@@ -14,6 +14,8 @@ import {
   useCombinedModelUpdateMutation,
   useProjectUpdateMutation,
   CombinedModel,
+  useSimulationUpdateMutation,
+  Simulation,
 } from "../app/backendApi";
 import { CombinedModelUpdate, ProjectUpdate } from "../features/model/Model";
 
@@ -6026,6 +6028,7 @@ export const units = [
 // Use mutable copies of snapshots to allow for API updates.
 let mockModel = { ...model };
 let mockProject = { ...project };
+let mockSimulation = { ...simulation };
 
 export const projectHandlers = [
   http.get("/api/combined_model", async ({ request }) => {
@@ -6109,6 +6112,19 @@ export const projectHandlers = [
     }
     return HttpResponse.json({ error: "Compound not found" }, { status: 404 });
   }),
+  http.get("/api/variable/:id", async ({ params }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const variableId = parseInt(params.id, 10);
+    const variable = variables.find((v) => v.id === variableId);
+    if (!variable) {
+      return HttpResponse.json(
+        { detail: "Variable not found" },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json(variable, { status: 200 });
+  }),
   http.put("/api/combined_model/:id", async ({ params, request }) => {
     await delay();
     //@ts-expect-error params.id is a string
@@ -6152,6 +6168,17 @@ export const projectHandlers = [
     //@ts-expect-error projectData is DefaultBodyType
     mockProject = { ...projectData, id: projectId };
     return HttpResponse.json(mockProject, {
+      status: 200,
+    });
+  }),
+  http.put("/api/simulation/:id", async ({ params, request }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const simulationId = parseInt(params.id, 10);
+    const simulationData = await request.json();
+    //@ts-expect-error projectData is DefaultBodyType
+    mockSimulation = { ...simulationData, id: simulationId };
+    return HttpResponse.json(mockSimulation, {
       status: 200,
     });
   }),
@@ -6228,4 +6255,37 @@ export function useMockProject(
   };
 
   return [project, updateMockProject];
+}
+
+interface UseMockSimulationArgs {
+  simulation: SimulationRead;
+  updateSimulation: ({
+    id,
+    simulation,
+  }: {
+    id: number;
+    simulation: Simulation;
+  }) => void;
+}
+
+export type SimulationUpdate = (arg: {
+  id: number;
+  simulation: Simulation;
+}) => Promise<{ data?: SimulationRead }>;
+
+export function useMockSimulation(
+  args: UseMockSimulationArgs,
+): [SimulationRead, SimulationUpdate] {
+  const [simulation, setSimulation] = useState<SimulationRead>(args.simulation);
+  const [updateSimulation] = useSimulationUpdateMutation();
+
+  const updateMockSimulation: SimulationUpdate = async ({ id, simulation }) => {
+    args.updateSimulation({ id, simulation });
+    await updateSimulation({ id, simulation });
+    mockSimulation = { ...mockSimulation, ...simulation } as SimulationRead;
+    setSimulation(mockSimulation);
+    return { data: mockSimulation };
+  };
+
+  return [simulation, updateMockSimulation];
 }

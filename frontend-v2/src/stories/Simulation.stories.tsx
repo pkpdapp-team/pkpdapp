@@ -7,7 +7,7 @@ import {
   PageName,
   setPage,
 } from "../features/main/mainSlice";
-import { project, projectHandlers, variables } from "./project.mock";
+import { project, projectHandlers } from "./project.mock";
 import { simulationData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
@@ -24,32 +24,6 @@ const meta: Meta<typeof Simulations> = {
         http.get("/api/subject_group", async () => {
           await delay();
           return HttpResponse.json([], { status: 200 });
-        }),
-        http.get("/api/variable/:id", async ({ params }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const variableId = parseInt(params.id, 10);
-          const variable = variables.find((v) => v.id === variableId);
-          if (!variable) {
-            return HttpResponse.json(
-              { detail: "Variable not found" },
-              { status: 404 },
-            );
-          }
-          return HttpResponse.json(variable, { status: 200 });
-        }),
-        http.put("/api/simulation/:id", async ({ params, request }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const simulationId = parseInt(params.id, 10);
-          const simulationData = await request.json();
-          return HttpResponse.json(
-            //@ts-expect-error simulationData is DefaultBodyType
-            { ...simulationData, id: simulationId },
-            {
-              status: 200,
-            },
-          );
         }),
         http.post("/api/combined_model/:id/simulate", async () => {
           await delay();
@@ -82,7 +56,9 @@ const meta: Meta<typeof Simulations> = {
             aria-label="simulations sidebar"
             id="simulations-portal"
           />
-          <Story />
+          <Box width="100%">
+            <Story />
+          </Box>
         </Box>
       );
     },
@@ -121,5 +97,22 @@ export const Parameters: Story = {
       name: /^V1/,
     });
     await userEvent.click(parameterOption);
+  },
+};
+
+export const AddNewPlot: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const addPlotButton = await canvas.findByRole("button", {
+      name: "Add new plot",
+    });
+    expect(addPlotButton).toBeInTheDocument();
+    await userEvent.click(addPlotButton);
+
+    const variableButton = await screen.findByRole("button", {
+      name: /^A1/,
+    });
+    expect(variableButton).toBeInTheDocument();
+    await userEvent.click(variableButton);
   },
 };
