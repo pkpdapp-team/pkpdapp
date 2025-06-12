@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, screen, fn } from "storybook/test";
+import { expect, within, screen, fn, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -79,7 +79,9 @@ export const AddNew: Story = {
     const efficacyTable = await canvas.findByRole("table", {
       name: "Efficacy-Safety Data",
     });
-    const efficacyTableRows = within(efficacyTable).getAllByRole("row");
-    expect(efficacyTableRows).toHaveLength(4); // header + 3 data rows
+    await waitFor(() => {
+      const efficacyTableRows = within(efficacyTable).getAllByRole("row");
+      expect(efficacyTableRows).toHaveLength(4); // header + 3 data rows
+    });
   },
 };
