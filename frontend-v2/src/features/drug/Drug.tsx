@@ -352,7 +352,12 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
           }}
         >
           <Box sx={{ display: "flex" }}>
-            <Typography variant="h6" component="h2" gutterBottom>
+            <Typography
+              id="efficacy-heading"
+              variant="h6"
+              component="h2"
+              gutterBottom
+            >
               Efficacy-Safety Data
             </Typography>
             <Tooltip
@@ -385,14 +390,16 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
           maxHeight: getTableHeight({ steps: DOUBLE_TABLE_SECOND_BREAKPOINTS }),
         }}
       >
-        <Table stickyHeader>
+        <Table stickyHeader aria-labelledby="efficacy-heading">
           <TableHead>
-            <TableCell>Select</TableCell>
-            <TableCell>Name</TableCell>
-            <TableCell>C50</TableCell>
-            <TableCell>Unit</TableCell>
-            <TableCell>Hill-coefficient</TableCell>
-            <TableCell>Actions</TableCell>
+            <TableRow>
+              <TableCell>Select</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>C50</TableCell>
+              <TableCell>Unit</TableCell>
+              <TableCell>Hill-coefficient</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
           </TableHead>
           <TableBody>
             {defaultValues?.efficacy_experiments?.map(
