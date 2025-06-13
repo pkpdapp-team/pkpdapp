@@ -106,7 +106,6 @@ const ProjectTable: FC = () => {
     useCompoundListQuery();
 
   const projects = projectsUnordered ? [...projectsUnordered] : undefined;
-  console.log(projects);
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
