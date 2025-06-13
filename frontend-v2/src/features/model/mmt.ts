@@ -5,6 +5,8 @@ Description: language definition for Myokit models.
 Category: config
 */
 
+import { HLJSApi } from "highlight.js";
+
 const FUNCTIONS = [
   "if",
   "piecewise",
@@ -23,7 +25,7 @@ const FUNCTIONS = [
   "floor",
 ];
 
-export default function mmt(hljs) {
+export default function mmt(hljs: HLJSApi) {
   // units inside in statements
   const UNIT_RE = /[\w\d*/^]+/;
   // [[model]] or [component]

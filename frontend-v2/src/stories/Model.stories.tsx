@@ -131,6 +131,26 @@ export const Default: Story = {
   },
 };
 
+export const ShowMMTModel: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const showMMTButton = canvas.getByRole("button", {
+      name: /Show MMT Code/i,
+    });
+    expect(showMMTButton).toBeInTheDocument();
+    await userEvent.click(showMMTButton);
+
+    const codeHeading = await screen.findByRole("heading", {
+      name: /Code/i,
+    });
+    expect(codeHeading).toBeInTheDocument();
+    const codeBlock = screen.getByRole("code");
+    expect(codeBlock).toBeInTheDocument();
+    expect(codeBlock.innerText).toEqual(model.mmt);
+  },
+};
+
 export const Species: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
