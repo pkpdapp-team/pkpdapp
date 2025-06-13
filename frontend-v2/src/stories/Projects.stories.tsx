@@ -6,6 +6,8 @@ import { http, delay, HttpResponse } from "msw";
 
 import { project, projectHandlers } from "./project.mock";
 import { ProjectDescriptionProvider } from "../shared/contexts/ProjectDescriptionContext";
+import { setProject as setReduxProject } from "../features/main/mainSlice";
+import { useDispatch } from "react-redux";
 
 let mockProjects = [project];
 
@@ -115,6 +117,8 @@ const meta: Meta<typeof Projects> = {
   },
   decorators: [
     (Story) => {
+      const dispatch = useDispatch();
+      dispatch(setReduxProject(null));
       return (
         <ProjectDescriptionProvider>
           <Story />
