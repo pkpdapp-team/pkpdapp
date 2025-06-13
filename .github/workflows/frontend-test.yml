@@ -32,4 +32,6 @@ jobs:
         run: yarn install --immutable
 
       - name: Run tests
-        run: yarn test-storybook
+        run: yarn test
+        env:
+          HOME: /root
