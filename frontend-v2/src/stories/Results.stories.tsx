@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, screen } from "storybook/test";
+import { expect, within } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -126,7 +126,7 @@ export const Default: Story = {
     expect(table1Tab).toBeInTheDocument();
 
     ["Columns", "Rows", "Group", "Interval"].forEach((name) => {
-      const combobox = screen.getByRole("combobox", {
+      const combobox = canvas.getByRole("combobox", {
         name,
       });
       expect(combobox).toBeInTheDocument();

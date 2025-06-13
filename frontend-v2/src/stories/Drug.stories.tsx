@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, screen, fn, waitFor } from "storybook/test";
+import { expect, within, fn, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -53,7 +53,7 @@ type Story = StoryObj<typeof Drug>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const drugHeading = await screen.findByRole("heading", {
+    const drugHeading = await canvas.findByRole("heading", {
       name: "Drug & Target",
     });
     expect(drugHeading).toBeInTheDocument();
