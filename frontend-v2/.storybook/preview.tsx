@@ -24,6 +24,7 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
+          "Projects",
           "Drug and Target",
           "Edit Model",
           "Data Upload",
