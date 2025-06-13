@@ -24,6 +24,7 @@ const preview: Preview = {
     options: {
       storySort: {
         order: [
+          "Projects",
           "Drug and Target",
           "Edit Model (version 1)",
           "Edit Model (version 3)",

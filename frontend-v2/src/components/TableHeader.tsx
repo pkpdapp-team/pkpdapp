@@ -36,5 +36,7 @@ export const TableHeader = ({
       </Tooltip>
     </Box>
   ) : (
-    <Typography variant={variant}>{label}</Typography>
+    <Typography id={id} variant={variant}>
+      {label}
+    </Typography>
   );

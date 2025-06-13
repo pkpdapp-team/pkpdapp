@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, screen } from "storybook/test";
+import { expect, within } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -8,6 +8,24 @@ import { project, projectHandlers } from "./project.mock";
 import { simulationData } from "./simulations.mock";
 import { http, delay, HttpResponse } from "msw";
 import { SimulationContext } from "../contexts/SimulationContext";
+
+const resultsTables = [
+  {
+    id: 60,
+    name: "Table 1",
+    rows: "variables",
+    columns: "parameters",
+    filters: {
+      parameterIndex: "columns",
+      variableIndex: "rows",
+      groupIndex: 0,
+      intervalIndex: 0,
+    },
+    project: 57,
+  },
+];
+
+let mockResultsTables = [...resultsTables];
 
 const meta: Meta<typeof Results> = {
   title: "Results",
@@ -28,22 +46,43 @@ const meta: Meta<typeof Results> = {
             );
           }
           // Simulate fetching results for the project
+          return HttpResponse.json(mockResultsTables, { status: 200 });
+        }),
+        http.put("/api/results_table/:id", async ({ params, request }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const tableId = parseInt(params.id, 10);
+          const updatedTable = await request.json();
+          // Simulate updating a results table
+          const updatedTables = mockResultsTables.map((table) =>
+            // @ts-expect-error updatedTable is DefaultBodyType
+            table.id === tableId ? { ...table, ...updatedTable } : table,
+          );
+          const newTable = updatedTables.find((table) => table.id === tableId);
+          return HttpResponse.json(newTable, { status: 200 });
+        }),
+        http.post("/api/results_table", async ({ request }) => {
+          await delay();
+          const newTable = await request.json();
+          // Simulate creating a new results table
+          const createdTable = {
+            //@ts-expect-error newTable is DefaultBodyType
+            ...newTable,
+            id: mockResultsTables.length + 1, // Incremental ID for simplicity
+          };
+          mockResultsTables.push(createdTable);
+          return HttpResponse.json(createdTable, { status: 201 });
+        }),
+        http.delete("/api/results_table/:id", async ({ params }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const tableId = parseInt(params.id, 10);
+          // Simulate deleting a results table
+          mockResultsTables = mockResultsTables.filter(
+            (table) => table.id !== tableId,
+          );
           return HttpResponse.json(
-            [
-              {
-                id: 60,
-                name: "Table 1",
-                rows: "variables",
-                columns: "parameters",
-                filters: {
-                  parameterIndex: "columns",
-                  variableIndex: "rows",
-                  groupIndex: 0,
-                  intervalIndex: 0,
-                },
-                project: 57,
-              },
-            ],
+            { message: "Table deleted" },
             { status: 200 },
           );
         }),
@@ -65,6 +104,9 @@ const meta: Meta<typeof Results> = {
       );
     },
   ],
+  beforeEach: () => {
+    mockResultsTables = [...resultsTables]; // Reset mock data before each story
+  },
 };
 export default meta;
 
@@ -84,7 +126,7 @@ export const Default: Story = {
     expect(table1Tab).toBeInTheDocument();
 
     ["Columns", "Rows", "Group", "Interval"].forEach((name) => {
-      const combobox = screen.getByRole("combobox", {
+      const combobox = canvas.getByRole("combobox", {
         name,
       });
       expect(combobox).toBeInTheDocument();
@@ -94,5 +136,27 @@ export const Default: Story = {
       name: "Results table",
     });
     expect(table).toBeInTheDocument();
+  },
+};
+
+export const AddNewTable: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const addButton = await canvas.findByRole("button", {
+      name: /Add Table/i,
+    });
+    expect(addButton).toBeInTheDocument();
+
+    await userEvent.click(addButton);
+
+    const newTableTab = await canvas.findByRole("tab", {
+      name: "Table 2",
+    });
+    expect(newTableTab).toBeInTheDocument();
+
+    const newTable = await canvas.findByRole("table", {
+      name: "Results table",
+    });
+    expect(newTable).toBeInTheDocument();
   },
 };

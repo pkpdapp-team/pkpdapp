@@ -288,7 +288,7 @@ const ProjectTable: FC = () => {
           paddingBottom: "1rem",
         }}
       >
-        <TableHeader label="Projects" variant="h4" />
+        <TableHeader id="projects-heading" label="Projects" variant="h4" />
         <DropdownButton
           useIcon={false}
           data_cy="create-project"
@@ -364,7 +364,7 @@ const ProjectTable: FC = () => {
             <div>Create a new one</div>
           </div>
         ) : (
-          <Table stickyHeader size="small">
+          <Table stickyHeader size="small" aria-labelledby="projects-heading">
             <TableHead>
               <TableRow>
                 <TableCell

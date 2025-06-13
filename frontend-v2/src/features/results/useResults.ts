@@ -26,11 +26,15 @@ export function useResults() {
     updateResults,
     async createResults({ resultsTable }: { resultsTable: ResultsTableRead }) {
       await createResults({ resultsTable });
-      refetch();
+      if (projectId) {
+        refetch();
+      }
     },
     async deleteResults({ id }: { id: number }) {
       await deleteResults({ id });
-      refetch();
+      if (projectId) {
+        refetch();
+      }
     },
   };
 }
