@@ -424,6 +424,7 @@ const ProjectEditorRow: FC<Props> = ({
           project={project}
         >
           <MaterialTextField
+            label="Edit project description"
             {...register("project.description")}
             sx={{ width: "50vw" }}
             disabled={!isEditMode}
