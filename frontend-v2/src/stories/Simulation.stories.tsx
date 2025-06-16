@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within } from "storybook/test";
+import { expect, fn, screen, waitFor, within } from "storybook/test";
 import { useDispatch } from "react-redux";
 import {
   setProject as setReduxProject,
@@ -13,9 +13,14 @@ import { simulationData } from "./simulations.mock";
 import Simulations from "../features/simulation/Simulations";
 import { Box } from "@mui/material";
 
+const simulationSpy = fn();
+
 const meta: Meta<typeof Simulations> = {
   title: "Simulations",
   component: Simulations,
+  args: {
+    updateSimulations: simulationSpy,
+  },
   parameters: {
     layout: "fullscreen",
     msw: {
@@ -25,8 +30,10 @@ const meta: Meta<typeof Simulations> = {
           await delay();
           return HttpResponse.json([], { status: 200 });
         }),
-        http.post("/api/combined_model/:id/simulate", async () => {
+        http.post("/api/combined_model/:id/simulate", async ({ request }) => {
           await delay();
+          const simulationParams = await request.json();
+          simulationSpy(simulationParams);
           return HttpResponse.json(simulationData, {
             status: 200,
           });
@@ -97,6 +104,26 @@ export const Parameters: Story = {
       name: /^V1/,
     });
     await userEvent.click(parameterOption);
+
+    const simulationSlider = await screen.findByRole("slider", {
+      name: "V1 [mL/kg]",
+    });
+    expect(simulationSlider).toBeInTheDocument();
+
+    const inputField = await screen.findByRole("spinbutton", {
+      name: "V1 [mL/kg]",
+    });
+    expect(inputField).toBeInTheDocument();
+    await userEvent.click(inputField);
+    expect(inputField).toHaveFocus();
+    await userEvent.keyboard("{backspace>6}");
+    await userEvent.type(inputField, "100");
+    await userEvent.tab();
+
+    await waitFor(() => {
+      const [simulationParams] = simulationSpy.mock.lastCall || [];
+      expect(simulationParams.variables["PKCompartment.V1"]).toBe(100);
+    });
   },
 };
 
@@ -114,5 +141,39 @@ export const AddNewPlot: Story = {
     });
     expect(variableButton).toBeInTheDocument();
     await userEvent.click(variableButton);
+  },
+};
+
+export const EditPlot: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    let plot = canvasElement.querySelector("svg.main-svg");
+    await waitFor(() => {
+      plot = canvasElement.querySelector("svg.main-svg");
+      expect(plot).toBeInTheDocument();
+    });
+    const dragLayer = plot?.querySelector("rect.drag");
+    await userEvent.hover(dragLayer!);
+    const editButton = canvasElement.querySelector(
+      'a[data-title="Customise Plot"]',
+    );
+    expect(editButton).toBeInTheDocument();
+    await userEvent.click(editButton!);
+
+    const customisePlotHeading = await screen.findByRole("heading", {
+      name: "Customise Plot",
+    });
+    expect(customisePlotHeading).toBeInTheDocument();
+
+    const xAxisLabelSearchbox = screen.getByRole("searchbox", {
+      name: "X Axis Label",
+    });
+    expect(xAxisLabelSearchbox).toBeInTheDocument();
+    expect(xAxisLabelSearchbox).toHaveValue("Time  [h]");
+
+    const yAxisLabelSearchbox = screen.getByRole("searchbox", {
+      name: "Y Axis Label",
+    });
+    expect(yAxisLabelSearchbox).toBeInTheDocument();
+    expect(yAxisLabelSearchbox).toHaveValue("C1  [pmol/L]");
   },
 };

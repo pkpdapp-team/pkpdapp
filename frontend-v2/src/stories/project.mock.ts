@@ -6145,7 +6145,7 @@ export const projectHandlers = [
 
     const projectId = url.searchParams.get("project_id");
     if (projectId) {
-      return HttpResponse.json([simulation], {
+      return HttpResponse.json([mockSimulation], {
         status: 200,
       });
     }
