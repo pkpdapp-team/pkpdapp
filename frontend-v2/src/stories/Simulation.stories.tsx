@@ -143,3 +143,37 @@ export const AddNewPlot: Story = {
     await userEvent.click(variableButton);
   },
 };
+
+export const EditPlot: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    let plot = canvasElement.querySelector("svg.main-svg");
+    await waitFor(() => {
+      plot = canvasElement.querySelector("svg.main-svg");
+      expect(plot).toBeInTheDocument();
+    });
+    const dragLayer = plot?.querySelector("rect.drag");
+    await userEvent.hover(dragLayer!);
+    const editButton = canvasElement.querySelector(
+      'a[data-title="Customise Plot"]',
+    );
+    expect(editButton).toBeInTheDocument();
+    await userEvent.click(editButton!);
+
+    const customisePlotHeading = await screen.findByRole("heading", {
+      name: "Customise Plot",
+    });
+    expect(customisePlotHeading).toBeInTheDocument();
+
+    const xAxisLabelSearchbox = screen.getByRole("searchbox", {
+      name: "X Axis Label",
+    });
+    expect(xAxisLabelSearchbox).toBeInTheDocument();
+    expect(xAxisLabelSearchbox).toHaveValue("Time  [h]");
+
+    const yAxisLabelSearchbox = screen.getByRole("searchbox", {
+      name: "Y Axis Label",
+    });
+    expect(yAxisLabelSearchbox).toBeInTheDocument();
+    expect(yAxisLabelSearchbox).toHaveValue("C1  [pmol/L]");
+  },
+};
