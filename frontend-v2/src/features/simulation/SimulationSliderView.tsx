@@ -177,7 +177,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       }}
     >
       <Stack direction="row" spacing={0} alignItems="center">
-        <Tooltip title={variable.description} placement="bottom">
+        <Tooltip title={variable.description} placement="bottom" describeChild>
           <Typography
             id="discrete-slider"
             gutterBottom
@@ -248,7 +248,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           onChange={handleSliderChange}
           onChangeCommitted={commitChangesWithValue}
           valueLabelDisplay="off"
-          aria-labelledby="input-slider"
+          aria-labelledby="discrete-slider"
         />
       </Box>
       <Box alignItems="center">
@@ -263,7 +263,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             min: minValue,
             max: maxValue,
             type: "number",
-            "aria-labelledby": "input-slider",
+            "aria-labelledby": "discrete-slider",
           }}
         />
       </Box>
