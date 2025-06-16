@@ -7,13 +7,41 @@ import Data from "../features/data/Data";
 import { project, projectHandlers } from "./project.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 
+import { HttpResponse, http } from "msw";
+
+const datasetHandlers = [
+  http.get("/api/dataset/:id", () => {
+    return HttpResponse.json(
+      {
+        id: 1,
+        name: "Test Dataset",
+        subjects: [],
+        groups: [],
+      },
+      { status: 200 },
+    );
+  }),
+  http.get("/api/subject_group", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/subject", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/biomarker_type", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+];
+
 const meta: Meta<typeof Data> = {
-  title: "Data Upload",
+  title: "Data Upload (create dataset)",
   component: Data,
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [...projectHandlers],
+      handlers: {
+        project: projectHandlers,
+        dataset: datasetHandlers,
+      },
     },
   },
   decorators: [

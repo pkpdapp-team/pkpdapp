@@ -277,19 +277,37 @@ const Data: FC = () => {
           }}
         >
           <Box padding={1}>
-            <Typography variant="h6" component="h2" gutterBottom>
+            <Typography
+              id="protocols-heading"
+              variant="h6"
+              component="h2"
+              gutterBottom
+            >
               Protocols
             </Typography>
             <Box>
-              <DataGrid rows={dosingRows} columns={dosingColumns} />
+              <DataGrid
+                aria-labelledby="protocols-heading"
+                rows={dosingRows}
+                columns={dosingColumns}
+              />
             </Box>
           </Box>
           <Box padding={1}>
-            <Typography variant="h6" component="h2" gutterBottom>
+            <Typography
+              id="observations-heading"
+              variant="h6"
+              component="h2"
+              gutterBottom
+            >
               Observations
             </Typography>
             <Box>
-              <DataGrid rows={observations} columns={columns} />
+              <DataGrid
+                aria-labelledby="observations-heading"
+                rows={observations}
+                columns={columns}
+              />
             </Box>
           </Box>
         </Box>
