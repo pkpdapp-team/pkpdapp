@@ -302,26 +302,31 @@ const ProjectEditorRow: FC<Props> = ({
           </Typography>
         </TableCell>
         <TableCell>
-          <ButtonBase
-            focusRipple
-            onClick={() => onOpenDescriptionModal(project.id)}
-          >
-            {isEditMode ? (
+          {isEditMode ? (
+            <ButtonBase
+              focusRipple
+              onClick={() => onOpenDescriptionModal(project.id)}
+            >
               <Typography
                 component="span"
                 sx={{ color: "blue", cursor: "pointer" }}
               >
                 {project?.description?.length ? "Read" : "Add"}
               </Typography>
-            ) : (
+            </ButtonBase>
+          ) : project?.description?.length ? (
+            <ButtonBase
+              focusRipple
+              onClick={() => onOpenDescriptionModal(project.id)}
+            >
               <Typography
                 component="span"
                 sx={{ color: "blue", cursor: "pointer" }}
               >
-                {project?.description?.length ? "Read" : ""}
+                Read
               </Typography>
-            )}
-          </ButtonBase>
+            </ButtonBase>
+          ) : null}
         </TableCell>
         <TableCell>
           {!isEditMode ? (
@@ -331,7 +336,7 @@ const ProjectEditorRow: FC<Props> = ({
                   disabled={isSharedWithMe}
                   onClick={() => setIsEditMode(true)}
                 >
-                  <EditIcon />
+                  <EditIcon titleAccess="Edit" />
                 </IconButton>
               </Tooltip>
               <ConfirmationDialog
@@ -343,7 +348,7 @@ const ProjectEditorRow: FC<Props> = ({
               />
               <Tooltip title="Copy Project">
                 <IconButton onClick={copyProject}>
-                  <ContentCopyIcon />
+                  <ContentCopyIcon titleAccess="Copy" />
                 </IconButton>
               </Tooltip>
 
@@ -360,7 +365,7 @@ const ProjectEditorRow: FC<Props> = ({
               </Tooltip>
               <Tooltip title={deleteTooltip}>
                 <IconButton onClick={() => setShowConfirmDelete(true)}>
-                  <Delete />
+                  <Delete titleAccess="Delete" />
                 </IconButton>
               </Tooltip>
               {isSharedWithMe && (
@@ -387,7 +392,7 @@ const ProjectEditorRow: FC<Props> = ({
                     handleSave();
                   }}
                 >
-                  <CheckIcon />
+                  <CheckIcon titleAccess="Save" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Discard changes">
@@ -397,7 +402,7 @@ const ProjectEditorRow: FC<Props> = ({
                     reset();
                   }}
                 >
-                  <CloseIcon />
+                  <CloseIcon titleAccess="Discard changes" />
                 </IconButton>
               </Tooltip>
             </Stack>

@@ -182,7 +182,7 @@ const DoseRow: FC<Props> = ({
       <TableCell align="center">
         {index !== 0 && (
           <IconButton onClick={handleDeleteRow} disabled={disabled}>
-            <Delete />
+            <Delete titleAccess="Remove dose" />
           </IconButton>
         )}
       </TableCell>

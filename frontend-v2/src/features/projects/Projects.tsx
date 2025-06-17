@@ -310,7 +310,11 @@ const ProjectTable: FC = () => {
                   sx={{ borderBottom: "solid 2px blue" }}
                   padding="checkbox"
                 >
-                  <DnsIcon fontSize="small" sx={{ marginTop: ".5rem" }} />
+                  <DnsIcon
+                    titleAccess="Selected project"
+                    fontSize="small"
+                    sx={{ marginTop: ".5rem" }}
+                  />
                 </TableCell>
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>
@@ -321,7 +325,7 @@ const ProjectTable: FC = () => {
                       }
                       onClick={() => handleSortBy(SortOptions.NAME)}
                     >
-                      <SortIcon />
+                      <SortIcon titleAccess="Sort by name" />
                     </IconButton>
                   </div>
                 </TableCell>
@@ -334,7 +338,7 @@ const ProjectTable: FC = () => {
                       }
                       onClick={() => handleSortBy(SortOptions.COMPOUND)}
                     >
-                      <SortIcon />
+                      <SortIcon titleAccess="Sort by compound" />
                     </IconButton>
                   </div>
                 </TableCell>
@@ -350,7 +354,7 @@ const ProjectTable: FC = () => {
                       }
                       onClick={() => handleSortBy(SortOptions.SPECIES)}
                     >
-                      <SortIcon />
+                      <SortIcon titleAccess="Sort by species" />
                     </IconButton>
                   </div>
                 </TableCell>

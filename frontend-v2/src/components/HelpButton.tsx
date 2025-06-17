@@ -32,28 +32,26 @@ const HelpButton: FC<HelpButtonProps> = ({ children }) => {
   };
 
   return (
-    <>
-      <Tooltip
-        placement="bottom-end"
-        title={tooltipWrapper(children, handleClose)}
-        disableHoverListener={true}
-        open={open}
-        TransitionProps={{ timeout: { enter: 200, exit: 0 } }}
-        componentsProps={{
-          tooltip: {
-            sx: {
-              bgcolor: "common.white",
-              color: "common.black",
-              boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)",
-            },
+    <Tooltip
+      placement="bottom-end"
+      title={tooltipWrapper(children, handleClose)}
+      disableHoverListener={true}
+      open={open}
+      TransitionProps={{ timeout: { enter: 200, exit: 0 } }}
+      componentsProps={{
+        tooltip: {
+          sx: {
+            bgcolor: "common.white",
+            color: "common.black",
+            boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)",
           },
-        }}
-      >
-        <IconButton onClick={handleOpen}>
-          <HelpOutline />
-        </IconButton>
-      </Tooltip>
-    </>
+        },
+      }}
+    >
+      <IconButton onClick={handleOpen}>
+        <HelpOutline titleAccess="Help" />
+      </IconButton>
+    </Tooltip>
   );
 };
 
