@@ -172,15 +172,6 @@ export const MapObservations: Story = {
 
     await EditDataset.play?.(context);
 
-    // There's a bug where you need to stratify a dataset before editing observations.
-    const stratificationButton = await canvas.findByRole("button", {
-      name: /Stratification/i,
-    });
-    expect(stratificationButton).toBeInTheDocument();
-    await userEvent.click(stratificationButton);
-
-    await delay(1000);
-
     const mapObservationsButton = await canvas.findByRole("button", {
       name: /Map Observations/i,
     });

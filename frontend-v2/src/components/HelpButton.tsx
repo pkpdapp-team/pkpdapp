@@ -37,8 +37,7 @@ const HelpButton: FC<HelpButtonProps> = ({ children }) => {
       title={tooltipWrapper(children, handleClose)}
       disableHoverListener={true}
       open={open}
-      TransitionProps={{ timeout: { enter: 200, exit: 0 } }}
-      componentsProps={{
+      slotProps={{
         tooltip: {
           sx: {
             bgcolor: "common.white",
@@ -46,6 +45,7 @@ const HelpButton: FC<HelpButtonProps> = ({ children }) => {
             boxShadow: "2px 2px 5px rgba(0, 0, 0, .3)",
           },
         },
+        transition: { timeout: { enter: 200, exit: 0 } },
       }}
     >
       <IconButton onClick={handleOpen}>
