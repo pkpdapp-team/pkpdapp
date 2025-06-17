@@ -508,7 +508,9 @@ export default function Sidebar() {
                 arrow
                 title="Description"
                 placement="bottom"
-                PopperProps={{ style: { zIndex: 9999 } }}
+                slotProps={{
+                  popper: { style: { zIndex: 9999 } },
+                }}
               >
                 <IconButton onClick={() => onOpenDescriptionModal(projectId)}>
                   <DescriptionOutlinedIcon />
