@@ -30,7 +30,9 @@ export const TableHeader = ({
         title={tooltip}
         arrow
         placement="right"
-        PopperProps={{ sx: { marginLeft: "4px" } }}
+        slotProps={{
+          popper: { sx: { marginLeft: "4px" } },
+        }}
       >
         <HelpOutlineIcon sx={{ marginLeft: "8px", color: "dimgray" }} />
       </Tooltip>

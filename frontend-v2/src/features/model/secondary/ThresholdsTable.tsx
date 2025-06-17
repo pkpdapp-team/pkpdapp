@@ -158,7 +158,9 @@ function VariableRow({
           defaultValue={variable.lower_threshold || 0}
           onChange={onChangeLowerThreshold}
           size="small"
-          inputProps={{ "aria-label": `Lower Threshold: ${variable.name}` }}
+          slotProps={{
+            htmlInput: { "aria-label": `Lower Threshold: ${variable.name}` },
+          }}
         />
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
@@ -168,7 +170,9 @@ function VariableRow({
           defaultValue={variable.upper_threshold || Infinity}
           onChange={onChangeUpperThreshold}
           size="small"
-          inputProps={{ "aria-label": `Upper Threshold: ${variable.name}` }}
+          slotProps={{
+            htmlInput: { "aria-label": `Upper Threshold: ${variable.name}` },
+          }}
         />
       </TableCell>
       <TableCell>

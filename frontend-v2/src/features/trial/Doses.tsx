@@ -162,7 +162,9 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                 regimens (e.g. changing dosing frequency and/or dosing levels)"
                 arrow
                 placement="right"
-                PopperProps={{ sx: { marginLeft: "4px" } }}
+                slotProps={{
+                  popper: { sx: { marginLeft: "4px" } },
+                }}
               >
                 <HelpOutlineIcon
                   sx={{
