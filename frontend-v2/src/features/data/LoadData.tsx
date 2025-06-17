@@ -212,7 +212,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
-            <input {...getInputProps()} />
+            <input aria-label="Upload CSV" {...getInputProps()} />
             <Typography
               style={{
                 display: "flex",

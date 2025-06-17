@@ -102,6 +102,11 @@ function TimeUnitSelect() {
         onChange={onChangeUnit}
         size="small"
         sx={{ minWidth: "6rem" }}
+        slotProps={{
+          input: {
+            "aria-label": "Time unit",
+          },
+        }}
       >
         {timeUnitOptions.map((option) => (
           <MenuItem key={option.label} value={option.value}>
@@ -160,6 +165,11 @@ function IntervalRow({
           onChange={onChangeStart}
           error={start > end}
           helperText={start > end ? "Start time must be before end time" : ""}
+          slotProps={{
+            htmlInput: {
+              "aria-label": "Start time",
+            },
+          }}
         />
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
@@ -171,13 +181,18 @@ function IntervalRow({
           onChange={onChangeEnd}
           error={end < start}
           helperText={end < start ? "End time must be after start time" : ""}
+          slotProps={{
+            htmlInput: {
+              "aria-label": "End time",
+            },
+          }}
         />
       </TableCell>
       <TableCell sx={{ width: "10rem" }}>
         {editUnits ? <TimeUnitSelect /> : intervalUnit?.symbol}
       </TableCell>
       <TableCell>
-        <IconButton onClick={onDelete}>
+        <IconButton aria-label="Delete time interval" onClick={onDelete}>
           <Delete />
         </IconButton>
       </TableCell>

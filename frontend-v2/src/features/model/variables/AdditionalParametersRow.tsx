@@ -288,6 +288,7 @@ const AdditionalParametersRow: FC<Props> = ({
             disabled={disableRo || isSharedWithMe}
             control={
               <MuiCheckbox
+                aria-label={`Static Receptor Occupancy: ${variable.name}`}
                 checked={isLinkedTo("RO")}
                 onClick={onClickDerived("RO")}
               />

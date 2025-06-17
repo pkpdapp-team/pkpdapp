@@ -61,7 +61,7 @@ export const CodeModal = ({
             }}
           >
             <TableHeader label="Code" />
-            <IconButton onClick={onClose}>
+            <IconButton aria-label="Close" onClick={onClose}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -76,6 +76,7 @@ export const CodeModal = ({
               padding: "6px",
               border: "1px solid dimgray",
             }}
+            tabIndex={0}
           >
             {highlightCode(code, language)}
           </Typography>

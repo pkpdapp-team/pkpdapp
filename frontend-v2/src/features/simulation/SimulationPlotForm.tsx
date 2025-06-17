@@ -334,7 +334,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   onClick={() => handleRemoveYAxis(yAxis)}
                   disabled={isSharedWithMe}
                 >
-                  <Delete />
+                  <Delete titleAccess="Delete" />
                 </IconButton>
               </Grid>
             </Grid>
@@ -378,7 +378,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   onClick={() => handleRemoveCxLine(cxLineIndex)}
                   disabled={isSharedWithMe}
                 >
-                  <Delete />
+                  <Delete titleAccess="Delete" />
                 </IconButton>
               </Grid>
             </Grid>
@@ -458,7 +458,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   onClick={() => handleRemoveYAxis(yAxis)}
                   disabled={isSharedWithMe}
                 >
-                  <Delete />
+                  <Delete titleAccess="Delete" />
                 </IconButton>
               </Grid>
             </Grid>

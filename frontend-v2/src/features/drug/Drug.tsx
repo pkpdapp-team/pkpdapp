@@ -513,7 +513,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                               submit();
                             }}
                           >
-                            <CheckIcon />
+                            <CheckIcon titleAccess="Save" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip arrow title="Discard changes">
@@ -523,7 +523,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                               reset();
                             }}
                           >
-                            <CloseIcon />
+                            <CloseIcon titleAccess="Discard changes" />
                           </IconButton>
                         </Tooltip>
                       </Stack>
@@ -546,7 +546,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                                 setIsEditIndex(index);
                               }}
                             >
-                              <EditIcon />
+                              <EditIcon titleAccess="Edit" />
                             </IconButton>
                           </span>
                         </Tooltip>
@@ -565,7 +565,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                               }
                               onClick={() => deleteEfficacyExperiment(index)}
                             >
-                              <Delete />
+                              <Delete titleAccess="Delete" />
                             </IconButton>
                           </span>
                         </Tooltip>
