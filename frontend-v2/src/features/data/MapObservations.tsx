@@ -117,6 +117,10 @@ const MapObservations: FC<IMapObservations> = ({
   } = useObservationRows(state, selectedGroup);
   const uniqueObservationIds = [...new Set(observationIds)];
 
+  if (!variables || !units) {
+    return <Typography>Loading...</Typography>;
+  }
+
   const filterOutputs = model?.is_library_model
     ? ["environment.t", "PDCompartment.C_Drug"]
     : [];
@@ -395,6 +399,7 @@ const MapObservations: FC<IMapObservations> = ({
           }}
         >
           <DataGrid
+            aria-labelledby={`group-tab-${tab}`}
             density="compact"
             rows={observationRows}
             columns={columns}

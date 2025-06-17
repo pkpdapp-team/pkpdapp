@@ -247,171 +247,168 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     };
 
   return (
-    <>
-      <Box component="div">
-        <TableHeader
-          label="Dosing"
-          tooltip="Map dosing compartments to your subject groups here. You can set dose
+    <Box component="div">
+      <TableHeader
+        id="create-dosing-protocols-header"
+        label="Dosing"
+        tooltip="Map dosing compartments to your subject groups here. You can set dose
           amounts, units and intervals under Trial Design, once you have
           uploaded your data."
-        />
-        <TableContainer
-          sx={{
-            maxHeight: calculateTableHeights({
-              baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
-              isOpen: notificationsInfo.isOpen,
-              count: notificationsInfo.count,
-            }),
-            transition: "all .35s ease-in",
-          }}
+      />
+      <TableContainer
+        sx={{
+          maxHeight: calculateTableHeights({
+            baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
+            isOpen: notificationsInfo.isOpen,
+            count: notificationsInfo.count,
+          }),
+          transition: "all .35s ease-in",
+        }}
+      >
+        <Table
+          stickyHeader
+          size="small"
+          aria-labelledby="create-dosing-protocols-header"
         >
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography>Administration ID</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Group</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Dosing Compartment</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Amount</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Amount Unit</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Time</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Time Unit</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Additional Doses</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>Interdose Interval</Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {dosingCompartments.map((compartment) => {
-                const dosingRows = state.data.filter(
-                  (row) =>
-                    row["Amount Variable"] === compartment &&
-                    row["Amount"] !== ".",
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <Typography>Administration ID</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Group</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Dosing Compartment</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Amount</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Amount Unit</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Time</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Time Unit</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Additional Doses</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography>Interdose Interval</Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {dosingCompartments.map((compartment) => {
+              const dosingRows = state.data.filter(
+                (row) =>
+                  row["Amount Variable"] === compartment &&
+                  row["Amount"] !== ".",
+              );
+              const administrationIds = dosingRows.map(
+                (row) => row[administrationIdField],
+              );
+              const uniqueAdministrationIds = [...new Set(administrationIds)];
+              return uniqueAdministrationIds.map((adminId) => {
+                const [currentRow] = dosingRows.filter((row) =>
+                  administrationIdField
+                    ? row[administrationIdField] === adminId
+                    : true,
                 );
-                const administrationIds = dosingRows.map(
-                  (row) => row[administrationIdField],
+                const selectedVariable = variables?.find(
+                  (variable) =>
+                    variable.qname === currentRow?.["Amount Variable"],
                 );
-                const uniqueAdministrationIds = [...new Set(administrationIds)];
-                return uniqueAdministrationIds.map((adminId) => {
-                  const [currentRow] = dosingRows.filter((row) =>
-                    administrationIdField
-                      ? row[administrationIdField] === adminId
-                      : true,
-                  );
-                  const selectedVariable = variables?.find(
-                    (variable) =>
-                      variable.qname === currentRow?.["Amount Variable"],
-                  );
-                  const compatibleUnits = units?.find(
-                    (unit) => unit.id === selectedVariable?.unit,
-                  )?.compatible_units;
-                  const defaultAmountUnit =
-                    amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
-                  const selectedAmountUnit =
-                    currentRow?.[amountUnitField] || defaultAmountUnit;
-                  return (
-                    <TableRow key={adminId}>
-                      <TableCell sx={{ width: "5rem" }}>
-                        {currentRow?.[administrationIdField]}
-                      </TableCell>
-                      <TableCell sx={{ width: "5rem" }}>
-                        {currentRow?.[groupIdField]}
-                      </TableCell>
-                      <TableCell sx={{ width: "10rem" }}>
-                        {selectedVariable?.name}
-                      </TableCell>
-                      <NumericTableCell
-                        id={`input-amount-${adminId}`}
-                        disabled={!selectedVariable}
-                        label="Amount"
-                        onChange={handleInputChange(adminId, "Amount")}
-                        value={currentRow?.["Amount"]}
-                      />
-                      <TableCell sx={{ width: "10rem" }}>
-                        <FormControl fullWidth>
-                          <InputLabel
-                            size="small"
-                            id={`select-unit-${adminId}-label`}
-                          >
-                            Units
-                          </InputLabel>
-                          <Select
-                            labelId={`select-unit-${adminId}-label`}
-                            id={`select-unit-${adminId}`}
-                            label="Units"
-                            disabled={!selectedVariable}
-                            value={selectedAmountUnit}
-                            onChange={handleInputChange(
-                              adminId,
-                              amountUnitField,
-                            )}
-                            sx={{ maxWidth: "10rem" }}
-                            size="small"
-                            margin="dense"
-                          >
-                            {compatibleUnits?.map((unit) => (
-                              <MenuItem key={unit.symbol} value={unit.symbol}>
-                                {unit.symbol}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                      <NumericTableCell
-                        id={`input-time-${adminId}`}
-                        disabled={!selectedVariable}
-                        label="Time"
-                        onChange={handleInputChange(adminId, timeField)}
-                        value={currentRow?.[timeField]}
-                      />
-                      <TableCell sx={{ width: "10rem" }}>
-                        <Typography>{currentRow?.["Time Unit"]}</Typography>
-                      </TableCell>
-                      <NumericTableCell
-                        id={`input-addDoses-${adminId}`}
-                        disabled={!selectedVariable}
-                        label="Additional Doses"
-                        onChange={handleInputChange(
-                          adminId,
-                          "Additional Doses",
-                        )}
-                        value={currentRow?.["Additional Doses"]}
-                      />
-                      <NumericTableCell
-                        id={`input-doseInterval-${adminId}`}
-                        disabled={!selectedVariable}
-                        label="Interdose Interval"
-                        onChange={handleInputChange(
-                          adminId,
-                          "Interdose Interval",
-                        )}
-                        value={currentRow?.["Interdose Interval"]}
-                      />
-                    </TableRow>
-                  );
-                });
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-    </>
+                const compatibleUnits = units?.find(
+                  (unit) => unit.id === selectedVariable?.unit,
+                )?.compatible_units;
+                const defaultAmountUnit =
+                  amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
+                const selectedAmountUnit =
+                  currentRow?.[amountUnitField] || defaultAmountUnit;
+                return (
+                  <TableRow key={adminId}>
+                    <TableCell sx={{ width: "5rem" }}>
+                      {currentRow?.[administrationIdField]}
+                    </TableCell>
+                    <TableCell sx={{ width: "5rem" }}>
+                      {currentRow?.[groupIdField]}
+                    </TableCell>
+                    <TableCell sx={{ width: "10rem" }}>
+                      {selectedVariable?.name}
+                    </TableCell>
+                    <NumericTableCell
+                      id={`input-amount-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Amount"
+                      onChange={handleInputChange(adminId, "Amount")}
+                      value={currentRow?.["Amount"]}
+                    />
+                    <TableCell sx={{ width: "10rem" }}>
+                      <FormControl fullWidth>
+                        <InputLabel
+                          size="small"
+                          id={`select-unit-${adminId}-label`}
+                        >
+                          Units
+                        </InputLabel>
+                        <Select
+                          labelId={`select-unit-${adminId}-label`}
+                          id={`select-unit-${adminId}`}
+                          label="Units"
+                          disabled={!selectedVariable}
+                          value={selectedAmountUnit}
+                          onChange={handleInputChange(adminId, amountUnitField)}
+                          sx={{ maxWidth: "10rem" }}
+                          size="small"
+                          margin="dense"
+                        >
+                          {compatibleUnits?.map((unit) => (
+                            <MenuItem key={unit.symbol} value={unit.symbol}>
+                              {unit.symbol}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <NumericTableCell
+                      id={`input-time-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Time"
+                      onChange={handleInputChange(adminId, timeField)}
+                      value={currentRow?.[timeField]}
+                    />
+                    <TableCell sx={{ width: "10rem" }}>
+                      <Typography>{currentRow?.["Time Unit"]}</Typography>
+                    </TableCell>
+                    <NumericTableCell
+                      id={`input-addDoses-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Additional Doses"
+                      onChange={handleInputChange(adminId, "Additional Doses")}
+                      value={currentRow?.["Additional Doses"]}
+                    />
+                    <NumericTableCell
+                      id={`input-doseInterval-${adminId}`}
+                      disabled={!selectedVariable}
+                      label="Interdose Interval"
+                      onChange={handleInputChange(
+                        adminId,
+                        "Interdose Interval",
+                      )}
+                      value={currentRow?.["Interdose Interval"]}
+                    />
+                  </TableRow>
+                );
+              });
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 
