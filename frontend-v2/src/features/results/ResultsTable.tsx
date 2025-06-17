@@ -137,6 +137,7 @@ export const ResultsTable: FC<ResultsTableProps> = ({
           maxWidth: "100%",
           maxHeight: getTableHeight({ steps: RESULTS_TABLE_HEIGHTS }),
         }}
+        tabIndex={0}
       >
         <Table stickyHeader size="small" aria-label="Results table">
           <TableHead>

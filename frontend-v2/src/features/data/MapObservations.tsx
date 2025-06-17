@@ -273,7 +273,9 @@ const MapObservations: FC<IMapObservations> = ({
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: "15rem" }}>
-                  <Typography>{observationIdField}</Typography>
+                  <Typography>
+                    {observationIdField || "Observation ID"}
+                  </Typography>
                 </TableCell>
                 <TableCell sx={{ width: "15rem" }}>
                   <Typography>Observation</Typography>

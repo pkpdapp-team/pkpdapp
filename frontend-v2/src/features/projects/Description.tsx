@@ -65,7 +65,7 @@ export const DescriptionModal = ({
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="h4">{project?.name}</Typography>
             <IconButton onClick={handleOpenChange}>
-              <CloseIcon />
+              <CloseIcon titleAccess="Close" />
             </IconButton>
           </Box>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
