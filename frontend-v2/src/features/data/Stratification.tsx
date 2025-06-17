@@ -49,7 +49,10 @@ function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
  * @param columnName
  * @returns data with group ID and administration ID columns.
  */
-function groupDataRows(data: { [key: string]: string }[], columnName: string) {
+export function groupDataRows(
+  data: { [key: string]: string }[],
+  columnName: string,
+) {
   const newData = data.map((row) => ({ ...row }));
   newData.forEach((row) => {
     row["Group ID"] = row[columnName] || "1";

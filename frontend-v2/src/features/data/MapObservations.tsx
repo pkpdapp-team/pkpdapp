@@ -37,6 +37,7 @@ import {
   getTableHeight,
 } from "../../shared/calculateTableHeights";
 import { TableHeader } from "../../components/TableHeader";
+import { groupDataRows } from "./Stratification";
 
 interface IMapObservations {
   state: StepperState;
@@ -116,6 +117,15 @@ const MapObservations: FC<IMapObservations> = ({
     observationVariables,
   } = useObservationRows(state, selectedGroup);
   const uniqueObservationIds = [...new Set(observationIds)];
+
+  const [firstRow] = state.data;
+  if (!firstRow["Group ID"]) {
+    const newData = groupDataRows(state.data, state.groupColumn);
+    state.setData(newData);
+    state.setNormalisedFields(
+      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
+    );
+  }
 
   if (!variables || !units) {
     return <Typography>Loading...</Typography>;
