@@ -3,8 +3,16 @@ import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { store } from "../src/app/store";
 
-// Initialize MSW
-initialize();
+/*
+ * Initializes MSW
+ * See https://github.com/mswjs/msw-storybook-addon#configuring-msw
+ * to learn how to customize it
+ */
+initialize({
+  serviceWorker: {
+    url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+  },
+});
 
 const preview: Preview = {
   parameters: {
