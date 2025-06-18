@@ -12,8 +12,6 @@ import {
 } from "./protocols.mock";
 import { DoseRead, ProtocolRead, SubjectGroupRead } from "../app/backendApi";
 import { useState } from "react";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 let protocolMocks: ProtocolRead[] = [...projectProtocols];
 let groupMocks: SubjectGroupRead[] = [...groups];
@@ -153,7 +151,6 @@ const meta: Meta<typeof Protocols> = {
   beforeEach: () => {
     protocolMocks = [...projectProtocols];
     groupMocks = [...groups];
-    store.dispatch(api.util.resetApiState()); // Reset API state
   },
 };
 

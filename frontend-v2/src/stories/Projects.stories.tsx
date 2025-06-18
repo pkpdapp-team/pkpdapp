@@ -8,8 +8,6 @@ import { project, projectHandlers } from "./project.mock";
 import { ProjectDescriptionProvider } from "../shared/contexts/ProjectDescriptionContext";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 import { useDispatch } from "react-redux";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 let mockProjects = [project];
 
@@ -130,7 +128,6 @@ const meta: Meta<typeof Projects> = {
   ],
   beforeEach: () => {
     mockProjects = [project];
-    store.dispatch(api.util.resetApiState()); // Reset API state
   },
 };
 type Story = StoryObj<typeof Projects>;

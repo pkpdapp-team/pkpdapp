@@ -12,8 +12,6 @@ import { simulationData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
 import { Box } from "@mui/material";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 const simulationSpy = fn();
 
@@ -72,9 +70,6 @@ const meta: Meta<typeof Simulations> = {
       );
     },
   ],
-  beforeEach: async () => {
-    store.dispatch(api.util.resetApiState());
-  },
 };
 
 export default meta;

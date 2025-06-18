@@ -14,8 +14,6 @@ import {
   protocols,
   subjects,
 } from "./dataset.mock";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 const datasetHandlers = [
   http.get("/api/dataset/:id", async () => {
@@ -65,9 +63,6 @@ const meta: Meta<typeof Data> = {
       return <Story />;
     },
   ],
-  beforeEach: async () => {
-    store.dispatch(api.util.resetApiState());
-  },
 };
 
 export default meta;

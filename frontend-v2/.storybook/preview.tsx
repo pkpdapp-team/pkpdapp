@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { store } from "../src/app/store";
+import { api } from "../src/app/api";
 
 /*
  * Initializes MSW
@@ -9,6 +10,7 @@ import { store } from "../src/app/store";
  * to learn how to customize it
  */
 initialize({
+  quiet: true, // Set to true to avoid logging in the console
   serviceWorker: {
     url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
   },
@@ -55,6 +57,9 @@ const preview: Preview = {
   ],
   tags: ["autodocs"],
   loaders: [mswLoader],
+  beforeEach: async () => {
+    store.dispatch(api.util.resetApiState());
+  },
 };
 
 export default preview;
