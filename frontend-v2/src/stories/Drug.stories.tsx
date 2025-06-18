@@ -6,6 +6,8 @@ import { setProject as setReduxProject } from "../features/main/mainSlice";
 import Drug from "../features/drug/Drug";
 import { project, projectHandlers } from "./project.mock";
 import { http, delay, HttpResponse } from "msw";
+import { store } from "../app/store";
+import { api } from "../app/api";
 
 const compoundSpy = fn();
 
@@ -45,6 +47,9 @@ const meta: Meta<typeof Drug> = {
       return <Story />;
     },
   ],
+  beforeEach: async () => {
+    store.dispatch(api.util.resetApiState());
+  },
 };
 export default meta;
 
