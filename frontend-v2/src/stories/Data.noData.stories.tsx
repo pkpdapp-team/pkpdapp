@@ -8,8 +8,6 @@ import { project, projectHandlers } from "./project.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 
 import { HttpResponse, http } from "msw";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 const datasetHandlers = [
   http.get("/api/dataset/:id", () => {
@@ -53,10 +51,6 @@ const meta: Meta<typeof Data> = {
       return <Story />;
     },
   ],
-  beforeEach: async () => {
-    // Reset the API state before each story
-    store.dispatch(api.util.resetApiState());
-  },
 };
 
 export default meta;

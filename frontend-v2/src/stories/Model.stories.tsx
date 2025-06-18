@@ -19,8 +19,6 @@ import {
 } from "./project.mock";
 import { pd_model, pkModels, pdModels } from "./model.mock";
 import { useEffect } from "react";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 const meta: Meta<typeof TabbedModelForm> = {
   title: "Edit Model",
@@ -98,9 +96,6 @@ const meta: Meta<typeof TabbedModelForm> = {
       );
     },
   ],
-  beforeEach: async () => {
-    store.dispatch(api.util.resetApiState());
-  },
 };
 
 export default meta;
