@@ -8,8 +8,6 @@ import { project, projectHandlers } from "./project.mock";
 import { simulationData } from "./simulations.mock";
 import { http, delay, HttpResponse } from "msw";
 import { SimulationContext } from "../contexts/SimulationContext";
-import { store } from "../app/store";
-import { api } from "../app/api";
 
 const resultsTables = [
   {
@@ -108,7 +106,6 @@ const meta: Meta<typeof Results> = {
   ],
   beforeEach: () => {
     mockResultsTables = [...resultsTables]; // Reset mock data before each story
-    store.dispatch(api.util.resetApiState()); // Reset API state
   },
 };
 export default meta;

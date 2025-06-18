@@ -52,7 +52,10 @@ function useApiQueries() {
     { skip: !model?.id },
   );
 
+  const loading = [projectProtocols, units, variables];
+
   return {
+    isLoading: loading.some((x) => !x),
     amountUnit,
     projectProtocols,
     units,
@@ -74,7 +77,12 @@ const MapDosing: FC<IMapDosing> = ({
   );
 
   // Fetch API data.
-  const { amountUnit, projectProtocols, units, variables } = useApiQueries();
+  const { isLoading, amountUnit, projectProtocols, units, variables } =
+    useApiQueries();
+
+  if (isLoading) {
+    return null;
+  }
 
   const hasInvalidUnits =
     !!amountUnitField &&

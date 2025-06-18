@@ -135,7 +135,7 @@ export const ShowMMTModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
 
-    const showMMTButton = canvas.getByRole("button", {
+    const showMMTButton = await canvas.findByRole("button", {
       name: /Show MMT Code/i,
     });
     expect(showMMTButton).toBeInTheDocument();

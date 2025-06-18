@@ -146,11 +146,10 @@ export const AddNewPlot: Story = {
 
 export const EditPlot: Story = {
   play: async ({ canvasElement, userEvent }) => {
-    let plot = canvasElement.querySelector("svg.main-svg");
-    await waitFor(() => {
-      plot = canvasElement.querySelector("svg.main-svg");
-      expect(plot).toBeInTheDocument();
-    });
+    // Wait for Plotly to load the plots.
+    await delay(2000);
+    const plot = canvasElement.querySelector("svg.main-svg");
+    expect(plot).toBeInTheDocument();
     const dragLayer = plot?.querySelector("rect.drag");
     await userEvent.hover(dragLayer!);
     const editButton = canvasElement.querySelector(
