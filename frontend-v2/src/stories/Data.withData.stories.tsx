@@ -123,12 +123,16 @@ export const Default: Story = {
 export const EditDataset: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-
     const editDatasetButton = await canvas.findByRole("button", {
       name: /Edit Dataset/i,
     });
-    expect(editDatasetButton).toBeInTheDocument();
-    await waitFor(() => expect(editDatasetButton).toBeEnabled());
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", {
+          name: /Edit Dataset/i,
+        }),
+      ).toBeEnabled(),
+    );
     await userEvent.click(editDatasetButton);
 
     const notificationsButton = await canvas.findByRole("button", {
