@@ -130,6 +130,9 @@ export const EditDataset: Story = {
     );
     await userEvent.click(editDatasetButton);
 
+    await canvas.findByRole("button", {
+      name: /Upload data/i,
+    });
     const notificationsButton = await canvas.findByRole("button", {
       name: "Notifications 1",
     });

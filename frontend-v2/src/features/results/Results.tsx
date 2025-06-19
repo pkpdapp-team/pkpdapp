@@ -8,6 +8,15 @@ import { ResultsTableRead } from "../../app/backendApi";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 
+/**
+ * Display results for the combined model. Results can be displayed by:
+ * - secondary PK parameter.
+ * - model variable.
+ * - time interval.
+ * - subject group.
+ *
+ * Create multiple results tables and save them to the current project.
+ */
 const Results: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
