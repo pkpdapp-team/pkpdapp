@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, fn, waitFor } from "storybook/test";
+import { expect, screen, within, fn } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -323,18 +323,30 @@ export const SecondaryParameters: Story = {
     await delay(1000);
     await userEvent.click(secondaryParametersTab);
 
-    const addButton = canvas.getByRole("button", { name: /Add/i });
-    expect(addButton).toBeInTheDocument();
-    await userEvent.click(addButton);
-
     const timeIntervalsTable = canvas.getByRole("table", {
       name: /Define time intervals/i,
     });
     expect(timeIntervalsTable).toBeInTheDocument();
+    const rows = timeIntervalsTable.querySelectorAll("tr");
+    expect(rows).toHaveLength(1); // Header row
 
-    await waitFor(() => {
-      const rows = within(timeIntervalsTable).getAllByRole("row");
-      expect(rows).toHaveLength(2);
-    }); // Header row + 1 data row
+    const addButton = canvas.getByRole("button", { name: /Add/i });
+    expect(addButton).toBeInTheDocument();
+    await userEvent.click(addButton);
+
+    const startTimeInput = await within(timeIntervalsTable).findByRole(
+      "spinbutton",
+      {
+        name: /Start time/i,
+      },
+    );
+    expect(startTimeInput).toBeInTheDocument();
+    const endTimeInput = await within(timeIntervalsTable).findByRole(
+      "spinbutton",
+      {
+        name: /End time/i,
+      },
+    );
+    expect(endTimeInput).toBeInTheDocument();
   },
 };
