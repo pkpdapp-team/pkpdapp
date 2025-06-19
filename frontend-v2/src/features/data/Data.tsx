@@ -53,6 +53,14 @@ function displayUnitSymbol(symbol: string | undefined) {
   return symbol === "" ? "dimensionless" : symbol;
 }
 
+/**
+ * Create a dataset from a CSV file, or edit an existing dataset.
+ * - Upload a CSV and map columns to dataset fields.
+ * - Choose a categorical covariate variable to stratify the dataset.
+ * - Map dosing to odsing compartments in the model.
+ * - Map observations to model variables.
+ * - Preview the editted dataset and save.
+ */
 const Data: FC = () => {
   const [tab, setTab] = useState(0);
   const projectId = useSelector(
