@@ -1,23 +1,14 @@
 /* eslint-disable no-loss-of-precision */
 import { http, HttpResponse, delay } from "msw";
-import { useState } from "react";
 import {
   ProjectRead,
   SimulationRead,
-  DerivedVariableRead,
   VariableRead,
   ProtocolRead,
   CompoundRead,
   UnitRead,
   CombinedModelRead,
-  TimeIntervalRead,
-  useCombinedModelUpdateMutation,
-  useProjectUpdateMutation,
-  CombinedModel,
-  useSimulationUpdateMutation,
-  Simulation,
 } from "../app/backendApi";
-import { CombinedModelUpdate, ProjectUpdate } from "../features/model/Model";
 
 export const model = {
   id: 57,
@@ -6109,11 +6100,6 @@ export const units = [
   },
 ] as unknown[] as UnitRead[];
 
-// Use mutable copies of snapshots to allow for API updates.
-let mockModel = { ...model };
-let mockProject = { ...project };
-let mockSimulation = { ...simulation };
-
 export const projectHandlers = [
   http.get("/api/combined_model", async ({ request }) => {
     await delay();
@@ -6121,7 +6107,7 @@ export const projectHandlers = [
 
     const projectId = url.searchParams.get("project_id");
     if (projectId) {
-      return HttpResponse.json([mockModel], {
+      return HttpResponse.json([model], {
         status: 200,
       });
     }
@@ -6145,7 +6131,7 @@ export const projectHandlers = [
 
     const projectId = url.searchParams.get("project_id");
     if (projectId) {
-      return HttpResponse.json([mockSimulation], {
+      return HttpResponse.json([simulation], {
         status: 200,
       });
     }
@@ -6179,7 +6165,7 @@ export const projectHandlers = [
     //@ts-expect-error params.id is a string
     const projectId = parseInt(params.id, 10);
     if (projectId === project.id) {
-      return HttpResponse.json(mockProject, {
+      return HttpResponse.json(project, {
         status: 200,
       });
     }
@@ -6209,41 +6195,6 @@ export const projectHandlers = [
     }
     return HttpResponse.json(variable, { status: 200 });
   }),
-  http.put("/api/combined_model/:id", async ({ params, request }) => {
-    await delay();
-    //@ts-expect-error params.id is a string
-    const modelId = parseInt(params.id, 10);
-    const modelData = await request.json();
-    //@ts-expect-error modelData is DefaultBodyType
-    const timeIntervals = modelData?.time_intervals.map(
-      (interval: TimeIntervalRead, index: number) => {
-        return {
-          ...interval,
-          pkpd_model: modelId,
-          id: interval.id || index + 1, // Ensure each interval has a unique ID
-        };
-      },
-    );
-    //@ts-expect-error modelData is DefaultBodyType
-    const derivedVariables = modelData?.derived_variables.map(
-      (variable: DerivedVariableRead, index: number) => {
-        return {
-          ...variable,
-          id: variable.id || index + 1, // Ensure each derived variable has a unique ID
-        };
-      },
-    );
-    mockModel = {
-      //@ts-expect-error modelData is DefaultBodyType
-      ...modelData,
-      id: modelId,
-      time_intervals: timeIntervals,
-      derived_variables: derivedVariables,
-    };
-    return HttpResponse.json(mockModel, {
-      status: 200,
-    });
-  }),
   http.put("/api/project/:id", async ({ params, request }) => {
     await delay();
     //@ts-expect-error params.id is a string
@@ -6251,7 +6202,7 @@ export const projectHandlers = [
     const projectData = await request.json();
     //@ts-expect-error projectData is DefaultBodyType
     mockProject = { ...projectData, id: projectId };
-    return HttpResponse.json(mockProject, {
+    return HttpResponse.json(project, {
       status: 200,
     });
   }),
@@ -6262,114 +6213,8 @@ export const projectHandlers = [
     const simulationData = await request.json();
     //@ts-expect-error projectData is DefaultBodyType
     mockSimulation = { ...simulationData, id: simulationId };
-    return HttpResponse.json(mockSimulation, {
+    return HttpResponse.json(simulation, {
       status: 200,
     });
   }),
-  http.put(
-    "/api/combined_model/:id/set_params_to_defaults",
-    async ({ params, request }) => {
-      await delay();
-      //@ts-expect-error params.id is a string
-      const modelId = parseInt(params.id, 10);
-      const modelData = await request.json();
-      //@ts-expect-error modelData is DefaultBodyType
-      mockModel = { ...modelData, id: modelId };
-      return HttpResponse.json(mockModel, {
-        status: 200,
-      });
-    },
-  ),
 ];
-
-interface UseMockModelArgs {
-  model: CombinedModelRead;
-  updateModel: ({
-    id,
-    combinedModel,
-  }: {
-    id: number;
-    combinedModel: CombinedModel;
-  }) => void;
-}
-
-export function useMockModel(
-  args: UseMockModelArgs,
-): [CombinedModelRead, CombinedModelUpdate] {
-  const [model, setModel] = useState<CombinedModelRead>(args.model);
-  const [updateModel] = useCombinedModelUpdateMutation();
-
-  const updateMockModel: CombinedModelUpdate = async ({
-    id,
-    combinedModel,
-  }) => {
-    args.updateModel({ id, combinedModel });
-    await updateModel({ id, combinedModel });
-    mockModel = { ...mockModel, ...combinedModel } as CombinedModelRead;
-    setModel(mockModel);
-    return { data: mockModel };
-  };
-
-  return [model, updateMockModel];
-}
-
-interface UseMockProjectArgs {
-  project: ProjectRead;
-  updateProject: ({
-    id,
-    project,
-  }: {
-    id: number;
-    project: ProjectRead;
-  }) => void;
-}
-
-export function useMockProject(
-  args: UseMockProjectArgs,
-): [ProjectRead, ProjectUpdate] {
-  const [project, setProject] = useState<ProjectRead>(args.project);
-  const [updateProject] = useProjectUpdateMutation();
-
-  const updateMockProject: ProjectUpdate = async ({ id, project }) => {
-    args.updateProject({ id, project });
-    await updateProject({ id, project });
-    mockProject = { ...mockProject, ...project } as ProjectRead;
-    setProject(mockProject);
-    return { data: mockProject };
-  };
-
-  return [project, updateMockProject];
-}
-
-interface UseMockSimulationArgs {
-  simulation: SimulationRead;
-  updateSimulation: ({
-    id,
-    simulation,
-  }: {
-    id: number;
-    simulation: Simulation;
-  }) => void;
-}
-
-export type SimulationUpdate = (arg: {
-  id: number;
-  simulation: Simulation;
-}) => Promise<{ data?: SimulationRead }>;
-
-export function useMockSimulation(
-  args: UseMockSimulationArgs,
-): [SimulationRead, SimulationUpdate] {
-  const [simulation, setSimulation] = useState<SimulationRead>(args.simulation);
-  const [updateSimulation] = useSimulationUpdateMutation();
-
-  const updateMockSimulation: SimulationUpdate = async ({ id, simulation }) => {
-    args.updateSimulation({ id, simulation });
-    await updateSimulation({ id, simulation });
-    mockSimulation = { ...mockSimulation, ...simulation } as SimulationRead;
-    setSimulation(mockSimulation);
-    return { data: mockSimulation };
-  };
-
-  return [simulation, updateMockSimulation];
-}
