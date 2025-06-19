@@ -4,108 +4,170 @@ import { expect, screen, within, fn, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
-import { TabbedModelForm } from "../features/model/Model";
-import {
-  model,
-  project,
-  simulation,
-  protocols,
-  compound,
-  variables,
-  units,
-  projectHandlers,
-  useMockModel,
-  useMockProject,
-} from "./project.mock";
-import { pd_model, pkModels, pdModels } from "./model.mock";
-import { useEffect } from "react";
+import Model from "../features/model/Model";
+import { model, project, projectHandlers } from "./project.mock";
+import { pkModels, pdModels } from "./model.mock";
+import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
-const meta: Meta<typeof TabbedModelForm> = {
+let mockModel = { ...model };
+let mockProject = { ...project };
+const modelSpy = fn();
+const projectSpy = fn();
+
+const meta: Meta<typeof Model> = {
   title: "Edit Model",
-  component: TabbedModelForm,
+  component: Model,
   args: {
-    model,
-    pd_model,
-    project,
-    simulation,
-    variables,
-    protocols,
-    compound,
-    units,
-    updateModel: fn(),
-    updateProject: fn(),
+    updateModel: modelSpy,
+    updateProject: projectSpy,
   },
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [
-        ...projectHandlers,
-        http.get("/api/pharmacokinetic", async () => {
-          await delay();
-          return HttpResponse.json(pkModels, {
-            status: 200,
-          });
-        }),
-        http.get("/api/pharmacodynamic", async () => {
-          await delay();
-          return HttpResponse.json(pdModels, {
-            status: 200,
-          });
-        }),
-        http.put("/api/simulation/:id", async ({ params, request }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const simulationId = parseInt(params.id, 10);
-          const simulationData = await request.json();
-          return HttpResponse.json(
-            //@ts-expect-error simulationData is DefaultBodyType
-            { ...simulationData, id: simulationId },
-            {
+      handlers: {
+        project: [
+          http.get("/api/combined_model", async ({ request }) => {
+            await delay();
+            const url = new URL(request.url);
+
+            const projectId = url.searchParams.get("project_id");
+            if (projectId) {
+              return HttpResponse.json([mockModel], {
+                status: 200,
+              });
+            }
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/project/:id", async ({ params }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const projectId = parseInt(params.id, 10);
+            if (projectId === project.id) {
+              return HttpResponse.json(mockProject, {
+                status: 200,
+              });
+            }
+            return HttpResponse.json(
+              { error: "Project not found" },
+              { status: 404 },
+            );
+          }),
+          http.put("/api/combined_model/:id", async ({ params, request }) => {
+            //@ts-expect-error params.id is a string
+            const modelId = parseInt(params.id, 10);
+            const modelData = await request.json();
+            modelSpy(modelId, modelData);
+            await delay();
+            //@ts-expect-error modelData is DefaultBodyType
+            const timeIntervals = modelData?.time_intervals.map(
+              (interval: TimeIntervalRead, index: number) => {
+                return {
+                  ...interval,
+                  pkpd_model: modelId,
+                  id: interval.id || index + 1, // Ensure each interval has a unique ID
+                };
+              },
+            );
+            //@ts-expect-error modelData is DefaultBodyType
+            const derivedVariables = modelData?.derived_variables.map(
+              (variable: DerivedVariableRead, index: number) => {
+                return {
+                  ...variable,
+                  id: variable.id || index + 1, // Ensure each derived variable has a unique ID
+                };
+              },
+            );
+            mockModel = {
+              //@ts-expect-error modelData is DefaultBodyType
+              ...modelData,
+              id: modelId,
+              time_intervals: timeIntervals,
+              derived_variables: derivedVariables,
+            };
+            return HttpResponse.json(mockModel, {
               status: 200,
+            });
+          }),
+          http.put("/api/project/:id", async ({ params, request }) => {
+            //@ts-expect-error params.id is a string
+            const projectId = parseInt(params.id, 10);
+            const projectData = await request.json();
+            projectSpy(projectId, projectData);
+            await delay();
+            //@ts-expect-error projectData is DefaultBodyType
+            mockProject = { ...projectData, id: projectId };
+            return HttpResponse.json(mockProject, {
+              status: 200,
+            });
+          }),
+          http.put(
+            "/api/combined_model/:id/set_params_to_defaults",
+            async ({ params, request }) => {
+              await delay();
+              //@ts-expect-error params.id is a string
+              const modelId = parseInt(params.id, 10);
+              const modelData = await request.json();
+              //@ts-expect-error modelData is DefaultBodyType
+              mockModel = { ...modelData, id: modelId };
+              return HttpResponse.json(mockModel, {
+                status: 200,
+              });
             },
-          );
-        }),
-      ],
+          ),
+          ...projectHandlers,
+        ],
+        model: [
+          http.get("/api/pharmacokinetic", async () => {
+            await delay();
+            return HttpResponse.json(pkModels, {
+              status: 200,
+            });
+          }),
+          http.get("/api/pharmacodynamic", async () => {
+            await delay();
+            return HttpResponse.json(pdModels, {
+              status: 200,
+            });
+          }),
+          http.put("/api/simulation/:id", async ({ params, request }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const simulationId = parseInt(params.id, 10);
+            const simulationData = await request.json();
+            return HttpResponse.json(
+              //@ts-expect-error simulationData is DefaultBodyType
+              { ...simulationData, id: simulationId },
+              {
+                status: 200,
+              },
+            );
+          }),
+        ],
+      },
     },
   },
   decorators: [
-    (Story, { args }) => {
-      const [model, updateMockModel] = useMockModel({
-        model: args.model,
-        updateModel: args.updateModel,
-      });
-      const [project, updateMockProject] = useMockProject({
-        project: args.project,
-        updateProject: args.updateProject,
-      });
+    (Story) => {
       const dispatch = useDispatch();
-      const projectId = args.project.id;
+      dispatch(setReduxProject(project.id));
 
-      useEffect(() => {
-        dispatch(setReduxProject(projectId));
-      }, [dispatch, projectId]);
-
-      return (
-        <TabbedModelForm
-          {...args}
-          model={model}
-          project={project}
-          updateModel={updateMockModel}
-          updateProject={updateMockProject}
-        />
-      );
+      return <Story />;
     },
   ],
+  beforeEach: () => {
+    mockModel = { ...model };
+    mockProject = { ...project };
+  },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof TabbedModelForm>;
+type Story = StoryObj<typeof Model>;
 
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const modelTab = canvas.getByRole("tab", { name: /PK\/PD Model/i });
+    const modelTab = await canvas.findByRole("tab", { name: /PK\/PD Model/i });
     const mapVariablesTab = canvas.getByRole("tab", { name: /Map Variables/i });
     const parametersTab = canvas.getByRole("tab", { name: /^Parameters/i });
     const secondaryParametersTab = canvas.getByRole("tab", {
@@ -134,6 +196,7 @@ export const Default: Story = {
 export const ShowMMTModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
 
     const showMMTButton = await canvas.findByRole("button", {
       name: /Show MMT Code/i,
@@ -154,6 +217,9 @@ export const ShowMMTModel: Story = {
 export const Species: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("tab", {
+      name: /PK\/PD Model/i,
+    });
     const speciesList = await canvas.findByLabelText("Species");
     expect(speciesList).toHaveTextContent("Rat");
 
@@ -161,6 +227,12 @@ export const Species: Story = {
     const listbox = await screen.findByRole("listbox");
     await userEvent.selectOptions(listbox, "Mouse");
     expect(speciesList).toHaveTextContent("Mouse");
+
+    await delay(1000); // Wait for the model to update
+    const errorTab = await canvas.findByRole("tab", {
+      name: /PK\/PD Model Please select a PK model to simulate/i,
+    });
+    expect(errorTab).toBeInTheDocument();
 
     const pkModelList = await canvas.findByRole("combobox", {
       name: /PK Model/i,
@@ -172,10 +244,6 @@ export const Species: Story = {
     expect(pdModelList).toContainHTML(
       "<span class='notranslate' aria-hidden='true'>​</span>",
     );
-    const errorIcon = await canvas.findByRole("img", {
-      name: "Please select a PK model to simulate.",
-    });
-    expect(errorIcon).toBeInTheDocument();
     const checkboxes = canvas.queryAllByRole("checkbox");
     expect(checkboxes).toHaveLength(0);
   },
@@ -184,6 +252,7 @@ export const Species: Story = {
 export const PKModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("one_compartment_preclinical");
 
@@ -197,6 +266,7 @@ export const PKModel: Story = {
 export const PDModel: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("direct_effects_emax");
 
@@ -215,7 +285,7 @@ export const PDModel: Story = {
 export const MapVariables: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const mapVariablesTab = canvas.getByRole("tab", {
+    const mapVariablesTab = await canvas.findByRole("tab", {
       name: /Map Variables/i,
     });
     await userEvent.click(mapVariablesTab);
@@ -242,7 +312,7 @@ export const MapVariables: Story = {
 export const SecondaryParameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const mapVariablesTab = canvas.getByRole("tab", {
+    const mapVariablesTab = await canvas.findByRole("tab", {
       name: /Map Variables/i,
     });
     await userEvent.click(mapVariablesTab);
