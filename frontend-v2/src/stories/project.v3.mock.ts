@@ -1,6 +1,5 @@
 /* eslint-disable no-loss-of-precision */
 import { http, HttpResponse, delay } from "msw";
-import { useState } from "react";
 import {
   ProjectRead,
   SimulationRead,
@@ -11,11 +10,7 @@ import {
   UnitRead,
   CombinedModelRead,
   TimeIntervalRead,
-  useCombinedModelUpdateMutation,
-  useProjectUpdateMutation,
-  CombinedModel,
 } from "../app/backendApi";
-import { CombinedModelUpdate, ProjectUpdate } from "../features/model/Model";
 
 export const model = {
   id: 65,
@@ -108,7 +103,7 @@ export const project: ProjectRead = {
   species: "R",
   species_weight: 1.0,
   version: 3,
-  compound: 90,
+  compound: 65,
   species_weight_unit: 41,
   users: [1],
 };
@@ -615,7 +610,7 @@ export const protocols: ProtocolRead[] = [
   },
 ];
 export const compound: CompoundRead = {
-  id: 57,
+  id: 65,
   efficacy_experiments: [
     {
       id: 141,
@@ -5820,6 +5815,17 @@ export const projectHandlers = [
     }
     return HttpResponse.json({ error: "Project not found" }, { status: 404 });
   }),
+  http.get("/api/compound/:id", async ({ params }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const compoundId = parseInt(params.id, 10);
+    if (compoundId === compound.id) {
+      return HttpResponse.json(compound, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json({ error: "Compound not found" }, { status: 404 });
+  }),
   http.put("/api/combined_model/:id", async ({ params, request }) => {
     await delay();
     //@ts-expect-error params.id is a string
@@ -5866,77 +5872,4 @@ export const projectHandlers = [
       status: 200,
     });
   }),
-  http.put(
-    "/api/combined_model/:id/set_params_to_defaults",
-    async ({ params, request }) => {
-      await delay();
-      //@ts-expect-error params.id is a string
-      const modelId = parseInt(params.id, 10);
-      const modelData = await request.json();
-      //@ts-expect-error modelData is DefaultBodyType
-      mockModel = { ...modelData, id: modelId };
-      return HttpResponse.json(mockModel, {
-        status: 200,
-      });
-    },
-  ),
 ];
-
-interface UseMockModelArgs {
-  model: CombinedModelRead;
-  updateModel: ({
-    id,
-    combinedModel,
-  }: {
-    id: number;
-    combinedModel: CombinedModel;
-  }) => void;
-}
-
-export function useMockModel(
-  args: UseMockModelArgs,
-): [CombinedModelRead, CombinedModelUpdate] {
-  const [model, setModel] = useState<CombinedModelRead>(args.model);
-  const [updateModel] = useCombinedModelUpdateMutation();
-
-  const updateMockModel: CombinedModelUpdate = async ({
-    id,
-    combinedModel,
-  }) => {
-    args.updateModel({ id, combinedModel });
-    await updateModel({ id, combinedModel });
-    mockModel = { ...mockModel, ...combinedModel } as CombinedModelRead;
-    setModel(mockModel);
-    return { data: mockModel };
-  };
-
-  return [model, updateMockModel];
-}
-
-interface UseMockProjectArgs {
-  project: ProjectRead;
-  updateProject: ({
-    id,
-    project,
-  }: {
-    id: number;
-    project: ProjectRead;
-  }) => void;
-}
-
-export function useMockProject(
-  args: UseMockProjectArgs,
-): [ProjectRead, ProjectUpdate] {
-  const [project, setProject] = useState<ProjectRead>(args.project);
-  const [updateProject] = useProjectUpdateMutation();
-
-  const updateMockProject: ProjectUpdate = async ({ id, project }) => {
-    args.updateProject({ id, project });
-    await updateProject({ id, project });
-    mockProject = { ...mockProject, ...project } as ProjectRead;
-    setProject(mockProject);
-    return { data: mockProject };
-  };
-
-  return [project, updateMockProject];
-}
