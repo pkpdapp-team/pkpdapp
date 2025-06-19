@@ -1,13 +1,16 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, fn, within, waitFor } from "storybook/test";
+import { expect, within, waitFor, fn } from "storybook/test";
 
 import Protocols from "../features/trial/Protocols";
-import { projectProtocols, variables, units, groups } from "./protocols.mock";
+import { projectProtocols, groups } from "./protocols.mock";
 import { DoseRead, ProtocolRead, SubjectGroupRead } from "../app/backendApi";
 import { useDispatch } from "react-redux";
 import { setProject } from "../features/main/mainSlice";
 import { project, projectHandlers } from "./project.mock";
+
+const protocolSpy = fn();
+const doseSpy = fn();
 
 let protocolMocks: ProtocolRead[] = [...projectProtocols];
 let groupMocks: SubjectGroupRead[] = [...groups];
@@ -16,14 +19,8 @@ const meta: Meta<typeof Protocols> = {
   title: "Trial Design",
   component: Protocols,
   args: {
-    project,
-    projectProtocols,
-    variables,
-    units,
-    groups,
-    refetchGroups: fn(),
-    refetchProtocols: fn(),
-    isSharedWithMe: false,
+    updateProtocol: protocolSpy,
+    updateDose: doseSpy,
   },
   parameters: {
     layout: "fullscreen",
@@ -76,8 +73,9 @@ const meta: Meta<typeof Protocols> = {
             });
           }),
           http.put("/api/protocol/:id", async ({ request }) => {
-            await delay();
             const newProtocol = await request.json();
+            protocolSpy(newProtocol);
+            await delay();
             let newDoseId = 0;
             // @ts-expect-error newProtocol might be undefined
             newProtocol.doses.forEach((dose: DoseRead) => {
@@ -100,6 +98,29 @@ const meta: Meta<typeof Protocols> = {
               );
             });
             return HttpResponse.json(newProtocol, {
+              status: 200,
+            });
+          }),
+          http.put("/api/dose/:id", async ({ request, params }) => {
+            // @ts-expect-error params.id is a string
+            const doseId = parseInt(params.id, 10);
+            // @ts-expect-error request.json() is DefaultBodyType
+            const updatedDose: DoseRead = await request.json();
+            doseSpy(doseId, updatedDose);
+            await delay();
+            protocolMocks.forEach((protocol) => {
+              protocol.doses = protocol.doses.map((dose) =>
+                dose.id === doseId ? updatedDose : dose,
+              );
+            });
+            groupMocks.forEach((group) => {
+              group.protocols.forEach((protocol) => {
+                protocol.doses = protocol.doses.map((dose) =>
+                  dose.id === doseId ? updatedDose : dose,
+                );
+              });
+            });
+            return HttpResponse.json(updatedDose, {
               status: 200,
             });
           }),
