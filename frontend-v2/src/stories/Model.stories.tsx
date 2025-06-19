@@ -334,18 +334,22 @@ export const SecondaryParameters: Story = {
     await delay(1000);
     await userEvent.click(secondaryParametersTab);
 
-    const addButton = canvas.getByRole("button", { name: /Add/i });
-    expect(addButton).toBeInTheDocument();
-    await userEvent.click(addButton);
-
     const timeIntervalsTable = canvas.getByRole("table", {
       name: /Define time intervals/i,
     });
     expect(timeIntervalsTable).toBeInTheDocument();
+    const rows = timeIntervalsTable.querySelectorAll("tr");
+    expect(rows).toHaveLength(3); // Header row + 2 time intervals
 
-    await waitFor(() => {
-      const rows = within(timeIntervalsTable).getAllByRole("row");
-      expect(rows).toHaveLength(4);
-    }); // Header row + 3 time intervals
+    const addButton = canvas.getByRole("button", { name: /Add/i });
+    expect(addButton).toBeInTheDocument();
+    await userEvent.click(addButton);
+
+    const startTimeInput =
+      await within(timeIntervalsTable).findByDisplayValue("60");
+    expect(startTimeInput).toBeInTheDocument();
+    const endTimeInput =
+      await within(timeIntervalsTable).findByDisplayValue("80");
+    expect(endTimeInput).toBeInTheDocument();
   },
 };
