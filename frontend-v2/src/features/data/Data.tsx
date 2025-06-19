@@ -57,7 +57,7 @@ function displayUnitSymbol(symbol: string | undefined) {
  * Create a dataset from a CSV file, or edit an existing dataset.
  * - Upload a CSV and map columns to dataset fields.
  * - Choose a categorical covariate variable to stratify the dataset.
- * - Map dosing to odsing compartments in the model.
+ * - Map dosing to dosing compartments in the model.
  * - Map observations to model variables.
  * - Preview the editted dataset and save.
  */
