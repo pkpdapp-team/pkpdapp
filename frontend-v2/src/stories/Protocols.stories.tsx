@@ -178,6 +178,7 @@ export const Default: Story = {
 export const AddRow: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /Project/i });
     const addRowButton = await canvas.findByRole("button", {
       name: /Add New Row/i,
     });
