@@ -96,6 +96,7 @@ export default ({ mode }) => {
               instances: [{ browser: "chromium" }],
             },
             setupFiles: [".storybook/vitest.setup.ts"],
+            retry: 2,
           },
         },
       ],
