@@ -8,6 +8,7 @@ import Model from "../features/model/Model";
 import { model, project, projectHandlers } from "./project.mock";
 import { pkModels, pdModels } from "./model.mock";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
+import { tagsData } from "./model.v3.mock";
 
 let mockModel = { ...model };
 let mockProject = { ...project };
@@ -117,6 +118,12 @@ const meta: Meta<typeof Model> = {
           ...projectHandlers,
         ],
         model: [
+          http.get("/api/tag", async () => {
+            await delay();
+            return HttpResponse.json(tagsData, {
+              status: 200,
+            });
+          }),
           http.get("/api/pharmacokinetic", async () => {
             await delay();
             return HttpResponse.json(pkModels, {
