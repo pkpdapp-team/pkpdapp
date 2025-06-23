@@ -91,9 +91,11 @@ export const Parameters: Story = {
     const canvas = within(canvasElement);
     const parametersButton = await canvas.findByRole("button", {
       name: "Parameters 0",
+      expanded: false,
     });
     expect(parametersButton).toBeInTheDocument();
     await userEvent.click(parametersButton);
+    expect(parametersButton).toHaveAttribute("aria-expanded", "true");
 
     const addParameterButton = await canvas.findByRole("button", {
       name: /Add parameter/i,
