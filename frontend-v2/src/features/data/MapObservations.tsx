@@ -383,7 +383,7 @@ const MapObservations: FC<IMapObservations> = ({
           </Table>
         </TableContainer>
         <TableHeader label="Groups" />
-        <Tabs value={tab} onChange={handleTabChange}>
+        <Tabs value={tab} onChange={handleTabChange} selectionFollowsFocus>
           {groupIDs.map((groupID, index) => (
             <Tab
               key={groupID}

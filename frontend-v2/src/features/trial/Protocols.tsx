@@ -256,6 +256,7 @@ export const Protocols: FC<ProtocolsProps> = ({
           variant="scrollable"
           scrollButtons
           allowScrollButtonsMobile
+          selectionFollowsFocus
           sx={{ width: "fit-content" }}
           value={tab}
           onChange={handleTabChange}

@@ -226,7 +226,7 @@ const Stratification: FC<IStratification> = ({
           If you want to move individuals between groups or assign them to a new
           group, select them first and then follow the instructions."
         />
-        <Tabs value={tab} onChange={handleTabChange}>
+        <Tabs value={tab} onChange={handleTabChange} selectionFollowsFocus>
           {groups.map((group, index) => (
             <Tab key={group.name} label={group.name} {...a11yProps(index)} />
           ))}

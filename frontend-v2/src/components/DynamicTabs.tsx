@@ -125,7 +125,7 @@ export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({
           <Tabs
             value={currentTab}
             onChange={handleChange}
-            aria-label="basic tabs example"
+            selectionFollowsFocus
           >
             {tabNames.map((name, index) => (
               <Tab
