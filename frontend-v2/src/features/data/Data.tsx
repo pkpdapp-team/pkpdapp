@@ -268,7 +268,7 @@ const Data: FC = () => {
           </Button>
         </Grid>
       </Grid>
-      <Tabs value={tab} onChange={handleTabChange}>
+      <Tabs value={tab} onChange={handleTabChange} selectionFollowsFocus>
         {groups?.map((group, index) => (
           <Tab key={group.id} label={group.name} {...a11yProps(index)} />
         ))}

@@ -6200,21 +6200,25 @@ export const projectHandlers = [
     //@ts-expect-error params.id is a string
     const projectId = parseInt(params.id, 10);
     const projectData = await request.json();
-    //@ts-expect-error projectData is DefaultBodyType
-    mockProject = { ...projectData, id: projectId };
-    return HttpResponse.json(project, {
-      status: 200,
-    });
+    return HttpResponse.json(
+      // @ts-expect-error projectData is DefaultBodyType
+      { id: projectId, ...projectData },
+      {
+        status: 200,
+      },
+    );
   }),
   http.put("/api/simulation/:id", async ({ params, request }) => {
     await delay();
     //@ts-expect-error params.id is a string
     const simulationId = parseInt(params.id, 10);
     const simulationData = await request.json();
-    //@ts-expect-error projectData is DefaultBodyType
-    mockSimulation = { ...simulationData, id: simulationId };
-    return HttpResponse.json(simulation, {
-      status: 200,
-    });
+    return HttpResponse.json(
+      // @ts-expect-error simulationData is DefaultBodyType
+      { id: simulationId, ...simulationData },
+      {
+        status: 200,
+      },
+    );
   }),
 ];

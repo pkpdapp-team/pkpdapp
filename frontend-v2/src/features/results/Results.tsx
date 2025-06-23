@@ -96,6 +96,7 @@ const Results: FC = () => {
           variant="scrollable"
           scrollButtons
           allowScrollButtonsMobile
+          selectionFollowsFocus
           sx={{ width: "fit-content" }}
         >
           {results?.map((table, index) => {
