@@ -123,6 +123,32 @@ const SidePanelSteps = [
   },
 ];
 
+const AccordionButton = ({
+  children = null,
+  expanded = false,
+  onClick,
+  title,
+}: {
+  children?: React.ReactNode;
+  expanded?: boolean;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+  title: string;
+}) => {
+  return (
+    <Button
+      sx={ButtonSx}
+      disableTouchRipple
+      disableElevation
+      onClick={onClick}
+      startIcon={expanded ? <ExpandLess /> : <ExpandMore />}
+      aria-expanded={expanded}
+    >
+      <Typography component="span">{title}</Typography>
+      {children}
+    </Button>
+  );
+};
+
 export const SimulationsSidePanel = ({
   portalId,
   addPlotOptions,
@@ -226,19 +252,11 @@ export const SimulationsSidePanel = ({
               >
                 <Box>
                   <Box>
-                    <Button
-                      sx={ButtonSx}
-                      disableTouchRipple
-                      disableRipple
-                      disableFocusRipple
-                      disableElevation
+                    <AccordionButton
+                      expanded={collapseLayout}
                       onClick={() => setCollapseLayout(!collapseLayout)}
-                      startIcon={
-                        collapseLayout ? <ExpandLess /> : <ExpandMore />
-                      }
-                    >
-                      <Typography>Figures Layout</Typography>
-                    </Button>
+                      title="Figures Layout"
+                    />
                     <Collapse
                       sx={{
                         transition: "all .35s ease-in",
@@ -268,19 +286,11 @@ export const SimulationsSidePanel = ({
                     </Collapse>
                   </Box>
                   <Box>
-                    <Button
-                      sx={ButtonSx}
-                      disableTouchRipple
-                      disableRipple
-                      disableFocusRipple
-                      disableElevation
+                    <AccordionButton
+                      expanded={collapseOptions}
                       onClick={() => setCollapseOptions(!collapseOptions)}
-                      startIcon={
-                        collapseOptions ? <ExpandLess /> : <ExpandMore />
-                      }
-                    >
-                      <Typography>Simulation Options</Typography>
-                    </Button>
+                      title="Simulation Options"
+                    />
                     <Collapse
                       sx={{
                         transition: "all .35s ease-in",
@@ -327,24 +337,17 @@ export const SimulationsSidePanel = ({
                   <Box>
                     {!!groups?.length && (
                       <>
-                        <Button
-                          sx={ButtonSx}
-                          disableTouchRipple
-                          disableRipple
-                          disableFocusRipple
-                          disableElevation
+                        <AccordionButton
+                          expanded={collapseGroups}
                           onClick={() => setCollapseGroups(!collapseGroups)}
-                          startIcon={
-                            collapseGroups ? <ExpandLess /> : <ExpandMore />
-                          }
+                          title="Groups"
                         >
-                          <Typography>Groups</Typography>{" "}
                           <Badge
                             sx={{ marginLeft: "auto", marginRight: "1rem" }}
                             badgeContent={visibleGroups?.length}
                             color="primary"
                           />
-                        </Button>
+                        </AccordionButton>
                         <Collapse
                           sx={{
                             transition: "all .35s ease-in",
@@ -385,19 +388,11 @@ export const SimulationsSidePanel = ({
                     )}
                   </Box>
                   <Box sx={{ width: "11rem" }}>
-                    <Button
-                      sx={ButtonSx}
-                      disableTouchRipple
-                      disableRipple
-                      disableFocusRipple
-                      disableElevation
+                    <AccordionButton
+                      expanded={collapseReference}
                       onClick={() => setCollapseReference(!collapseReference)}
-                      startIcon={
-                        collapseReference ? <ExpandLess /> : <ExpandMore />
-                      }
-                    >
-                      <Typography>Reference</Typography>
-                    </Button>
+                      title="Reference"
+                    />
                     <Collapse
                       sx={{
                         transition: "all .35s ease-in",
@@ -420,19 +415,11 @@ export const SimulationsSidePanel = ({
                     </Collapse>
                   </Box>
                   <Box sx={{ width: "11rem" }}>
-                    <Button
-                      sx={ButtonSx}
-                      disableTouchRipple
-                      disableRipple
-                      disableFocusRipple
-                      disableElevation
+                    <AccordionButton
+                      expanded={collapseLegend}
                       onClick={() => setCollapseLegend(!collapseLegend)}
-                      startIcon={
-                        collapseReference ? <ExpandLess /> : <ExpandMore />
-                      }
-                    >
-                      <Typography>Legend</Typography>
-                    </Button>
+                      title="Legend"
+                    />
                     <Collapse
                       sx={{
                         transition: "all .35s ease-in",
@@ -457,24 +444,17 @@ export const SimulationsSidePanel = ({
                     </Collapse>
                   </Box>
                   <Box sx={{ width: "11rem" }}>
-                    <Button
-                      sx={ButtonSx}
-                      disableTouchRipple
-                      disableRipple
-                      disableFocusRipple
-                      disableElevation
+                    <AccordionButton
+                      expanded={collapseParameters}
                       onClick={() => setCollapseParameters(!collapseParameters)}
-                      startIcon={
-                        collapseParameters ? <ExpandLess /> : <ExpandMore />
-                      }
+                      title="Parameters"
                     >
-                      <Typography>Parameters</Typography>
                       <Badge
                         sx={{ marginLeft: "auto", marginRight: "1rem" }}
                         badgeContent={orderedSliders?.length}
                         color="primary"
                       />
-                    </Button>
+                    </AccordionButton>
                     <Collapse
                       sx={{
                         transition: "all .35s ease-in",
