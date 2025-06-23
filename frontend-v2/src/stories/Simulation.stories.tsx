@@ -12,8 +12,12 @@ import { simulationData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
 import { Box } from "@mui/material";
+import { dataset } from "./dataset.mock";
 
 const simulationSpy = fn();
+
+const [simulation] = simulationData;
+const simulationDataWithGroups = [simulation, simulation, simulation];
 
 const meta: Meta<typeof Simulations> = {
   title: "Simulations",
@@ -24,21 +28,24 @@ const meta: Meta<typeof Simulations> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [
-        ...projectHandlers,
-        http.get("/api/subject_group", async () => {
+      handlers: {
+        project: projectHandlers,
+        dataset: http.get("/api/subject_group", async () => {
           await delay();
           return HttpResponse.json([], { status: 200 });
         }),
-        http.post("/api/combined_model/:id/simulate", async ({ request }) => {
-          await delay();
-          const simulationParams = await request.json();
-          simulationSpy(simulationParams);
-          return HttpResponse.json(simulationData, {
-            status: 200,
-          });
-        }),
-      ],
+        simulate: http.post(
+          "/api/combined_model/:id/simulate",
+          async ({ request }) => {
+            await delay();
+            const simulationParams = await request.json();
+            simulationSpy(simulationParams);
+            return HttpResponse.json(simulationData, {
+              status: 200,
+            });
+          },
+        ),
+      },
     },
   },
   decorators: [
@@ -176,5 +183,58 @@ export const EditPlot: Story = {
     });
     expect(yAxisLabelSearchbox).toBeInTheDocument();
     expect(yAxisLabelSearchbox).toHaveValue("C1  [pmol/L]");
+  },
+};
+
+export const WithGroups: Story = {
+  parameters: {
+    msw: {
+      handlers: {
+        dataset: http.get("/api/subject_group", async ({ request }) => {
+          await delay();
+          const url = new URL(request.url);
+          const datasetId = url.searchParams.get("dataset_id");
+          if (datasetId) {
+            return HttpResponse.json(dataset.groups, { status: 200 });
+          }
+          return HttpResponse.json([], { status: 200 });
+        }),
+        simulate: http.post(
+          "/api/combined_model/:id/simulate",
+          async ({ request }) => {
+            await delay();
+            const simulationParams = await request.json();
+            simulationSpy(simulationParams);
+            return HttpResponse.json(simulationDataWithGroups, { status: 200 });
+          },
+        ),
+      },
+    },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const simulationsHeading = await canvas.findByRole("heading", {
+      name: "Simulations",
+    });
+    expect(simulationsHeading).toBeInTheDocument();
+
+    const groupsButton = await screen.findByRole("button", {
+      name: "Groups 3",
+      expanded: false,
+    });
+    expect(groupsButton).toBeInTheDocument();
+    await userEvent.click(groupsButton);
+    expect(groupsButton).toHaveAttribute("aria-expanded", "true");
+
+    const projectGroupCheckbox = await screen.findByRole("checkbox", {
+      name: "Project",
+      checked: true,
+    });
+    expect(projectGroupCheckbox).toBeInTheDocument();
+    const groupCheckboxes = await screen.findAllByRole("checkbox", {
+      name: /Group \w+/,
+      checked: true,
+    });
+    expect(groupCheckboxes).toHaveLength(2);
   },
 };
