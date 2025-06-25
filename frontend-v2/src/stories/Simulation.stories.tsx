@@ -8,16 +8,13 @@ import {
   setPage,
 } from "../features/main/mainSlice";
 import { project, projectHandlers } from "./project.mock";
-import { simulationData } from "./simulations.mock";
+import { simulationData, simulationWithGroupsData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
 import { Box } from "@mui/material";
-import { dataset } from "./dataset.mock";
+import { biomarkerTypes, dataset, subjects } from "./dataset.mock";
 
 const simulationSpy = fn();
-
-const [simulation] = simulationData;
-const simulationDataWithGroups = [simulation, simulation, simulation];
 
 const meta: Meta<typeof Simulations> = {
   title: "Simulations",
@@ -30,10 +27,18 @@ const meta: Meta<typeof Simulations> = {
     msw: {
       handlers: {
         project: projectHandlers,
-        dataset: http.get("/api/subject_group", async () => {
-          await delay();
-          return HttpResponse.json([], { status: 200 });
-        }),
+        dataset: [
+          http.get("/api/subject_group", async () => {
+            await delay();
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/subject", () => {
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/biomarker_type", () => {
+            return HttpResponse.json([], { status: 200 });
+          }),
+        ],
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
@@ -190,22 +195,32 @@ export const WithGroups: Story = {
   parameters: {
     msw: {
       handlers: {
-        dataset: http.get("/api/subject_group", async ({ request }) => {
-          await delay();
-          const url = new URL(request.url);
-          const datasetId = url.searchParams.get("dataset_id");
-          if (datasetId) {
-            return HttpResponse.json(dataset.groups, { status: 200 });
-          }
-          return HttpResponse.json([], { status: 200 });
-        }),
+        dataset: [
+          http.get("/api/subject_group", async ({ request }) => {
+            await delay();
+            const url = new URL(request.url);
+            const datasetId = url.searchParams.get("dataset_id");
+            if (datasetId) {
+              return HttpResponse.json(dataset.groups, { status: 200 });
+            }
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/subject", async () => {
+            await delay();
+            return HttpResponse.json(subjects, { status: 200 });
+          }),
+          http.get("/api/biomarker_type", async () => {
+            await delay();
+            return HttpResponse.json(biomarkerTypes, { status: 200 });
+          }),
+        ],
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
             await delay();
             const simulationParams = await request.json();
             simulationSpy(simulationParams);
-            return HttpResponse.json(simulationDataWithGroups, { status: 200 });
+            return HttpResponse.json(simulationWithGroupsData, { status: 200 });
           },
         ),
       },
