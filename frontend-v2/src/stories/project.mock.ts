@@ -6171,6 +6171,10 @@ export const projectHandlers = [
     }
     return HttpResponse.json({ error: "Project not found" }, { status: 404 });
   }),
+  http.get("/api/compound", async () => {
+    await delay();
+    return HttpResponse.json([compound], { status: 200 });
+  }),
   http.get("/api/compound/:id", async ({ params }) => {
     await delay();
     //@ts-expect-error params.id is a string

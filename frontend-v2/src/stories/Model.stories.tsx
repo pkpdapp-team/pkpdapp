@@ -130,6 +130,21 @@ const meta: Meta<typeof Model> = {
               status: 200,
             });
           }),
+          http.get("/api/pharmacodynamic/:id", async ({ params }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const modelId = parseInt(params.id, 10);
+            const pdModel = pdModels.find((m) => m.id === modelId);
+            if (pdModel) {
+              return HttpResponse.json(pdModel, {
+                status: 200,
+              });
+            }
+            return HttpResponse.json(
+              { error: "PD Model not found" },
+              { status: 404 },
+            );
+          }),
           http.get("/api/pharmacodynamic", async () => {
             await delay();
             return HttpResponse.json(pdModels, {
