@@ -42,6 +42,29 @@ const meta: Meta<typeof Projects> = {
     msw: {
       handlers: {
         project: [
+          http.get("/api/user", async () => {
+            await delay();
+            return HttpResponse.json(
+              [
+                {
+                  id: 1,
+                  username: "test",
+                  first_name: "",
+                  last_name: "",
+                  email: "test.user@dtc.ox.ac.uk",
+                  profile: {
+                    id: 1,
+                    user: 1,
+                  },
+                  project_set: [
+                    1, 2, 3, 7, 8, 9, 11, 12, 25, 26, 27, 28, 29, 30, 33, 36,
+                    37, 38, 39, 40, 41, 43, 57, 63, 65,
+                  ],
+                },
+              ],
+              { status: 200 },
+            );
+          }),
           http.get("/api/project", async () => {
             await delay();
             return HttpResponse.json(mockProjects, { status: 200 });
