@@ -5781,6 +5781,18 @@ export const projectHandlers = [
     }
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/simulation", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+
+    const projectId = url.searchParams.get("project_id");
+    if (projectId) {
+      return HttpResponse.json([simulation], {
+        status: 200,
+      });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
   http.get("/api/unit", async ({ request }) => {
     await delay();
     const url = new URL(request.url);
