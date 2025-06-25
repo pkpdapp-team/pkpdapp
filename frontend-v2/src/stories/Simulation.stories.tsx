@@ -28,6 +28,17 @@ const meta: Meta<typeof Simulations> = {
       handlers: {
         project: projectHandlers,
         dataset: [
+          http.get("/api/dataset/:id", () => {
+            return HttpResponse.json(
+              {
+                id: 1,
+                name: "Test Dataset",
+                subjects: [],
+                groups: [],
+              },
+              { status: 200 },
+            );
+          }),
           http.get("/api/subject_group", async () => {
             await delay();
             return HttpResponse.json([], { status: 200 });
@@ -196,6 +207,10 @@ export const WithGroups: Story = {
     msw: {
       handlers: {
         dataset: [
+          http.get("/api/dataset/:id", async () => {
+            await delay();
+            return HttpResponse.json(dataset, { status: 200 });
+          }),
           http.get("/api/subject_group", async ({ request }) => {
             await delay();
             const url = new URL(request.url);
