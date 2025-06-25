@@ -11,108 +11,137 @@ import { useDispatch } from "react-redux";
 
 let mockProjects = [project];
 
+const datasetHandlers = [
+  http.get("/api/dataset/:id", () => {
+    return HttpResponse.json(
+      {
+        id: 1,
+        name: "Test Dataset",
+        subjects: [],
+        groups: [],
+      },
+      { status: 200 },
+    );
+  }),
+  http.get("/api/subject_group", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/subject", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/biomarker_type", () => {
+    return HttpResponse.json([], { status: 200 });
+  }),
+];
+
 const meta: Meta<typeof Projects> = {
   title: "Projects",
   component: Projects,
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [
-        http.get("/api/project", async () => {
-          await delay();
-          return HttpResponse.json(mockProjects, { status: 200 });
-        }),
-        http.get("/api/project/:id", async ({ params }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const projectId = parseInt(params.id, 10);
-          const foundProject = mockProjects.find(
-            (project) => project.id === projectId,
-          );
-          if (!foundProject) {
-            return HttpResponse.json(
-              { detail: "Project not found" },
-              { status: 404 },
+      handlers: {
+        project: [
+          http.get("/api/project", async () => {
+            await delay();
+            return HttpResponse.json(mockProjects, { status: 200 });
+          }),
+          http.get("/api/project/:id", async ({ params }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const projectId = parseInt(params.id, 10);
+            const foundProject = mockProjects.find(
+              (project) => project.id === projectId,
             );
-          }
-          return HttpResponse.json(foundProject, { status: 200 });
-        }),
-        http.post("/api/project", async ({ request }) => {
-          await delay();
-          const newProjectData = await request.json();
-          // @ts-expect-error newProjectData is DefaultBodyType
-          const newProject = { ...project, ...newProjectData, id: 1 };
-          mockProjects.push(newProject);
-          return HttpResponse.json(newProject, { status: 201 });
-        }),
-        http.put("/api/project/:id", async ({ params, request }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const projectId = parseInt(params.id, 10);
-          const updatedProject = await request.json();
-          mockProjects = mockProjects.map((project) =>
-            project.id === projectId
-              ? // @ts-expect-error updatedProject is DefaultBodyType
-                { ...project, ...updatedProject }
-              : project,
-          );
-          return HttpResponse.json(
-            // @ts-expect-error updatedProject is DefaultBodyType
-            { ...updatedProject, id: projectId },
-            { status: 200 },
-          );
-        }),
-        http.delete("/api/project/:id", async ({ params }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const projectId = parseInt(params.id, 10);
-          mockProjects = mockProjects.filter(
-            (project) => project.id !== projectId,
-          );
-          return HttpResponse.json({ id: projectId }, { status: 204 });
-        }),
-        http.get("/api/compound/:id", async () => {
-          await delay();
-          // Simulate fetching a compound by ID
-          return HttpResponse.json(
-            { id: 1, name: "Compound A", projectId: 1 },
-            { status: 200 },
-          );
-        }),
-        http.post("/api/compound/", async ({ request }) => {
-          await delay();
-          const newCompound = await request.json();
-          // @ts-expect-error newCompound is DefaultBodyType
-          return HttpResponse.json({ ...newCompound, id: 1 }, { status: 201 });
-        }),
-        http.put("/api/compound/:id", async ({ params, request }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const compoundId = parseInt(params.id, 10);
-          const updatedCompound = await request.json();
-          return HttpResponse.json(
-            // @ts-expect-error updatedCompound is DefaultBodyType
-            { ...updatedCompound, id: compoundId },
-            { status: 200 },
-          );
-        }),
-        http.get("/api/results_table", async () => {
-          await delay();
-          return HttpResponse.json([], { status: 200 });
-        }),
-        http.post("/api/results_table", async ({ request }) => {
-          await delay();
-          const newTable = await request.json();
-          // Simulate creating a new results table
-          const createdTable = {
-            //@ts-expect-error newTable is DefaultBodyType
-            ...newTable,
-            id: 1,
-          };
-          return HttpResponse.json(createdTable, { status: 201 });
-        }),
-        ...projectHandlers,
-      ],
+            if (!foundProject) {
+              return HttpResponse.json(
+                { detail: "Project not found" },
+                { status: 404 },
+              );
+            }
+            return HttpResponse.json(foundProject, { status: 200 });
+          }),
+          http.post("/api/project", async ({ request }) => {
+            await delay();
+            const newProjectData = await request.json();
+            // @ts-expect-error newProjectData is DefaultBodyType
+            const newProject = { ...project, ...newProjectData, id: 1 };
+            mockProjects.push(newProject);
+            return HttpResponse.json(newProject, { status: 201 });
+          }),
+          http.put("/api/project/:id", async ({ params, request }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const projectId = parseInt(params.id, 10);
+            const updatedProject = await request.json();
+            mockProjects = mockProjects.map((project) =>
+              project.id === projectId
+                ? // @ts-expect-error updatedProject is DefaultBodyType
+                  { ...project, ...updatedProject }
+                : project,
+            );
+            return HttpResponse.json(
+              // @ts-expect-error updatedProject is DefaultBodyType
+              { ...updatedProject, id: projectId },
+              { status: 200 },
+            );
+          }),
+          http.delete("/api/project/:id", async ({ params }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const projectId = parseInt(params.id, 10);
+            mockProjects = mockProjects.filter(
+              (project) => project.id !== projectId,
+            );
+            return HttpResponse.json({ id: projectId }, { status: 204 });
+          }),
+          http.get("/api/compound/:id", async () => {
+            await delay();
+            // Simulate fetching a compound by ID
+            return HttpResponse.json(
+              { id: 1, name: "Compound A", projectId: 1 },
+              { status: 200 },
+            );
+          }),
+          http.post("/api/compound/", async ({ request }) => {
+            await delay();
+            const newCompound = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error newCompound is DefaultBodyType
+              { ...newCompound, id: 1 },
+              { status: 201 },
+            );
+          }),
+          http.put("/api/compound/:id", async ({ params, request }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const compoundId = parseInt(params.id, 10);
+            const updatedCompound = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error updatedCompound is DefaultBodyType
+              { ...updatedCompound, id: compoundId },
+              { status: 200 },
+            );
+          }),
+          http.get("/api/results_table", async () => {
+            await delay();
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.post("/api/results_table", async ({ request }) => {
+            await delay();
+            const newTable = await request.json();
+            // Simulate creating a new results table
+            const createdTable = {
+              //@ts-expect-error newTable is DefaultBodyType
+              ...newTable,
+              id: 1,
+            };
+            return HttpResponse.json(createdTable, { status: 201 });
+          }),
+          ...projectHandlers,
+        ],
+        dataset: datasetHandlers,
+      },
     },
   },
   decorators: [
