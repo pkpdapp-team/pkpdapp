@@ -162,6 +162,9 @@ export const Protocols: FC<ProtocolsProps> = ({
     event: SyntheticEvent<Element, Event>,
     newValue: number,
   ) => {
+    if ((event.target as HTMLButtonElement).name === "remove") {
+      return; // Prevent tab change when clicking on the remove icon
+    }
     setTab(newValue);
   };
 
@@ -195,22 +198,28 @@ export const Protocols: FC<ProtocolsProps> = ({
         }),
       },
     });
-    refetchGroups();
+    await refetchGroups();
+    setTab(groups.length + 1);
   };
 
   const removeGroup = (groupID: number) => async () => {
     const subjectGroup = groups?.find((g) => g.id === groupID);
+    const subjectGroupIndex = groups?.findIndex((g) => g.id === groupID) + 1; // +1 because the first tab is the project
     const subjectCount = subjectGroup?.subjects.length || 0;
     const confirmationMessage =
       subjectCount === 0
         ? `Are you sure you want to delete ${subjectGroup?.name}?`
         : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
     if (window?.confirm(confirmationMessage)) {
-      setTab(tab - 1);
       await destroySubjectGroup({ id: groupID });
-      refetchGroups();
+      await refetchGroups();
+      if (subjectGroupIndex === tab) {
+        setTab(subjectGroupIndex - 1);
+      }
+      if (tab > subjectGroupIndex) {
+        setTab(tab - 1);
+      }
     }
-    setTab(0);
   };
 
   const onProtocolChange = () => {
@@ -273,6 +282,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                 icon={
                   !groups?.[index] ? undefined : (
                     <IconButton
+                      name="remove"
                       onClick={async (e) => {
                         e.stopPropagation();
                         removeGroup(groups?.[index]?.id)();

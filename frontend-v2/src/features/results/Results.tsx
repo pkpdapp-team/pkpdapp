@@ -56,12 +56,23 @@ const Results: FC = () => {
   };
 
   const handleTabChange = async (event: SyntheticEvent, newValue: number) => {
+    if ((event.target as HTMLButtonElement).name === "remove") {
+      return; // Prevent tab change when clicking on the remove icon
+    }
     setTab(newValue);
   };
 
-  const handleTabRemove = async (table: ResultsTableRead) => {
+  interface HandleTabRemove {
+    (
+      table: ResultsTableRead,
+    ): (event: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
+  }
+
+  const handleTabRemove: HandleTabRemove = (table) => async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
     if (window.confirm("Are you sure you want to delete the current Table?")) {
-      const removedIndex = results?.map(({ id }) => id).indexOf(table.id) || -1;
+      const removedIndex = results?.findIndex((t) => t.id === table.id);
       await deleteResults({ id: table.id });
 
       if (removedIndex === tab) {
@@ -108,12 +119,7 @@ const Results: FC = () => {
                 sx={{ maxHeight: "48px", minHeight: 0 }}
                 icon={
                   index === 0 ? undefined : (
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTabRemove(table);
-                      }}
-                    >
+                    <IconButton name="remove" onClick={handleTabRemove(table)}>
                       <RemoveCircleOutlineIcon fontSize="small" />
                     </IconButton>
                   )
