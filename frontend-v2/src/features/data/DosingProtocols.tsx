@@ -205,6 +205,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 amountUnitField && currentRow && currentRow[amountUnitField];
               const amount = currentRow?.[amountField];
               const time = currentRow?.[timeField];
+              const displayedUnit = compatibleUnits?.find(
+                (unit) => unit.symbol === adminUnit,
+              )
+                ? adminUnit
+                : "";
               return (
                 <TableRow key={adminId}>
                   <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
@@ -223,11 +228,12 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         labelId={`select-var-${adminId}-label`}
                         id={`select-var-${adminId}`}
                         label="Variable"
-                        value={selectedVariable?.qname}
+                        value={selectedVariable?.qname || ""}
                         onChange={handleAmountMappingChange(adminId)}
                         size="small"
                         margin="dense"
                       >
+                        <MenuItem value="">None</MenuItem>
                         {modelAmounts?.map((variable) => (
                           <MenuItem key={variable.name} value={variable.qname}>
                             {variable.name}
@@ -251,12 +257,14 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         labelId={`select-unit-${adminId}-label`}
                         id={`select-unit-${adminId}`}
                         label="Units"
-                        value={adminUnit}
+                        value={displayedUnit}
+                        disabled={!compatibleUnits?.length}
                         onChange={handleAmountUnitChange(adminId)}
                         sx={{ maxWidth: "10rem" }}
                         size="small"
                         margin="dense"
                       >
+                        <MenuItem value="">None</MenuItem>
                         {compatibleUnits?.map((unit) => (
                           <MenuItem key={unit.symbol} value={unit.symbol}>
                             {unit.symbol}
