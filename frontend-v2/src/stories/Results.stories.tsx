@@ -158,8 +158,8 @@ export const Default: Story = {
     });
     expect(table1Tab).toBeInTheDocument();
 
-    ["Columns", "Rows", "Group", "Interval"].forEach((name) => {
-      const combobox = canvas.getByRole("combobox", {
+    ["Columns", "Rows", "Group", "Interval"].forEach(async (name) => {
+      const combobox = await canvas.findByRole("combobox", {
         name,
       });
       expect(combobox).toBeInTheDocument();
