@@ -51,7 +51,7 @@ const Results: FC = () => {
       groupIndex: 0,
       intervalIndex: 0,
     };
-    createResults({ resultsTable: newTable });
+    await createResults({ resultsTable: newTable });
     setTab(results.length);
   };
 
@@ -62,7 +62,7 @@ const Results: FC = () => {
   const handleTabRemove = async (table: ResultsTableRead) => {
     if (window.confirm("Are you sure you want to delete the current Table?")) {
       const removedIndex = results?.map(({ id }) => id).indexOf(table.id) || -1;
-      deleteResults({ id: table.id });
+      await deleteResults({ id: table.id });
 
       if (removedIndex === tab) {
         setTab(removedIndex - 1);
