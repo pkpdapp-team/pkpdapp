@@ -127,6 +127,7 @@ const Stratification: FC<IStratification> = ({
     state.setNormalisedFields(
       new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
     );
+    return <Typography>Loading…</Typography>;
   }
 
   const handleTabChange = (
