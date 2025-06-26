@@ -27,13 +27,13 @@ export function useResults() {
     async createResults({ resultsTable }: { resultsTable: ResultsTableRead }) {
       await createResults({ resultsTable });
       if (projectId) {
-        refetch();
+        return refetch();
       }
     },
     async deleteResults({ id }: { id: number }) {
       await deleteResults({ id });
       if (projectId) {
-        refetch();
+        return refetch();
       }
     },
   };

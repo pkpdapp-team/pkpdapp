@@ -69,6 +69,15 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   );
   const { updateResults } = useResults();
 
+  const loaded =
+    (groups.length &&
+      intervals.length &&
+      concentrationVariables.length &&
+      parameters.length) > 0;
+  if (!loaded) {
+    return <div>Loading...</div>;
+  }
+
   const groupIndex: FilterIndex =
     columns === "groups" ? "columns" : rows === "groups" ? "rows" : group;
   const variableIndex: FilterIndex =

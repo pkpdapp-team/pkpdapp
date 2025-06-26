@@ -332,11 +332,12 @@ const MapObservations: FC<IMapObservations> = ({
                             labelId={`select-var-${obsId}-label`}
                             id={`select-var-${obsId}`}
                             label="Variable"
-                            value={selectedVariable?.qname}
+                            value={selectedVariable?.qname || ""}
                             onChange={handleObservationChange(obsId)}
                             size="small"
                             margin="dense"
                           >
+                            <MenuItem value="">None</MenuItem>
                             {modelOutputs?.map((variable) => (
                               <MenuItem
                                 key={variable.name}
@@ -365,6 +366,7 @@ const MapObservations: FC<IMapObservations> = ({
                             size="small"
                             margin="dense"
                           >
+                            <MenuItem value="">None</MenuItem>
                             {compatibleUnits?.map((unit) => (
                               <MenuItem
                                 key={unit.id}
