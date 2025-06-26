@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import { validateDataRow } from "./dataValidation";
@@ -65,9 +65,14 @@ const PreviewData: FC<IPreviewData> = ({
       (header) =>
         !["Cat Covariate", "Cont Covariate", "Ignore"].includes(header),
     );
+  let dataChanged = false;
   normalisedHeaders.forEach((header) => {
-    normaliseDataColumn(state, header);
+    const newData = normaliseDataColumn(state, header);
+    dataChanged = dataChanged || newData !== state.data;
   });
+  if (dataChanged) {
+    return <Typography>Loading…</Typography>;
+  }
   const { data, fields } = state;
   const visibleFields = fields.filter(
     (field) =>

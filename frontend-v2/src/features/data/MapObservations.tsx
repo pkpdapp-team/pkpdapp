@@ -78,13 +78,7 @@ function validateUnitSymbol(
   return validUnit;
 }
 
-const MapObservations: FC<IMapObservations> = ({
-  state,
-  notificationsInfo,
-}: IMapObservations) => {
-  const [tab, setTab] = useState(0);
-  const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
-  const selectedGroup = groupIDs[tab];
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -107,6 +101,19 @@ const MapObservations: FC<IMapObservations> = ({
     { skip: !project || !project.compound },
   );
 
+  return { model, variables, units };
+}
+
+const MapObservations: FC<IMapObservations> = ({
+  state,
+  notificationsInfo,
+}: IMapObservations) => {
+  const [tab, setTab] = useState(0);
+  const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
+  const selectedGroup = groupIDs[tab];
+
+  const { model, variables, units } = useApiQueries();
+
   const {
     observationRows,
     observationIdField,
@@ -125,6 +132,7 @@ const MapObservations: FC<IMapObservations> = ({
     state.setNormalisedFields(
       new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
     );
+    return <Typography>Loading...</Typography>;
   }
 
   if (!variables || !units) {

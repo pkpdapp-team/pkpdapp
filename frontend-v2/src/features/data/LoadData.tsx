@@ -91,28 +91,20 @@ function createDefaultSubjectGroup(state: StepperState) {
   updateDataAndResetFields(state, newData);
 }
 
-function setMinimumInfusionTime(state: StepperState) {
-  const infusionTimeField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Infusion Duration",
-    ) || "Infusion Duration";
-  const hasZeroInfusionTime = state.data.some(
-    (row) => parseFloat(row[infusionTimeField]) === 0,
-  );
-  if (hasZeroInfusionTime) {
-    const newData = [...state.data];
-    newData.forEach((row) => {
-      const infusionTime = parseFloat(row[infusionTimeField]);
-      row[infusionTimeField] =
-        infusionTime === 0 ? "0.0833" : row[infusionTimeField];
-    });
-    state.setData(newData);
-  }
+function setMinimumInfusionTime(
+  state: StepperState,
+  infusionTimeField: string,
+) {
+  const newData = [...state.data];
+  newData.forEach((row) => {
+    const infusionTime = parseFloat(row[infusionTimeField]);
+    row[infusionTimeField] =
+      infusionTime === 0 ? "0.0833" : row[infusionTimeField];
+  });
+  state.setData(newData);
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
-  const showData = state.data.length > 0 && state.fields.length > 0;
-  const normalisedHeaders = state.normalisedHeaders;
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -121,15 +113,17 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-  if (!normalisedHeaders.includes("ID")) {
-    createDefaultSubjects(state);
-  }
-  if (!normalisedHeaders.includes("Cat Covariate")) {
-    createDefaultSubjectGroup(state);
-  }
-  if (normalisedHeaders.includes("Infusion Duration")) {
-    setMinimumInfusionTime(state);
-  }
+  return {
+    isProjectLoading,
+    isSharedWithMe,
+  };
+}
+
+const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
+  const showData = state.data.length > 0 && state.fields.length > 0;
+  const normalisedHeaders = state.normalisedHeaders;
+
+  const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -187,6 +181,27 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     onDrop,
     noClick: true,
   });
+
+  if (!normalisedHeaders.includes("ID")) {
+    createDefaultSubjects(state);
+  }
+  if (!normalisedHeaders.includes("Cat Covariate")) {
+    createDefaultSubjectGroup(state);
+  }
+
+  if (normalisedHeaders.includes("Infusion Duration")) {
+    const infusionTimeField =
+      state.fields.find(
+        (field) => state.normalisedFields.get(field) === "Infusion Duration",
+      ) || "Infusion Duration";
+    const hasZeroInfusionTime = state.data.some(
+      (row) => parseFloat(row[infusionTimeField]) === 0,
+    );
+    if (hasZeroInfusionTime) {
+      setMinimumInfusionTime(state, infusionTimeField);
+      return <Typography>Loading…</Typography>;
+    }
+  }
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.setNormalisedFields(normalisedFields);
