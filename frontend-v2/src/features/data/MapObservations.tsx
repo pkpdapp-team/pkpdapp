@@ -1,4 +1,4 @@
-import { FC, SyntheticEvent, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
@@ -125,16 +125,17 @@ const MapObservations: FC<IMapObservations> = ({
   } = useObservationRows(state, selectedGroup);
   const uniqueObservationIds = [...new Set(observationIds)];
 
-  const [firstRow] = state.data;
-  if (!firstRow["Group ID"]) {
-    const newData = groupDataRows(state.data, state.groupColumn);
-    state.data = newData;
-    state.normalisedFields = new Map([
-      ...state.normalisedFields.entries(),
-      ["Group ID", "Group ID"],
-    ]);
-    return <Typography>Loading...</Typography>;
-  }
+  useEffect(() => {
+    const [firstRow] = state.data;
+    if (!firstRow["Group ID"]) {
+      const newData = groupDataRows(state.data, state.groupColumn);
+      state.data = newData;
+      state.normalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        ["Group ID", "Group ID"],
+      ]);
+    }
+  }, [state]);
 
   if (!variables || !units) {
     return <Typography>Loading...</Typography>;
