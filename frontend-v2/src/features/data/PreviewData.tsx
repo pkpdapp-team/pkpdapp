@@ -44,8 +44,8 @@ function normaliseDataColumn(state: StepperState, type: string) {
       delete newRow[field];
       return newRow;
     });
-    state.setData(newData);
-    state.setNormalisedFields(newNormalisedFields);
+    state.data = newData;
+    state.normalisedFields = newNormalisedFields;
     return newData;
   }
   return state.data;

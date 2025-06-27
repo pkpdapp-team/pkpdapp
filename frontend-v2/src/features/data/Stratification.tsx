@@ -88,7 +88,7 @@ const Stratification: FC<IStratification> = ({
 
   const [firstRow] = state.data;
   const [tab, setTab] = useState(0);
-  const { groupColumn, setGroupColumn } = state;
+  const { groupColumn } = state;
 
   const groups = groupsFromCatCovariate(state, groupColumn);
   const isValidGrouping = validateGroupMembers(groups);
@@ -96,14 +96,14 @@ const Stratification: FC<IStratification> = ({
     "Invalid group subjects. Each subject ID can only belong to a single cohort.";
   if (!isValidGrouping && !state.errors.includes(groupErrorMessage)) {
     const newErrors = [...state.errors, groupErrorMessage];
-    state.setErrors(newErrors);
+    state.errors = newErrors;
   }
 
   if (isValidGrouping && state.errors.includes(groupErrorMessage)) {
     const newErrors = state.errors.filter(
       (error) => error !== groupErrorMessage,
     );
-    state.setErrors(newErrors);
+    state.errors = newErrors;
   }
 
   const isValidDosing = validateGroupProtocols(groups, protocols);
@@ -114,19 +114,20 @@ const Stratification: FC<IStratification> = ({
     const newErrors = state.errors.filter(
       (error) => error !== doseErrorMessage,
     );
-    state.setErrors(newErrors);
+    state.errors = newErrors;
   }
   if (!isValidDosing && !state.errors.includes(doseErrorMessage)) {
     const newErrors = [...state.errors, doseErrorMessage];
-    state.setErrors(newErrors);
+    state.errors = newErrors;
   }
 
   if (!firstRow["Group ID"]) {
     const newData = groupDataRows(state.data, groupColumn);
-    state.setData(newData);
-    state.setNormalisedFields(
-      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
-    );
+    state.data = newData;
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Group ID", "Group ID"],
+    ]);
     return <Typography>Loading…</Typography>;
   }
 
@@ -140,8 +141,8 @@ const Stratification: FC<IStratification> = ({
   const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newGroup = event.target.value;
     const newData = groupDataRows(state.data, newGroup);
-    setGroupColumn(newGroup);
-    state.setData(newData);
+    state.groupColumn = newGroup;
+    state.data = newData;
   };
 
   function a11yProps(index: number) {

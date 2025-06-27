@@ -128,10 +128,11 @@ const MapObservations: FC<IMapObservations> = ({
   const [firstRow] = state.data;
   if (!firstRow["Group ID"]) {
     const newData = groupDataRows(state.data, state.groupColumn);
-    state.setData(newData);
-    state.setNormalisedFields(
-      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
-    );
+    state.data = newData;
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Group ID", "Group ID"],
+    ]);
     return <Typography>Loading...</Typography>;
   }
 
@@ -183,8 +184,8 @@ const MapObservations: FC<IMapObservations> = ({
         [observationVariableField, "Observation Variable"],
         [observationUnitField, "Observation Unit"],
       ]);
-      state.setData(nextData);
-      state.setNormalisedFields(newNormalisedFields);
+      state.data = nextData;
+      state.normalisedFields = newNormalisedFields;
       const { errors, warnings } = validateState({
         ...state,
         data: nextData,
@@ -193,8 +194,8 @@ const MapObservations: FC<IMapObservations> = ({
       if (!validUnit) {
         errors.push("Mapped observation variables must have units.");
       }
-      state.setErrors(errors);
-      state.setWarnings(warnings);
+      state.errors = errors;
+      state.warnings = warnings;
     };
   const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];
@@ -206,7 +207,7 @@ const MapObservations: FC<IMapObservations> = ({
       .forEach((row) => {
         row[observationUnitField] = value;
       });
-    state.setData(nextData);
+    state.data = nextData;
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
@@ -224,8 +225,8 @@ const MapObservations: FC<IMapObservations> = ({
     if (!validUnit) {
       errors.push("Mapped observation variables must have units.");
     }
-    state.setErrors(errors);
-    state.setWarnings(warnings);
+    state.errors = errors;
+    state.warnings = warnings;
   };
 
   function handleTabChange(

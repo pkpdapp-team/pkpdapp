@@ -56,25 +56,16 @@ type Field = string;
 
 export type StepperState = {
   fileName: string;
-  setFileName: (fileName: string) => void;
   fields: Field[];
   normalisedHeaders: Field[];
   normalisedFields: Map<Field, string>;
-  setNormalisedFields: (normalisedFields: Map<Field, string>) => void;
   data: Data;
-  setData: (data: Data) => void;
   errors: string[];
-  setErrors: (errors: string[]) => void;
   warnings: string[];
-  setWarnings: (warnings: string[]) => void;
   timeUnit?: string;
-  setTimeUnit: (timeUnit: string) => void;
   amountUnit?: string;
-  setAmountUnit: (amountUnit: string) => void;
   groupColumn: string;
-  setGroupColumn: (primaryCohort: string) => void;
   hasDosingRows: boolean;
-  setHasDosingRows: (hasDosingRows: boolean) => void;
 };
 
 function validateSubjectProtocols(protocols: IProtocol[]) {
@@ -119,24 +110,60 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
     setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
-    fileName,
-    setFileName,
-    normalisedFields,
-    setNormalisedFields,
-    data,
-    setData,
-    errors,
-    setErrors,
-    warnings,
-    setWarnings,
-    timeUnit,
-    setTimeUnit,
-    amountUnit,
-    setAmountUnit,
-    groupColumn,
-    setGroupColumn,
-    hasDosingRows,
-    setHasDosingRows,
+    get fileName() {
+      return fileName;
+    },
+    set fileName(newFileName: string) {
+      setFileName(newFileName);
+    },
+    get normalisedFields() {
+      return normalisedFields;
+    },
+    set normalisedFields(newNormalisedFields: Map<Field, string>) {
+      setNormalisedFields(newNormalisedFields);
+    },
+    get data() {
+      return data;
+    },
+    set data(newData: Data) {
+      setData(newData);
+    },
+    get errors() {
+      return errors;
+    },
+    set errors(newErrors: string[]) {
+      setErrors(newErrors);
+    },
+    get warnings() {
+      return warnings;
+    },
+    set warnings(newWarnings: string[]) {
+      setWarnings(newWarnings);
+    },
+    get timeUnit() {
+      return timeUnit;
+    },
+    set timeUnit(newTimeUnit: string | undefined) {
+      setTimeUnit(newTimeUnit);
+    },
+    get amountUnit() {
+      return amountUnit;
+    },
+    set amountUnit(newAmountUnit: string | undefined) {
+      setAmountUnit(newAmountUnit);
+    },
+    get groupColumn() {
+      return groupColumn;
+    },
+    set groupColumn(newGroupColumn: string) {
+      setGroupColumn(newGroupColumn);
+    },
+    get hasDosingRows() {
+      return hasDosingRows;
+    },
+    set hasDosingRows(newHasDosingRows: boolean) {
+      setHasDosingRows(newHasDosingRows);
+    },
     get fields() {
       return [...normalisedFields.keys()];
     },

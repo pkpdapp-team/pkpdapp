@@ -119,17 +119,15 @@ function createDosingRows(
     });
   });
   newRows.sort((a, b) => parseInt(a[idField]) - parseInt(b[idField]));
-  state.setData([...nextData, ...newRows]);
-  state.setNormalisedFields(
-    new Map([
-      ...state.normalisedFields.entries(),
-      ["Amount Variable", "Amount Variable"],
-      ["Amount Unit", "Amount Unit"],
-      ["Infusion Duration", "Infusion Duration"],
-      ["Additional Doses", "Additional Doses"],
-      ["Interdose Interval", "Interdose Interval"],
-    ]),
-  );
+  state.data = [...nextData, ...newRows];
+  state.normalisedFields = new Map([
+    ...state.normalisedFields.entries(),
+    ["Amount Variable", "Amount Variable"],
+    ["Amount Unit", "Amount Unit"],
+    ["Infusion Duration", "Infusion Duration"],
+    ["Additional Doses", "Additional Doses"],
+    ["Interdose Interval", "Interdose Interval"],
+  ]);
 }
 
 type NumericTableCellProps = {
@@ -215,8 +213,8 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       ["Amount", "Amount"],
     ]);
     const newData = state.data.map((row) => ({ ...row, Amount: "." }));
-    state.setNormalisedFields(newNormalisedFields);
-    state.setData(newData);
+    state.normalisedFields = newNormalisedFields;
+    state.data = newData;
   }
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -243,7 +241,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
         .forEach((row) => {
           row[field] = value;
         });
-      state.setData(nextData);
+      state.data = nextData;
     };
 
   return (
