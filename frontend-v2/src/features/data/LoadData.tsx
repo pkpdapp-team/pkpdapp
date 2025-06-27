@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
-import { FC, useCallback } from "react";
+import { FC, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
@@ -125,6 +125,28 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
 
   const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
+  useEffect(() => {
+    if (!normalisedHeaders.includes("ID")) {
+      createDefaultSubjects(state);
+    }
+    if (!normalisedHeaders.includes("Cat Covariate")) {
+      createDefaultSubjectGroup(state);
+    }
+
+    if (normalisedHeaders.includes("Infusion Duration")) {
+      const infusionTimeField =
+        state.fields.find(
+          (field) => state.normalisedFields.get(field) === "Infusion Duration",
+        ) || "Infusion Duration";
+      const hasZeroInfusionTime = state.data.some(
+        (row) => parseFloat(row[infusionTimeField]) === 0,
+      );
+      if (hasZeroInfusionTime) {
+        setMinimumInfusionTime(state, infusionTimeField);
+      }
+    }
+  }, [normalisedHeaders, state]);
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       state.timeUnit = "";
@@ -181,27 +203,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     onDrop,
     noClick: true,
   });
-
-  if (!normalisedHeaders.includes("ID")) {
-    createDefaultSubjects(state);
-  }
-  if (!normalisedHeaders.includes("Cat Covariate")) {
-    createDefaultSubjectGroup(state);
-  }
-
-  if (normalisedHeaders.includes("Infusion Duration")) {
-    const infusionTimeField =
-      state.fields.find(
-        (field) => state.normalisedFields.get(field) === "Infusion Duration",
-      ) || "Infusion Duration";
-    const hasZeroInfusionTime = state.data.some(
-      (row) => parseFloat(row[infusionTimeField]) === 0,
-    );
-    if (hasZeroInfusionTime) {
-      setMinimumInfusionTime(state, infusionTimeField);
-      return <Typography>Loading…</Typography>;
-    }
-  }
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.normalisedFields = normalisedFields;
