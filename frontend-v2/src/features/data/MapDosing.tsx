@@ -97,7 +97,7 @@ const MapDosing: FC<IMapDosing> = ({
     const newNormalisedFields = new Map(state.normalisedFields);
     newNormalisedFields.set(amountUnitField, "Ignore");
     newNormalisedFields.set("Amount Unit", "Amount Unit");
-    state.setNormalisedFields(newNormalisedFields);
+    state.normalisedFields = newNormalisedFields;
   }
 
   const dosingCompartments = projectProtocols

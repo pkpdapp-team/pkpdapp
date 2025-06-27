@@ -62,8 +62,8 @@ export default function useObservationRows(state: StepperState, tab: string) {
     ) as Map<string, string>;
     normalisedFields.set("Observation", "Observation");
     normalisedFields.set("Observation ID", "Observation ID");
-    state.setNormalisedFields(normalisedFields);
-    state.setData(rows);
+    state.normalisedFields = normalisedFields;
+    state.data = rows;
   }
   const observationRows = observationField
     ? rows.filter(

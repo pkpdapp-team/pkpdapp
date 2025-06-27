@@ -37,7 +37,7 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
           row["Group ID"] = newValue;
         });
     });
-    state.setData(newData);
+    state.data = newData;
   }
 
   return (
