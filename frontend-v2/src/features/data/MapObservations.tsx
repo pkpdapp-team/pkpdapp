@@ -1,4 +1,4 @@
-import { FC, SyntheticEvent, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
@@ -78,13 +78,7 @@ function validateUnitSymbol(
   return validUnit;
 }
 
-const MapObservations: FC<IMapObservations> = ({
-  state,
-  notificationsInfo,
-}: IMapObservations) => {
-  const [tab, setTab] = useState(0);
-  const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
-  const selectedGroup = groupIDs[tab];
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -107,6 +101,19 @@ const MapObservations: FC<IMapObservations> = ({
     { skip: !project || !project.compound },
   );
 
+  return { model, variables, units };
+}
+
+const MapObservations: FC<IMapObservations> = ({
+  state,
+  notificationsInfo,
+}: IMapObservations) => {
+  const [tab, setTab] = useState(0);
+  const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
+  const selectedGroup = groupIDs[tab];
+
+  const { model, variables, units } = useApiQueries();
+
   const {
     observationRows,
     observationIdField,
@@ -118,14 +125,17 @@ const MapObservations: FC<IMapObservations> = ({
   } = useObservationRows(state, selectedGroup);
   const uniqueObservationIds = [...new Set(observationIds)];
 
-  const [firstRow] = state.data;
-  if (!firstRow["Group ID"]) {
-    const newData = groupDataRows(state.data, state.groupColumn);
-    state.setData(newData);
-    state.setNormalisedFields(
-      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
-    );
-  }
+  useEffect(() => {
+    const [firstRow] = state.data;
+    if (!firstRow["Group ID"]) {
+      const newData = groupDataRows(state.data, state.groupColumn);
+      state.data = newData;
+      state.normalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        ["Group ID", "Group ID"],
+      ]);
+    }
+  }, [state]);
 
   if (!variables || !units) {
     return <Typography>Loading...</Typography>;
@@ -175,8 +185,8 @@ const MapObservations: FC<IMapObservations> = ({
         [observationVariableField, "Observation Variable"],
         [observationUnitField, "Observation Unit"],
       ]);
-      state.setData(nextData);
-      state.setNormalisedFields(newNormalisedFields);
+      state.data = nextData;
+      state.normalisedFields = newNormalisedFields;
       const { errors, warnings } = validateState({
         ...state,
         data: nextData,
@@ -185,8 +195,8 @@ const MapObservations: FC<IMapObservations> = ({
       if (!validUnit) {
         errors.push("Mapped observation variables must have units.");
       }
-      state.setErrors(errors);
-      state.setWarnings(warnings);
+      state.errors = errors;
+      state.warnings = warnings;
     };
   const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];
@@ -198,7 +208,7 @@ const MapObservations: FC<IMapObservations> = ({
       .forEach((row) => {
         row[observationUnitField] = value;
       });
-    state.setData(nextData);
+    state.data = nextData;
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
@@ -216,8 +226,8 @@ const MapObservations: FC<IMapObservations> = ({
     if (!validUnit) {
       errors.push("Mapped observation variables must have units.");
     }
-    state.setErrors(errors);
-    state.setWarnings(warnings);
+    state.errors = errors;
+    state.warnings = warnings;
   };
 
   function handleTabChange(

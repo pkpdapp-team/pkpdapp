@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Papa from "papaparse";
-import { FC, useCallback } from "react";
+import { FC, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
@@ -54,9 +54,9 @@ interface ILoadDataProps {
 function updateDataAndResetFields(state: StepperState, data: Data) {
   if (data.length > 0) {
     const newFields = Object.keys(data[0]);
-    state.setData(data);
+    state.data = data;
     const normalisedFields = new Map(newFields.map(normaliseHeader));
-    state.setNormalisedFields(normalisedFields);
+    state.normalisedFields = normalisedFields;
   }
 }
 
@@ -91,28 +91,20 @@ function createDefaultSubjectGroup(state: StepperState) {
   updateDataAndResetFields(state, newData);
 }
 
-function setMinimumInfusionTime(state: StepperState) {
-  const infusionTimeField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Infusion Duration",
-    ) || "Infusion Duration";
-  const hasZeroInfusionTime = state.data.some(
-    (row) => parseFloat(row[infusionTimeField]) === 0,
-  );
-  if (hasZeroInfusionTime) {
-    const newData = [...state.data];
-    newData.forEach((row) => {
-      const infusionTime = parseFloat(row[infusionTimeField]);
-      row[infusionTimeField] =
-        infusionTime === 0 ? "0.0833" : row[infusionTimeField];
-    });
-    state.setData(newData);
-  }
+function setMinimumInfusionTime(
+  state: StepperState,
+  infusionTimeField: string,
+) {
+  const newData = [...state.data];
+  newData.forEach((row) => {
+    const infusionTime = parseFloat(row[infusionTimeField]);
+    row[infusionTimeField] =
+      infusionTime === 0 ? "0.0833" : row[infusionTimeField];
+  });
+  state.data = newData;
 }
 
-const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
-  const showData = state.data.length > 0 && state.fields.length > 0;
-  const normalisedHeaders = state.normalisedHeaders;
+function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -121,42 +113,66 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-  if (!normalisedHeaders.includes("ID")) {
-    createDefaultSubjects(state);
-  }
-  if (!normalisedHeaders.includes("Cat Covariate")) {
-    createDefaultSubjectGroup(state);
-  }
-  if (normalisedHeaders.includes("Infusion Duration")) {
-    setMinimumInfusionTime(state);
-  }
+  return {
+    isProjectLoading,
+    isSharedWithMe,
+  };
+}
+
+const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
+  const showData = state.data.length > 0 && state.fields.length > 0;
+  const normalisedHeaders = state.normalisedHeaders;
+
+  const { isProjectLoading, isSharedWithMe } = useApiQueries();
+
+  useEffect(() => {
+    if (!normalisedHeaders.includes("ID")) {
+      createDefaultSubjects(state);
+    }
+    if (!normalisedHeaders.includes("Cat Covariate")) {
+      createDefaultSubjectGroup(state);
+    }
+
+    if (normalisedHeaders.includes("Infusion Duration")) {
+      const infusionTimeField =
+        state.fields.find(
+          (field) => state.normalisedFields.get(field) === "Infusion Duration",
+        ) || "Infusion Duration";
+      const hasZeroInfusionTime = state.data.some(
+        (row) => parseFloat(row[infusionTimeField]) === 0,
+      );
+      if (hasZeroInfusionTime) {
+        setMinimumInfusionTime(state, infusionTimeField);
+      }
+    }
+  }, [normalisedHeaders, state]);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      state.setTimeUnit("");
-      state.setAmountUnit("");
-      state.setErrors([]);
-      state.setWarnings([]);
+      state.timeUnit = "";
+      state.amountUnit = "";
+      state.errors = [];
+      state.warnings = [];
       acceptedFiles.forEach((file) => {
         const reader = new FileReader();
 
-        reader.onabort = () => state.setErrors(["file reading was aborted"]);
-        reader.onerror = () => state.setErrors(["file reading has failed"]);
+        reader.onabort = () => (state.errors = ["file reading was aborted"]);
+        reader.onerror = () => (state.errors = ["file reading has failed"]);
         reader.onload = () => {
           if (!ALLOWED_TYPES.includes(file.type)) {
-            state.setErrors([
+            state.errors = [
               "Only CSV files are supported. Please upload a CSV file.",
-            ]);
+            ];
             return;
           }
-          state.setFileName(file.name);
+          state.fileName = file.name;
           // Parse the CSV data
           const rawCsv = reader.result as string;
           const csvData = Papa.parse(rawCsv.trim(), { header: true });
           const fields = csvData.meta.fields || [];
           const normalisedFields = new Map(fields.map(normaliseHeader));
-          state.setData(csvData.data as Data);
-          state.setNormalisedFields(normalisedFields);
+          state.data = csvData.data as Data;
+          state.normalisedFields = normalisedFields;
           // Make a copy of the new state that we can pass to validators.
           const csvState = {
             ...state,
@@ -166,7 +182,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
             normalisedHeaders: [...normalisedFields.values()],
           };
           const fieldValidation = validateState(csvState);
-          state.setHasDosingRows(validateDosingRows(csvState));
+          state.hasDosingRows = validateDosingRows(csvState);
           const groupColumn =
             fields.find(
               (field) => normalisedFields.get(field) === "Cat Covariate",
@@ -174,9 +190,9 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           const errors = csvData.errors
             .map((e) => e.message)
             .concat(fieldValidation.errors);
-          state.setGroupColumn(groupColumn);
-          state.setErrors(errors);
-          state.setWarnings(fieldValidation.warnings);
+          state.groupColumn = groupColumn;
+          state.errors = errors;
+          state.warnings = fieldValidation.warnings;
         };
         reader.readAsText(file);
       });
@@ -189,14 +205,14 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
-    state.setNormalisedFields(normalisedFields);
+    state.normalisedFields = normalisedFields;
     const { errors, warnings } = validateState({
       ...state,
       normalisedFields,
       normalisedHeaders: [...normalisedFields.values()],
     });
-    state.setErrors(errors);
-    state.setWarnings(warnings);
+    state.errors = errors;
+    state.warnings = warnings;
   };
 
   return (

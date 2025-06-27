@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, SyntheticEvent, useState } from "react";
+import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import {
   Box,
   Radio,
@@ -88,46 +88,50 @@ const Stratification: FC<IStratification> = ({
 
   const [firstRow] = state.data;
   const [tab, setTab] = useState(0);
-  const { groupColumn, setGroupColumn } = state;
+  const { groupColumn } = state;
 
   const groups = groupsFromCatCovariate(state, groupColumn);
-  const isValidGrouping = validateGroupMembers(groups);
-  const groupErrorMessage =
-    "Invalid group subjects. Each subject ID can only belong to a single cohort.";
-  if (!isValidGrouping && !state.errors.includes(groupErrorMessage)) {
-    const newErrors = [...state.errors, groupErrorMessage];
-    state.setErrors(newErrors);
-  }
 
-  if (isValidGrouping && state.errors.includes(groupErrorMessage)) {
-    const newErrors = state.errors.filter(
-      (error) => error !== groupErrorMessage,
-    );
-    state.setErrors(newErrors);
-  }
+  useEffect(() => {
+    const isValidGrouping = validateGroupMembers(groups);
+    const groupErrorMessage =
+      "Invalid group subjects. Each subject ID can only belong to a single cohort.";
+    if (!isValidGrouping && !state.errors.includes(groupErrorMessage)) {
+      const newErrors = [...state.errors, groupErrorMessage];
+      state.errors = newErrors;
+    }
 
-  const isValidDosing = validateGroupProtocols(groups, protocols);
-  const doseErrorMessage =
-    "Doses within a group are inconsistent. Please choose another grouping or ignore administration columns and enter the dosing information in Trial Design.";
+    if (isValidGrouping && state.errors.includes(groupErrorMessage)) {
+      const newErrors = state.errors.filter(
+        (error) => error !== groupErrorMessage,
+      );
+      state.errors = newErrors;
+    }
 
-  if (isValidDosing && state.errors.includes(doseErrorMessage)) {
-    const newErrors = state.errors.filter(
-      (error) => error !== doseErrorMessage,
-    );
-    state.setErrors(newErrors);
-  }
-  if (!isValidDosing && !state.errors.includes(doseErrorMessage)) {
-    const newErrors = [...state.errors, doseErrorMessage];
-    state.setErrors(newErrors);
-  }
+    const isValidDosing = validateGroupProtocols(groups, protocols);
+    const doseErrorMessage =
+      "Doses within a group are inconsistent. Please choose another grouping or ignore administration columns and enter the dosing information in Trial Design.";
 
-  if (!firstRow["Group ID"]) {
-    const newData = groupDataRows(state.data, groupColumn);
-    state.setData(newData);
-    state.setNormalisedFields(
-      new Map([...state.normalisedFields.entries(), ["Group ID", "Group ID"]]),
-    );
-  }
+    if (isValidDosing && state.errors.includes(doseErrorMessage)) {
+      const newErrors = state.errors.filter(
+        (error) => error !== doseErrorMessage,
+      );
+      state.errors = newErrors;
+    }
+    if (!isValidDosing && !state.errors.includes(doseErrorMessage)) {
+      const newErrors = [...state.errors, doseErrorMessage];
+      state.errors = newErrors;
+    }
+
+    if (!firstRow["Group ID"]) {
+      const newData = groupDataRows(state.data, groupColumn);
+      state.data = newData;
+      state.normalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        ["Group ID", "Group ID"],
+      ]);
+    }
+  }, [groupColumn, groups, protocols, state, firstRow]);
 
   const handleTabChange = (
     event: SyntheticEvent<Element, Event>,
@@ -139,8 +143,8 @@ const Stratification: FC<IStratification> = ({
   const handleGroupChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newGroup = event.target.value;
     const newData = groupDataRows(state.data, newGroup);
-    setGroupColumn(newGroup);
-    state.setData(newData);
+    state.groupColumn = newGroup;
+    state.data = newData;
   };
 
   function a11yProps(index: number) {

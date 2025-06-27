@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
@@ -44,8 +44,8 @@ function normaliseDataColumn(state: StepperState, type: string) {
       delete newRow[field];
       return newRow;
     });
-    state.setData(newData);
-    state.setNormalisedFields(newNormalisedFields);
+    state.data = newData;
+    state.normalisedFields = newNormalisedFields;
     return newData;
   }
   return state.data;
@@ -65,9 +65,13 @@ const PreviewData: FC<IPreviewData> = ({
       (header) =>
         !["Cat Covariate", "Cont Covariate", "Ignore"].includes(header),
     );
-  normalisedHeaders.forEach((header) => {
-    normaliseDataColumn(state, header);
-  });
+
+  useEffect(() => {
+    normalisedHeaders.forEach((header) => {
+      normaliseDataColumn(state, header);
+    });
+  }, [normalisedHeaders, state]);
+
   const { data, fields } = state;
   const visibleFields = fields.filter(
     (field) =>

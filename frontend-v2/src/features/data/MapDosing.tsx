@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import DosingProtocols from "./DosingProtocols";
 import CreateDosingProtocols from "./CreateDosingProtocols";
 import { StepperState } from "./LoadDataStepper";
@@ -80,24 +80,27 @@ const MapDosing: FC<IMapDosing> = ({
   const { isLoading, amountUnit, projectProtocols, units, variables } =
     useApiQueries();
 
+  useEffect(() => {
+    const hasInvalidUnits =
+      !!amountUnitField &&
+      state.data
+        .map((row) => row[amountUnitField])
+        .some((symbol) => !units?.find((unit) => unit.symbol === symbol));
+    if (
+      !isLoading &&
+      hasInvalidUnits &&
+      amountUnitField !== "Amount Unit" &&
+      state.normalisedFields.get(amountUnitField) !== "Ignore"
+    ) {
+      const newNormalisedFields = new Map(state.normalisedFields);
+      newNormalisedFields.set(amountUnitField, "Ignore");
+      newNormalisedFields.set("Amount Unit", "Amount Unit");
+      state.normalisedFields = newNormalisedFields;
+    }
+  }, [amountUnitField, isLoading, state, units]);
+
   if (isLoading) {
     return null;
-  }
-
-  const hasInvalidUnits =
-    !!amountUnitField &&
-    state.data
-      .map((row) => row[amountUnitField])
-      .some((symbol) => !units?.find((unit) => unit.symbol === symbol));
-  if (
-    hasInvalidUnits &&
-    amountUnitField !== "Amount Unit" &&
-    state.normalisedFields.get(amountUnitField) !== "Ignore"
-  ) {
-    const newNormalisedFields = new Map(state.normalisedFields);
-    newNormalisedFields.set(amountUnitField, "Ignore");
-    newNormalisedFields.set("Amount Unit", "Amount Unit");
-    state.setNormalisedFields(newNormalisedFields);
   }
 
   const dosingCompartments = projectProtocols

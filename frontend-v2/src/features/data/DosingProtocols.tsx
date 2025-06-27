@@ -104,13 +104,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         .forEach((row) => {
           row[amountVariableField] = value;
         });
-      state.setData(nextData);
-      state.setNormalisedFields(
-        new Map([
-          ...state.normalisedFields.entries(),
-          [amountVariableField, "Amount Variable"],
-        ]),
-      );
+      state.data = nextData;
+      state.normalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        [amountVariableField, "Amount Variable"],
+      ]);
     };
   const handleAmountUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];
@@ -126,15 +124,15 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       ...state.normalisedFields.entries(),
       [amountUnitField, "Amount Unit"],
     ]);
-    state.setData(nextData);
-    state.setNormalisedFields(newNormalisedFields);
+    state.data = nextData;
+    state.normalisedFields = newNormalisedFields;
     const { errors, warnings } = validateState({
       ...state,
       data: nextData,
       normalisedFields: newNormalisedFields,
     });
-    state.setErrors(errors);
-    state.setWarnings(warnings);
+    state.errors = errors;
+    state.warnings = warnings;
   };
 
   return (

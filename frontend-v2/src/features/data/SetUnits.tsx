@@ -64,7 +64,7 @@ const SetUnits: FC<IMapObservations> = ({
     ) || "Time Unit";
 
   function setTimeUnit(event: SelectChangeEvent) {
-    state.setTimeUnit(event.target?.value);
+    state.timeUnit = event.target?.value;
     const newData = state.data.map((row) => ({
       ...row,
       "Time Unit": event.target?.value,
@@ -74,14 +74,14 @@ const SetUnits: FC<IMapObservations> = ({
       [timeUnitField, "Ignore"],
       ["Time Unit", "Time Unit"],
     ]);
-    state.setData(newData);
-    state.setNormalisedFields(newNormalisedFields);
+    state.data = newData;
+    state.normalisedFields = newNormalisedFields;
     const { errors, warnings } = validateState({
       ...state,
       normalisedFields: newNormalisedFields,
     });
-    state.setErrors(errors);
-    state.setWarnings(warnings);
+    state.errors = errors;
+    state.warnings = warnings;
     setIsChanged(true);
     setHasTimeUnitChanged(true);
   }
