@@ -36,7 +36,6 @@ interface Props {
   updateLinksToPd: (key: number, value: boolean) => void;
   isAnyLinkToPdSelected: boolean;
   updateLagTimes: (key: number, value: boolean) => void;
-  isAnyLagTimeSelected: boolean;
   onChange: () => void;
 }
 
@@ -55,7 +54,6 @@ const AdditionalParametersRow: FC<Props> = ({
   updateLinksToPd,
   isAnyLinkToPdSelected,
   updateLagTimes,
-  isAnyLagTimeSelected,
   onChange,
 }) => {
   const {
@@ -199,7 +197,6 @@ const AdditionalParametersRow: FC<Props> = ({
     return null;
   }
 
-  const modelHaveTLag = model.has_lag;
   let variable_name = variable.name;
   if (
     model.number_of_effect_compartments &&
@@ -214,36 +211,13 @@ const AdditionalParametersRow: FC<Props> = ({
     variable_name = `${variable.name}${compartment_number}`;
   }
 
-  return !modelHaveTLag && noMapToPD && noDerivedVariables ? null : (
+  return noMapToPD && noDerivedVariables ? null : (
     <TableRow>
       <TableCell size="small" width="5rem">
         <Tooltip title={variable.description}>
           <Typography>{variable_name}</Typography>
         </Tooltip>
       </TableCell>
-      {modelHaveTLag && (
-        <TableCell size="small" sx={{ width: "5rem" }}>
-          {!noDosing && (
-            <FormControlLabel
-              control={
-                <MuiCheckbox
-                  sx={{
-                    "& .MuiSvgIcon-root": {
-                      color: isAnyLagTimeSelected ? "inherit" : "red",
-                    },
-                  }}
-                  checked={isLinkedTo("TLG")}
-                  onClick={onClickDerived("TLG")}
-                  data-cy={`checkbox-tlag-${variable.name}`}
-                  disabled={isSharedWithMe}
-                  aria-label={`Lag time: ${variable.name}`}
-                />
-              }
-              label=""
-            />
-          )}
-        </TableCell>
-      )}
       {model.pd_model && (
         <TableCell size="small" sx={{ width: "8rem" }}>
           {!noMapToPD && (

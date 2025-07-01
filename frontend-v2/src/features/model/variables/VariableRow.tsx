@@ -36,11 +36,13 @@ interface Props {
   isAnyDosingSelected: boolean;
   updateLinksToPd: (key: number, value: boolean) => void;
   updateLagTimes: (key: number, value: boolean) => void;
+  isAnyLagTimeSelected: boolean;
 }
 
 const VariableRow: FC<Props> = ({
   project,
   compound,
+  model,
   variable,
   control,
   effectVariable,
@@ -50,8 +52,14 @@ const VariableRow: FC<Props> = ({
   isAnyDosingSelected,
   updateLinksToPd,
   updateLagTimes,
+  isAnyLagTimeSelected,
 }) => {
-  const { mappings, derivedVariables } = useFormData({ control });
+  const {
+    mappings,
+    derivedVariables,
+    derivedVariablesAppend,
+    derivedVariablesRemove,
+  } = useFormData({ control });
   const { addProtocol, removeProtocol, setValue, updateVariable, hasProtocol } =
     useVariableFormState({
       compound,
@@ -60,6 +68,24 @@ const VariableRow: FC<Props> = ({
       units,
       variable,
     });
+
+  const addTLG = () => {
+    derivedVariablesAppend({
+      pk_variable: variable.id,
+      pkpd_model: model.id,
+      type: "TLG",
+    });
+  };
+
+  const tlgIndex = derivedIndex("TLG", derivedVariables, variable);
+
+  const removeTLG = () => {
+    derivedVariablesRemove(tlgIndex);
+  };
+
+  const onClickTLG = () => {
+    return tlgIndex >= 0 ? removeTLG() : addTLG();
+  };
 
   async function onAddProtocol() {
     const value = await addProtocol();
@@ -155,6 +181,27 @@ const VariableRow: FC<Props> = ({
       <TableCell size="small" width="5rem">
         {isPD ? "PD" : "PK"}
       </TableCell>
+      {model.has_lag && (
+        <TableCell size="small" sx={{ width: "5rem" }}>
+          <FormControlLabel
+            control={
+              <MuiCheckbox
+                sx={{
+                  "& .MuiSvgIcon-root": {
+                    color: isAnyLagTimeSelected ? "inherit" : "red",
+                  },
+                }}
+                checked={isLinkedToTLG}
+                onClick={onClickTLG}
+                data-cy={`checkbox-tlag-${variable.name}`}
+                disabled={isSharedWithMe}
+                aria-label={`Lag time: ${variable.name}`}
+              />
+            }
+            label=""
+          />
+        </TableCell>
+      )}
       <TableCell size="small">
         {!noDosing && (
           <FormControlLabel
