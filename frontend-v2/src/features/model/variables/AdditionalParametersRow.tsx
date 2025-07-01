@@ -235,6 +235,7 @@ const AdditionalParametersRow: FC<Props> = ({
                   onClick={onClickDerived("TLG")}
                   data-cy={`checkbox-tlag-${variable.name}`}
                   disabled={isSharedWithMe}
+                  aria-label={`Lag time: ${variable.name}`}
                 />
               }
               label=""
