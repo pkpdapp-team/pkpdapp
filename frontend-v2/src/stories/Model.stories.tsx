@@ -331,6 +331,7 @@ export const LagTime: Story = {
     expect(lagTimeCheckbox2).toBeChecked();
 
     // Test that the error message has disappeared.
+    await delay(1000); // Wait for the model to update
     const mapVariablesTab = await canvas.findByRole("tab", {
       name: "Map Variables",
     });
