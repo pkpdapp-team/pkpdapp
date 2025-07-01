@@ -215,7 +215,7 @@ export const Default: Story = {
   },
 };
 
-export const ShowMMTModel: Story = {
+export const ShowMMTCode: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -299,6 +299,42 @@ export const PDModel: Story = {
     expect(pdModelList).toHaveTextContent(
       "indirect_effects_stimulation_elimination",
     );
+  },
+};
+
+export const LagTime: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+
+    const lagTimeCheckbox = await canvas.findByRole("checkbox", {
+      name: /Lag time/i,
+    });
+    expect(lagTimeCheckbox).toBeInTheDocument();
+    expect(lagTimeCheckbox).not.toBeChecked();
+    await userEvent.click(lagTimeCheckbox);
+    expect(lagTimeCheckbox).toBeChecked();
+
+    await delay(1000); // Wait for the model to update
+    const errorTab = await canvas.findByRole("tab", {
+      name: /Map Variables Please select a lag time variable/i,
+    });
+    expect(errorTab).toBeInTheDocument();
+    await userEvent.click(errorTab);
+
+    const lagTimeCheckbox2 = await canvas.findByRole("checkbox", {
+      name: /Lag time: A1/i,
+    });
+    expect(lagTimeCheckbox2).toBeInTheDocument();
+    expect(lagTimeCheckbox2).not.toBeChecked();
+    await userEvent.click(lagTimeCheckbox2);
+    expect(lagTimeCheckbox2).toBeChecked();
+
+    // Test that the error message has disappeared.
+    const mapVariablesTab = await canvas.findByRole("tab", {
+      name: "Map Variables",
+    });
+    expect(mapVariablesTab).toBeInTheDocument();
   },
 };
 
