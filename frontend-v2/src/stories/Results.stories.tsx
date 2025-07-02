@@ -1,5 +1,10 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import {
+  expect,
+  spyOn,
+  waitForElementToBeRemoved,
+  within,
+} from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -196,5 +201,23 @@ export const AddNewTable: Story = {
       name: "Results table",
     });
     expect(newTable).toBeInTheDocument();
+  },
+};
+
+export const DeleteTable: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const confirmSpy = spyOn(window, "confirm").mockImplementation(() => true); // Mock confirm dialog to always return true
+    await AddNewTable.play?.(context);
+    const canvas = within(canvasElement);
+    const table2Tab = await canvas.findByRole("tab", {
+      name: "Table 2",
+    });
+    expect(table2Tab).toBeInTheDocument();
+    // buttons within buttons are invalid HTML, so this button has no name.
+    const deleteButton = within(table2Tab).getByRole("button");
+    await userEvent.click(deleteButton);
+    await waitForElementToBeRemoved(table2Tab);
+
+    confirmSpy.mockRestore(); // Restore original confirm function
   },
 };
