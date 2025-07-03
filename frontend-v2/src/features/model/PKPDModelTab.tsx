@@ -116,18 +116,16 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
     const bIndex = pk_model_order.indexOf(bName);
     return aIndex - bIndex;
   });
-  const pd_model_map = pdModels.reduce(
-    (map, m) => {
-      map[m.id] = m;
-      return map;
-    },
-    {} as { [key: number]: PharmacodynamicRead },
+  const pd_model_map = new Map<number, PharmacodynamicRead>(
+    pdModels.map((m) => [m.id, m]),
   );
+  const pd_model = pd_model_map.get(model.pd_model as number);
+  const pd_model2 = pd_model_map.get(model.pd_model2 as number);
 
   const pdIsTumourGrowth =
     model.pd_model &&
-    pd_model_map[model.pd_model].name.includes("tumour_growth") &&
-    !pd_model_map[model.pd_model].name.includes("inhibition");
+    pd_model?.name.includes("tumour_growth") &&
+    !pd_model?.name.includes("inhibition");
   const pd_model2_options: { value: number | string; label: string }[] =
     pdModelsFiltered
       .filter((m) => m.name.includes("tumour_growth_inhibition"))
@@ -136,8 +134,6 @@ const PKPDModelTab: FC<Props> = ({ model, project, control }: Props) => {
       });
   pd_model2_options.push({ value: "", label: "None" });
 
-  const pd_model = model.pd_model ? pd_model_map[model.pd_model] : null;
-  const pd_model2 = model.pd_model2 ? pd_model_map[model.pd_model2] : null;
   const pdModelHasHillCoefficient =
     pd_model?.name.includes("indirect") ||
     pd_model?.name.includes("direct") ||

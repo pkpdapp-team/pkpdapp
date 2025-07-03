@@ -1,6 +1,12 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, fn } from "storybook/test";
+import {
+  expect,
+  screen,
+  within,
+  fn,
+  waitForElementToBeRemoved,
+} from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -177,6 +183,22 @@ const meta: Meta<typeof Model> = {
 
 export default meta;
 
+type UserEvent = {
+  click: (element: HTMLElement) => Promise<void>;
+  selectOptions: (element: HTMLElement, value: string) => Promise<void>;
+};
+
+async function selectMenuOption(
+  comboBox: HTMLElement,
+  option: string,
+  userEvent: UserEvent,
+): Promise<void> {
+  await userEvent.click(comboBox);
+  const listbox: HTMLElement = await screen.findByRole("listbox");
+  await userEvent.selectOptions(listbox, option);
+  expect(comboBox).toHaveTextContent(option);
+}
+
 type Story = StoryObj<typeof Model>;
 
 export const Default: Story = {
@@ -271,10 +293,11 @@ export const PKModel: Story = {
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("one_compartment_preclinical");
 
-    await userEvent.click(pkModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "three_compartment_preclinical");
-    expect(pkModelList).toHaveTextContent("three_compartment_preclinical");
+    await selectMenuOption(
+      pkModelList,
+      "three_compartment_preclinical",
+      userEvent,
+    );
   },
 };
 
@@ -285,14 +308,10 @@ export const PDModel: Story = {
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("direct_effects_emax");
 
-    await userEvent.click(pdModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(
-      listbox,
+    await selectMenuOption(
+      pdModelList,
       "indirect_effects_stimulation_elimination",
-    );
-    expect(pdModelList).toHaveTextContent(
-      "indirect_effects_stimulation_elimination",
+      userEvent,
     );
   },
 };
@@ -304,10 +323,56 @@ export const TumourGrowthModel: Story = {
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("direct_effects_emax");
 
-    await userEvent.click(pdModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "tumour_growth_linear");
-    expect(pdModelList).toHaveTextContent("tumour_growth_linear");
+    await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
+
+    const secondaryPDModelSelect = await canvas.findByRole(
+      "combobox",
+      {
+        name: /Secondary PD Model/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enoough in CI.
+      },
+    );
+    await selectMenuOption(
+      secondaryPDModelSelect,
+      "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
+      userEvent,
+    );
+  },
+};
+
+export const HillCoefficient: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    const pdModelList = await canvas.findByLabelText("PD Model");
+    expect(pdModelList).toHaveTextContent("direct_effects_emax");
+
+    let hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
+      name: /Hill coefficient/i,
+    });
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
+    expect(hillCoefficientCheckbox).not.toBeChecked();
+    await userEvent.click(hillCoefficientCheckbox);
+    expect(hillCoefficientCheckbox).toBeChecked();
+
+    await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+
+    await selectMenuOption(
+      pdModelList,
+      "indirect_effects_inhibition_elimination",
+      userEvent,
+    ); // Deselect the PD model
+    hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
+      name: /Hill coefficient/i,
+    });
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
+    expect(hillCoefficientCheckbox).toBeChecked();
+
+    await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox);
 
     const secondaryPDModelSelect = await canvas.findByRole(
       "combobox",
@@ -319,15 +384,15 @@ export const TumourGrowthModel: Story = {
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
-    await userEvent.click(secondaryPDModelSelect);
-    const secondaryPDModelListbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(
-      secondaryPDModelListbox,
+    await selectMenuOption(
+      secondaryPDModelSelect,
       "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
+      userEvent,
     );
-    expect(secondaryPDModelSelect).toHaveTextContent(
-      "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
-    );
+    hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
+      name: /Hill coefficient/i,
+    });
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
   },
 };
 
@@ -344,10 +409,15 @@ export const LagTime: Story = {
     await userEvent.click(lagTimeCheckbox);
     expect(lagTimeCheckbox).toBeChecked();
 
-    await delay(1000); // Wait for the model to update
-    const errorTab = await canvas.findByRole("tab", {
-      name: /Map Variables Please select a lag time variable/i,
-    });
+    const errorTab = await canvas.findByRole(
+      "tab",
+      {
+        name: /Map Variables Please select a lag time variable/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
     expect(errorTab).toBeInTheDocument();
     await userEvent.click(errorTab);
 
@@ -360,9 +430,15 @@ export const LagTime: Story = {
     expect(lagTimeCheckbox2).toBeChecked();
 
     // Test that the error message has disappeared.
-    const mapVariablesTab = await canvas.findByRole("tab", {
-      name: "Map Variables",
-    });
+    const mapVariablesTab = await canvas.findByRole(
+      "tab",
+      {
+        name: "Map Variables",
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
     expect(mapVariablesTab).toBeInTheDocument();
   },
 };
