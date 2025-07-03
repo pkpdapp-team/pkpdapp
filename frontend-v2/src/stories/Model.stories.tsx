@@ -297,6 +297,40 @@ export const PDModel: Story = {
   },
 };
 
+export const TumourGrowthModel: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    const pdModelList = await canvas.findByLabelText("PD Model");
+    expect(pdModelList).toHaveTextContent("direct_effects_emax");
+
+    await userEvent.click(pdModelList);
+    const listbox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(listbox, "tumour_growth_linear");
+    expect(pdModelList).toHaveTextContent("tumour_growth_linear");
+
+    const secondaryPDModelSelect = await canvas.findByRole(
+      "combobox",
+      {
+        name: /Secondary PD Model/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enoough in CI.
+      },
+    );
+    expect(secondaryPDModelSelect).toBeInTheDocument();
+    await userEvent.click(secondaryPDModelSelect);
+    const secondaryPDModelListbox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(
+      secondaryPDModelListbox,
+      "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
+    );
+    expect(secondaryPDModelSelect).toHaveTextContent(
+      "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
+    );
+  },
+};
+
 export const LagTime: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
