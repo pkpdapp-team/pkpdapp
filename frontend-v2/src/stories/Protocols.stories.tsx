@@ -1,6 +1,13 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, within, waitFor, fn } from "storybook/test";
+import {
+  expect,
+  within,
+  waitFor,
+  fn,
+  spyOn,
+  waitForElementToBeRemoved,
+} from "storybook/test";
 
 import Protocols from "../features/trial/Protocols";
 import { projectProtocols, groups } from "./protocols.mock";
@@ -223,5 +230,22 @@ export const AddGroup: Story = {
     const newGroupTab = canvas.getByRole("tab", { name: /Group 1/i });
     expect(newGroupTab).toBeInTheDocument();
     await userEvent.click(newGroupTab);
+  },
+};
+
+export const DeleteGroup: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const confirmSpy = spyOn(window, "confirm").mockImplementation(() => true); // Mock confirm dialog to always return true
+    const canvas = within(canvasElement);
+    await AddGroup.play?.(context);
+    const groupTab = await canvas.findByRole("tab", { name: /Group 1/i });
+    expect(groupTab).toBeInTheDocument();
+    // TODO: buttons within buttons are invalid HTML, and an accessibility error.
+    const deleteButton = await within(groupTab).findByRole("button");
+    expect(deleteButton).toBeInTheDocument();
+    await userEvent.click(deleteButton);
+    await waitForElementToBeRemoved(groupTab);
+
+    confirmSpy.mockRestore(); // Restore original confirm function
   },
 };
