@@ -201,10 +201,12 @@ const PKPDModelTab: FC<Props> = ({
     });
   pd_model2_options.push({ value: "", label: "None" });
 
-  const pdModelHasHillCoefficient =
-    pd_model?.name.includes("indirect") ||
-    pd_model?.name.includes("direct") ||
-    pd_model2?.name.includes("emax_kill");
+  const pdModelHasHillCoefficient = version_greater_than_2
+    ? pd_model?.mmt?.includes("desc: Hill coefficient") ||
+      pd_model2?.mmt?.includes("desc: Hill coefficient")
+    : pd_model?.name.includes("indirect") ||
+      pd_model?.name.includes("direct") ||
+      pd_model2?.name.includes("emax_kill");
 
   const defaultProps = {
     disabled: isSharedWithMe,
