@@ -1,6 +1,12 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
-import { expect, screen, within, fn } from "storybook/test";
+import {
+  expect,
+  screen,
+  within,
+  fn,
+  waitForElementToBeRemoved,
+} from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -183,6 +189,22 @@ const meta: Meta<typeof Model> = {
 
 export default meta;
 
+type UserEvent = {
+  click: (element: HTMLElement) => Promise<void>;
+  selectOptions: (element: HTMLElement, value: string) => Promise<void>;
+};
+
+async function selectMenuOption(
+  comboBox: HTMLElement,
+  option: string,
+  userEvent: UserEvent,
+): Promise<void> {
+  await userEvent.click(comboBox);
+  const listbox: HTMLElement = await screen.findByRole("listbox");
+  await userEvent.selectOptions(listbox, option);
+  expect(comboBox).toHaveTextContent(option);
+}
+
 type Story = StoryObj<typeof Model>;
 
 export const Default: Story = {
@@ -275,10 +297,7 @@ export const PKModel: Story = {
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("1-compartmental model");
 
-    await userEvent.click(pkModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "3-compartmental model");
-    expect(pkModelList).toHaveTextContent("3-compartmental model");
+    await selectMenuOption(pkModelList, "3-compartmental model", userEvent);
   },
 };
 
@@ -289,10 +308,11 @@ export const PDModel: Story = {
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("Direct effect model (inhibitory)");
 
-    await userEvent.click(pdModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "Direct effect model (stimulatory)");
-    expect(pdModelList).toHaveTextContent("Direct effect model (stimulatory)");
+    await selectMenuOption(
+      pdModelList,
+      "Direct effect model (stimulatory)",
+      userEvent,
+    );
   },
 };
 
@@ -303,10 +323,11 @@ export const TumourGrowthModel: Story = {
     const pdModelList = await canvas.findByLabelText("PD Model");
     expect(pdModelList).toHaveTextContent("Direct effect model (inhibitory)");
 
-    await userEvent.click(pdModelList);
-    const listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "Tumor growth model (linear)");
-    expect(pdModelList).toHaveTextContent("Tumor growth model (linear)");
+    await selectMenuOption(
+      pdModelList,
+      "Tumor growth model (linear)",
+      userEvent,
+    );
 
     const secondaryPDModelSelect = await canvas.findByRole(
       "combobox",
@@ -318,15 +339,87 @@ export const TumourGrowthModel: Story = {
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
-    await userEvent.click(secondaryPDModelSelect);
-    const secondaryPDModelListbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(
-      secondaryPDModelListbox,
+    await selectMenuOption(
+      secondaryPDModelSelect,
       "TGI cell distribution model (Emax kill)",
+      userEvent,
     );
-    expect(secondaryPDModelSelect).toHaveTextContent(
-      "TGI cell distribution model (Emax kill)",
+  },
+};
+
+export const HillCoefficient: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    const pdModelList = await canvas.findByLabelText("PD Model");
+    expect(pdModelList).toHaveTextContent("Direct effect model (inhibitory)");
+
+    let hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
+      name: /Hill coefficient/i,
+    });
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
+    expect(hillCoefficientCheckbox).not.toBeChecked();
+    await userEvent.click(hillCoefficientCheckbox);
+    expect(hillCoefficientCheckbox).toBeChecked();
+
+    await selectMenuOption(
+      pdModelList,
+      "Tumor growth model (linear)",
+      userEvent,
     );
+    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+
+    await selectMenuOption(
+      pdModelList,
+      "Indirect effect model (inhibition of elimination)",
+      userEvent,
+    ); // Deselect the PD model
+    hillCoefficientCheckbox = await canvas.findByRole(
+      "checkbox",
+      {
+        name: /Hill coefficient/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
+    expect(hillCoefficientCheckbox).toBeChecked();
+
+    await selectMenuOption(
+      pdModelList,
+      "Tumor growth model (linear)",
+      userEvent,
+    );
+    await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 2000, // the default timeout isn't long enough in CI.
+    });
+
+    const secondaryPDModelSelect = await canvas.findByRole(
+      "combobox",
+      {
+        name: /Secondary PD Model/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
+    expect(secondaryPDModelSelect).toBeInTheDocument();
+    await selectMenuOption(
+      secondaryPDModelSelect,
+      "TGI signal distribution model (Emax kill)",
+      userEvent,
+    );
+    hillCoefficientCheckbox = await canvas.findByRole(
+      "checkbox",
+      {
+        name: /Hill coefficient/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
+    expect(hillCoefficientCheckbox).toBeInTheDocument();
   },
 };
 
