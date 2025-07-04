@@ -363,7 +363,9 @@ export const HillCoefficient: Story = {
     expect(hillCoefficientCheckbox).toBeChecked();
 
     await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
-    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 2000, // the default timeout isn't long enough in CI.
+    });
 
     await selectMenuOption(
       pdModelList,
