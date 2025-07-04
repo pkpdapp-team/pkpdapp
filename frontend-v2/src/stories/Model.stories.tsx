@@ -358,21 +358,31 @@ export const HillCoefficient: Story = {
     expect(hillCoefficientCheckbox).toBeChecked();
 
     await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
-    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 2000, // the default timeout isn't long enough in CI.
+    });
 
     await selectMenuOption(
       pdModelList,
       "indirect_effects_inhibition_elimination",
       userEvent,
     ); // Deselect the PD model
-    hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
-      name: /Hill coefficient/i,
-    });
+    hillCoefficientCheckbox = await canvas.findByRole(
+      "checkbox",
+      {
+        name: /Hill coefficient/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).toBeChecked();
 
     await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
-    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 2000, // the default timeout isn't long enough in CI.
+    });
 
     const secondaryPDModelSelect = await canvas.findByRole(
       "combobox",
@@ -389,9 +399,15 @@ export const HillCoefficient: Story = {
       "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
       userEvent,
     );
-    hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
-      name: /Hill coefficient/i,
-    });
+    hillCoefficientCheckbox = await canvas.findByRole(
+      "checkbox",
+      {
+        name: /Hill coefficient/i,
+      },
+      {
+        timeout: 2000, // the default timeout isn't long enough in CI.
+      },
+    );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
   },
 };
