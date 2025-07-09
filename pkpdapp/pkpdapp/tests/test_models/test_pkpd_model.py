@@ -126,15 +126,17 @@ class TestPkpdModel(TestCase):
 
         for pk_model in pk_models:
             for pd_model in pd_models:
-                pkpd_model = CombinedModel.objects.create(
-                    name=f"{pk_model.name} + {pd_model.name}",
-                    pk_model=pk_model,
-                    pd_model=pd_model,
-                    project=self.project,
-                )
-                self.assertEqual(pkpd_model.pk_model, pk_model)
-                self.assertEqual(pkpd_model.pd_model, pd_model)
-                self.assertEqual(pkpd_model.project, self.project)
+
+                with self.subTest(pk=pk_model.name, pd=pd_model.name):
+                    pkpd_model = CombinedModel.objects.create(
+                        name=f"{pk_model.name} + {pd_model.name}",
+                        pk_model=pk_model,
+                        pd_model=pd_model,
+                        project=self.project,
+                    )
+                    self.assertEqual(pkpd_model.pk_model, pk_model)
+                    self.assertEqual(pkpd_model.pd_model, pd_model)
+                    self.assertEqual(pkpd_model.project, self.project)
 
     def test_combined_model_creation_single_model(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
