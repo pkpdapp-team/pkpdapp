@@ -114,7 +114,25 @@ class TestPkpdModel(TestCase):
             )
             self.assertNotEqual(copy.id, time_interval.id)
 
-    def test_combined_model_creation(self):
+    def test_combined_model_creation_all_models(self):
+        pk_models = PharmacokineticModel.objects.all()
+        pd_models = PharmacodynamicModel.objects.all()
+        self.assertGreater(len(pk_models), 0)
+        self.assertGreater(len(pd_models), 0)
+
+        for pk_model in pk_models:
+            for pd_model in pd_models:
+                pkpd_model = CombinedModel.objects.create(
+                    name=f"{pk_model.name} + {pd_model.name}",
+                    pk_model=pk_model,
+                    pd_model=pd_model,
+                    project=self.project,
+                )
+                self.assertEqual(pkpd_model.pk_model, pk_model)
+                self.assertEqual(pkpd_model.pd_model, pd_model)
+                self.assertEqual(pkpd_model.project, self.project)
+
+    def test_combined_model_creation_single_model(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
         pd_model = PharmacodynamicModel.objects.get(
             name="indirect_effects_stimulation_production"
