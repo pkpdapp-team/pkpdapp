@@ -33,7 +33,7 @@ const proxy = {
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
-  const { VITE_APP_GA_ID } = loadEnv(mode, process.cwd());
+  const { VITE_APP_GA_ID, VITE_BROWSER = "chromium" } = loadEnv(mode, process.cwd());
   const radarOptions = {
     enableDev: true,
     analytics: {
@@ -93,7 +93,7 @@ export default ({ mode }) => {
               enabled: true,
               headless: true,
               provider: "playwright",
-              instances: [{ browser: "chromium" }],
+              instances: [{ browser: VITE_BROWSER }],
             },
             setupFiles: [".storybook/vitest.setup.ts"],
             retry: 2,
