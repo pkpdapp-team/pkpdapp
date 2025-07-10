@@ -15,6 +15,10 @@ jobs:
       # Make sure to grab the latest version of the Playwright image
       # https://playwright.dev/docs/docker#pull-the-image
       image: mcr.microsoft.com/playwright:v1.56.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     defaults:
       run:
         working-directory: ./frontend-v2
@@ -33,3 +37,6 @@ jobs:
 
       - name: Run tests
         run: yarn test-storybook
+        env:
+          VITE_BROWSER: ${{ matrix.browser }}
+          HOME: /root
