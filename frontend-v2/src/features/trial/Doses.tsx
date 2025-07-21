@@ -120,6 +120,8 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
 
   const protocolName = mappedVariable.split(".").pop();
 
+  const sortedDoses = [...protocol.doses].sort((a, b) => a.id - b.id);
+
   return (
     <>
       <TableRow>
@@ -178,7 +180,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           </Box>
         </TableCell>
       </TableRow>
-      {protocol.doses.map((dose, index) => (
+      {sortedDoses.map((dose, index) => (
         <DoseRow
           key={dose.id}
           index={index}
@@ -188,7 +190,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           control={control}
           isPreclinical={isPreclinical}
           minStartTime={
-            doses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
+            sortedDoses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
           }
           onChange={onChange}
           removeDose={removeDose}
