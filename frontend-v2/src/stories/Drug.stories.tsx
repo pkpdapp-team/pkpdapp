@@ -18,24 +18,26 @@ const meta: Meta<typeof Drug> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: [
-        ...projectHandlers,
-        http.put("/api/compound/:id", async ({ params, request }) => {
-          await delay();
-          //@ts-expect-error params.id is a string
-          const compoundId = parseInt(params.id, 10);
-          const compoundData = await request.json();
-          compoundSpy(compoundId, compoundData);
-          return HttpResponse.json(
-            {
-              id: compoundId,
-              //@ts-expect-error compundData is a request body
-              ...compoundData,
-            },
-            { status: 200 },
-          );
-        }),
-      ],
+      handlers: {
+        project: projectHandlers,
+        compound: [
+          http.put("/api/compound/:id", async ({ params, request }) => {
+            await delay();
+            //@ts-expect-error params.id is a string
+            const compoundId = parseInt(params.id, 10);
+            const compoundData = await request.json();
+            compoundSpy(compoundId, compoundData);
+            return HttpResponse.json(
+              {
+                id: compoundId,
+                //@ts-expect-error compundData is a request body
+                ...compoundData,
+              },
+              { status: 200 },
+            );
+          }),
+        ],
+      },
     },
   },
   decorators: [
@@ -63,7 +65,7 @@ export const Default: Story = {
     });
     expect(efficacyTable).toBeInTheDocument();
     const efficacyTableRows = within(efficacyTable).getAllByRole("row");
-    expect(efficacyTableRows).toHaveLength(3); // header + 2 data rows
+    expect(efficacyTableRows).toHaveLength(1); // header + 0 data rows
   },
 };
 
@@ -81,7 +83,7 @@ export const AddNew: Story = {
     });
     await waitFor(() => {
       const efficacyTableRows = within(efficacyTable).getAllByRole("row");
-      expect(efficacyTableRows).toHaveLength(4); // header + 3 data rows
+      expect(efficacyTableRows).toHaveLength(2); // header + 1 data row
     });
   },
 };
