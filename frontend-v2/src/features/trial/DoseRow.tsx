@@ -8,6 +8,7 @@ import {
   DoseRead,
   Protocol,
   UnitRead,
+  useDoseDestroyMutation,
   useDoseRetrieveQuery,
   useDoseUpdateMutation,
 } from "../../app/backendApi";
@@ -23,7 +24,6 @@ type Props = {
   isPreclinical: boolean;
   minStartTime: number;
   onChange: () => void;
-  removeDose: (index: number) => void;
   selectedAmountLabel: string;
   timeUnit?: UnitRead;
 };
@@ -37,7 +37,6 @@ const DoseRow: FC<Props> = ({
   isPreclinical,
   minStartTime,
   onChange,
-  removeDose,
   selectedAmountLabel,
   timeUnit,
 }) => {
@@ -57,6 +56,7 @@ const DoseRow: FC<Props> = ({
   useDirty(isDirty);
 
   const [updateDose] = useDoseUpdateMutation();
+  const [destroyDose] = useDoseDestroyMutation();
 
   const handleFormData = useCallback(
     async (data: DoseRead) => {
@@ -81,9 +81,11 @@ const DoseRow: FC<Props> = ({
     disabled,
   };
 
-  const handleDeleteRow = () => {
-    removeDose(index);
+  const handleDeleteRow = async () => {
+    await destroyDose({ id: doseId });
+    onChange();
   };
+
   return (
     <TableRow>
       <TableCell>

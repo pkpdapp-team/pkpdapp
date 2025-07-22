@@ -83,6 +83,7 @@ class CombinedModelTestCase(APITestCase):
                         "duration": 0.001,
                         "repeat_interval": 1,
                         "repeats": 1,
+                        "protocol": None,  # will be set later
                     }
                 ],
             },
