@@ -2602,6 +2602,8 @@ export type Dose = {
   read_only?: boolean;
   /** datetime the object was stored. */
   datetime?: string | null;
+  /** protocol containing this dose */
+  protocol?: number | null;
 };
 export type DoseRead = {
   id: number;
@@ -2619,6 +2621,8 @@ export type DoseRead = {
   read_only?: boolean;
   /** datetime the object was stored. */
   datetime?: string | null;
+  /** protocol containing this dose */
+  protocol?: number | null;
 };
 export type DoseTypeEnum = "D" | "I";
 export type Protocol = {
@@ -2755,6 +2759,8 @@ export type PatchedDose = {
   read_only?: boolean;
   /** datetime the object was stored. */
   datetime?: string | null;
+  /** protocol containing this dose */
+  protocol?: number | null;
 };
 export type PatchedDoseRead = {
   id?: number;
@@ -2772,6 +2778,8 @@ export type PatchedDoseRead = {
   read_only?: boolean;
   /** datetime the object was stored. */
   datetime?: string | null;
+  /** protocol containing this dose */
+  protocol?: number | null;
 };
 export type LogLikelihoodParameter = {
   /** name of log_likelihood parameter. */

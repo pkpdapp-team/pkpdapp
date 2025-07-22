@@ -4033,6 +4033,10 @@ components:
           format: date-time
           nullable: true
           description: datetime the object was stored.
+        protocol:
+          type: integer
+          nullable: true
+          description: protocol containing this dose
       required:
       - amount
       - id
@@ -4714,6 +4718,10 @@ components:
           format: date-time
           nullable: true
           description: datetime the object was stored.
+        protocol:
+          type: integer
+          nullable: true
+          description: protocol containing this dose
     PatchedInference:
       type: object
       properties:

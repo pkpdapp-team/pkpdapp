@@ -100,44 +100,52 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   });
 
   const submitForm = useCallback(
-    (data: Compound) => {
+    async (data: Compound) => {
       if (isDirty) {
         // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
-        data.efficacy_experiments = data.efficacy_experiments.filter(
-          (efficacy_experiment) => efficacy_experiment.compound !== undefined,
-        );
+        data.efficacy_experiments = data.efficacy_experiments
+          .filter(
+            (efficacy_experiment) => efficacy_experiment.compound !== undefined,
+          )
+          // make sure experiments are sorted by ID
+          .sort((a, b) => (a as EfficacyRead).id - (b as EfficacyRead).id);
         reset(data);
         const selectedExperimentIndex = data.efficacy_experiments.findIndex(
           (efficacy_experiment) =>
             (efficacy_experiment as EfficacyRead).id === data.use_efficacy,
         );
-        updateCompound({ id: compound.id, compound: data }).then((result) => {
-          // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
-          if (result?.data) {
-            const selectedExperiment =
-              result.data.efficacy_experiments[selectedExperimentIndex];
-            reset({
-              ...data,
-              efficacy_experiments: result.data.efficacy_experiments,
-              use_efficacy: selectedExperiment?.id || null,
-            });
-            if (
-              selectedExperimentIndex === -1 &&
-              result.data.efficacy_experiments.length > 0
-            ) {
-              const newCompound = {
-                ...data,
-                efficacy_experiments: result.data.efficacy_experiments,
-                use_efficacy: result.data.efficacy_experiments[0].id,
-              };
-              reset(newCompound);
-              updateCompound({
-                id: compound.id,
-                compound: newCompound,
-              });
-            }
-          }
+        const result = await updateCompound({
+          id: compound.id,
+          compound: data,
         });
+        if (result?.data) {
+          const sortedEfficacyExperiments = [
+            ...result.data.efficacy_experiments,
+          ].sort((a, b) => a.id - b.id);
+          const selectedExperiment =
+            sortedEfficacyExperiments[selectedExperimentIndex];
+          reset({
+            ...data,
+            efficacy_experiments: sortedEfficacyExperiments,
+            use_efficacy: selectedExperiment?.id || null,
+          });
+          // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
+          if (
+            compound.efficacy_experiments.length === 0 &&
+            result.data.efficacy_experiments.length > 0
+          ) {
+            const newCompound = {
+              ...data,
+              efficacy_experiments: sortedEfficacyExperiments,
+              use_efficacy: sortedEfficacyExperiments[0].id,
+            };
+            reset(newCompound);
+            updateCompound({
+              id: compound.id,
+              compound: newCompound,
+            });
+          }
+        }
       }
     },
     [compound, updateCompound, isDirty, reset],

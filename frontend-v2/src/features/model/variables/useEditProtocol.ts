@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   CompoundRead,
-  DoseRead,
+  Dose,
   ProjectRead,
   UnitRead,
   VariableRead,
@@ -17,6 +17,8 @@ interface EditProtocolProps {
   variable: VariableRead;
   watchProtocolId: number | null | undefined;
 }
+
+type DefaultDose = Omit<Dose, "id" | "protocol">;
 
 export default function useEditProtocol({
   compound,
@@ -43,8 +45,7 @@ export default function useEditProtocol({
       (unit) => unit.symbol === doseAmountUnitSymbol,
     );
     const isSmallMolecule = compound.compound_type === "SM";
-    const defaultDose: DoseRead = {
-      id: 0,
+    const defaultDose: DefaultDose = {
       amount: 1,
       start_time: 0,
       repeat_interval: isSmallMolecule ? 24 : 168,

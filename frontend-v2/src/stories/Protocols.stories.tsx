@@ -22,6 +22,19 @@ const doseSpy = fn();
 let protocolMocks: ProtocolRead[] = [...projectProtocols];
 let groupMocks: SubjectGroupRead[] = [...groups];
 
+function addDoseToProtocol(
+  protocol: ProtocolRead,
+  newDose: DoseRead,
+): ProtocolRead {
+  if (newDose.protocol === protocol.id) {
+    return {
+      ...protocol,
+      doses: [...protocol.doses, newDose],
+    };
+  }
+  return protocol;
+}
+
 const meta: Meta<typeof Protocols> = {
   title: "Trial Design",
   component: Protocols,
@@ -115,11 +128,13 @@ const meta: Meta<typeof Protocols> = {
             const updatedDose: DoseRead = await request.json();
             doseSpy(doseId, updatedDose);
             await delay();
+            protocolMocks = protocolMocks.map((p) => ({ ...p }));
             protocolMocks.forEach((protocol) => {
               protocol.doses = protocol.doses.map((dose) =>
                 dose.id === doseId ? updatedDose : dose,
               );
             });
+            groupMocks = groupMocks.map((g) => ({ ...g }));
             groupMocks.forEach((group) => {
               group.protocols.forEach((protocol) => {
                 protocol.doses = protocol.doses.map((dose) =>
@@ -129,6 +144,65 @@ const meta: Meta<typeof Protocols> = {
             });
             return HttpResponse.json(updatedDose, {
               status: 200,
+            });
+          }),
+          http.delete("/api/dose/:id", async ({ params }) => {
+            await delay();
+            // @ts-expect-error params.id is a string
+            const doseId = parseInt(params.id, 10);
+            protocolMocks.forEach((protocol) => {
+              protocol.doses = protocol.doses.filter(
+                (dose) => dose.id !== doseId,
+              );
+            });
+            groupMocks.forEach((group) => {
+              group.protocols.forEach((protocol) => {
+                protocol.doses = protocol.doses.filter(
+                  (dose) => dose.id !== doseId,
+                );
+              });
+            });
+            return HttpResponse.json(
+              { success: true },
+              {
+                status: 200,
+              },
+            );
+          }),
+          http.post("/api/dose", async ({ request }) => {
+            await delay();
+            // @ts-expect-error request.json() is DefaultBodyType
+            const newDose: DoseRead = await request.json();
+            doseSpy(newDose);
+            const allProtocolDoses = protocolMocks.flatMap(
+              (protocol) => protocol.doses,
+            );
+            const allGroupDoses = groupMocks.flatMap((group) =>
+              group.protocols.flatMap((protocol) => protocol.doses),
+            );
+            const allDoses = [...allProtocolDoses, ...allGroupDoses];
+            const maxDoseId = Math.max(...allDoses.map((dose) => dose.id), 0);
+            newDose.id = maxDoseId + 1;
+            protocolMocks = protocolMocks.map((protocol) => {
+              return addDoseToProtocol(protocol, newDose);
+            });
+            groupMocks = groupMocks.map((group) => {
+              if (
+                group.protocols.some(
+                  (protocol) => protocol.id === newDose.protocol,
+                )
+              ) {
+                return {
+                  ...group,
+                  protocols: group.protocols.map((protocol) => {
+                    return addDoseToProtocol(protocol, newDose);
+                  }),
+                };
+              }
+              return group;
+            });
+            return HttpResponse.json(newDose, {
+              status: 201,
             });
           }),
           http.post("/api/subject_group", async ({ request }) => {
