@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect } from "react";
+import { FC, useEffect } from "react";
 import {
   TableCell,
   TableRow,
@@ -12,11 +12,11 @@ import {
   Protocol,
   ProtocolRead,
   UnitRead,
+  useDoseCreateMutation,
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { useFieldArray, useForm, useFormState } from "react-hook-form";
-import useDirty from "../../hooks/useDirty";
+import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
@@ -38,43 +38,16 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       { skip: !protocol.variables.length },
     );
   const mappedVariable = protocol.mapped_qname || variable?.qname || "";
-  const { control, handleSubmit, getValues, reset } = useForm<Protocol>({
+  const { control } = useForm<Protocol>({
     defaultValues: protocol,
-    values: protocol,
   });
-  const { isDirty, isSubmitting } = useFormState({ control });
-  useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
+  const [createDose] = useDoseCreateMutation();
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
 
-  const {
-    fields: doses,
-    append: appendDose,
-    remove: removeDose,
-  } = useFieldArray({
-    control,
-    name: "doses",
-  });
-
-  const handleFormData = useCallback(
-    async (data: Protocol) => {
-      if (JSON.stringify(data) !== JSON.stringify(protocol)) {
-        reset(data);
-        await updateProtocol({ id: protocol.id, protocol: data });
-        onChange();
-      }
-    },
-    [reset, protocol, updateProtocol, onChange],
-  );
-
-  useEffect(() => {
-    if (isDirty && !isSubmitting) {
-      const handleSave = handleSubmit(handleFormData);
-      handleSave();
-    }
-  }, [isDirty, isSubmitting, handleSubmit, handleFormData]);
+  const sortedDoses = [...protocol.doses].sort((a, b) => a.id - b.id);
 
   const isPreclinical = project.species !== "H";
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
@@ -97,30 +70,32 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     return <div>Loading...</div>;
   }
 
-  const handleAddRow = () => {
-    const lastDose = doses[doses.length - 1];
+  const handleAddRow = async () => {
+    const lastDose = sortedDoses[sortedDoses.length - 1];
     const increment =
       lastDose.repeats && lastDose.repeats > 1
         ? (lastDose.repeat_interval || 1) * lastDose.repeats
         : lastDose.duration || 1;
     const lastDoseEndTime = lastDose.start_time + increment;
-    appendDose({
-      amount: lastDose.amount,
-      duration: lastDose.duration,
-      repeats: lastDose.repeats,
-      start_time: lastDoseEndTime,
-      repeat_interval: lastDose.repeat_interval,
+    await createDose({
+      dose: {
+        amount: lastDose.amount,
+        duration: lastDose.duration,
+        repeats: lastDose.repeats,
+        start_time: lastDoseEndTime,
+        repeat_interval: lastDose.repeat_interval,
+        protocol: protocol.id,
+      },
     });
+    onChange();
   };
 
-  const selectedAmountId = getValues("amount_unit");
+  const selectedAmountId = protocol.amount_unit;
   const selectedAmountLabel =
     baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
       ?.symbol || "";
 
   const protocolName = mappedVariable.split(".").pop();
-
-  const sortedDoses = [...protocol.doses].sort((a, b) => a.id - b.id);
 
   return (
     <>
@@ -193,7 +168,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
             sortedDoses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
           }
           onChange={onChange}
-          removeDose={removeDose}
           selectedAmountLabel={selectedAmountLabel}
           timeUnit={units.find((u) => u.id === protocol.time_unit)}
         />

@@ -32,7 +32,8 @@ class ProtocolSerializer(serializers.ModelSerializer):
         doses = validated_data.pop('doses')
         protocol = Protocol.objects.create(**validated_data)
         for dose in doses:
-            Dose.objects.create(protocol=protocol, **dose)
+            dose['protocol'] = protocol
+            Dose.objects.create(**dose)
         return protocol
 
     def update(self, instance, validated_data):
