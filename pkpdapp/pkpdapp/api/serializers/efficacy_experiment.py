@@ -10,7 +10,7 @@ from pkpdapp.models import (
 )
 
 
-class EfficacySerializer(serializers.ModelSerializer):
+class EfficacyExperimentSerializer(serializers.ModelSerializer):
     class Meta:
         model = EfficacyExperiment
         fields = '__all__'

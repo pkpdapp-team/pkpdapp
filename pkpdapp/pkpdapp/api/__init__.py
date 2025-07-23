@@ -18,5 +18,5 @@ from .views import (
     LogLikelihoodView, InferenceWizardView, 
     login_view, logout_view, get_csrf, SessionView, WhoAmIView,
     SimulationViewSet, SubjectGroupView,
-    ResultsTableView
+    ResultsTableView, EfficacyExperimentView
 )
