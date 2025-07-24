@@ -6,16 +6,15 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from pkpdapp.api.views import (
-    NotADatasetDose,
     CheckAccessToProject,
 )
-from pkpdapp.api.serializers import EfficacySerializer
+from pkpdapp.api.serializers import EfficacyExperimentSerializer
 from pkpdapp.models import EfficacyExperiment
 
 
-class DoseView(viewsets.ModelViewSet):
+class EfficacyExperimentView(viewsets.ModelViewSet):
     queryset = EfficacyExperiment.objects.all()
-    serializer_class = EfficacySerializer
+    serializer_class = EfficacyExperimentSerializer
     permission_classes = [
-        IsAuthenticated & NotADatasetDose & CheckAccessToProject
+        IsAuthenticated & CheckAccessToProject
     ]

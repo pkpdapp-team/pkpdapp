@@ -19,15 +19,18 @@ import { RootState } from "../../app/store";
 import {
   Compound,
   CompoundRead,
-  EfficacyRead,
+  EfficacyExperimentRead,
   ProjectRead,
   UnitListApiResponse,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
+  useEfficacyExperimentCreateMutation,
+  useEfficacyExperimentDestroyMutation,
+  useEfficacyExperimentUpdateMutation,
   useProjectRetrieveQuery,
   useUnitListQuery,
 } from "../../app/backendApi";
-import { useFieldArray, useForm, useFormState } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import { FC, useCallback, useEffect, useState } from "react";
 import TextField from "../../components/TextField";
@@ -80,6 +83,9 @@ interface DrugFormProps {
 }
 const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const [updateCompound] = useCompoundUpdateMutation();
+  const [createEfficacyExperiment] = useEfficacyExperimentCreateMutation();
+  const [destroyEfficacyExperiment] = useEfficacyExperimentDestroyMutation();
+  const [updateEfficacyExperiment] = useEfficacyExperimentUpdateMutation();
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -94,11 +100,6 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const { isDirty, defaultValues } = useFormState({ control });
   useDirty(isDirty);
 
-  const { append: efficacyAppend, remove: efficacyRemove } = useFieldArray({
-    control,
-    name: "efficacy_experiments",
-  });
-
   const submitForm = useCallback(
     async (data: Compound) => {
       if (isDirty) {
@@ -108,12 +109,12 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
             (efficacy_experiment) => efficacy_experiment.compound !== undefined,
           )
           // make sure experiments are sorted by ID
-          .sort((a, b) => (a as EfficacyRead).id - (b as EfficacyRead).id);
+          .sort(
+            (a, b) =>
+              (a as EfficacyExperimentRead).id -
+              (b as EfficacyExperimentRead).id,
+          );
         reset(data);
-        const selectedExperimentIndex = data.efficacy_experiments.findIndex(
-          (efficacy_experiment) =>
-            (efficacy_experiment as EfficacyRead).id === data.use_efficacy,
-        );
         const result = await updateCompound({
           id: compound.id,
           compound: data,
@@ -122,35 +123,15 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
           const sortedEfficacyExperiments = [
             ...result.data.efficacy_experiments,
           ].sort((a, b) => a.id - b.id);
-          const selectedExperiment =
-            sortedEfficacyExperiments[selectedExperimentIndex];
           reset({
             ...data,
             efficacy_experiments: sortedEfficacyExperiments,
-            use_efficacy: selectedExperiment?.id || null,
           });
-          // if the compound has no efficacy experiments, but the result has, then set the first one as the use_efficacy
-          if (
-            compound.efficacy_experiments.length === 0 &&
-            result.data.efficacy_experiments.length > 0
-          ) {
-            const newCompound = {
-              ...data,
-              efficacy_experiments: sortedEfficacyExperiments,
-              use_efficacy: sortedEfficacyExperiments[0].id,
-            };
-            reset(newCompound);
-            updateCompound({
-              id: compound.id,
-              compound: newCompound,
-            });
-          }
         }
       }
     },
     [compound, updateCompound, isDirty, reset],
   );
-  const submit = handleSubmit(submitForm);
 
   useEffect(() => {
     if (isDirty) {
@@ -159,66 +140,126 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
     }
   }, [isDirty, handleSubmit, submitForm]);
 
-  const addNewEfficacyExperiment = () => {
-    efficacyAppend([
-      {
+  const addNewEfficacyExperiment = async () => {
+    const newExperiment = await createEfficacyExperiment({
+      efficacyExperiment: {
         name: "",
         c50: compound.target_concentration || 0,
         c50_unit: compound.target_concentration_unit || 0,
         hill_coefficient: 1,
         compound: compound.id,
       },
-    ]);
-    submit();
+    }).unwrap();
+    const newCompound = {
+      ...defaultValues,
+      id: compound.id,
+      efficacy_experiments: [
+        ...(defaultValues?.efficacy_experiments || []),
+        newExperiment,
+      ] as EfficacyExperimentRead[],
+    };
+    reset(newCompound);
+    // If this is the first experiment created, select it by default.
+    if (defaultValues?.efficacy_experiments?.length === 0) {
+      reset({
+        ...newCompound,
+        use_efficacy: newExperiment.id,
+      });
+      updateCompound({
+        id: compound.id,
+        compound: {
+          ...newCompound,
+          use_efficacy: newExperiment.id,
+        } as CompoundRead,
+      });
+    }
   };
 
-  const deleteEfficacyExperiment = (index: number) => {
+  const deleteEfficacyExperiment = (id: number) => {
     if (
       window.confirm(
         "Are you sure you want to permanently delete this efficacy-safety data?",
       )
     ) {
-      if (isEfficacySelected(index)) {
+      if (isEfficacySelected(id)) {
         setValue("use_efficacy", null);
       }
-      efficacyRemove(index);
-      submit();
+      destroyEfficacyExperiment({ id });
+      reset({
+        ...defaultValues,
+        efficacy_experiments: defaultValues?.efficacy_experiments?.filter(
+          (efficacy_experiment) =>
+            (efficacy_experiment as EfficacyExperimentRead)?.id !== id,
+        ),
+      });
     }
   };
 
-  const isEfficacySelected = (index: number) => {
-    const efficacy_experiment = defaultValues?.efficacy_experiments?.[
+  const saveEfficacyExperiment = async (index: number) => {
+    const efficacyExperimentValues = getValues(`efficacy_experiments.${index}`);
+    const efficacyExperiment = defaultValues?.efficacy_experiments?.[
       index
-    ] as EfficacyRead;
+    ] as EfficacyExperimentRead;
+    if (efficacyExperiment) {
+      const result = await updateEfficacyExperiment({
+        id: efficacyExperiment.id,
+        efficacyExperiment: {
+          ...efficacyExperimentValues,
+          compound: compound.id,
+        },
+      });
+      if (result?.data) {
+        const newEfficacyExperiments = [
+          ...(defaultValues?.efficacy_experiments || []),
+        ];
+        newEfficacyExperiments[index] = result.data;
+        reset({
+          ...defaultValues,
+          efficacy_experiments:
+            newEfficacyExperiments as EfficacyExperimentRead[],
+        });
+      }
+    }
+  };
+
+  const isEfficacySelected = (id: number) => {
+    const efficacy_experiment = defaultValues?.efficacy_experiments?.find(
+      (e) => (e as EfficacyExperimentRead).id === id,
+    ) as EfficacyExperimentRead;
     if (compound.use_efficacy === null) {
       return false;
     }
     return efficacy_experiment?.id === defaultValues?.use_efficacy;
   };
 
-  const handleSelectEfficacy = (index: number) => {
-    const efficacy_experiment = defaultValues?.efficacy_experiments?.[
-      index
-    ] as EfficacyRead;
+  const handleSelectEfficacy = (id: number) => {
+    const efficacy_experiment = defaultValues?.efficacy_experiments?.find(
+      (e) => (e as EfficacyExperimentRead).id === id,
+    ) as EfficacyExperimentRead;
     if (efficacy_experiment.id === defaultValues?.use_efficacy) {
-      const newCompound: CompoundRead = {
-        ...compound,
+      const newCompound = {
+        ...defaultValues,
+        id: compound.id,
+        efficacy_experiments:
+          (defaultValues?.efficacy_experiments as EfficacyExperimentRead[]) ||
+          [],
         use_efficacy: null,
       };
       reset(newCompound);
       updateCompound({
         id: compound.id,
-        compound: newCompound,
+        compound: newCompound as CompoundRead,
       });
     } else {
-      const newCompound: CompoundRead = {
-        ...compound,
+      const newCompound = {
+        ...defaultValues,
+        id: compound.id,
         use_efficacy: efficacy_experiment.id,
       };
       reset(newCompound);
       updateCompound({
         id: compound.id,
-        compound: newCompound,
+        compound: newCompound as CompoundRead,
       });
     }
   };
@@ -411,177 +452,183 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
           </TableHead>
           <TableBody>
             {defaultValues?.efficacy_experiments?.map(
-              (efficacy_experiment, index) => (
-                <TableRow
-                  key={`efficacy-experiment-${(efficacy_experiment as EfficacyRead)?.id}`}
-                >
-                  <TableCell width="5rem" size="small">
-                    <Tooltip
-                      arrow
-                      placement={"top-end"}
-                      title="Use this efficacy-safety data"
-                    >
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <Radio
-                          checked={isEfficacySelected(index)}
-                          onClick={() => handleSelectEfficacy(index)}
-                          disabled={isSharedWithMe}
-                          id={`efficacy_experiment-${(efficacy_experiment as EfficacyRead)?.id}`}
-                        />
-                      </div>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell size="small">
-                    {isEditIndex === index ? (
-                      <TextField
-                        size="small"
-                        sx={{ flex: "1", minWidth: "10rem" }}
-                        label="Name"
-                        name={`efficacy_experiments.${index}.name`}
-                        control={control}
-                        textFieldProps={defaultProps}
-                      />
-                    ) : (
-                      <label
-                        htmlFor={`efficacy_experiment-${(efficacy_experiment as EfficacyRead)?.id}`}
+              (efficacy_experiment, index) => {
+                const experimentId = (
+                  efficacy_experiment as EfficacyExperimentRead
+                )?.id;
+                return (
+                  <TableRow key={`efficacy-experiment-${experimentId}`}>
+                    <TableCell width="5rem" size="small">
+                      <Tooltip
+                        arrow
+                        placement={"top-end"}
+                        title="Use this efficacy-safety data"
                       >
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <Radio
+                            checked={isEfficacySelected(experimentId)}
+                            onClick={() => handleSelectEfficacy(experimentId)}
+                            disabled={isSharedWithMe}
+                            id={`efficacy_experiment-${experimentId}`}
+                          />
+                        </div>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell size="small">
+                      {isEditIndex === index ? (
+                        <TextField
+                          size="small"
+                          sx={{ flex: "1", minWidth: "10rem" }}
+                          label="Name"
+                          name={`efficacy_experiments.${index}.name`}
+                          control={control}
+                          textFieldProps={defaultProps}
+                        />
+                      ) : (
+                        <label htmlFor={`efficacy_experiment-${experimentId}`}>
+                          <Typography>
+                            {getValues(`efficacy_experiments.${index}.name`) ||
+                              "-"}
+                          </Typography>
+                        </label>
+                      )}
+                    </TableCell>
+                    <TableCell size="small">
+                      {isEditIndex === index ? (
+                        <FloatField
+                          size="small"
+                          sx={{ flex: "1", minWidth: "5rem" }}
+                          label="C50"
+                          name={`efficacy_experiments.${index}.c50`}
+                          control={control}
+                          textFieldProps={defaultProps}
+                        />
+                      ) : (
                         <Typography>
-                          {getValues(`efficacy_experiments.${index}.name`) ||
+                          {getValues(`efficacy_experiments.${index}.c50`) ||
                             "-"}
                         </Typography>
-                      </label>
-                    )}
-                  </TableCell>
-                  <TableCell size="small">
-                    {isEditIndex === index ? (
-                      <FloatField
-                        size="small"
-                        sx={{ flex: "1", minWidth: "5rem" }}
-                        label="C50"
-                        name={`efficacy_experiments.${index}.c50`}
-                        control={control}
-                        textFieldProps={defaultProps}
-                      />
-                    ) : (
-                      <Typography>
-                        {getValues(`efficacy_experiments.${index}.c50`) || "-"}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell size="small">
-                    {isEditIndex === index ? (
-                      <SelectField
-                        size="small"
-                        label={"Unit"}
-                        name={`efficacy_experiments.${index}.c50_unit`}
-                        options={c50UnitOpt}
-                        control={control}
-                        selectProps={defaultProps}
-                      />
-                    ) : (
-                      <Typography>
-                        {units.find(
-                          (u) =>
-                            u.id ===
-                            getValues(`efficacy_experiments.${index}.c50_unit`),
-                        )?.symbol || "-"}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell size="small">
-                    {isEditIndex === index ? (
-                      <FloatField
-                        size="small"
-                        sx={{ minWidth: "5rem" }}
-                        label="Hill-coefficient"
-                        name={`efficacy_experiments.${index}.hill_coefficient`}
-                        control={control}
-                        textFieldProps={defaultProps}
-                      />
-                    ) : (
-                      <Typography>
-                        {getValues(
-                          `efficacy_experiments.${index}.hill_coefficient`,
-                        ) || "-"}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell width="5rem" size="small">
-                    {isEditIndex === index ? (
-                      <Stack
-                        sx={{ justifyContent: "center" }}
-                        component="span"
-                        direction="row"
-                        spacing={0.0}
-                      >
-                        <Tooltip arrow title="Save changes">
-                          <IconButton
-                            onClick={() => {
-                              setIsEditIndex(null);
-                              submit();
-                            }}
-                          >
-                            <CheckIcon titleAccess="Save" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip arrow title="Discard changes">
-                          <IconButton
-                            onClick={() => {
-                              setIsEditIndex(null);
-                              reset();
-                            }}
-                          >
-                            <CloseIcon titleAccess="Discard changes" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    ) : (
-                      <Stack component="span" direction="row" spacing={0.0}>
-                        <Tooltip
-                          arrow
-                          title={
-                            isEditIndex !== null && isEditIndex !== index
-                              ? "Finish editing efficacy-safety data"
-                              : "Edit efficacy-safety data"
-                          }
+                      )}
+                    </TableCell>
+                    <TableCell size="small">
+                      {isEditIndex === index ? (
+                        <SelectField
+                          size="small"
+                          label={"Unit"}
+                          name={`efficacy_experiments.${index}.c50_unit`}
+                          options={c50UnitOpt}
+                          control={control}
+                          selectProps={defaultProps}
+                        />
+                      ) : (
+                        <Typography>
+                          {units.find(
+                            (u) =>
+                              u.id ===
+                              getValues(
+                                `efficacy_experiments.${index}.c50_unit`,
+                              ),
+                          )?.symbol || "-"}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell size="small">
+                      {isEditIndex === index ? (
+                        <FloatField
+                          size="small"
+                          sx={{ minWidth: "5rem" }}
+                          label="Hill-coefficient"
+                          name={`efficacy_experiments.${index}.hill_coefficient`}
+                          control={control}
+                          textFieldProps={defaultProps}
+                        />
+                      ) : (
+                        <Typography>
+                          {getValues(
+                            `efficacy_experiments.${index}.hill_coefficient`,
+                          ) || "-"}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell width="5rem" size="small">
+                      {isEditIndex === index ? (
+                        <Stack
+                          sx={{ justifyContent: "center" }}
+                          component="span"
+                          direction="row"
+                          spacing={0.0}
                         >
-                          <span>
+                          <Tooltip arrow title="Save changes">
                             <IconButton
-                              disabled={
-                                isEditIndex !== null && isEditIndex !== index
-                              }
                               onClick={() => {
-                                setIsEditIndex(index);
+                                setIsEditIndex(null);
+                                saveEfficacyExperiment(index);
                               }}
                             >
-                              <EditIcon titleAccess="Edit" />
+                              <CheckIcon titleAccess="Save" />
                             </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip
-                          arrow
-                          title={
-                            isEditIndex !== null && isEditIndex !== index
-                              ? "Finish editing efficacy-safety data"
-                              : "Delete efficacy-safety data"
-                          }
-                        >
-                          <span>
+                          </Tooltip>
+                          <Tooltip arrow title="Discard changes">
                             <IconButton
-                              disabled={
-                                isEditIndex !== null && isEditIndex !== index
-                              }
-                              onClick={() => deleteEfficacyExperiment(index)}
+                              onClick={() => {
+                                setIsEditIndex(null);
+                                reset();
+                              }}
                             >
-                              <Delete titleAccess="Delete" />
+                              <CloseIcon titleAccess="Discard changes" />
                             </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Stack>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ),
+                          </Tooltip>
+                        </Stack>
+                      ) : (
+                        <Stack component="span" direction="row" spacing={0.0}>
+                          <Tooltip
+                            arrow
+                            title={
+                              isEditIndex !== null && isEditIndex !== index
+                                ? "Finish editing efficacy-safety data"
+                                : "Edit efficacy-safety data"
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                disabled={
+                                  isEditIndex !== null && isEditIndex !== index
+                                }
+                                onClick={() => {
+                                  setIsEditIndex(index);
+                                }}
+                              >
+                                <EditIcon titleAccess="Edit" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip
+                            arrow
+                            title={
+                              isEditIndex !== null && isEditIndex !== index
+                                ? "Finish editing efficacy-safety data"
+                                : "Delete efficacy-safety data"
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                disabled={
+                                  isEditIndex !== null && isEditIndex !== index
+                                }
+                                onClick={() =>
+                                  deleteEfficacyExperiment(experimentId)
+                                }
+                              >
+                                <Delete titleAccess="Delete" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Stack>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              },
             )}
           </TableBody>
         </Table>

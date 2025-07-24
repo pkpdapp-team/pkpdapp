@@ -8,7 +8,7 @@ from rest_framework import serializers
 from pkpdapp.models import (
     Compound
 )
-from pkpdapp.api.serializers import EfficacySerializer
+from pkpdapp.api.serializers import EfficacyExperimentSerializer
 
 
 class BaseCompoundSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class BaseCompoundSerializer(serializers.ModelSerializer):
 
 
 class CompoundSerializer(serializers.ModelSerializer):
-    efficacy_experiments = EfficacySerializer(many=True)
+    efficacy_experiments = EfficacyExperimentSerializer(many=True)
 
     class Meta:
         model = Compound
@@ -33,7 +33,7 @@ class CompoundSerializer(serializers.ModelSerializer):
         )
         for exp in experiments:
             exp['compound'] = compound
-            serializer = EfficacySerializer()
+            serializer = EfficacyExperimentSerializer()
             serializer.create(exp)
         return compound
 
@@ -45,7 +45,7 @@ class CompoundSerializer(serializers.ModelSerializer):
         )
         for exp in experiments:
             exp['compound'] = instance
-            serializer = EfficacySerializer()
+            serializer = EfficacyExperimentSerializer()
             try:
                 old_experiment = old_experiments.pop(0)
                 new_exp = serializer.update(

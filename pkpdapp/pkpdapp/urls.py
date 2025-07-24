@@ -22,6 +22,8 @@ router.register('results_table', api.ResultsTableView, basename='results')
 router.register('subject', api.SubjectView, basename='subject')
 router.register('subject_group', api.SubjectGroupView, basename='subject_group')
 router.register('compound', api.CompoundView, basename='compound')
+router.register('efficacy_experiment',
+                api.EfficacyExperimentView, basename='efficacy_experiment')
 router.register('project', api.ProjectView, basename='project')
 router.register('project_access', api.ProjectAccessView,
                 basename='project_access')
