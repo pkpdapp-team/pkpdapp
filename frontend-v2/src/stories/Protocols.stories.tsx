@@ -291,6 +291,19 @@ export const AddRow: Story = {
   },
 };
 
+export const DeleteRow: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await AddRow.play?.(context);
+    const removeDoseButton = await canvas.findByRole("button", {
+      name: /Remove Dose/i,
+    });
+    expect(removeDoseButton).toBeInTheDocument();
+    await userEvent.click(removeDoseButton);
+    await waitFor(() => expect(canvas.getAllByRole("row")).toHaveLength(3));
+  },
+};
+
 export const AddGroup: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);

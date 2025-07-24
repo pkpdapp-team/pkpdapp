@@ -341,6 +341,59 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    efficacyExperimentList: build.query<
+      EfficacyExperimentListApiResponse,
+      EfficacyExperimentListApiArg
+    >({
+      query: () => ({ url: `/api/efficacy_experiment/` }),
+    }),
+    efficacyExperimentCreate: build.mutation<
+      EfficacyExperimentCreateApiResponse,
+      EfficacyExperimentCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/`,
+        method: "POST",
+        body: queryArg.efficacyExperiment,
+      }),
+    }),
+    efficacyExperimentRetrieve: build.query<
+      EfficacyExperimentRetrieveApiResponse,
+      EfficacyExperimentRetrieveApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/${queryArg.id}/`,
+      }),
+    }),
+    efficacyExperimentUpdate: build.mutation<
+      EfficacyExperimentUpdateApiResponse,
+      EfficacyExperimentUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.efficacyExperiment,
+      }),
+    }),
+    efficacyExperimentPartialUpdate: build.mutation<
+      EfficacyExperimentPartialUpdateApiResponse,
+      EfficacyExperimentPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedEfficacyExperiment,
+      }),
+    }),
+    efficacyExperimentDestroy: build.mutation<
+      EfficacyExperimentDestroyApiResponse,
+      EfficacyExperimentDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     inferenceList: build.query<InferenceListApiResponse, InferenceListApiArg>({
       query: () => ({ url: `/api/inference/` }),
     }),
@@ -1402,6 +1455,39 @@ export type DoseDestroyApiArg = {
   /** A unique integer value identifying this dose. */
   id: number;
 };
+export type EfficacyExperimentListApiResponse =
+  /** status 200  */ EfficacyExperimentRead[];
+export type EfficacyExperimentListApiArg = void;
+export type EfficacyExperimentCreateApiResponse =
+  /** status 201  */ EfficacyExperimentRead;
+export type EfficacyExperimentCreateApiArg = {
+  efficacyExperiment: EfficacyExperiment;
+};
+export type EfficacyExperimentRetrieveApiResponse =
+  /** status 200  */ EfficacyExperimentRead;
+export type EfficacyExperimentRetrieveApiArg = {
+  /** A unique integer value identifying this efficacy experiment. */
+  id: number;
+};
+export type EfficacyExperimentUpdateApiResponse =
+  /** status 200  */ EfficacyExperimentRead;
+export type EfficacyExperimentUpdateApiArg = {
+  /** A unique integer value identifying this efficacy experiment. */
+  id: number;
+  efficacyExperiment: EfficacyExperiment;
+};
+export type EfficacyExperimentPartialUpdateApiResponse =
+  /** status 200  */ EfficacyExperimentRead;
+export type EfficacyExperimentPartialUpdateApiArg = {
+  /** A unique integer value identifying this efficacy experiment. */
+  id: number;
+  patchedEfficacyExperiment: PatchedEfficacyExperiment;
+};
+export type EfficacyExperimentDestroyApiResponse = unknown;
+export type EfficacyExperimentDestroyApiArg = {
+  /** A unique integer value identifying this efficacy experiment. */
+  id: number;
+};
 export type InferenceListApiResponse = /** status 200  */ InferenceRead[];
 export type InferenceListApiArg = void;
 export type InferenceCreateApiResponse = /** status 201  */ InferenceRead;
@@ -2396,7 +2482,7 @@ export type Simulate = {
   };
   time_max?: number;
 };
-export type Efficacy = {
+export type EfficacyExperiment = {
   /** name of the experiment */
   name?: string;
   /** half maximal effective concentration */
@@ -2408,7 +2494,7 @@ export type Efficacy = {
   /** compound for efficacy experiment */
   compound: number;
 };
-export type EfficacyRead = {
+export type EfficacyExperimentRead = {
   id: number;
   /** name of the experiment */
   name?: string;
@@ -2424,7 +2510,7 @@ export type EfficacyRead = {
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
 export type Compound = {
-  efficacy_experiments: Efficacy[];
+  efficacy_experiments: EfficacyExperiment[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2463,7 +2549,7 @@ export type Compound = {
 };
 export type CompoundRead = {
   id: number;
-  efficacy_experiments: EfficacyRead[];
+  efficacy_experiments: EfficacyExperimentRead[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2501,7 +2587,7 @@ export type CompoundRead = {
   dissociation_unit?: number;
 };
 export type PatchedCompound = {
-  efficacy_experiments?: Efficacy[];
+  efficacy_experiments?: EfficacyExperiment[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2540,7 +2626,7 @@ export type PatchedCompound = {
 };
 export type PatchedCompoundRead = {
   id?: number;
-  efficacy_experiments?: EfficacyRead[];
+  efficacy_experiments?: EfficacyExperimentRead[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2780,6 +2866,31 @@ export type PatchedDoseRead = {
   datetime?: string | null;
   /** protocol containing this dose */
   protocol?: number | null;
+};
+export type PatchedEfficacyExperiment = {
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50?: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit?: number;
+  /** compound for efficacy experiment */
+  compound?: number;
+};
+export type PatchedEfficacyExperimentRead = {
+  id?: number;
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50?: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit?: number;
+  /** compound for efficacy experiment */
+  compound?: number;
 };
 export type LogLikelihoodParameter = {
   /** name of log_likelihood parameter. */
@@ -4217,6 +4328,12 @@ export const {
   useDoseUpdateMutation,
   useDosePartialUpdateMutation,
   useDoseDestroyMutation,
+  useEfficacyExperimentListQuery,
+  useEfficacyExperimentCreateMutation,
+  useEfficacyExperimentRetrieveQuery,
+  useEfficacyExperimentUpdateMutation,
+  useEfficacyExperimentPartialUpdateMutation,
+  useEfficacyExperimentDestroyMutation,
   useInferenceListQuery,
   useInferenceCreateMutation,
   useInferenceRetrieveQuery,

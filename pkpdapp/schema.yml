@@ -1019,6 +1019,147 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/efficacy_experiment/:
+    get:
+      operationId: efficacy_experiment_list
+      tags:
+      - efficacy_experiment
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EfficacyExperiment'
+          description: ''
+    post:
+      operationId: efficacy_experiment_create
+      tags:
+      - efficacy_experiment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EfficacyExperiment'
+          description: ''
+  /api/efficacy_experiment/{id}/:
+    get:
+      operationId: efficacy_experiment_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this efficacy experiment.
+        required: true
+      tags:
+      - efficacy_experiment
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EfficacyExperiment'
+          description: ''
+    put:
+      operationId: efficacy_experiment_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this efficacy experiment.
+        required: true
+      tags:
+      - efficacy_experiment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EfficacyExperiment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EfficacyExperiment'
+          description: ''
+    patch:
+      operationId: efficacy_experiment_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this efficacy experiment.
+        required: true
+      tags:
+      - efficacy_experiment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEfficacyExperiment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEfficacyExperiment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEfficacyExperiment'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EfficacyExperiment'
+          description: ''
+    delete:
+      operationId: efficacy_experiment_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this efficacy experiment.
+        required: true
+      tags:
+      - efficacy_experiment
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/inference/:
     get:
       operationId: inference_list
@@ -3807,7 +3948,7 @@ components:
         efficacy_experiments:
           type: array
           items:
-            $ref: '#/components/schemas/Efficacy'
+            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -4049,7 +4190,7 @@ components:
       description: |-
         * `D` - IV
         * `I` - Extravascular
-    Efficacy:
+    EfficacyExperiment:
       type: object
       properties:
         id:
@@ -4568,7 +4709,7 @@ components:
         efficacy_experiments:
           type: array
           items:
-            $ref: '#/components/schemas/Efficacy'
+            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -4722,6 +4863,30 @@ components:
           type: integer
           nullable: true
           description: protocol containing this dose
+    PatchedEfficacyExperiment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the experiment
+          maxLength: 100
+        c50:
+          type: number
+          format: double
+          description: half maximal effective concentration
+        hill_coefficient:
+          type: number
+          format: double
+          description: Hill coefficient measure of binding
+        c50_unit:
+          type: integer
+          description: unit for c50
+        compound:
+          type: integer
+          description: compound for efficacy experiment
     PatchedInference:
       type: object
       properties:

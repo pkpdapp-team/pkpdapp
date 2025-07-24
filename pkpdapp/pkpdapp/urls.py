@@ -22,16 +22,26 @@ router.register("results_table", api.ResultsTableView, basename="results")
 router.register("subject", api.SubjectView, basename="subject")
 router.register("subject_group", api.SubjectGroupView, basename="subject_group")
 router.register("compound", api.CompoundView, basename="compound")
+router.register("efficacy_experiment",
+                api.EfficacyExperimentView, basename="efficacy_experiment")
 router.register("project", api.ProjectView, basename="project")
-router.register("project_access", api.ProjectAccessView, basename="project_access")
+router.register("project_access", api.ProjectAccessView,
+                basename="project_access")
 router.register("dose", api.DoseView, basename="dose")
 router.register("tag", api.TagView, basename="tag")
 router.register("unit", api.UnitView, basename="unit")
 router.register("variable", api.VariableView, basename="variable")
 router.register("protocol", api.ProtocolView, basename="protocol")
-router.register("biomarker_type", api.BiomarkerTypeView, basename="biomarker_type")
-router.register("pharmacokinetic", api.PharmacokineticView, basename="pharmacokinetic")
-router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacodynamic")
+router.register("biomarker_type", api.BiomarkerTypeView,
+                basename="biomarker_type")
+router.register(
+    "pharmacokinetic", api.PharmacokineticView,
+    basename="pharmacokinetic"
+)
+router.register(
+    "pharmacodynamic", api.PharmacodynamicView,
+    basename="pharmacodynamic"
+)
 
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
 

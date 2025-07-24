@@ -39,4 +39,5 @@ from .views import (
     SubjectGroupView,
     ResultsTableView,
     TagView,
+    EfficacyExperimentView,
 )

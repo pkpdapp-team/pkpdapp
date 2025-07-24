@@ -28,6 +28,7 @@ from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
 from .dose import DoseView
 from .compound import CompoundView
+from .efficacy_experiment import EfficacyExperimentView
 
 from .models import (
     PharmacokineticView,
