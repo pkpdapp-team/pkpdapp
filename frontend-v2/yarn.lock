@@ -7572,12 +7572,12 @@ __metadata:
     openapi-types: "npm:^12.1.3"
     papaparse: "npm:^5.5.3"
     playwright: "npm:^1.54.1"
-    plotly.js-basic-dist-min: "npm:^3.0.1"
+    plotly.js-basic-dist-min: "npm:^3.0.3"
     prettier: "npm:^3.6.2"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     react-dropzone: "npm:^14.3.8"
-    react-hook-form: "npm:^7.60.0"
+    react-hook-form: "npm:^7.61.0"
     react-player: "npm:^2.16.1"
     react-plotly.js: "npm:^2.6.0"
     react-redux: "npm:^9.2.0"
@@ -7588,7 +7588,7 @@ __metadata:
     storybook: "npm:^9.0.18"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.38.0"
-    vite: "npm:^7.0.5"
+    vite: "npm:^7.0.6"
     vite-bundle-visualizer: "npm:^1.2.1"
     vite-plugin-radar: "npm:^0.10.1"
     vite-tsconfig-paths: "npm:^5.1.4"
@@ -10677,6 +10677,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"picomatch@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "picomatch@npm:4.0.3"
+  checksum: 10c0/9582c951e95eebee5434f59e426cddd228a7b97a0161a375aed4be244bd3fe8e3a31b846808ea14ef2c8a2527a6eeab7b3946a67d5979e81694654f939473ae2
+  languageName: node
+  linkType: hard
+
 "pify@npm:^2.2.0":
   version: 2.3.0
   resolution: "pify@npm:2.3.0"
@@ -10708,10 +10715,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plotly.js-basic-dist-min@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "plotly.js-basic-dist-min@npm:3.0.1"
-  checksum: 10c0/cb8685870137846cb3a8c8503bcfaee3c9c6443da6daf2f136d006cba2067fdb52f1840b26ca1a50e2dc077eb37d8685b6782f972cc62a8e57b60769b09a568c
+"plotly.js-basic-dist-min@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "plotly.js-basic-dist-min@npm:3.0.3"
+  checksum: 10c0/463c5387b11f1b8bf9de8777a8fafadab8434c04bbb8e322ba56587b3dfffee154462814ad734ae1bb355f03f6bf6c7762d58f63f331e6e6fd8f6b98c9797801
   languageName: node
   linkType: hard
 
@@ -10996,12 +11003,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.60.0":
-  version: 7.60.0
-  resolution: "react-hook-form@npm:7.60.0"
+"react-hook-form@npm:^7.61.0":
+  version: 7.61.0
+  resolution: "react-hook-form@npm:7.61.0"
   peerDependencies:
     react: ^16.8.0 || ^17 || ^18 || ^19
-  checksum: 10c0/eb8518d42a074d9e115d4b414bac18ae72708b2d047a9453dcc7588b00df300b32cebf6ecb7f2c8aa534808b3dc54bde4124af95c1e432b6691f9aba07c93b11
+  checksum: 10c0/cea31b922cb8010df180c25d8062e806aca2f01364517aedda1169816a15188b1f5252507cd69cc76543e2d33e44d3effa72dd1c47d2b588d27b43c3905ace63
   languageName: node
   linkType: hard
 
@@ -13275,14 +13282,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^7.0.5":
-  version: 7.0.5
-  resolution: "vite@npm:7.0.5"
+"vite@npm:^7.0.6":
+  version: 7.0.6
+  resolution: "vite@npm:7.0.6"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.4.6"
     fsevents: "npm:~2.3.3"
-    picomatch: "npm:^4.0.2"
+    picomatch: "npm:^4.0.3"
     postcss: "npm:^8.5.6"
     rollup: "npm:^4.40.0"
     tinyglobby: "npm:^0.2.14"
@@ -13326,7 +13333,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/95fb7f393adc2d2428e0e033ed4ea599323118f645415c35db3df40bd2c5a2962b0b4c967f35cfb80ca04efb1eb51bdb5f4b63529bb5f9aa3603d9fbeb50543f
+  checksum: 10c0/3b14dfa661281b4843789884199ba2a9cca940a7666970036fe3fb1abff52b88e63e8be5ab419dd04d9f96c0415ee0f1e3ec8ebe357041648af7ccd8e348b6ad
   languageName: node
   linkType: hard
 
