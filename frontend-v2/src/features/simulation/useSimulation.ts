@@ -39,15 +39,16 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
     const simInputs = JSON.parse(serialisedInputs);
-    if (
-      simInputs.outputs?.length > 1 &&
-      simInputs.time_max &&
-      model &&
-      protocols &&
-      compound &&
-      SIMULATION_PAGES.includes(page)
-    ) {
-      const runSimulation = async () => {
+    const simulateModel = async () => {
+      if (
+        runSimulation &&
+        simInputs.outputs?.length > 1 &&
+        simInputs.time_max &&
+        model &&
+        protocols &&
+        compound &&
+        SIMULATION_PAGES.includes(page)
+      ) {
         setLoadingSimulate(true);
         const response = await simulate({
           id: model.id,
@@ -61,10 +62,10 @@ export default function useSimulation(
             setSimulations(responseData);
           }
         }
-      };
-      console.log("Simulating with params", simInputs.variables);
-      runSimulation();
-    }
+      }
+    };
+    console.log("Simulating with params", simInputs.variables);
+    simulateModel();
     return () => {
       ignore = true;
     };
