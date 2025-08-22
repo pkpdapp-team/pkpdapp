@@ -199,7 +199,7 @@ export const EditPlot: Story = {
     const dragLayer = plot?.querySelector("rect.drag");
     await userEvent.hover(dragLayer!);
     const editButton = canvasElement.querySelector(
-      'a[data-title="Customise Plot"]',
+      'button[data-title="Customise Plot"]',
     );
     expect(editButton).toBeInTheDocument();
     await userEvent.click(editButton!);
