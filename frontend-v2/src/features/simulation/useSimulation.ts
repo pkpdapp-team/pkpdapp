@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import useProtocols from "./useProtocols";
 import { SimulationContext } from "../../contexts/SimulationContext";
 
