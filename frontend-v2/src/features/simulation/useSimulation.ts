@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import useProtocols from "./useProtocols";
 import { SimulationContext } from "../../contexts/SimulationContext";
 
@@ -40,7 +40,6 @@ export default function useSimulation(
     let ignore = false;
     const simInputs = JSON.parse(serialisedInputs);
     if (
-      runSimulation &&
       simInputs.outputs?.length > 1 &&
       simInputs.time_max &&
       model &&
@@ -48,12 +47,12 @@ export default function useSimulation(
       compound &&
       SIMULATION_PAGES.includes(page)
     ) {
-      setLoadingSimulate(true);
-      console.log("Simulating with params", simInputs.variables);
-      simulate({
-        id: model.id,
-        simulate: simInputs,
-      }).then((response) => {
+      const runSimulation = async () => {
+        setLoadingSimulate(true);
+        const response = await simulate({
+          id: model.id,
+          simulate: simInputs,
+        });
         if (!ignore) {
           setLoadingSimulate(false);
           if ("data" in response) {
@@ -62,7 +61,9 @@ export default function useSimulation(
             setSimulations(responseData);
           }
         }
-      });
+      };
+      console.log("Simulating with params", simInputs.variables);
+      runSimulation();
     }
     return () => {
       ignore = true;
@@ -76,7 +77,6 @@ export default function useSimulation(
     page,
     runSimulation,
     setSimulations,
-    simInputs,
   ]);
 
   return {
