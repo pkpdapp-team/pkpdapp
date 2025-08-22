@@ -152,6 +152,27 @@ export const Parameters: Story = {
   },
 };
 
+export const Reference: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const referenceButton = await canvas.findByRole("button", {
+      name: "Reference",
+    });
+    expect(referenceButton).toBeInTheDocument();
+    await userEvent.click(referenceButton);
+
+    const showReferenceCheckbox = await screen.findByRole("checkbox", {
+      name: /Show reference/,
+    });
+    expect(showReferenceCheckbox).toBeInTheDocument();
+    await userEvent.click(showReferenceCheckbox);
+    expect(showReferenceCheckbox).toBeChecked();
+    await waitFor(() => {
+      expect(simulationSpy).toHaveBeenCalledTimes(2);
+    });
+  },
+};
+
 export const AddNewPlot: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
