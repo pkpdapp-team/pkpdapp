@@ -88,7 +88,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const [isEditIndex, setIsEditIndex] = useState<number | null>(null);
 
   // create a form for the compound data using react-hook-form
-  const { reset, handleSubmit, control, setValue } = useForm<Compound>({
+  const { reset, handleSubmit, control } = useForm<Compound>({
     defaultValues: compound,
   });
   const { isDirty, defaultValues } = useFormState({ control });
@@ -180,17 +180,19 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
         "Are you sure you want to permanently delete this efficacy-safety data?",
       )
     ) {
-      if (isEfficacySelected(id)) {
-        setValue("use_efficacy", null);
-      }
       destroyEfficacyExperiment({ id });
-      reset({
+      const isSelected = isEfficacySelected(id);
+      const newFormState = {
         ...defaultValues,
         efficacy_experiments: defaultValues?.efficacy_experiments?.filter(
           (efficacy_experiment) =>
             (efficacy_experiment as EfficacyExperimentRead)?.id !== id,
         ),
-      });
+      };
+      if (isSelected) {
+        newFormState.use_efficacy = null;
+      }
+      reset(newFormState);
     }
   };
 
