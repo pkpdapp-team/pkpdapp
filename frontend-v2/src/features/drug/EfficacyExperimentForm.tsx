@@ -15,9 +15,10 @@ import Delete from "@mui/icons-material/Delete";
 import FloatField from "../../components/FloatField";
 import SelectField from "../../components/SelectField";
 import TextField from "../../components/TextField";
-import { compound, project, units } from "../../stories/project.mock";
 import {
   EfficacyExperimentRead,
+  ProjectRead,
+  UnitListApiResponse,
   useEfficacyExperimentUpdateMutation,
 } from "../../app/backendApi";
 import { useForm, useFormState } from "react-hook-form";
@@ -28,6 +29,8 @@ import { selectIsProjectShared } from "../login/loginSlice";
 
 interface Props {
   efficacyExperiment: EfficacyExperimentRead;
+  project: ProjectRead;
+  units: UnitListApiResponse;
   isSelected: boolean;
   isEditing: boolean;
   disabled: boolean;
@@ -39,6 +42,8 @@ interface Props {
 
 export function EfficacyExperimentForm({
   efficacyExperiment,
+  project,
+  units,
   isSelected,
   isEditing,
   disabled,

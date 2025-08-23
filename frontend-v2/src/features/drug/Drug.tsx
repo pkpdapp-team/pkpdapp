@@ -413,6 +413,8 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                   <EfficacyExperimentForm
                     key={experimentId}
                     efficacyExperiment={efficacyExperiment}
+                    project={project}
+                    units={units}
                     isSelected={isSelected}
                     isEditing={isEditIndex === index}
                     disabled={isEditIndex !== null && isEditIndex !== index}
