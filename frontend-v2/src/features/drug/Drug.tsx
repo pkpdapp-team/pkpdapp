@@ -86,6 +86,9 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const [createEfficacyExperiment] = useEfficacyExperimentCreateMutation();
   const [destroyEfficacyExperiment] = useEfficacyExperimentDestroyMutation();
   const [updateEfficacyExperiment] = useEfficacyExperimentUpdateMutation();
+  const { refetch: refetchCompoundUnits } = useUnitListQuery({
+    compoundId: compound.id,
+  });
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -102,7 +105,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
 
   const submitForm = useCallback(
     async (data: Compound) => {
-      if (isDirty) {
+      if (compound?.id && isDirty) {
         // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
         data.efficacy_experiments = data.efficacy_experiments
           .filter(
@@ -120,17 +123,22 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
           compound: data,
         });
         if (result?.data) {
-          const sortedEfficacyExperiments = [
-            ...result.data.efficacy_experiments,
-          ].sort((a, b) => a.id - b.id);
-          reset({
-            ...data,
-            efficacy_experiments: sortedEfficacyExperiments,
-          });
+          try {
+            const sortedEfficacyExperiments = [
+              ...result.data.efficacy_experiments,
+            ].sort((a, b) => a.id - b.id);
+            reset({
+              ...data,
+              efficacy_experiments: sortedEfficacyExperiments,
+            });
+            refetchCompoundUnits();
+          } catch (error) {
+            console.error(error);
+          }
         }
       }
     },
-    [compound, updateCompound, isDirty, reset],
+    [compound, updateCompound, isDirty, reset, refetchCompoundUnits],
   );
 
   useEffect(() => {
@@ -201,24 +209,26 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
       index
     ] as EfficacyExperimentRead;
     if (efficacyExperiment) {
-      const result = await updateEfficacyExperiment({
+      const newEfficacyExperiment = {
+        ...efficacyExperiment,
+        ...efficacyExperimentValues,
+      };
+      const newEfficacyExperiments = [
+        ...(defaultValues?.efficacy_experiments || []),
+      ];
+      newEfficacyExperiments[index] = newEfficacyExperiment;
+      reset({
+        ...defaultValues,
+        efficacy_experiments:
+          newEfficacyExperiments as EfficacyExperimentRead[],
+      });
+      updateEfficacyExperiment({
         id: efficacyExperiment.id,
         efficacyExperiment: {
-          ...efficacyExperimentValues,
+          ...newEfficacyExperiment,
           compound: compound.id,
         },
       });
-      if (result?.data) {
-        const newEfficacyExperiments = [
-          ...(defaultValues?.efficacy_experiments || []),
-        ];
-        newEfficacyExperiments[index] = result.data;
-        reset({
-          ...defaultValues,
-          efficacy_experiments:
-            newEfficacyExperiments as EfficacyExperimentRead[],
-        });
-      }
     }
   };
 
