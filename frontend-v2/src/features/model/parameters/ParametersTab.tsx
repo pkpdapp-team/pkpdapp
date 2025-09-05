@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../../components/HelpButton";
-import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
+import { getConstVariables, getNoReset } from "./getConstVariables";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
 import { FormData } from "../Model";

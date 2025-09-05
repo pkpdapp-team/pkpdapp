@@ -42,7 +42,7 @@ import useSimulationInputs from "./useSimulationInputs";
 import useDirty from "../../hooks/useDirty";
 import paramPriority from "../model/parameters/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getConstVariables } from "../model/parameters/resetToSpeciesDefaults";
+import { getConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
@@ -184,8 +184,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
