@@ -43,6 +43,14 @@ export type FormData = Omit<CombinedModel, "species"> & {
   species_weight_unit: number | undefined;
 };
 
+const defaultSpeciesWeights = new Map([
+  ["H", 75.0],
+  ["R", 0.25],
+  ["K", 3.5],
+  ["M", 0.025],
+  ["O", 10.0],
+]);
+
 function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -119,6 +127,7 @@ function useModelFormDataCallback({
   reset,
   updateModel,
   updateProject,
+  units,
 }: {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -126,6 +135,7 @@ function useModelFormDataCallback({
   reset: (values?: Partial<FormData>) => void;
   updateModel: CombinedModelUpdate;
   updateProject: ProjectUpdate;
+  units: UnitListApiResponse;
 }) {
   const [updateSimulation] = useSimulationUpdateMutation();
 
@@ -137,8 +147,10 @@ function useModelFormDataCallback({
       if (!model || !project) {
         return;
       }
-      const { species, species_weight, species_weight_unit, ...modelData } =
-        data;
+      const { species, ...modelData } = data;
+      let species_weight = data.species_weight;
+      let species_weight_unit = data.species_weight_unit;
+
       // if tlag checkbox is unchecked, then remove tlag derived variables
       if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
         modelData.derived_variables = modelData.derived_variables.filter(
@@ -150,19 +162,21 @@ function useModelFormDataCallback({
         modelData.pd_model2 = null;
       }
 
+      // if species has changed, then set default values for body weight and unit
       if (species !== project.species) {
-        // if species has changed, then clear the models
-        modelData.pk_model = null;
-        modelData.pd_model = null;
-        modelData.pd_model2 = null;
-        modelData.mappings = [];
-        modelData.derived_variables = [];
+        const kg = units.find((u) => u.symbol === "kg");
+        if (kg && species) {
+          species_weight_unit = kg.id;
+          species_weight = defaultSpeciesWeights.get(species);
+        }
       }
 
       // Reset form isDirty and isSubmitting state from previous submissions.
       reset({
         ...data,
         ...modelData,
+        species_weight,
+        species_weight_unit,
       });
       updateProject({
         id: project.id,
@@ -205,6 +219,7 @@ function useModelFormDataCallback({
       updateSimulation,
       setParamsToDefault,
       reset,
+      units,
     ],
   );
   return handleFormData;
@@ -286,6 +301,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
     reset,
     updateModel,
     updateProject,
+    units,
   });
 
   /* 

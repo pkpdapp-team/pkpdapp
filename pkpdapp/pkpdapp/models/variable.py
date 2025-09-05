@@ -405,8 +405,11 @@ class Variable(StoredModel):
     def refs_by(self):
         model = self.get_model()
         myokit_model = model.get_myokit_model()
-        variable = myokit_model.get(self.qname)
-        variables = [self.get_variable(model, v) for v in variable.refs_by()]
+        try:
+            variable = myokit_model.get(self.qname)
+            variables = [self.get_variable(model, v) for v in variable.refs_by()]
+        except KeyError:
+            variables = []
         return variables
 
     # copy a variable to self. the qnames must match

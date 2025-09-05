@@ -271,23 +271,6 @@ export const Species: Story = {
     const listbox = await screen.findByRole("listbox");
     await userEvent.selectOptions(listbox, "Mouse");
     expect(speciesList).toHaveTextContent("Mouse");
-
-    await delay(1000); // Wait for the model to update
-    const errorTab = await canvas.findByRole("tab", {
-      name: /PK\/PD Model Please select a PK model to simulate/i,
-    });
-    expect(errorTab).toBeInTheDocument();
-
-    const pkModelList = await canvas.findByRole("combobox", {
-      name: /PK Model/i,
-    });
-    const pdModelList = canvas.getByRole("combobox", { name: /PD Model/i });
-    expect(pkModelList).toHaveTextContent("None");
-    expect(pdModelList).toHaveTextContent("None");
-    const checkboxes = canvas.queryAllByRole("checkbox");
-    checkboxes.forEach((checkbox) => {
-      expect(checkbox).toBeDisabled();
-    });
   },
 };
 
