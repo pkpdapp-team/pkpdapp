@@ -43,6 +43,14 @@ export type FormData = Omit<CombinedModel, "species"> & {
   species_weight_unit: number | undefined;
 };
 
+const defaultSpeciesWeights = new Map([
+  ["H", 75.0],
+  ["R", 0.25],
+  ["K", 3.5],
+  ["M", 0.025],
+  ["O", 10.0],
+]);
+
 function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -139,8 +147,10 @@ function useModelFormDataCallback({
       if (!model || !project) {
         return;
       }
-      let { species, species_weight, species_weight_unit, ...modelData } =
-        data;
+      const { species, ...modelData } = data;
+      let species_weight = data.species_weight;
+      let species_weight_unit = data.species_weight_unit;
+
       // if tlag checkbox is unchecked, then remove tlag derived variables
       if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
         modelData.derived_variables = modelData.derived_variables.filter(
@@ -155,28 +165,11 @@ function useModelFormDataCallback({
       // if species has changed, then set default values for body weight and unit
       if (species !== project.species) {
         const kg = units.find((u) => u.symbol === "kg");
-        if (kg) {
+        if (kg && species) {
           species_weight_unit = kg.id;
-          if (species === "H") {
-            species_weight = 75.0;
-          } else if (species === "R") {
-            species_weight = 0.25;
-          } else if (species === "K") {
-            species_weight = 3.5;
-          } else if (species === "M") {
-            species_weight = 0.025;
-          } else if (species === "O") {
-            species_weight = 10.0;
-          }
+          species_weight = defaultSpeciesWeights.get(species);
         }
       }
-      console.log(
-        "Model form data",
-        species,
-        species_weight,
-        species_weight_unit,
-        modelData,
-      );
 
       // Reset form isDirty and isSubmitting state from previous submissions.
       reset({
@@ -226,6 +219,7 @@ function useModelFormDataCallback({
       updateSimulation,
       setParamsToDefault,
       reset,
+      units,
     ],
   );
   return handleFormData;
