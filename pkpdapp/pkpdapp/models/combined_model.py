@@ -238,7 +238,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pk_model = myokit.Model()
         else:
             pk_model = self.pk_model.create_myokit_model()
-        if self.pk_model2 is None:
+        if self.pk_model2 is None or self.pk_model is None:
             pk_model2 = myokit.Model()
         else:
             pk_model2 = self.pk_model2.create_myokit_model()
@@ -252,7 +252,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = self.pd_model2.create_myokit_model()
 
         # combined both pk models
-        if self.pk_model2 is not None:
+        if self.pk_model2 is not None and self.pk_model is not None:
             pk_model.import_component(
                 pk_model2.get("PKCompartment"), new_name="Extravascular"
             )
