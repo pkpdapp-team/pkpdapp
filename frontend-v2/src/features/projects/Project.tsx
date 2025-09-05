@@ -313,20 +313,22 @@ const ProjectEditorRow: FC<Props> = ({
         </TableCell>
         <TableCell>
           {isEditMode ? (
-            <Autocomplete
-              multiple
-              freeSolo
-              id="tags-standard"
-              options={unusedTags}
-              getOptionLabel={(option) => option}
-              defaultValue={tags}
-              onChange={(event, value) =>
-                setValue("project.tags", value.join(","), { shouldDirty: true })
-              }
-              renderInput={(params) => (
-                <MaterialTextField {...params} variant="standard" />
-              )}
-            />
+            <Tooltip title="Select tags. You can create a new tag by typing the name and pressing enter" placement="top">
+              <Autocomplete
+                multiple
+                freeSolo
+                id="tags-standard"
+                options={unusedTags}
+                getOptionLabel={(option) => option}
+                defaultValue={tags}
+                onChange={(event, value) =>
+                  setValue("project.tags", value.join(","), { shouldDirty: true })
+                }
+                renderInput={(params) => (
+                  <MaterialTextField {...params} variant="standard" />
+                )}
+              />
+            </Tooltip>
           ) : (
             <Stack direction="row" spacing={0.5}>
               {tags.map((tag) => (
