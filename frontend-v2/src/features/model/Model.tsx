@@ -162,8 +162,18 @@ function useModelFormDataCallback({
         modelData.pd_model2 = null;
       }
 
-      // if species has changed, then set default values for body weight and unit
       if (species !== project.species) {
+        const version_greater_than_2 = project.version ? project.version >= 3 : false;
+        // if species has changed, then clear the models (only for old model)
+        if (!version_greater_than_2) {
+          modelData.pk_model = null;
+          modelData.pd_model = null;
+          modelData.pd_model2 = null;
+          modelData.mappings = [];
+          modelData.derived_variables = [];
+        }
+
+        // if species has changed, then set default values for body weight and unit
         const kg = units.find((u) => u.symbol === "kg");
         if (kg && species) {
           species_weight_unit = kg.id;
