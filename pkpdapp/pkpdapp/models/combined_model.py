@@ -1077,6 +1077,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
+            # old models did not have tags so get the model name from the
+            # existing name
             model_name = (
                 self.pk_model.name.replace("_clinical", "")
                 .replace("_preclinical", "")
@@ -1087,6 +1089,20 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 .replace("production", "")
                 .replace("elimination", "")
             )
+            # new models use tags to define the model type
+            tags = list(self.pk_model.tags.all().values_list("name", flat=True))
+            if "TMDD" in tags:
+                if "1-compartment" in tags:
+                    model_name = "one_compartment_tmdd"
+                elif "2-compartment" in tags:
+                    model_name = "two_compartment_tmdd"
+            else:
+                if "1-compartment" in tags:
+                    model_name = "one_compartment"
+                elif "2-compartment" in tags:
+                    model_name = "two_compartment"
+                elif "3-compartment" in tags:
+                    model_name = "three_compartment"
             print(
                 "resetting params to defaults",
                 model_name,
