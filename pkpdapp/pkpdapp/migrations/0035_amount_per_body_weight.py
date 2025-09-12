@@ -7,18 +7,28 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0034_version_3_pd_models'),
+        ("pkpdapp", "0034_version_3_pd_models"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='protocol',
-            name='amount_per_body_weight',
-            field=models.BooleanField(default=False, help_text='whether the amount is per body weight'),
+            model_name="protocol",
+            name="amount_per_body_weight",
+            field=models.BooleanField(
+                default=False, help_text="whether the amount is per body weight"
+            ),
         ),
         migrations.AlterField(
-            model_name='dose',
-            name='protocol',
-            field=models.ForeignKey(blank=True, default=None, help_text='protocol containing this dose', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='pkpdapp.protocol'),
+            model_name="dose",
+            name="protocol",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                help_text="protocol containing this dose",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="doses",
+                to="pkpdapp.protocol",
+            ),
         ),
     ]

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0035_amount_per_body_weight'),
+        ("pkpdapp", "0035_amount_per_body_weight"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='variable',
-            name='unit_per_body_weight',
-            field=models.BooleanField(default=False, help_text='whether the unit is per body weight'),
+            model_name="variable",
+            name="unit_per_body_weight",
+            field=models.BooleanField(
+                default=False, help_text="whether the unit is per body weight"
+            ),
         ),
     ]
