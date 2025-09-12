@@ -57,9 +57,9 @@ class MyokitModelMixin:
             # to per animal
             additional_conversion_factor = 1.0
             if (
-                project.version > 2
+                project is not None
+                and project.version > 2
                 and protocol.amount_per_body_weight
-                and project is not None
             ):
                 additional_conversion_factor = project.species_weight
 
@@ -431,9 +431,9 @@ class MyokitModelMixin:
                 myokit_variable_sbml.unit(), compound=compound, is_target=is_target
             )
             if (
-                project.version > 2
+                project is not None
+                and project.version > 2
                 and variable.unit_per_body_weight
-                and project is not None
             ):
                 conversion_factor *= project.species_weight
 
