@@ -233,7 +233,6 @@ class MyokitModelMixin:
         for v in model.variables(const=True, sort=True):
             if v.is_literal() and v.qname() not in removed_variables:
                 v = Variable.get_variable(self, v)
-                print("got variable", v.qname, v.unit.symbol)
                 if v._state.adding:
                     new_variables.append(v)
                 else:
