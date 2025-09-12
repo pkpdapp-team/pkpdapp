@@ -20,6 +20,7 @@ import {
   CombinedModelRead,
 } from "../../../app/backendApi";
 import UnitField from "../../../components/UnitField";
+import Checkbox from "../../../components/Checkbox";
 import useDirty from "../../../hooks/useDirty";
 import FloatField from "../../../components/FloatField";
 import { selectIsProjectShared } from "../../login/loginSlice";
@@ -101,6 +102,9 @@ const ParameterRow: FC<Props> = ({
   const isPreclinicalPerKg =
     project?.species !== "H" && unit?.symbol.endsWith("/kg");
 
+
+  const isPKandVol = isPK && unit?.m === 3;
+
   const defaultProps = {
     disabled: isSharedWithMe,
   };
@@ -109,13 +113,13 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-    { value: "EMX", label: "Dose Maximum Effect" },
-    { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
-    { value: "POW", label: "Dose Hill Effect" },
-    { value: "TDI", label: "Time Inhibition" },
-    { value: "IND", label: "Time Induction" },
-    { value: "", label: "None" },
-  ];
+      { value: "EMX", label: "Dose Maximum Effect" },
+      { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
+      { value: "POW", label: "Dose Hill Effect" },
+      { value: "TDI", label: "Time Inhibition" },
+      { value: "IND", label: "Time Induction" },
+      { value: "", label: "None" },
+    ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
@@ -259,6 +263,16 @@ const ParameterRow: FC<Props> = ({
           isPreclinicalPerKg={isPreclinicalPerKg}
           selectProps={defaultProps}
         />
+      </TableCell>
+      <TableCell size="small" sx={{ width: "10rem" }}>
+        {isPKandVol && (
+          <Checkbox
+            label=""
+            name="unit_per_body_weight"
+            control={control}
+            checkboxFieldProps={defaultProps}
+          />
+        )}
       </TableCell>
       <TableCell size="small">
         {isPK && (

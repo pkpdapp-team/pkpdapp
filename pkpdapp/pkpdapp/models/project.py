@@ -14,7 +14,7 @@ from django.urls import reverse
 
 def get_species_weight_unit():
     try:
-        return Unit.objects.get(symbol="g")
+        return Unit.objects.get(symbol="kg")
     except Unit.DoesNotExist:
         return None
 

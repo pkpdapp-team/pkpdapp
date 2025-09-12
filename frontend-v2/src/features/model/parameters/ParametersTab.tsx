@@ -131,6 +131,9 @@ const ParametersTab: FC<Props> = ({
                 </div>
               </TableCell>
               <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
+              </TableCell>
+              <TableCell>
                 <div style={{ ...defaultHeaderSx }}>Nonlinearity</div>
               </TableCell>
             </TableRow>

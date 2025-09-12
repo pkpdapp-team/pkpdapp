@@ -6,23 +6,19 @@
 
 from django.db import models
 from django.urls import reverse
-from pkpdapp.models import (
-    Compound, Unit,
-    Project, StoredModel,
-    SubjectGroup
-)
+from pkpdapp.models import Compound, Unit, Project, StoredModel, SubjectGroup
 
 
 def get_h_unit():
     try:
-        return Unit.objects.get(symbol='h')
+        return Unit.objects.get(symbol="h")
     except Unit.DoesNotExist:
         return None
 
 
 def get_mg_unit():
     try:
-        return Unit.objects.get(symbol='mg')
+        return Unit.objects.get(symbol="mg")
     except Unit.DoesNotExist:
         return None
 
@@ -33,30 +29,34 @@ class Protocol(StoredModel):
     a compound, dataset and subject.
     """
 
-    name = models.CharField(
-        max_length=100, help_text='name of the protocol'
-    )
+    name = models.CharField(max_length=100, help_text="name of the protocol")
     dataset = models.ForeignKey(
-        'Dataset', on_delete=models.CASCADE,
-        related_name='protocols',
-        blank=True, null=True,
-        help_text='Dataset that uses this protocol.'
+        "Dataset",
+        on_delete=models.CASCADE,
+        related_name="protocols",
+        blank=True,
+        null=True,
+        help_text="Dataset that uses this protocol.",
     )
     project = models.ForeignKey(
-        Project, on_delete=models.CASCADE,
-        related_name='protocols',
-        blank=True, null=True,
-        help_text='Project that "owns" this protocol.'
+        Project,
+        on_delete=models.CASCADE,
+        related_name="protocols",
+        blank=True,
+        null=True,
+        help_text='Project that "owns" this protocol.',
     )
     compound = models.ForeignKey(
-        Compound, on_delete=models.PROTECT,
-        blank=True, null=True,
-        help_text='drug compound'
+        Compound,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        help_text="drug compound",
     )
 
     class DoseType(models.TextChoices):
-        DIRECT = 'D', 'IV'
-        INDIRECT = 'I', 'Extravascular'
+        DIRECT = "D", "IV"
+        INDIRECT = "I", "Extravascular"
 
     dose_type = models.CharField(
         max_length=1,
@@ -65,35 +65,44 @@ class Protocol(StoredModel):
     )
 
     time_unit = models.ForeignKey(
-        Unit, on_delete=models.PROTECT,
-        blank=True, null=True,
+        Unit,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
         default=get_h_unit,
-        related_name='protocols_time',
-        help_text=(
-            'unit for the start_time and duration values stored in each dose'
-        )
+        related_name="protocols_time",
+        help_text=("unit for the start_time and duration values stored in each dose"),
     )
 
     amount_unit = models.ForeignKey(
-        Unit, on_delete=models.PROTECT,
+        Unit,
+        on_delete=models.PROTECT,
         default=get_mg_unit,
-        blank=True, null=True,
-        related_name='protocols_amount',
-        help_text='unit for the amount value stored in each dose'
+        blank=True,
+        null=True,
+        related_name="protocols_amount",
+        help_text="unit for the amount value stored in each dose",
+    )
+
+    amount_per_body_weight = models.BooleanField(
+        default=False, help_text="whether the amount is per body weight"
     )
 
     mapped_qname = models.CharField(
-        default='',
-        blank=True, null=True,
+        default="",
+        blank=True,
+        null=True,
         max_length=50,
-        help_text='qname of the mapped dosing compartment for each dose'
+        help_text="qname of the mapped dosing compartment for each dose",
     )
 
     group = models.ForeignKey(
-        SubjectGroup, on_delete=models.SET_NULL,
-        related_name='protocols',
-        blank=True, null=True,
-        help_text='Group that uses this protocol'
+        SubjectGroup,
+        on_delete=models.SET_NULL,
+        related_name="protocols",
+        blank=True,
+        null=True,
+        help_text="Group that uses this protocol",
     )
 
     __original_dose_type = None
@@ -103,7 +112,7 @@ class Protocol(StoredModel):
         self.__original_dose_type = self.dose_type
 
     def get_absolute_url(self):
-        return reverse('protocol-detail', kwargs={'pk': self.pk})
+        return reverse("protocol-detail", kwargs={"pk": self.pk})
 
     def get_project(self):
         if self.project:
@@ -136,8 +145,8 @@ class Protocol(StoredModel):
         if self.group != protocol.group:
             return False
 
-        my_doses = self.doses.order_by('start_time')
-        other_doses = protocol.doses.order_by('start_time')
+        my_doses = self.doses.order_by("start_time")
+        other_doses = protocol.doses.order_by("start_time")
         for my_dose, other_dose in zip(my_doses, other_doses):
             if not my_dose.is_same_as(other_dose):
                 return False
@@ -154,12 +163,12 @@ class Protocol(StoredModel):
 
     def copy(self, new_project):
         stored_protocol_kwargs = {
-            'name': self.name,
-            'project': new_project,
-            'compound': self.compound,
-            'dose_type': self.dose_type,
-            'time_unit': self.time_unit,
-            'amount_unit': self.amount_unit,
+            "name": self.name,
+            "project": new_project,
+            "compound": self.compound,
+            "dose_type": self.dose_type,
+            "time_unit": self.time_unit,
+            "amount_unit": self.amount_unit,
         }
         stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
         for dose in self.doses.all():

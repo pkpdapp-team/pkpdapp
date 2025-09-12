@@ -81,6 +81,10 @@ class Variable(StoredModel):
         ),
     )
 
+    unit_per_body_weight = models.BooleanField(
+        default=False, help_text="whether the unit is per body weight"
+    )
+
     unit_symbol = models.CharField(
         max_length=20,
         blank=True,
