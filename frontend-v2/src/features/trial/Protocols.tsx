@@ -335,8 +335,14 @@ export const Protocols: FC<ProtocolsProps> = ({
                   <div style={{ ...defaultHeaderSx }}>
                     {" "}
                     Dose Unit
-                    <HelpButton title="Dose Unit">
-                      Default selection: mg/kg for preclinical, mg for clinical
+                  </div>
+                </TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    {" "}
+                    Per Body Weight (kg)
+                    <HelpButton title="Per Body Weight">
+                      If checked, the dose is given in amount per body
                     </HelpButton>
                   </div>
                 </TableCell>

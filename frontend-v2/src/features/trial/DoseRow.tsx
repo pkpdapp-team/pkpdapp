@@ -14,6 +14,7 @@ import {
 } from "../../app/backendApi";
 import { Control, useForm, useFormState } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
+import Checkbox from "../../components/Checkbox";
 
 type Props = {
   baseUnit?: UnitRead;
@@ -119,6 +120,14 @@ const DoseRow: FC<Props> = ({
         ) : (
           <Typography>{selectedAmountLabel}</Typography>
         )}
+      </TableCell>
+      <TableCell>
+        <Checkbox
+          label=""
+          name={`amount_per_body_weight`}
+          control={control}
+          checkboxFieldProps={{ ...defaultProps, disabled: index !== 0 || disabled }}
+        />
       </TableCell>
       <TableCell>
         <IntegerField

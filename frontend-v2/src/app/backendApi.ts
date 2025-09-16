@@ -2720,6 +2720,8 @@ export type Protocol = {
   /** name of the protocol */
   name: string;
   dose_type?: DoseTypeEnum;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** qname of the mapped dosing compartment for each dose */
   mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
@@ -2747,6 +2749,8 @@ export type ProtocolRead = {
   /** name of the protocol */
   name: string;
   dose_type?: DoseTypeEnum;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** qname of the mapped dosing compartment for each dose */
   mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
@@ -3506,6 +3510,8 @@ export type PatchedProtocol = {
   /** name of the protocol */
   name?: string;
   dose_type?: DoseTypeEnum;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** qname of the mapped dosing compartment for each dose */
   mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
@@ -3533,6 +3539,8 @@ export type PatchedProtocolRead = {
   /** name of the protocol */
   name?: string;
   dose_type?: DoseTypeEnum;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** qname of the mapped dosing compartment for each dose */
   mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
@@ -4104,6 +4112,8 @@ export type Variable = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -4157,6 +4167,8 @@ export type VariableRead = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -4208,6 +4220,8 @@ export type PatchedVariable = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname?: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -4261,6 +4275,8 @@ export type PatchedVariableRead = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname?: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */

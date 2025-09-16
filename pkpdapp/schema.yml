@@ -5189,6 +5189,9 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        amount_per_body_weight:
+          type: boolean
+          description: whether the amount is per body weight
         mapped_qname:
           type: string
           nullable: true
@@ -5519,6 +5522,9 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_per_body_weight:
+          type: boolean
+          description: whether the unit is per body weight
         unit_symbol:
           type: string
           nullable: true
@@ -5878,6 +5884,9 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
+        amount_per_body_weight:
+          type: boolean
+          description: whether the amount is per body weight
         mapped_qname:
           type: string
           nullable: true
@@ -6491,6 +6500,9 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_per_body_weight:
+          type: boolean
+          description: whether the unit is per body weight
         unit_symbol:
           type: string
           nullable: true

@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC, useCallback, useEffect } from "react";
 import {
   TableCell,
   TableRow,
@@ -16,13 +16,14 @@ import {
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { useForm } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import DoseRow from "./DoseRow";
+import useDirty from "../../hooks/useDirty";
 
 interface Props {
   onChange: () => void;
@@ -38,10 +39,32 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       { skip: !protocol.variables.length },
     );
   const mappedVariable = protocol.mapped_qname || variable?.qname || "";
-  const { control } = useForm<Protocol>({
+  const { control, reset, handleSubmit } = useForm<Protocol>({
     defaultValues: protocol,
   });
+  const { isDirty, isSubmitting } = useFormState({ control: control });
+  useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
+
+  const handleFormData = useCallback(
+    async (data: Protocol) => {
+      if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+        reset(data);
+        await updateProtocol({ id: protocol.id, protocol: data });
+      }
+    },
+    [protocol, protocol.id, onChange, updateProtocol, reset],
+  );
+
+  useEffect(() => {
+    if (isDirty && !isSubmitting) {
+      const handleSave = handleSubmit(handleFormData);
+      handleSave();
+    }
+  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
+
+
+
   const [createDose] = useDoseCreateMutation();
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),

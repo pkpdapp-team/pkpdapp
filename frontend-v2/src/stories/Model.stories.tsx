@@ -266,11 +266,18 @@ export const Species: Story = {
     });
     const speciesList = await canvas.findByLabelText("Species");
     expect(speciesList).toHaveTextContent("Rat");
+    const pkModelList = await canvas.findByLabelText("PK Model");
+    const pdModelList = await canvas.findByLabelText("PD Model");
+    expect(pkModelList).toHaveTextContent("one_compartment_preclinical");
+    expect(pdModelList).toHaveTextContent("direct_effects_emax");
 
     await userEvent.click(speciesList);
     const listbox = await screen.findByRole("listbox");
     await userEvent.selectOptions(listbox, "Mouse");
     expect(speciesList).toHaveTextContent("Mouse");
+    // Check that the PK and PD model has been cleared
+    expect(pkModelList).toHaveTextContent("None");
+    expect(pdModelList).toHaveTextContent("None");
   },
 };
 

@@ -34,7 +34,7 @@ class TestProject(TestCase):
 
     def test_project_weight_unit_default(self):
         # weight unit should be set to default (g)
-        self.assertEqual(self.project.species_weight_unit.symbol, "g")
+        self.assertEqual(self.project.species_weight_unit.symbol, "kg")
 
     def test_copy(self):
         pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")

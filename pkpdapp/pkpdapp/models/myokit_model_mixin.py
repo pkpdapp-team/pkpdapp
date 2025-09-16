@@ -42,12 +42,6 @@ class MyokitModelMixin:
         else:
             compound = project.compound
 
-        species_weight_in_kg = 1.0
-        if project is not None and project.version > 2:
-            kg_conversion_factor = project.species_weight_unit.convert_to(
-                myokit.units.kg, compound=compound
-            )
-            species_weight_in_kg = project.species_weight * kg_conversion_factor
         for qname, protocol in dosing_protocols.items():
             amount_var = model.get(qname)
             set_administration(model, amount_var)
@@ -61,16 +55,16 @@ class MyokitModelMixin:
 
             # if the amount unit is in per kg, use species weight to convert
             # to per animal
-            protocol_amount_unit = protocol.amount_unit
             additional_conversion_factor = 1.0
-            if protocol.amount_unit.symbol.endswith("/kg"):
-                if project is not None and project.version > 2:
-                    additional_conversion_factor = species_weight_in_kg
-                    protocol_amount_unit.g += 1
-                    protocol_amount_unit.multiplier += 3.0
+            if (
+                project is not None
+                and project.version > 2
+                and protocol.amount_per_body_weight
+            ):
+                additional_conversion_factor = project.species_weight
 
             amount_conversion_factor = (
-                protocol_amount_unit.convert_to(
+                protocol.amount_unit.convert_to(
                     amount_var.unit(), compound=compound, is_target=is_target
                 )
                 * additional_conversion_factor
@@ -436,6 +430,12 @@ class MyokitModelMixin:
             conversion_factor = variable.unit.convert_to(
                 myokit_variable_sbml.unit(), compound=compound, is_target=is_target
             )
+            if (
+                project is not None
+                and project.version > 2
+                and variable.unit_per_body_weight
+            ):
+                conversion_factor *= project.species_weight
 
         return conversion_factor * value
 
