@@ -207,6 +207,7 @@ class MyokitModelMixin:
             removed_variables += [
                 "PKCompartment.b_term",
                 "PKCompartment.c_term",
+                "PKCompartment.RateAbs",
             ]
             if not getattr(self, "has_saturation", True):
                 removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
