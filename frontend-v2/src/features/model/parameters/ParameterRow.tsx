@@ -92,6 +92,7 @@ const ParameterRow: FC<Props> = ({
 
   const isPD = variable.qname.startsWith("PD");
   const isPK = variable.qname.startsWith("PK");
+  const isNonlin = variable.qname.startsWith("PKNonlin");
   const isUD = variable.qname.endsWith("_ud");
   const type = isUD ? "UD" : isPD ? "PD" : "PK";
 
@@ -289,7 +290,7 @@ const ParameterRow: FC<Props> = ({
         )}
       </TableCell>
       <TableCell size="small">
-        {isPK && (
+        {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
             <Select
               size="small"

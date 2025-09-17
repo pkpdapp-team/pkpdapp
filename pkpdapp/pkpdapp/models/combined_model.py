@@ -580,7 +580,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 continue
 
             time_var = pkpd_model.binding("time")
-            myokit_compartment = myokit_var.parent()
+            if pkpd_model.has_component("PKNonlinearities"):
+                myokit_compartment = pkpd_model.get("PKNonlinearities")
+            else:
+                myokit_compartment = pkpd_model.add_component("PKNonlinearities")
             var_name = derived_variable.pk_variable.name
             var = None
             if (
