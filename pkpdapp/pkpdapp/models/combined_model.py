@@ -461,9 +461,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 name="Effect compartment model"
             )
             ec_myokit = effect_compartment.create_myokit_model()
-            c1_variable_name = (
-                "PKCompartment.calc_C1_f" if calc_C1_f_exists else "PKCompartment.C1"
-            )
+
+            tags = list(self.pk_model.tags.all().values_list("name", flat=True))
+            if "TMDD" in tags:
+                c1_variable_name = "PKCompartment.C1_f"
+            else:
+                c1_variable_name = (
+                    "PKCompartment.calc_C1_f"
+                    if calc_C1_f_exists
+                    else "PKCompartment.C1"
+                )
             c1_variable = pk_model.get(c1_variable_name)
             for i in range(self.number_of_effect_compartments):
                 pk_model.import_component(

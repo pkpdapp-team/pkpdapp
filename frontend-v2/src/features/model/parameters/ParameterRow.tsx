@@ -210,11 +210,25 @@ const ParameterRow: FC<Props> = ({
     }
   };
 
+  let variable_name = variable.name;
+  if (
+    model.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable.qname.startsWith("Effect")
+  ) {
+    const compartment_name = variable.qname.split(".")[0];
+    const compartment_number = compartment_name.slice(
+      17,
+      compartment_name.length,
+    );
+    variable_name = `${variable.name}_Ce${compartment_number}`;
+  }
+
   return (
     <TableRow>
       <TableCell size="small" sx={{ width: "5rem" }}>
         <Tooltip title={variable.description}>
-          <Typography>{variable.name}</Typography>
+          <Typography>{variable_name}</Typography>
         </Tooltip>
       </TableCell>
       <TableCell size="small" sx={{ width: "5rem" }}>
