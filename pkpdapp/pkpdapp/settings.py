@@ -27,6 +27,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # setup automatic pk column for models
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+DEBUG = int(os.environ.get("DEBUG", default=0))
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -71,7 +73,6 @@ LOGGING = {
 
 SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
 
 ALLOWED_HOSTS = [os.environ.get("HOST_NAME", "localhost"), "127.0.0.1"]
 

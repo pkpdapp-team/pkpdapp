@@ -911,7 +911,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 k_var = myokit_compartment.add_variable(new_names[1])
                 k_var.meta["desc"] = f"Exponential Decay Rate for {var_name}"
-                k_var.set_unit(myokit.units.dimensionless / myokit.units.second)
+                k_var.set_unit(1 / myokit.units.hour)
                 k_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[2])
@@ -955,7 +955,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
                 k_var = myokit_compartment.add_variable(new_names[1])
                 k_var.meta["desc"] = f"Exponential Increase Rate for {var_name}"
-                k_var.set_unit(1 / myokit.units.second)
+                k_var.set_unit(1 / myokit.units.hour)
                 k_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[2])
