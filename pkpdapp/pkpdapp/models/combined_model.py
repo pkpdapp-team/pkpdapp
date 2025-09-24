@@ -992,7 +992,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     f"Unknown derived variable type {derived_variable.type}"
                 )
             # replace the original variable with the new one in the model
-            for comp_var in myokit_compartment.variables():
+            for comp_var in myokit_var.parent().variables():
                 if var is None or comp_var == var:
                     continue
                 new_expr = comp_var.rhs().clone(
