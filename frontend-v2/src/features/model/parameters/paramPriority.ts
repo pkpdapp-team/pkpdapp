@@ -29,7 +29,13 @@ const sliderPriority = (param: Variable) => {
   let priority = 0;
   if (param.qname.endsWith("_ud")) {
     priority = qnameLibraryOrder.length + 2;
-  } else if (param.qname.startsWith("PK")) {
+  } else if (param.qname.startsWith("PKNonlinearities")) {
+    priority = qnameLibraryOrder.length;
+    const index = qnameLibraryOrder.indexOf(param.qname.replace("PKNonlinearities", "PKCompartment"));
+    if (index > -1) {
+      priority = index;
+    }
+  } else if (param.qname.startsWith("PKCompartment")) {
     priority = qnameLibraryOrder.length;
     const index = qnameLibraryOrder.indexOf(param.qname);
     if (index > -1) {

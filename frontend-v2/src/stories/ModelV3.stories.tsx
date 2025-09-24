@@ -475,6 +475,19 @@ export const MapVariables: Story = {
   },
 };
 
+
+export const Parameters: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const parametersTab = await canvas.findByRole("tab", {
+      name: /^Parameters$/i,
+    });
+    await userEvent.click(parametersTab);
+    const cl_parameter_text = await canvas.findByText("CL");
+    expect(cl_parameter_text).toBeInTheDocument();
+  }
+}
+
 export const SecondaryParameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);

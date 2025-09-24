@@ -580,7 +580,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 continue
 
             time_var = pkpd_model.binding("time")
-            myokit_compartment = myokit_var.parent()
+            if pkpd_model.has_component("PKNonlinearities"):
+                myokit_compartment = pkpd_model.get("PKNonlinearities")
+            else:
+                myokit_compartment = pkpd_model.add_component("PKNonlinearities")
             var_name = derived_variable.pk_variable.name
             var = None
             if (
@@ -908,7 +911,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 k_var = myokit_compartment.add_variable(new_names[1])
                 k_var.meta["desc"] = f"Exponential Decay Rate for {var_name}"
-                k_var.set_unit(myokit.units.dimensionless / myokit.units.second)
+                k_var.set_unit(1 / myokit.units.hour)
                 k_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[2])
@@ -952,7 +955,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
                 k_var = myokit_compartment.add_variable(new_names[1])
                 k_var.meta["desc"] = f"Exponential Increase Rate for {var_name}"
-                k_var.set_unit(1 / myokit.units.second)
+                k_var.set_unit(1 / myokit.units.hour)
                 k_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[2])
@@ -989,7 +992,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     f"Unknown derived variable type {derived_variable.type}"
                 )
             # replace the original variable with the new one in the model
-            for comp_var in myokit_compartment.variables():
+            for comp_var in myokit_var.parent().variables():
                 if var is None or comp_var == var:
                     continue
                 new_expr = comp_var.rhs().clone(
