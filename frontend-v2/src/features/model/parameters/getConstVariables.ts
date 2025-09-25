@@ -29,10 +29,10 @@ export const getConstVariables = (
     constVariables = constVariables.filter(
       (variable) => variable.name !== "C_Drug",
     );
-    // if Aa is not dosed, then we will filter out F and ka (for library models)
+    // if Aa or Atr1-10 is not dosed, then we will filter out F and ka (for library models)
     const aaIsNotDosed =
       variables.filter(
-        (variable) => variable.protocol && variable.name === "Aa",
+        (variable) => variable.protocol && (variable.name === "Aa" || variable.name.startsWith("Atr")),
       ).length === 0;
     if (aaIsNotDosed) {
       constVariables = constVariables.filter(
