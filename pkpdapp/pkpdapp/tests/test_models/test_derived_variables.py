@@ -132,6 +132,7 @@ class TestDerivedVariables(TestCase):
         vars = [v.qname() for v in myokit_model.variables()]
         for var in [
             "PDCompartment.C_Drug",
+            "PKNonlinearities.C_Drug",
             "PKNonlinearities.C_Drug_Emax",
             "PKNonlinearities.D50_C_Drug",
             "PKNonlinearities.h_C_Drug",
@@ -143,7 +144,7 @@ class TestDerivedVariables(TestCase):
         print(myokit_model.get("PKNonlinearities.C_Drug_Emax").rhs().code())
         self.assertEqual(
             str(myokit_model.get("PKNonlinearities.C_Drug_Emax").rhs()),
-            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (100^PKNonlinearities.h_C_Drug / (100^PKNonlinearities.h_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.h_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (PKNonlinearities.C_Drug^PKNonlinearities.h_C_Drug / (PKNonlinearities.C_Drug^PKNonlinearities.h_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.h_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -163,6 +164,7 @@ class TestDerivedVariables(TestCase):
         vars = [v.qname() for v in myokit_model.variables()]
         for var in [
             "PDCompartment.C_Drug",
+            "PKNonlinearities.C_Drug",
             "PKNonlinearities.C_Drug_Imax",
             "PKNonlinearities.D50_C_Drug",
             "PKNonlinearities.h_C_Drug",
@@ -173,7 +175,7 @@ class TestDerivedVariables(TestCase):
         self.assertTrue(myokit_model.get("PKNonlinearities.C_Drug_Imax").is_constant())
         self.assertEqual(
             str(myokit_model.get("PKNonlinearities.C_Drug_Imax").rhs()),
-            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 - PDCompartment.C_Drug^PKNonlinearities.h_C_Drug / (PDCompartment.C_Drug^PKNonlinearities.h_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.h_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 - PKNonlinearities.C_Drug^PKNonlinearities.h_C_Drug / (PKNonlinearities.C_Drug^PKNonlinearities.h_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.h_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
@@ -194,6 +196,7 @@ class TestDerivedVariables(TestCase):
         vars = [v.qname() for v in myokit_model.variables()]
         for var in [
             "PDCompartment.C_Drug",
+            "PKNonlinearities.C_Drug",
             "PKNonlinearities.C_Drug_Power",
             "PKNonlinearities.Ref_D_C_Drug",
             "PKNonlinearities.a_D_C_Drug",
@@ -203,7 +206,7 @@ class TestDerivedVariables(TestCase):
         self.assertTrue(myokit_model.get("PKNonlinearities.C_Drug_Power").is_constant())
         self.assertEqual(
             str(myokit_model.get("PKNonlinearities.C_Drug_Power").rhs()),
-            "PDCompartment.C_Drug * (PDCompartment.C_Drug / PKNonlinearities.Ref_D_C_Drug)^PKNonlinearities.a_D_C_Drug",  # noqa E501
+            "PDCompartment.C_Drug * (PKNonlinearities.C_Drug / PKNonlinearities.Ref_D_C_Drug)^PKNonlinearities.a_D_C_Drug",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
