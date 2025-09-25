@@ -3988,6 +3988,10 @@ components:
           type: number
           format: double
           description: molecular mass for target for conversion from mol to grams
+        target2_molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for target 2 for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -4013,6 +4017,9 @@ components:
         target_molecular_mass_unit:
           type: integer
           description: unit for target molecular mass (e.g. g/mol)
+        target2_molecular_mass_unit:
+          type: integer
+          description: unit for target 2 molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration
@@ -4749,6 +4756,10 @@ components:
           type: number
           format: double
           description: molecular mass for target for conversion from mol to grams
+        target2_molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for target 2 for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -4774,6 +4785,9 @@ components:
         target_molecular_mass_unit:
           type: integer
           description: unit for target molecular mass (e.g. g/mol)
+        target2_molecular_mass_unit:
+          type: integer
+          description: unit for target 2 molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration

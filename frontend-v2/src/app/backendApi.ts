@@ -2529,6 +2529,8 @@ export type Compound = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2542,6 +2544,8 @@ export type Compound = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2568,6 +2572,8 @@ export type CompoundRead = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2581,6 +2587,8 @@ export type CompoundRead = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2606,6 +2614,8 @@ export type PatchedCompound = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2619,6 +2629,8 @@ export type PatchedCompound = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2645,6 +2657,8 @@ export type PatchedCompoundRead = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2658,6 +2672,8 @@ export type PatchedCompoundRead = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */

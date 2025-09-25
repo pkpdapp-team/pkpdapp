@@ -34,7 +34,7 @@ class MyokitModelMixin:
 
     @staticmethod
     def _get_protocol_amount_conversion_factor(
-        project, protocol, amount_var, compound, is_target
+        project, protocol, amount_var, compound, target
     ):
         # if the amount unit is in per kg, use species weight to convert
         # to per animal
@@ -48,7 +48,7 @@ class MyokitModelMixin:
 
         amount_conversion_factor = (
             protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, is_target=is_target
+                amount_var.unit(), compound=compound, target=target
             )
             * additional_conversion_factor
         )
@@ -72,11 +72,15 @@ class MyokitModelMixin:
             if qname in override_tlag:
                 tlag_value = override_tlag[qname]
 
+            target = None
             if self.is_library_model:
-                is_target = "CT1" in qname or "AT1" in qname
+                if "CT1" in qname or "AT1" in qname:
+                    target = 1
+                elif "CT2" in qname or "AT2" in qname:
+                    target = 2
 
             amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, amount_var, compound, is_target
+                project, protocol, amount_var, compound, target
             )
 
             time_conversion_factor = protocol.time_unit.convert_to(
@@ -427,9 +431,12 @@ class MyokitModelMixin:
         return [self._serialise_variable(v) for v in variables]
 
     def _convert_unit(self, variable, myokit_variable_sbml, value):
-        is_target = False
+        target = None
         if self.is_library_model:
-            is_target = "CT1" in variable.qname or "AT1" in variable.qname
+            if "CT1" in variable.qname or "AT1" in variable.qname:
+                target = 1
+            elif "CT2" in variable.qname or "AT2" in variable.qname:
+                target = 2
         if variable.unit is None:
             conversion_factor = 1.0
         else:
@@ -438,7 +445,7 @@ class MyokitModelMixin:
             if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound, is_target=is_target
+                myokit_variable_sbml.unit(), compound=compound, target=target
             )
             if (
                 project is not None
@@ -495,7 +502,7 @@ class MyokitModelMixin:
             dose = protocol.doses.first()
             myokit_var = model.get("PKNonlinearities.C_Drug")
             amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, myokit_var, protocol.compound, False
+                project, protocol, myokit_var, protocol.compound
             )
             first_dose_value = dose.amount
             myokit_var.set_rhs(first_dose_value * amount_conversion_factor)
