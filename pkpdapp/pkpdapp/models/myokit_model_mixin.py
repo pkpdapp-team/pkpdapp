@@ -32,6 +32,28 @@ class MyokitModelMixin:
 
         return variables
 
+    @staticmethod
+    def _get_protocol_amount_conversion_factor(
+        project, protocol, amount_var, compound, is_target
+    ):
+        # if the amount unit is in per kg, use species weight to convert
+        # to per animal
+        additional_conversion_factor = 1.0
+        if (
+            project is not None
+            and project.version > 2
+            and protocol.amount_per_body_weight
+        ):
+            additional_conversion_factor = project.species_weight
+
+        amount_conversion_factor = (
+            protocol.amount_unit.convert_to(
+                amount_var.unit(), compound=compound, is_target=is_target
+            )
+            * additional_conversion_factor
+        )
+        return amount_conversion_factor
+
     def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
         protocols = {}
         is_target = False
@@ -53,21 +75,8 @@ class MyokitModelMixin:
             if self.is_library_model:
                 is_target = "CT1" in qname or "AT1" in qname
 
-            # if the amount unit is in per kg, use species weight to convert
-            # to per animal
-            additional_conversion_factor = 1.0
-            if (
-                project is not None
-                and project.version > 2
-                and protocol.amount_per_body_weight
-            ):
-                additional_conversion_factor = project.species_weight
-
-            amount_conversion_factor = (
-                protocol.amount_unit.convert_to(
-                    amount_var.unit(), compound=compound, is_target=is_target
-                )
-                * additional_conversion_factor
+            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                project, protocol, amount_var, compound, is_target
             )
 
             time_conversion_factor = protocol.time_unit.convert_to(
@@ -471,13 +480,36 @@ class MyokitModelMixin:
     def get_time_max(self):
         return self.time_max
 
+    def _handle_nonlinarities(self, model, dosing_protocols):
+        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
+        # value of the first dose concentration
+        if (
+            self.is_library_model
+            and model.has_variable("PKNonlinearities.C_Drug")
+            and dosing_protocols is not None
+            and len(dosing_protocols) > 0
+        ):
+
+            project = self.get_project()
+            protocol = list(dosing_protocols.values())[0]
+            dose = protocol.doses.first()
+            myokit_var = model.get("PKNonlinearities.C_Drug")
+            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                project, protocol, myokit_var, protocol.compound, False
+            )
+            first_dose_value = dose.amount
+            myokit_var.set_rhs(first_dose_value * amount_conversion_factor)
+
     def simulate_model(
         self, outputs=None, variables=None, time_max=None, dosing_protocols=None
     ):
         model = self.get_myokit_model()
+
         # Convert units
         variables = self._initialise_variables(model, variables)
         time_max = self._convert_bound_unit("time", time_max, model)
+        self._handle_nonlinarities(model, dosing_protocols)
+
         # get tlag vars
         override_tlag = self._get_override_tlag(variables)
         # create simulator

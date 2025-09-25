@@ -758,6 +758,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 min_var.set_unit(myokit_var.unit())
                 min_var.set_rhs(myokit.Number(0))
 
+                try:
+                    dose_var = myokit_compartment.get("C_Drug")
+                except KeyError:
+                    dose_var = myokit_compartment.add_variable("C_Drug")
+                    dose_var.meta["desc"] = "concentration of first dose"
+                    dose_var.set_unit(first_dose_unit)
+                    dose_var.set_rhs(myokit.Number(first_dose_value))
+
                 var = myokit_compartment.add_variable(new_names[0])
                 var.meta["desc"] = f"Emax for {var_name}"
                 var.set_unit(myokit_var.unit())
@@ -770,12 +778,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                             ),
                             myokit.Divide(
                                 myokit.Power(
-                                    myokit.Number(first_dose_value),
+                                    myokit.Name(dose_var),
                                     myokit.Name(h_var),
                                 ),
                                 myokit.Plus(
                                     myokit.Power(
-                                        myokit.Number(first_dose_value),
+                                        myokit.Name(dose_var),
                                         myokit.Name(h_var),
                                     ),
                                     myokit.Power(
@@ -790,8 +798,15 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             elif derived_variable.type == DerivedVariable.Type.IMAX:
                 # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin  # noqa: E501
-                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
-                if myokit_c_drug is None:
+                first_dose_value = None
+                first_dose_unit = None
+                protocol = self.project.protocols.first()
+                if protocol:
+                    dose = protocol.doses.first()
+                    if dose:
+                        first_dose_value = dose.amount
+                        first_dose_unit = protocol.amount_unit.get_myokit_unit()
+                if first_dose_value is None:
                     continue
                 new_names = [
                     f"{var_name}_Imax",
@@ -809,7 +824,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 d50_var = myokit_compartment.add_variable(new_names[1])
                 d50_var.meta["desc"] = f"Imax D50 for {var_name}"
-                d50_var.set_unit(myokit_c_drug.unit())
+                d50_var.set_unit(first_dose_unit)
                 d50_var.set_rhs(myokit.Number(1))
 
                 h_var = myokit_compartment.add_variable(new_names[2])
@@ -821,6 +836,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 min_var.meta["desc"] = f"Imax min for {var_name}"
                 min_var.set_unit(myokit_var.unit())
                 min_var.set_rhs(myokit.Number(0))
+
+                try:
+                    dose_var = myokit_compartment.get("C_Drug")
+                except KeyError:
+                    dose_var = myokit_compartment.add_variable("C_Drug")
+                    dose_var.meta["desc"] = "concentration of first dose"
+                    dose_var.set_unit(first_dose_unit)
+                    dose_var.set_rhs(myokit.Number(first_dose_value))
 
                 var = myokit_compartment.add_variable(new_names[0])
                 var.meta["desc"] = f"Imax for {var_name}"
@@ -836,12 +859,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                                 myokit.Number(1),
                                 myokit.Divide(
                                     myokit.Power(
-                                        myokit.Name(myokit_c_drug),
+                                        myokit.Name(dose_var),
                                         myokit.Name(h_var),
                                     ),
                                     myokit.Plus(
                                         myokit.Power(
-                                            myokit.Name(myokit_c_drug),
+                                            myokit.Name(dose_var),
                                             myokit.Name(h_var),
                                         ),
                                         myokit.Power(
@@ -857,8 +880,15 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             elif derived_variable.type == DerivedVariable.Type.POWER:
                 # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
-                myokit_c_drug = pk_model.get("PDCompartment.C_Drug")
-                if myokit_c_drug is None:
+                first_dose_value = None
+                first_dose_unit = None
+                protocol = self.project.protocols.first()
+                if protocol:
+                    dose = protocol.doses.first()
+                    if dose:
+                        first_dose_value = dose.amount
+                        first_dose_unit = protocol.amount_unit.get_myokit_unit()
+                if first_dose_value is None:
                     continue
                 new_names = [
                     f"{var_name}_Power",
@@ -875,13 +905,21 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 ref_d_var = myokit_compartment.add_variable(new_names[1])
                 ref_d_var.meta["desc"] = f"Power Reference for {var_name}"
-                ref_d_var.set_unit(myokit_c_drug.unit())
+                ref_d_var.set_unit(first_dose_unit)
                 ref_d_var.set_rhs(myokit.Number(1))
 
                 a_d_var = myokit_compartment.add_variable(new_names[2])
                 a_d_var.meta["desc"] = f"Power Exponent for {var_name}"
                 a_d_var.set_unit(myokit.units.dimensionless)
                 a_d_var.set_rhs(myokit.Number(1))
+
+                try:
+                    dose_var = myokit_compartment.get("C_Drug")
+                except KeyError:
+                    dose_var = myokit_compartment.add_variable("C_Drug")
+                    dose_var.meta["desc"] = "concentration of first dose"
+                    dose_var.set_unit(first_dose_unit)
+                    dose_var.set_rhs(myokit.Number(first_dose_value))
 
                 var = myokit_compartment.add_variable(new_names[0])
                 var.meta["desc"] = f"Power for {var_name}"
@@ -891,7 +929,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                         myokit.Name(myokit_var),
                         myokit.Power(
                             myokit.Divide(
-                                myokit.Name(myokit_c_drug),
+                                myokit.Name(dose_var),
                                 myokit.Name(ref_d_var),
                             ),
                             myokit.Name(a_d_var),
