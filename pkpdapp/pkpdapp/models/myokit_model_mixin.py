@@ -56,7 +56,6 @@ class MyokitModelMixin:
 
     def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
         protocols = {}
-        is_target = False
         time_var = model.binding("time")
         project = self.get_project()
         if project is None:

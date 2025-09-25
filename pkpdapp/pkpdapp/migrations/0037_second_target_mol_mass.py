@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name="target2_molecular_mass",
             field=models.FloatField(
                 default=25000.0,
-                help_text="molecular mass for target 2 for conversion from mol to grams",
+                help_text="molecular mass for target 2 for conversion from mol to grams",  # noqa: E501
             ),
         ),
         migrations.AddField(
