@@ -74,6 +74,7 @@ function SelectField<T extends FieldValues>({
             input={<OutlinedInput label={label} notched={displayEmpty} />}
             error={!!error}
             data-cy={`select-${name}`}
+            data-testid={`select-${name}`}
             {...selectProps}
           >
             {options.map((option) => (
