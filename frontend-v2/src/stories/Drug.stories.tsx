@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, fn, waitFor, spyOn } from "storybook/test";
+import { expect, within, fn, waitFor, spyOn, screen } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -119,6 +119,22 @@ export const Default: Story = {
     expect(efficacyTable).toBeInTheDocument();
     const efficacyTableRows = within(efficacyTable).getAllByRole("row");
     expect(efficacyTableRows).toHaveLength(1); // header + 0 data rows
+  },
+};
+
+export const EditMolecularWeightUnit: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const molecularWeightUnit = await canvas.findByTestId("select-molecular_mass_unit");
+    const molecularWeightUnitCombobox = await within(molecularWeightUnit).findByRole("combobox");
+
+    expect(molecularWeightUnit).toBeInTheDocument();
+    expect(molecularWeightUnitCombobox).toHaveTextContent("g/mol (Da)");
+
+    await userEvent.click(molecularWeightUnitCombobox);
+    const unitListBox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(unitListBox, "kg/mol (kDa)");
+    expect(molecularWeightUnitCombobox).toHaveTextContent("kg/mol (kDa)");
   },
 };
 

@@ -972,6 +972,7 @@ export const compound: CompoundRead = {
   intrinsic_clearance_assay: "MS",
   fraction_unbound_including_cells: 1,
   target_molecular_mass: 25000,
+  target2_molecular_mass: 25000,
   target_concentration: 1,
   dissociation_constant: 1,
   is_soluble: true,
@@ -979,6 +980,7 @@ export const compound: CompoundRead = {
   molecular_mass_unit: 54,
   intrinsic_clearance_unit: 8,
   target_molecular_mass_unit: 54,
+  target2_molecular_mass_unit: 54,
   target_concentration_unit: 1,
   dissociation_unit: 1,
 };
@@ -1299,6 +1301,12 @@ export const units = [
       {
         id: 54,
         symbol: "g/mol",
+        conversion_factor: 1,
+        target_conversion_factor: 1,
+      },
+      {
+        id: 111,
+        symbol: "kg/mol",
         conversion_factor: 1,
         target_conversion_factor: 1,
       },
@@ -6082,6 +6090,62 @@ export const units = [
     cd: 0,
     mol: 1,
     multiplier: -15,
+  },
+  {
+    id: 111,
+    compatible_units: [
+      {
+        id: 55,
+        symbol: "g/nmol",
+        conversion_factor: 0.000001,
+        target_conversion_factor: 0.000001,
+      },
+      {
+        id: 54,
+        symbol: "g/mol",
+        conversion_factor: 1,
+        target_conversion_factor: 1,
+      },
+      {
+        id: 53,
+        symbol: "",
+        conversion_factor: 0.000006666666666666667,
+        target_conversion_factor: 0.00004,
+      },
+      {
+        id: 66,
+        symbol: "mg/kg",
+        conversion_factor: 6.666666666666667,
+        target_conversion_factor: 40,
+      },
+      {
+        id: 69,
+        symbol: "µg/kg",
+        conversion_factor: 6666.666666666667,
+        target_conversion_factor: 40000,
+      },
+      {
+        id: 68,
+        symbol: "ng/kg",
+        conversion_factor: 6666666.666666667,
+        target_conversion_factor: 40000000,
+      },
+      {
+        id: 67,
+        symbol: "pg/kg",
+        conversion_factor: 6666666666.666667,
+        target_conversion_factor: 40000000000,
+      },
+    ],
+    symbol: "kg/mol",
+    g: 1,
+    m: 0,
+    s: 0,
+    A: 0,
+    K: 0,
+    cd: 0,
+    mol: -1,
+    multiplier: 0.001,
   },
 ] as unknown[] as UnitRead[];
 

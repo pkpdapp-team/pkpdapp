@@ -244,15 +244,15 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   );
   const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit: { [key: string]: string }) => {
-        // add (Da) and (kDa) for clarity
-        if (unit.symbol === "g/mol") {
-          return { value: unit.id, label: `${unit.symbol} (Da)` };
-        }
-        if (unit.symbol === "kg/mol") {
-          return { value: unit.id, label: `${unit.symbol} (kDa)` };
-        }
-        return { value: unit.id, label: unit.symbol };
-      })
+      // add (Da) and (kDa) for clarity
+      if (unit.symbol === "g/mol") {
+        return { value: unit.id, label: `${unit.symbol} (Da)` };
+      }
+      if (unit.symbol === "kg/mol") {
+        return { value: unit.id, label: `${unit.symbol} (kDa)` };
+      }
+      return { value: unit.id, label: unit.symbol };
+    })
     : [];
 
   const defaultProps = { disabled: isSharedWithMe };
@@ -332,6 +332,30 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
                   size="small"
                   label={"Unit"}
                   name={"target_molecular_mass_unit"}
+                  options={molMassUnitOpt}
+                  control={control}
+                  selectProps={defaultProps}
+                />
+              </Stack>
+            </Stack>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Target 2 Properties
+            </Typography>
+            <Stack direction="column" spacing={2}>
+              <Stack direction="row" spacing={2}>
+                <FloatField
+                  size="small"
+                  label={"Molecular Mass"}
+                  name={"target2_molecular_mass"}
+                  control={control}
+                  sx={{ flex: "1" }}
+                  rules={{ required: true }}
+                  textFieldProps={defaultProps}
+                />
+                <SelectField
+                  size="small"
+                  label={"Unit"}
+                  name={"target2_molecular_mass_unit"}
                   options={molMassUnitOpt}
                   control={control}
                   selectProps={defaultProps}

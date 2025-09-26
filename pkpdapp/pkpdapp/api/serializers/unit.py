@@ -37,11 +37,12 @@ class UnitSerializer(serializers.ModelSerializer):
             {
                 "id": u.id,
                 "symbol": u.symbol,
-                "conversion_factor": unit.convert_to(
-                    u, compound=compound, is_target=False
-                ),
+                "conversion_factor": unit.convert_to(u, compound=compound, target=None),
                 "target_conversion_factor": unit.convert_to(
-                    u, compound=compound, is_target=True
+                    u, compound=compound, target=1
+                ),
+                "target2_conversion_factor": unit.convert_to(
+                    u, compound=compound, target=2
                 ),
             }
             for u in sorted_units
