@@ -195,14 +195,6 @@ function useModelFormDataCallback({
       return updateModel({ id: model.id, combinedModel: modelData })
         .then((response) => {
           if (response?.data) {
-            // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
-            if (modelData.pk_model !== model?.pk_model && simulation) {
-              const time_max_unit = response.data.time_unit;
-              updateSimulation({
-                id: simulation.id,
-                simulation: { ...simulation, time_max_unit },
-              });
-            }
             // if the pk model has changed, need to reset the parameters
             if (modelData.pk_model !== model?.pk_model) {
               setParamsToDefault({ id: model.id, combinedModel: modelData });
