@@ -196,7 +196,7 @@ function useModelFormDataCallback({
         .then((response) => {
           if (response?.data) {
             // if the pk_model has changed, need to reset the simulation time_max_unit and set default parameters again
-            if (modelData.pk_model !== model?.pk_model && simulation) {
+            if ((modelData.pk_model != model?.pk_model) && simulation) {
               const time_max_unit = response.data.time_unit;
               updateSimulation({
                 id: simulation.id,
