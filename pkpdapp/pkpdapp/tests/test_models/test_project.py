@@ -20,6 +20,7 @@ from pkpdapp.models import (
     SimulationYAxis,
     Unit,
     EfficacyExperiment,
+    DerivedVariable,
 )
 
 
@@ -42,6 +43,7 @@ class TestProject(TestCase):
             name="my wonderful model",
             pk_model=pk_model,
             project=self.project,
+            number_of_effect_compartments=1,
         )
         protocol = Protocol.objects.create(name="my protocol")
         dose = protocol.doses.create(
@@ -54,7 +56,15 @@ class TestProject(TestCase):
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
+        c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
         h = Unit.objects.get(symbol="h")
+
+        DerivedVariable.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=cl,
+            secondary_variable=c1,
+            type=DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
+        )
 
         sim = Simulation.objects.create(
             project=self.project,
@@ -83,6 +93,18 @@ class TestProject(TestCase):
         )
 
         new_project = self.project.copy()
+
+        # check that EffectCompartment1.Kp exists
+        kp = new_project.pk_models.first().variables.filter(
+            qname="EffectCompartment1.Kp"
+        )
+        self.assertEqual(kp.count(), 1)
+
+        # check that the derived variable exists
+        new_dv = new_project.pk_models.first().derived_variables.first()
+        self.assertEqual(new_dv.pk_variable.qname, "PKCompartment.CL")
+        self.assertEqual(new_dv.secondary_variable.qname, "PKCompartment.C1")
+        self.assertEqual(new_dv.type, DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN)
 
         # check that the new project has the right name
         self.assertEqual(new_project.name, "Copy of demo")
