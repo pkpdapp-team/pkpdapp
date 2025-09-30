@@ -13,6 +13,7 @@ import {
   Tabs,
   Tab,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
 import {
@@ -274,6 +275,10 @@ export const Protocols: FC<ProtocolsProps> = ({
           {groups?.map((group, index) => {
             const selectedDoses =
               group.protocols?.flatMap((p) => p?.doses) || [];
+            const mappedVariableQnames = group.protocols?.map((p) => p.mapped_qname);
+            const aMappedVariableDoesNotExist = mappedVariableQnames?.some((v) => {
+              return !variables?.some((variable) => variable.qname === v);
+            });
             return (
               <Tab
                 key={group.id}
@@ -290,6 +295,11 @@ export const Protocols: FC<ProtocolsProps> = ({
                     >
                       {selectedDoses.length === 0 && (
                         <Error color="error" sx={{ marginRight: ".5rem" }} />
+                      )}
+                      {aMappedVariableDoesNotExist && (
+                        <Tooltip title="One or more variables linked to this protocol no longer exist in the model, please delete this group." arrow>
+                          <Error color="error" sx={{ marginRight: ".5rem" }} />
+                        </Tooltip>
                       )}
                       <RemoveCircleOutlineIcon fontSize="small" />
                     </IconButton>
