@@ -96,9 +96,13 @@ const PKPDModelTab: FC<Props> = ({
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
   const [tags, setTags] = useState<number[]>([]);
+  const [pdTags, setPdTags] = useState<number[]>([]);
 
   const handleTagChange = (event: SelectChangeEvent<number[]>) => {
     setTags(event.target.value as number[]);
+  };
+  const handlePdTagChange = (event: SelectChangeEvent<number[]>) => {
+    setPdTags(event.target.value as number[]);
   };
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -140,11 +144,20 @@ const PKPDModelTab: FC<Props> = ({
     return version_greater_than_2 && m.model_type === "PKEX";
   });
   const pdModelsFiltered = pdModels.filter((m) => {
+    let is_pd_model = false;
     if (version_greater_than_2) {
-      return m.model_type === "PD" || m.model_type === "TG";
+      is_pd_model = m.model_type === "PD" || m.model_type === "TG";
     } else {
-      return !m.name.includes("tumour_growth_inhibition");
+      is_pd_model = !m.name.includes("tumour_growth_inhibition");
     }
+    if (m.tags) {
+      for (const tag of pdTags) {
+        if (!m.tags.includes(tag)) {
+          return false;
+        }
+      }
+    }
+    return is_pd_model;
   });
   const pdModels2Filtered = pdModels.filter((m) => {
     if (version_greater_than_2) {
@@ -213,9 +226,36 @@ const PKPDModelTab: FC<Props> = ({
     displayEmpty: true,
   };
 
-  const tagOptions = tagsData.map((tag) => {
-    return { value: tag.id, label: tag.name };
-  });
+  const pkTagList = [
+    "1-compartment",
+    "2-compartment",
+    "3-compartment",
+    "PK",
+    "TMDD",
+    "QSS",
+    "MM",
+    "bispecific",
+    "constant",
+  ];
+  const pdTagList = [
+    "direct",
+    "indirect",
+    "TGI",
+    "DDI",
+  ];
+  const tagOptions = tagsData.filter((tag => {
+    return pkTagList.includes(tag.name)
+  })).
+    map((tag) => {
+      return { value: tag.id, label: tag.name };
+    });
+  const pdTagOptions = tagsData.filter((tag => {
+    return pdTagList.includes(tag.name)
+  }))
+    .map((tag) => {
+      return { value: tag.id, label: tag.name };
+    });
+
 
   const effectCompartmentTooltip =
     "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
@@ -476,15 +516,61 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          <SelectField
-            size="small"
-            label="PD Model"
-            name="pd_model"
-            control={control}
-            options={pd_model_options}
-            formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-            selectProps={defaultProps}
-          />
+          {version_greater_than_2 && (
+            <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
+              <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
+              <Select
+                size="small"
+                labelId="tags-label"
+                id="tags"
+                multiple
+                value={pdTags}
+                onChange={handlePdTagChange}
+                input={
+                  <OutlinedInput
+                    id="select-multiple-tags"
+                    label={modelTypesLabel}
+                  />
+                }
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const label = pdTagOptions.find(
+                        (tag) => tag.value === value,
+                      )?.label;
+                      return <Chip key={value} label={label} />;
+                    })}
+                  </Box>
+                )}
+              >
+                {pdTagOptions.map((tag) => (
+                  <MenuItem key={tag.value} value={tag.value}>
+                    {tag.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          <Stack
+            sx={{
+              marginTop: 2,
+              display: "flex",
+              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+            }}
+            direction="row"
+            alignItems="center"
+            spacing={1}
+          >
+            <SelectField
+              size="small"
+              label="PD Model"
+              name="pd_model"
+              control={control}
+              options={pd_model_options}
+              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+              selectProps={defaultProps}
+            />
+          </Stack>
         </Grid>
         <Box width="100%" />
         {pdIsTumourGrowth && (
