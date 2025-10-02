@@ -147,18 +147,6 @@ const ParameterRow: FC<Props> = ({
       nonlinearityIndex = i;
     }
   }
-  //  | "AUC"
-  //| "RO"
-  //| "FUP"
-  //| "BPR"
-  //| "TLG"
-  //| "MM"
-  //| "EMM"
-  //| "EMX"
-  //| "IMX"
-  //| "POW"
-  //| "TDI"
-  //| "IND";
 
   let nonlinearityDocImage = "";
   if (nonlinearityValue) {
@@ -169,7 +157,7 @@ const ParameterRow: FC<Props> = ({
     } else if (nonlinearityValue === "IMX") {
       nonlinearityDocImage = "Dose_decrease_w.JPG";
     } else if (nonlinearityValue === "POW") {
-      nonlinearityDocImage = "Dose_increase_w.JPG";
+      nonlinearityDocImage = "Dose_increase_wo.JPG";
     } else if (nonlinearityValue === "TDI") {
       nonlinearityDocImage = "Time_inhibition.JPG";
     } else if (nonlinearityValue === "IND") {
