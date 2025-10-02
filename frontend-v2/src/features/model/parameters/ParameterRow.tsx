@@ -23,6 +23,7 @@ import UnitField from "../../../components/UnitField";
 import Checkbox from "../../../components/Checkbox";
 import useDirty from "../../../hooks/useDirty";
 import FloatField from "../../../components/FloatField";
+import HelpButton from "../../../components/HelpButton";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
@@ -144,6 +145,35 @@ const ParameterRow: FC<Props> = ({
       }
       nonlinearityValue = derivedVariables[i].type;
       nonlinearityIndex = i;
+    }
+  }
+  //  | "AUC"
+  //| "RO"
+  //| "FUP"
+  //| "BPR"
+  //| "TLG"
+  //| "MM"
+  //| "EMM"
+  //| "EMX"
+  //| "IMX"
+  //| "POW"
+  //| "TDI"
+  //| "IND";
+
+  let nonlinearityDocImage = "";
+  if (nonlinearityValue) {
+    if (nonlinearityValue === "MM" || nonlinearityValue === "EMM") {
+      nonlinearityDocImage = "Conc_Michaelis Menten.JPG";
+    } else if (nonlinearityValue === "EMX") {
+      nonlinearityDocImage = "Dose_increase_w.JPG";
+    } else if (nonlinearityValue === "IMX") {
+      nonlinearityDocImage = "Dose_decrease_w.JPG";
+    } else if (nonlinearityValue === "POW") {
+      nonlinearityDocImage = "Dose_increase_w.JPG";
+    } else if (nonlinearityValue === "TDI") {
+      nonlinearityDocImage = "Time_inhibition.JPG";
+    } else if (nonlinearityValue === "IND") {
+      nonlinearityDocImage = "Time_induction.JPG";
     }
   }
   const timeVaryingVariables = variables.filter(
@@ -319,10 +349,15 @@ const ParameterRow: FC<Props> = ({
                 ))}
               </Select>
             )}
+            {nonlinearityDocImage && (
+              <HelpButton title={nonlinearityDocImage} placement="left" maxWidth="550px">
+                <img src={`nonlinearities/${nonlinearityDocImage}`} alt="doc" style={{ maxWidth: "500px" }} />
+              </HelpButton>
+            )}
           </Stack>
         )}
       </TableCell>
-    </TableRow>
+    </TableRow >
   );
 };
 
