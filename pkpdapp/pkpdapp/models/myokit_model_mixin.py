@@ -501,7 +501,7 @@ class MyokitModelMixin:
             dose = protocol.doses.first()
             myokit_var = model.get("PKNonlinearities.C_Drug")
             amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, myokit_var, protocol.compound
+                project, protocol, myokit_var, protocol.compound, target=None
             )
             first_dose_value = dose.amount
             myokit_var.set_rhs(first_dose_value * amount_conversion_factor)
