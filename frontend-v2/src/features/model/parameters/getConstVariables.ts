@@ -1,23 +1,9 @@
-// @ts-expect-error MutationTrigger isn't exported from Redux any more.
-import { MutationTrigger } from "@reduxjs/toolkit/dist/query/react/buildHooks";
 import {
   CombinedModelRead,
-  CompoundRead,
-  PharmacokineticRead,
   ProjectRead,
-  UnitRead,
   VariableRead,
-  VariableUpdateApiArg,
 } from "../../../app/backendApi";
 import paramPriority from "./paramPriority";
-import { param_default as paramDefaults } from "./param_default";
-import {
-  MutationDefinition,
-  BaseQueryFn,
-  FetchArgs,
-  FetchBaseQueryError,
-  FetchBaseQueryMeta,
-} from "@reduxjs/toolkit/dist/query";
 
 // filter out parameters from all variables, and sort them by priority
 export const getConstVariables = (
@@ -56,18 +42,3 @@ export const getConstVariables = (
 export const getNoReset = (project: ProjectRead) =>
   !project.species || project.species === "O";
 
-type VariableMutation = MutationTrigger<
-  MutationDefinition<
-    VariableUpdateApiArg,
-    BaseQueryFn<
-      string | FetchArgs,
-      unknown,
-      FetchBaseQueryError,
-      unknown,
-      FetchBaseQueryMeta
-    >,
-    never,
-    VariableRead,
-    "api"
-  >
->;
