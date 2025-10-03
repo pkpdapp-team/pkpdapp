@@ -53,7 +53,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
         await updateProtocol({ id: protocol.id, protocol: data });
       }
     },
-    [protocol, protocol.id, onChange, updateProtocol, reset],
+    [protocol, updateProtocol, reset],
   );
 
   useEffect(() => {

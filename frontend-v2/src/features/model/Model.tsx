@@ -8,7 +8,6 @@ import {
   ProjectRead,
   ProjectSpeciesEnum,
   ProtocolListApiResponse,
-  SimulationRead,
   TagRead,
   UnitListApiResponse,
   useCombinedModelListQuery,
@@ -20,7 +19,6 @@ import {
   useProjectUpdateMutation,
   useProtocolListQuery,
   useSimulationListQuery,
-  useSimulationUpdateMutation,
   useTagListQuery,
   useUnitListQuery,
   useVariableListQuery,
@@ -123,7 +121,6 @@ function useApiQueries() {
 function useModelFormDataCallback({
   model,
   project,
-  simulation,
   reset,
   updateModel,
   updateProject,
@@ -131,13 +128,11 @@ function useModelFormDataCallback({
 }: {
   model: CombinedModelRead;
   project: ProjectRead;
-  simulation?: SimulationRead;
   reset: (values?: Partial<FormData>) => void;
   updateModel: CombinedModelUpdate;
   updateProject: ProjectUpdate;
   units: UnitListApiResponse;
 }) {
-  const [updateSimulation] = useSimulationUpdateMutation();
 
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
@@ -215,10 +210,8 @@ function useModelFormDataCallback({
     [
       model,
       project,
-      simulation,
       updateModel,
       updateProject,
-      updateSimulation,
       setParamsToDefault,
       reset,
       units,
@@ -276,14 +269,12 @@ interface TabbedModelFormProps {
   updateProject: ProjectUpdate;
   tagsData?: TagRead[];
   pd_model?: PharmacodynamicRead;
-  simulation?: SimulationRead;
 }
 
 export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   model,
   pd_model,
   project,
-  simulation,
   variables,
   protocols,
   compound,
@@ -299,7 +290,6 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   const handleFormData = useModelFormDataCallback({
     model,
     project,
-    simulation,
     reset,
     updateModel,
     updateProject,
@@ -412,7 +402,6 @@ const Model: FC = () => {
     pd_model,
     project,
     protocols,
-    simulation,
     tagsData,
     units,
     variables,
@@ -434,7 +423,6 @@ const Model: FC = () => {
       model={model}
       pd_model={pd_model}
       project={project}
-      simulation={simulation}
       variables={variables}
       protocols={protocols}
       compound={compound}
