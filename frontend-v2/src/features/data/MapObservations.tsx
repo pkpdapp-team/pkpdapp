@@ -116,6 +116,7 @@ const MapObservations: FC<IMapObservations> = ({
 
   const {
     observationRows,
+    observationField,
     observationIdField,
     observationUnitField,
     observationVariableField,
@@ -173,7 +174,7 @@ const MapObservations: FC<IMapObservations> = ({
           return row;
         })
         .filter((row) =>
-          observationIdField ? row[observationIdField] === id : true,
+          observationIdField ? row[observationIdField] === id : (observationField in row && row[observationField] !== "."),
         )
         .forEach((row) => {
           row[observationVariableField] = value;
@@ -320,7 +321,7 @@ const MapObservations: FC<IMapObservations> = ({
                   )?.symbol;
                   const compatibleUnits = selectedVariable
                     ? units?.find((unit) => unit.id === selectedVariable?.unit)
-                        ?.compatible_units
+                      ?.compatible_units
                     : units;
                   ["%", "fraction", "ratio"].forEach((token) => {
                     if (selectedUnitSymbol?.toLowerCase().includes(token)) {
