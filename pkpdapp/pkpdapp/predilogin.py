@@ -42,6 +42,8 @@ def check_groupmembership(userid: str, group: str) -> bool:
     }
     response = requests.post(endpoint, headers=headers, json=body, verify=False)
     json_response = response.json()
+    if "groups" not in json_response or not json_response["groups"]:
+        return False
     members = json_response["groups"][0]["members"]
     return any(member["userId"] == userid for member in members) if members else False
 
