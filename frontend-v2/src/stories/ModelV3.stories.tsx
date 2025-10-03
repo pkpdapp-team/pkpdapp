@@ -205,6 +205,22 @@ async function selectMenuOption(
   expect(comboBox).toHaveTextContent(option);
 }
 
+async function assertMenuOptions(
+  comboBox: HTMLElement,
+  options_exist: string[],
+  options_not_exist: string[],
+  userEvent: UserEvent,
+): Promise<void> {
+  await userEvent.click(comboBox);
+  const listbox: HTMLElement = await screen.findByRole("listbox");
+  for (const option of options_exist) {
+    expect(listbox).toHaveTextContent(option);
+  }
+  for (const option of options_not_exist) {
+    expect(listbox).not.toHaveTextContent(option);
+  }
+}
+
 type Story = StoryObj<typeof Model>;
 
 export const Default: Story = {
@@ -256,6 +272,50 @@ export const ShowMMTCode: Story = {
     expect(codeBlock.innerText).toEqual(model.mmt);
   },
 };
+
+export const PkFiltering: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    const pkModelCombo = await canvas.findByLabelText("PK Model");
+    expect(pkModelCombo).toHaveTextContent("1-compartmental model");
+
+    await selectMenuOption(pkModelCombo, "None", userEvent);
+
+
+    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole("combobox", {
+      name: /Filter By Model Type/i,
+    });
+
+    expect(pkFilterTags).toBeInTheDocument();
+    expect(pdFilterTags).toBeInTheDocument();
+
+    // filter by 2-compartment
+    await selectMenuOption(pkFilterTags, "2-compartment", userEvent);
+    assertMenuOptions(pkModelCombo, ["2-compartmental model"], ["1-compartmental model", "3-compartmental model"], userEvent);
+  }
+}
+
+export const PdFiltering: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+
+    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole("combobox", {
+      name: /Filter By Model Type/i,
+    });
+
+    expect(pkFilterTags).toBeInTheDocument();
+    expect(pdFilterTags).toBeInTheDocument();
+
+    const pdModelCombo = await canvas.findByLabelText("PD Model");
+    expect(pdModelCombo).toHaveTextContent("Direct effect model (inhibitory)");
+    await selectMenuOption(pdModelCombo, "None", userEvent);
+    await selectMenuOption(pdFilterTags, "indirect", userEvent);
+    assertMenuOptions(pdModelCombo, ["Indirect effect model (inhibition of elimination)"], ["Direct effect model (inhibitory)", "Tumor growth model (linear)"], userEvent);
+  }
+}
+
 
 export const Species: Story = {
   play: async ({ canvasElement, userEvent }) => {
