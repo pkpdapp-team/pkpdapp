@@ -9,7 +9,7 @@ interface HelpButtonProps {
   title: string;
   children: ReactNode;
   maxWidth?: string;
-  placement: 'auto-end'
+  placement?: 'auto-end'
   | 'auto-start'
   | 'auto'
   | 'bottom-end'
