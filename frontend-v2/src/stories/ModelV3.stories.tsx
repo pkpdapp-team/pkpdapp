@@ -276,7 +276,7 @@ export const ShowMMTCode: Story = {
 export const PkFiltering: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const tab = await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
     const pkModelCombo = await canvas.findByLabelText("PK Model");
     expect(pkModelCombo).toHaveTextContent("1-compartmental model");
 
@@ -299,7 +299,7 @@ export const PkFiltering: Story = {
 export const PdFiltering: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const tab = await canvas.findByRole("tab", { name: /PK\/PD Model/i });
+    await canvas.findByRole("tab", { name: /PK\/PD Model/i });
 
     const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole("combobox", {
       name: /Filter By Model Type/i,
