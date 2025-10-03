@@ -277,6 +277,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 DerivedVariable.Type.EMAX,
                 DerivedVariable.Type.IMAX,
                 DerivedVariable.Type.POWER,
+                DerivedVariable.Type.NEGATIVE_POWER,
                 DerivedVariable.Type.EXP_DECAY,
                 DerivedVariable.Type.EXP_INCREASE,
             ]:
@@ -885,7 +886,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                         myokit.Name(min_var),
                     )
                 )
-            elif derived_variable.type == DerivedVariable.Type.POWER:
+            elif (
+                derived_variable.type == DerivedVariable.Type.POWER
+                or derived_variable.type == DerivedVariable.Type.NEGATIVE_POWER
+            ):
                 # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
                 first_dose_value = None
                 first_dose_unit = None
@@ -931,6 +935,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 var = myokit_compartment.add_variable(new_names[0])
                 var.meta["desc"] = f"Power for {var_name}"
                 var.set_unit(myokit_var.unit())
+                if derived_variable.type == DerivedVariable.Type.NEGATIVE_POWER:
+                    a = myokit.Multiply(myokit.Number(-1), myokit.Name(a_d_var))
+                else:
+                    a = myokit.Name(a_d_var)
                 var.set_rhs(
                     myokit.Multiply(
                         myokit.Name(myokit_var),
@@ -939,7 +947,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                                 myokit.Name(dose_var),
                                 myokit.Name(ref_d_var),
                             ),
-                            myokit.Name(a_d_var),
+                            a,
                         ),
                     )
                 )
@@ -1293,6 +1301,7 @@ class DerivedVariable(StoredModel):
         EMAX = "EMX", "Emax"
         IMAX = "IMX", "Imax"
         POWER = "POW", "Power"
+        NEGATIVE_POWER = "NPW", "Negative Power"
         EXP_DECAY = "TDI", "Exponential Decay"
         EXP_INCREASE = "IND", "Exponential Increase"
 

@@ -4129,6 +4129,7 @@ components:
             * `EMX` - Emax
             * `IMX` - Imax
             * `POW` - Power
+            * `NPW` - Negative Power
             * `TDI` - Exponential Decay
             * `IND` - Exponential Increase
         pkpd_model:
@@ -6343,6 +6344,7 @@ components:
       - EMX
       - IMX
       - POW
+      - NPW
       - TDI
       - IND
       type: string
@@ -6357,6 +6359,7 @@ components:
         * `EMX` - Emax
         * `IMX` - Imax
         * `POW` - Power
+        * `NPW` - Negative Power
         * `TDI` - Exponential Decay
         * `IND` - Exponential Increase
     Unit:

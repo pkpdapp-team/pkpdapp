@@ -2181,6 +2181,7 @@ export type TypeEnum =
   | "EMX"
   | "IMX"
   | "POW"
+  | "NPW"
   | "TDI"
   | "IND";
 export type DerivedVariable = {
@@ -2200,6 +2201,7 @@ export type DerivedVariable = {
     * `EMX` - Emax
     * `IMX` - Imax
     * `POW` - Power
+    * `NPW` - Negative Power
     * `TDI` - Exponential Decay
     * `IND` - Exponential Increase */
   type: TypeEnum;
@@ -2228,6 +2230,7 @@ export type DerivedVariableRead = {
     * `EMX` - Emax
     * `IMX` - Imax
     * `POW` - Power
+    * `NPW` - Negative Power
     * `TDI` - Exponential Decay
     * `IND` - Exponential Increase */
   type: TypeEnum;
