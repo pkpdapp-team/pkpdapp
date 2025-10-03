@@ -118,6 +118,7 @@ const ParameterRow: FC<Props> = ({
       { value: "EMX", label: "Dose Maximum Effect" },
       { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
       { value: "POW", label: "Dose Hill Effect" },
+      { value: "NPW", label: "Dose Negative Hill Effect" },
       { value: "TDI", label: "Time Inhibition" },
       { value: "IND", label: "Time Induction" },
       { value: "", label: "None" },
@@ -158,6 +159,8 @@ const ParameterRow: FC<Props> = ({
       nonlinearityDocImage = "Dose_decrease_w.JPG";
     } else if (nonlinearityValue === "POW") {
       nonlinearityDocImage = "Dose_increase_wo.JPG";
+    } else if (nonlinearityValue === "NPW") {
+      nonlinearityDocImage = "Dose_decrease_wo.JPG";
     } else if (nonlinearityValue === "TDI") {
       nonlinearityDocImage = "Time_inhibition.JPG";
     } else if (nonlinearityValue === "IND") {
