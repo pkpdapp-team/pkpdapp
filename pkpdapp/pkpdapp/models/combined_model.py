@@ -127,6 +127,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_has_lag = None
     __original_has_hill_coefficient = None
     __original_has_bioavailability = None
+    __original_number_of_effect_compartments = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -151,6 +152,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             instance.__original_has_bioavailability = instance.has_bioavailability
         if "has_hill_coefficient" in field_names:
             instance.__original_has_hill_coefficient = instance.has_hill_coefficient
+        if "number_of_effect_compartments" in field_names:
+            instance.__original_number_of_effect_compartments = (
+                instance.number_of_effect_compartments
+            )
         return instance
 
     def get_project(self):
@@ -204,6 +209,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             "has_hill_coefficient": self.has_hill_coefficient,
             "species": self.species,
             "pd_model2": self.pd_model2,
+            "number_of_effect_compartments": self.number_of_effect_compartments,
+            "has_anti_drug_antibodies": self.has_anti_drug_antibodies,
         }
         stored_model = CombinedModel.objects.create(**stored_model_kwargs)
 
@@ -1111,6 +1118,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             or self.has_lag != self.__original_has_lag
             or self.has_bioavailability != self.__original_has_bioavailability
             or self.has_hill_coefficient != self.__original_has_hill_coefficient
+            or self.number_of_effect_compartments
+            != self.__original_number_of_effect_compartments
         ):
             self.update_model()
 
@@ -1122,6 +1131,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_has_lag = self.has_lag
         self.__original_has_hill_coefficient = self.has_hill_coefficient
         self.__original_has_bioavailability = self.has_bioavailability
+        self.__original_number_of_effect_compartments = (
+            self.number_of_effect_compartments
+        )
 
     def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
@@ -1315,9 +1327,15 @@ class DerivedVariable(StoredModel):
 
     def copy(self, new_pkpd_model, new_variables):
         new_pk_variable = new_variables[self.pk_variable.qname]
+        new_secondary_variable = (
+            new_variables[self.secondary_variable.qname]
+            if self.secondary_variable
+            else None
+        )
         stored_kwargs = {
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
+            "secondary_variable": new_secondary_variable,
             "read_only": self.read_only,
             "type": self.type,
         }
