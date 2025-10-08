@@ -31,6 +31,7 @@ The configuration of the production application is stored in the `.env.prod` fil
 - `HOST_NAME`: the host name of the application
 - `SECRET_KEY`: a large random string used for cryptographic signing
 - `DATABASE_URL`: URL of a postgres database (e.g. postgres://username:password@postgres:5432/postgres). Note that any special characters in the password must be url-encoded. E.g. `postgres://user:p#ssword!@localhost/foobar` should be written as `postgres://user:p%23ssword!@localhost/foobar`.
+- 'ENABLE_SIGNUP': set to 'true' to enable user sign up
 
 - `RABBITMQ_DEFAULT_USER`: username for rabbitmq server (optional)
 - `RABBITMQ_DEFAULT_PASS`: password for rabbitmq server (optional)
@@ -61,11 +62,13 @@ For search/bind, connecting to the LDAP server either anonymously or with a fixe
 - `AUTH_LDAP_USER_GROUP`: (optional) authentication will only succeed if user is in this LDAP group (e.g. `cn=user,ou=groups,dc=example,dc=com`). If not set, then any user in the search base will be authenticated.
 - `AUTH_LDAP_ADMIN_GROUP`: (optional) user must be in this LDAP group to be a superuser (e.g. `cn=admin,ou=groups,dc=example,dc=com`). If not set, then no user will be a superuser.
 
-There are also a number of optional variables that can be set:
+There are also a number of frontend variables that can be set in `frontend-v2/.env`:
 
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
+- 'VITE_ENABLE_SIGNUP': set to true to enable user sign up
+- 'VITE_APP_ACK_TXT': Acknowledgment text for login and signup pages
 
 ### SSL Certificate
 
