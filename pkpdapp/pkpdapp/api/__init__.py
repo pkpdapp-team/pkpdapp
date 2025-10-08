@@ -32,6 +32,7 @@ from .views import (
     InferenceWizardView,
     login_view,
     logout_view,
+    register_view,
     get_csrf,
     SessionView,
     WhoAmIView,

@@ -11,6 +11,7 @@ import {
   Alert,
 } from "@mui/material";
 import TextField from "../../components/TextField";
+import { defaultAckText } from "../../constants/acknowledgmentText";
 
 interface LoginFormInputs {
   username: string;
@@ -19,13 +20,14 @@ interface LoginFormInputs {
 
 interface LoginProps {
   onLogin: (username: string, password: string) => void;
+  onSignup: () => void;
   isLoading: boolean;
   errorMessage?: string;
 }
 
-const { VITE_APP_HELP_URL } = import.meta.env;
+const { VITE_APP_HELP_URL, VITE_ENABLE_SIGNUP, VITE_APP_ACK_TXT } = import.meta.env;
 
-const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
+const Login: FC<LoginProps> = ({ onLogin, onSignup, isLoading, errorMessage }) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
 
   const onSubmit = (data: LoginFormInputs) => {
@@ -82,19 +84,22 @@ const Login: FC<LoginProps> = ({ onLogin, isLoading, errorMessage }) => {
           >
             {isLoading ? <CircularProgress size={24} /> : "Login"}
           </Button>
+          {VITE_ENABLE_SIGNUP === "true" && (
+            <Button
+              type="button"
+              variant="outlined"
+              color="primary"
+              onClick={onSignup}
+              disabled={isLoading}
+            >
+              Sign Up
+            </Button>
+          )}
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </Stack>
       </form>
       <Typography variant="caption" sx={{ marginTop: 2 }}>
-        I acknowledge that I am bound by confidentiality obligations imposed
-        through my employment or contractual agreement with Roche in connection
-        with my access to confidential information, including PKPD Explorer and
-        its contents. By entering PKPD Explorer, I confirm that I understand
-        that my activities within PKPD Explorer may be monitored consistent with
-        local law, and all contents and passwords are confidential information,
-        and that unauthorized disclosure or use of such confidential information
-        may result in disciplinary action including termination of my employment
-        or services and/or legal action based on local law.
+        {VITE_APP_ACK_TXT || defaultAckText}
       </Typography>
     </Container>
   );

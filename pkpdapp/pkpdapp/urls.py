@@ -22,26 +22,19 @@ router.register("results_table", api.ResultsTableView, basename="results")
 router.register("subject", api.SubjectView, basename="subject")
 router.register("subject_group", api.SubjectGroupView, basename="subject_group")
 router.register("compound", api.CompoundView, basename="compound")
-router.register("efficacy_experiment",
-                api.EfficacyExperimentView, basename="efficacy_experiment")
+router.register(
+    "efficacy_experiment", api.EfficacyExperimentView, basename="efficacy_experiment"
+)
 router.register("project", api.ProjectView, basename="project")
-router.register("project_access", api.ProjectAccessView,
-                basename="project_access")
+router.register("project_access", api.ProjectAccessView, basename="project_access")
 router.register("dose", api.DoseView, basename="dose")
 router.register("tag", api.TagView, basename="tag")
 router.register("unit", api.UnitView, basename="unit")
 router.register("variable", api.VariableView, basename="variable")
 router.register("protocol", api.ProtocolView, basename="protocol")
-router.register("biomarker_type", api.BiomarkerTypeView,
-                basename="biomarker_type")
-router.register(
-    "pharmacokinetic", api.PharmacokineticView,
-    basename="pharmacokinetic"
-)
-router.register(
-    "pharmacodynamic", api.PharmacodynamicView,
-    basename="pharmacodynamic"
-)
+router.register("biomarker_type", api.BiomarkerTypeView, basename="biomarker_type")
+router.register("pharmacokinetic", api.PharmacokineticView, basename="pharmacokinetic")
+router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacodynamic")
 
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
 
@@ -80,6 +73,7 @@ urlpatterns = [
     path("api/csrf/", api.get_csrf, name="auth-csrf"),
     path("api/login/", api.login_view, name="auth-login"),
     path("api/logout/", api.logout_view, name="auth-logout"),
+    path("api/register/", api.register_view, name="auth-register"),
     path("api/session/", api.SessionView.as_view(), name="auth-session"),
     path("api/whoami/", api.WhoAmIView.as_view(), name="auth-whoami"),
     path("api-auth/", include("rest_framework.urls")),
