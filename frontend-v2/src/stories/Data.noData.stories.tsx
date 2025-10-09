@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { project, projectHandlers } from "./project.mock";
+import { project, projectHandlers } from "./project.v3.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 
 import { HttpResponse, http } from "msw";
@@ -165,14 +165,14 @@ export const MapDosing: Story = {
     expect(variableSelects[0]).toHaveTextContent("A1");
     await userEvent.click(variableSelects[1]);
     listbox = await screen.findByRole("listbox");
-    await userEvent.selectOptions(listbox, "Aa");
-    expect(variableSelects[1]).toHaveTextContent("Aa");
+    await userEvent.selectOptions(listbox, "A1");
+    expect(variableSelects[1]).toHaveTextContent("A1");
     const unitSelects = canvas.getAllByRole("combobox", {
       name: "Units",
     });
     expect(unitSelects.length).toBe(2);
     unitSelects.forEach((select) => {
-      expect(select).toHaveTextContent("mg/kg");
+      expect(select).toHaveTextContent("mg");
     });
   },
 };
