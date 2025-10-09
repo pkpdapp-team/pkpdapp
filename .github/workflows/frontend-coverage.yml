@@ -54,7 +54,7 @@ jobs:
           name: frontend-coverage
           path: ./frontend-v2/coverage
       - name: SonarCloud Scan Frontend
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}
