@@ -32,7 +32,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run frontend coverage
-        run: yarn test --coverage
+        run: yarn test-coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
