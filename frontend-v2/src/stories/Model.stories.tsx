@@ -339,6 +339,7 @@ export const TumourGrowthModel: Story = {
 
 export const HillCoefficient: Story = {
   play: async ({ canvasElement, userEvent }) => {
+    const timeout = 5000;
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
     const pdModelList = await canvas.findByLabelText("PD Model");
@@ -354,7 +355,7 @@ export const HillCoefficient: Story = {
 
     await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
-      timeout: 2000, // the default timeout isn't long enough in CI.
+      timeout, // the default timeout isn't long enough in CI.
     });
 
     await selectMenuOption(
@@ -368,7 +369,7 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enough in CI.
+        timeout, // the default timeout isn't long enough in CI.
       },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
@@ -376,7 +377,7 @@ export const HillCoefficient: Story = {
 
     await selectMenuOption(pdModelList, "tumour_growth_linear", userEvent);
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
-      timeout: 2000, // the default timeout isn't long enough in CI.
+      timeout, // the default timeout isn't long enough in CI.
     });
 
     const secondaryPDModelSelect = await canvas.findByRole(
@@ -385,7 +386,7 @@ export const HillCoefficient: Story = {
         name: /Secondary PD Model/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enoough in CI.
+        timeout, // the default timeout isn't long enoough in CI.
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
@@ -400,7 +401,7 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enough in CI.
+        timeout, // the default timeout isn't long enough in CI.
       },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
