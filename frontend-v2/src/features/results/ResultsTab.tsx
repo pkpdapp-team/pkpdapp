@@ -70,8 +70,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const { updateResults } = useResults();
 
   const loaded =
-    (groups.length &&
-      intervals.length &&
+    (intervals.length &&
       concentrationVariables.length &&
       parameters.length) > 0;
   if (!loaded) {

@@ -23,3 +23,5 @@ frontend/node_modules
 logfile.log*
 
 .vscode
+
+notes.md
