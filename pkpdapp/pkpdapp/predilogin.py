@@ -65,8 +65,12 @@ class PrediBackend(BaseBackend):
                 logger.debug(f"User found: {user.username}")
             except User.DoesNotExist:
                 logger.debug(f"User not found, creating new user: {username}")
-                is_user = check_groupmembership(username, "GLOPKPDAPP_User")
-                is_superuser = check_groupmembership(username, "GLOPKPDAPP_Admin")
+                is_user = check_groupmembership(
+                    username, settings.AUTH_PREDILOGIN_USER_GROUP
+                )
+                is_superuser = check_groupmembership(
+                    username, settings.AUTH_PREDILOGIN_ADMIN_GROUP
+                )
                 if is_user or is_superuser:
                     user = User(username=username)
                     user.set_password(password)

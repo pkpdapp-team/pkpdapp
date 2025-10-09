@@ -46,6 +46,8 @@ The following variables are used for PrediLogin authentication (optional):
 - `AUTH_PREDILOGIN_USE`: set to 1 to use PrediLogin authentication
 - `AUTH_PREDILOGIN_BASE_URL`: URL of PrediLogin API (e.g. <https://predilogin.example.com/api>)
 - `AUTH_PREDILOGIN_API_KEY`: API key for PrediLogin (e.g. `your_api_key_here`)
+- 'AUTH_PREDILOGIN_ADMIN_GROUP': user must be in this group to be a superuser (e.g. `admin`)
+- 'AUTH_PREDILOGIN_USER_GROUP': authentication will only succeed if user is in this group (e.g. `user`)
 
 For direct binding:
 
