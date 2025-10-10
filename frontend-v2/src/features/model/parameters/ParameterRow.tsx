@@ -107,6 +107,7 @@ const ParameterRow: FC<Props> = ({
 
 
   const isPKandVol = isPK && unit?.m === 3;
+  const canBePerKg = isPKandVol || variable.qname.startsWith("PKNonlinearities.Ref_D") || variable.qname.startsWith("PKNonlinearities.D50");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -292,7 +293,7 @@ const ParameterRow: FC<Props> = ({
         />
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
-        {isPKandVol && (
+        {canBePerKg && (
           <Checkbox
             label=""
             name="unit_per_body_weight"
