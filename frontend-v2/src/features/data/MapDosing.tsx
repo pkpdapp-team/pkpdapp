@@ -30,7 +30,6 @@ function useApiQueries() {
     { id: projectId || 0 },
     { skip: !projectId },
   );
-  const isPreclinical = project?.species !== "H";
   const { data: projectProtocols } = useProtocolListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
@@ -43,9 +42,7 @@ function useApiQueries() {
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  const amountUnit = isPreclinical
-    ? units?.find((unit) => unit.symbol === "pmol/kg")
-    : units?.find((unit) => unit.symbol === "pmol");
+  const amountUnit = units?.find((unit) => unit.symbol === "pmol");
   const [model] = models;
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },

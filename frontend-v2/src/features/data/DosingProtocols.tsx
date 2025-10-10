@@ -64,10 +64,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const interDoseField = findFieldByType("Interdose Interval", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
+      (row) =>
+        (row[amountField] && row[amountField] !== ".") ||
+        parseInt(row[administrationIdField]),
+    )
     : state.data.filter((row) => parseInt(row[administrationIdField]));
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -86,9 +86,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     )?.compatible_units;
     const variableUnit = units?.find((unit) => unit.id === variable.unit);
     return (
+      variable.constant === false &&
       variableUnit?.symbol !== "" &&
       amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
+      undefined
     );
   };
   const modelAmounts = variables?.filter(isAmount) || [];
