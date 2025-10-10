@@ -46,6 +46,7 @@ import { getConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
+import { effectCompartmentParameterName } from "../../shared/effectCompartmentNaming";
 
 type SliderValues = { [key: number]: number };
 
@@ -323,12 +324,16 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const addPlotOptions = outputsSorted.map((variable) => ({
-    value: variable.id,
-    label: variable.description
-      ? `${variable.name} (${variable.description})`
-      : variable.name,
-  }));
+  const addPlotOptions = outputsSorted.map((variable) => {
+    const variable_name = model ?
+      effectCompartmentParameterName({ variable, model }) : variable.name;
+    return {
+      value: variable.id,
+      label: variable.description
+        ? `${variable_name} (${variable.description})`
+        : variable_name,
+    };
+  });
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);

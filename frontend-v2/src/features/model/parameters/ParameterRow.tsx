@@ -28,6 +28,7 @@ import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { DerivedVariableType } from "../derivedVariable";
+import { effectCompartmentParameterName } from "../../../shared/effectCompartmentNaming";
 
 interface Props {
   model: CombinedModelRead;
@@ -232,19 +233,7 @@ const ParameterRow: FC<Props> = ({
     }
   };
 
-  let variable_name = variable.name;
-  if (
-    model.number_of_effect_compartments &&
-    model.number_of_effect_compartments > 1 &&
-    variable.qname.startsWith("Effect")
-  ) {
-    const compartment_name = variable.qname.split(".")[0];
-    const compartment_number = compartment_name.slice(
-      17,
-      compartment_name.length,
-    );
-    variable_name = `${variable.name}_Ce${compartment_number}`;
-  }
+  const variable_name = effectCompartmentParameterName({ variable, model });
 
   return (
     <TableRow>
