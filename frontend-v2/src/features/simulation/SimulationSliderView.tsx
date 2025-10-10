@@ -164,6 +164,11 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     return <div>Variable not found</div>;
   }
 
+  const unitSymbol = unit?.symbol ? variable.unit_per_body_weight ? `${unit.symbol}/kg` : unit.symbol : "";
+  const sliderLabel = unitSymbol
+    ? `${variable.name} [${unitSymbol}]`
+    : variable.name;
+
   return (
     <div
       data-cy={`parameter-slider-${variable.name}`}
@@ -183,9 +188,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             gutterBottom
             sx={{ flexGrow: 1, fontWeight: "bold" }}
           >
-            {unit?.symbol
-              ? `${variable.name} [${unit?.symbol}]`
-              : variable.name}
+            {sliderLabel}
           </Typography>
         </Tooltip>
       </Stack>
