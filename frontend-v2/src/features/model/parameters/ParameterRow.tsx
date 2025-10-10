@@ -116,10 +116,10 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-      { value: "EMX", label: "Dose Maximum Effect" },
-      { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
-      { value: "POW", label: "Dose Hill Effect" },
-      { value: "NPW", label: "Dose Negative Hill Effect" },
+      { value: "EMX", label: "Dose Emax" },
+      { value: "IMX", label: "Dose Imax" },
+      { value: "POW", label: "Dose Power Increase" },
+      { value: "NPW", label: "Dose Power Decrease" },
       { value: "TDI", label: "Time Inhibition" },
       { value: "IND", label: "Time Induction" },
       { value: "", label: "None" },
@@ -128,8 +128,8 @@ const ParameterRow: FC<Props> = ({
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
     nonlinearityOptions = [
-      { value: "MM", label: "Michaelis-Menten (sat CL)" },
-      { value: "EMM", label: "Michaelis-Menten (lin + sat CL)" },
+      { value: "MM", label: "Michaelis-Menten (2 parameters)" },
+      { value: "EMM", label: "Michaelis-Menten (4 parameters)" },
       ...nonlinearityOptions,
     ];
   }
