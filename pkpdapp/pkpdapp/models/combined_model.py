@@ -1159,6 +1159,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             )
             # new models use tags to define the model type
             tags = list(self.pk_model.tags.all().values_list("name", flat=True))
+            unit_per_body_weight = species != Project.Species.HUMAN
             if "TMDD" in tags:
                 if "1-compartment" in tags:
                     model_name = "one_compartment_tmdd"
@@ -1198,6 +1199,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     continue
                 v.default_value = value
                 v.unit = unit
+                v.unit_per_body_weight = unit_per_body_weight
                 if not v._state.adding:
                     v.save()
 
