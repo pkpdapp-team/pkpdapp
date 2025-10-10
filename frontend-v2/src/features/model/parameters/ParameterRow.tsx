@@ -177,10 +177,12 @@ const ParameterRow: FC<Props> = ({
       v.qname.startsWith("PK") &&
       !variable.refs_by.includes(v.id),
   );
-  const concentrationOptions = timeVaryingVariables.map((variable) => ({
-    value: variable.id,
-    label: variable.name,
-  }));
+  const concentrationOrAmountOptions = timeVaryingVariables
+    .filter((v) => v.name.length == 2 && (v.name.startsWith("C") || v.name.startsWith("A")))
+    .map((variable) => ({
+      value: variable.id,
+      label: variable.name,
+    }));
   // variable C1 is the default concentration variable
   const concentrationDefault = timeVaryingVariables.find(
     (variable) => variable.name === "C1",
@@ -325,7 +327,7 @@ const ParameterRow: FC<Props> = ({
                 onChange={handleNonlinearityConcChange}
                 {...defaultProps}
               >
-                {concentrationOptions.map((option) => (
+                {concentrationOrAmountOptions.map((option) => (
                   <MenuItem value={option.value} key={option.value}>
                     {option.label}
                   </MenuItem>
