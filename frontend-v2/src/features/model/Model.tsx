@@ -133,7 +133,6 @@ function useModelFormDataCallback({
   updateProject: ProjectUpdate;
   units: UnitListApiResponse;
 }) {
-
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
@@ -158,7 +157,9 @@ function useModelFormDataCallback({
       }
 
       if (species !== project.species) {
-        const version_greater_than_2 = project.version ? project.version >= 3 : false;
+        const version_greater_than_2 = project.version
+          ? project.version >= 3
+          : false;
         // if species has changed, then clear the models (only for old model)
         if (!version_greater_than_2) {
           modelData.pk_model = null;
@@ -239,6 +240,7 @@ function useModelFormState({
   };
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,
+    values: defaultValues,
   });
   const { isDirty } = useFormState({
     control,
