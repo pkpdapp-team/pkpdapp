@@ -133,8 +133,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             mappings_data = [m for m in mappings_data if m["pd_variable"] is not None]
 
         # don't update mappings if read_only
-        # don't update mapping or derived variables if pk model has changed
-        if not (instance.read_only or pk_model_changed):
+        if not instance.read_only:
             for derived_var in derived_var_data:
                 serializer = DerivedVariableSerializer()
                 try:
@@ -165,13 +164,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     mapping["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(mapping)
 
-        # delete any remaining old mappings, derived variables and time intervals
-        for old_model in old_mappings:
-            old_model.delete()
-        for old_model in old_derived_vars:
-            old_model.delete()
-        for old_model in old_time_intervals:
-            old_model.delete()
+            # delete any remaining old mappings, derived variables and time intervals
+            for old_model in old_mappings:
+                old_model.delete()
+            for old_model in old_derived_vars:
+                old_model.delete()
+            for old_model in old_time_intervals:
+                old_model.delete()
 
         # update model since mappings might have changed
         new_pkpd_model.update_model()
@@ -183,7 +182,12 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             if project is not None:
                 for protocol in project.protocols.all():
                     if not protocol.variables.exists():
-                        protocol.delete()
+                        mapped_var_name = protocol.mapped_variable_name
+                        mapped_var = instance.variables.filter(
+                            qname=mapped_var_name
+                        ).first()
+                        if mapped_var is None:
+                            protocol.delete()
 
         return new_pkpd_model
 
