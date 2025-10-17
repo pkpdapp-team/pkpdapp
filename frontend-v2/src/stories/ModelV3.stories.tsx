@@ -481,6 +481,15 @@ export const LagTime: Story = {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
 
+    const pkModelList = await canvas.findByLabelText("Extravascular PK Model");
+
+    const notLagTimeCheckbox = await canvas.queryByRole("checkbox", {
+      name: /Lag time/i,
+    });
+    expect(notLagTimeCheckbox).not.toBeInTheDocument();
+
+    await selectMenuOption(pkModelList, "First order absorption model", userEvent);
+
     const lagTimeCheckbox = await canvas.findByRole("checkbox", {
       name: /Lag time/i,
     });
