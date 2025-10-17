@@ -473,7 +473,7 @@ const PKPDModelTab: FC<Props> = ({
               />
             </Stack>
           )}
-          {model.pk_model2 && (
+          {(model.pk_model2 || !version_greater_than_2) && (
             <Stack
               sx={{
                 display: "flex",
@@ -489,7 +489,7 @@ const PKPDModelTab: FC<Props> = ({
                     name="has_lag"
                     control={control}
                     checkboxFieldProps={{
-                      disabled: !model.pk_model || !model.pk_model2 || isSharedWithMe,
+                      disabled: !model.pk_model || isSharedWithMe,
                     }}
                   />
                 </div>
@@ -501,7 +501,7 @@ const PKPDModelTab: FC<Props> = ({
                     name="has_bioavailability"
                     control={control}
                     checkboxFieldProps={{
-                      disabled: !model.pk_model || !model.pk_model2 || isSharedWithMe,
+                      disabled: !model.pk_model || isSharedWithMe,
                     }}
                   />
                 </div>
