@@ -490,10 +490,11 @@ export const LagTime: Story = {
 
     await selectMenuOption(pkModelList, "First order absorption model", userEvent);
 
+    await delay(1000);
+
     const lagTimeCheckbox = await canvas.findByRole("checkbox", {
       name: /Lag time/i,
     });
-    expect(lagTimeCheckbox).toBeInTheDocument();
     expect(lagTimeCheckbox).not.toBeChecked();
     await userEvent.click(lagTimeCheckbox);
     expect(lagTimeCheckbox).toBeChecked();
