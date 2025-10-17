@@ -473,39 +473,41 @@ const PKPDModelTab: FC<Props> = ({
               />
             </Stack>
           )}
-          <Stack
-            sx={{
-              display: "flex",
-              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-            }}
-            direction="row"
-            spacing={3}
-          >
-            <Tooltip title="Includes a time delay following PO or SC administration">
-              <div>
-                <Checkbox
-                  label="Lag Time"
-                  name="has_lag"
-                  control={control}
-                  checkboxFieldProps={{
-                    disabled: !model.pk_model || isSharedWithMe,
-                  }}
-                />
-              </div>
-            </Tooltip>
-            <Tooltip title="Includes bioavailability (F), if not selected F=1">
-              <div>
-                <Checkbox
-                  label="Bioavailability"
-                  name="has_bioavailability"
-                  control={control}
-                  checkboxFieldProps={{
-                    disabled: !model.pk_model || isSharedWithMe,
-                  }}
-                />
-              </div>
-            </Tooltip>
-          </Stack>
+          {model.pk_model2 && (
+            <Stack
+              sx={{
+                display: "flex",
+                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+              }}
+              direction="row"
+              spacing={3}
+            >
+              <Tooltip title="Includes a time delay following PO or SC administration">
+                <div>
+                  <Checkbox
+                    label="Lag Time"
+                    name="has_lag"
+                    control={control}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || !model.pk_model2 || isSharedWithMe,
+                    }}
+                  />
+                </div>
+              </Tooltip>
+              <Tooltip title="Includes bioavailability (F), if not selected F=1">
+                <div>
+                  <Checkbox
+                    label="Bioavailability"
+                    name="has_bioavailability"
+                    control={control}
+                    checkboxFieldProps={{
+                      disabled: !model.pk_model || !model.pk_model2 || isSharedWithMe,
+                    }}
+                  />
+                </div>
+              </Tooltip>
+            </Stack>
+          )}
         </Grid>
       </Grid>
       <Grid container spacing={2}>

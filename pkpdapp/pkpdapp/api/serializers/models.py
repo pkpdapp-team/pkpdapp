@@ -112,6 +112,12 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         pk_model_changed = False
         if "pk_model" in validated_data:
             pk_model_changed = instance.pk_model != validated_data.get("pk_model")
+
+        # if pk_model2 is None, then ensure that lag time and bioavailability is off
+        if validated_data.get("pk_model2") is None:
+            validated_data["has_lag"] = False
+            validated_data["has_bioavailability"] = False
+
         pd_model_changed = False
         if "pd_model" in validated_data:
             pd_model_changed = instance.pd_model != validated_data.get("pd_model")
