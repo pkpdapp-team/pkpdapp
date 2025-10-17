@@ -59,7 +59,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const [range, setRange] = useState<number>(10.0);
 
   // update the slider value if the variable default value changes
-  const defaultValue = variable?.default_value || 1.0;
+  //
+  const defaultValue = variable?.default_value !== undefined ?
+    variable.default_value : 1.0;
   const [value, setValue] = useState<number>(defaultValue);
   const [editing, setEditing] = useState<boolean>(false);
   useEffect(() => {
@@ -108,14 +110,13 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     setValue(Number(event.target.value));
   };
 
-  const baseValue = variable?.default_value || 1.0;
   let minValue = variable?.lower_bound;
   if (minValue === undefined || minValue === null) {
-    minValue = baseValue / range;
+    minValue = defaultValue / range;
   }
   let maxValue = variable?.upper_bound;
   if (maxValue === undefined || maxValue === null) {
-    maxValue = baseValue * range;
+    maxValue = defaultValue === 0 ? range : defaultValue * range;
   }
   const stepValue = (maxValue - minValue) / 1000.0;
 
