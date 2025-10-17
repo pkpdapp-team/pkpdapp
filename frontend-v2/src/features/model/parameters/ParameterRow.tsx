@@ -119,8 +119,8 @@ const ParameterRow: FC<Props> = ({
       { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
       { value: "POW", label: "Dose Hill Effect" },
       { value: "NPW", label: "Dose Negative Hill Effect" },
-      { value: "TDI", label: "Time Inhibition" },
-      { value: "IND", label: "Time Induction" },
+      { value: "TDI", label: "Time Decrease" },
+      { value: "IND", label: "Time Increase" },
       { value: "", label: "None" },
     ];
 

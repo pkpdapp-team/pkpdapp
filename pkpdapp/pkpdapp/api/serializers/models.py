@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 import traceback
+from django.db import IntegrityError
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -149,6 +150,11 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                 except IndexError:
                     derived_var["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(derived_var)
+                except IntegrityError:
+                    # skip derived variable if it causes integrity error
+                    # this can occur if a variable is removed from the model
+                    # that is used in a derived variable
+                    continue
 
             for time_interval in time_interval_data:
                 serializer = TimeIntervalSerializer()
@@ -169,6 +175,10 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                 except IndexError:
                     mapping["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(mapping)
+                except IntegrityError:
+                    # skip mapping if it causes integrity error
+                    # this can occur if a variable is removed from the model
+                    continue
 
             # delete any remaining old mappings, derived variables and time intervals
             for old_model in old_mappings:
@@ -181,14 +191,14 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         # update model since mappings might have changed
         new_pkpd_model.update_model()
 
-        # if pk model has changed, go through all protocols of the project and delete
-        # any that are not associated with a variable
         if pk_model_changed:
+            # go through all protocols of the project and delete
+            # any that are not associated with a variable
             project = new_pkpd_model.project
             if project is not None:
                 for protocol in project.protocols.all():
                     if not protocol.variables.exists():
-                        mapped_var_name = protocol.mapped_variable_name
+                        mapped_var_name = protocol.mapped_qname
                         mapped_var = instance.variables.filter(
                             qname=mapped_var_name
                         ).first()
