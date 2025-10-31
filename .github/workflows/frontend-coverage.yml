@@ -19,12 +19,12 @@ jobs:
       run:
         working-directory: ./frontend-v2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "lts/jod"
+          node-version: "lts/krypton"
           cache: "yarn"
           cache-dependency-path: ./frontend-v2/yarn.lock
 
@@ -54,7 +54,7 @@ jobs:
           name: frontend-coverage
           path: ./frontend-v2/coverage
       - name: SonarCloud Scan Frontend
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }}

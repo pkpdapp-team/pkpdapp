@@ -15,11 +15,11 @@ jobs:
       run:
         working-directory: ./frontend-v2
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v6
         with:
-          node-version: "lts/jod"
+          node-version: "lts/krypton"
           cache: "yarn"
           cache-dependency-path: ./frontend-v2/yarn.lock
       - name: Install dependencies
