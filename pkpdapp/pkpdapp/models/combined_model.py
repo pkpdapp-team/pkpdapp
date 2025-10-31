@@ -1145,6 +1145,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
     def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
+            project = self.project
+            if project is None:
+                is_preclinical = False
+            else:
+                is_preclinical = project.species != Project.Species.HUMAN
+
             # old models did not have tags so get the model name from the
             # existing name
             model_name = (
@@ -1177,6 +1183,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 species,
                 compoundType,
                 self.pk_model.name,
+                is_preclinical,
             )
             if variables is None:
                 variables = self.variables.all()
@@ -1197,6 +1204,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if value is None or unit is None:
                     continue
                 v.default_value = value
+                v.unit_per_body_weight = is_preclinical
                 v.unit = unit
                 if not v._state.adding:
                     v.save()
