@@ -106,6 +106,7 @@ const ParameterRow: FC<Props> = ({
 
 
   const isPKandVol = isPK && unit?.m === 3;
+  const is_Ref_D_or_D50 = variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -301,7 +302,7 @@ const ParameterRow: FC<Props> = ({
         />
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
-        {isPKandVol && (
+        {(isPKandVol || is_Ref_D_or_D50) && (
           <Checkbox
             label=""
             name="unit_per_body_weight"
