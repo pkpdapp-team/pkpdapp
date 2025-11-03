@@ -8,6 +8,7 @@ import { defineConfig } from "vitest/config";
 import viteTsconfigPaths from "vite-tsconfig-paths";
 import { VitePluginRadar } from "vite-plugin-radar";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import { playwright } from "@vitest/browser-playwright";
 
 const dirname =
   typeof __dirname !== "undefined"
@@ -92,7 +93,7 @@ export default ({ mode }) => {
             browser: {
               enabled: true,
               headless: true,
-              provider: "playwright",
+              provider: playwright(),
               instances: [{ browser: "chromium" }],
             },
             setupFiles: [".storybook/vitest.setup.ts"],

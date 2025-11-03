@@ -17,7 +17,7 @@ import {
   FetchArgs,
   FetchBaseQueryError,
   FetchBaseQueryMeta,
-} from "@reduxjs/toolkit/dist/query";
+} from "@reduxjs/toolkit/query";
 
 // filter out parameters from all variables, and sort them by priority
 export const getConstVariables = (
