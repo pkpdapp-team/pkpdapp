@@ -62,12 +62,12 @@ function getVariableName(
   if (
     model?.number_of_effect_compartments &&
     model.number_of_effect_compartments > 1 &&
-    variable.qname.startsWith("Effect")
+    variable.qname.startsWith("EffectCompartment")
   ) {
-    const compartment_name = variable.qname.split(".")[0];
-    const compartment_number = compartment_name.slice(
-      17,
-      compartment_name.length,
+    const [compartment_name] = variable.qname.split(".");
+    const compartment_number = compartment_name.replace(
+      "EffectCompartment",
+      "",
     );
     variableName = `${variable.name}${compartment_number}`;
   }
