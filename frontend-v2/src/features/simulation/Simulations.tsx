@@ -9,6 +9,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
+  CombinedModelRead,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
@@ -51,6 +52,36 @@ type SliderValues = { [key: number]: number };
 
 interface ErrorObject {
   error: string;
+}
+
+function getVariableName(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): string {
+  let variableName = variable.name;
+  if (
+    model?.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable.qname.startsWith("Effect")
+  ) {
+    const compartment_name = variable.qname.split(".")[0];
+    const compartment_number = compartment_name.slice(
+      17,
+      compartment_name.length,
+    );
+    variableName = `${variable.name}${compartment_number}`;
+  }
+  return variableName;
+}
+
+function renameVariable(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): VariableRead {
+  return {
+    ...variable,
+    name: getVariableName(variable, model),
+  };
 }
 
 const getSliderInitialValues = (
@@ -184,8 +215,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -323,12 +354,14 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const addPlotOptions = outputsSorted.map((variable) => ({
-    value: variable.id,
-    label: variable.description
-      ? `${variable.name} (${variable.description})`
-      : variable.name,
-  }));
+  const addPlotOptions = outputsSorted
+    .map((variable) => renameVariable(variable, model))
+    .map((variable) => ({
+      value: variable.id,
+      label: variable.description
+        ? `${variable.name} (${variable.description})`
+        : variable.name,
+    }));
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
@@ -555,7 +588,11 @@ const Simulations: FC = () => {
                   plot={plot}
                   data={data}
                   dataReference={showReference ? dataReference : []}
-                  variables={variables || []}
+                  variables={
+                    variables?.map((variable) =>
+                      renameVariable(variable, model),
+                    ) || []
+                  }
                   control={control}
                   setValue={setValue}
                   remove={removePlot}
