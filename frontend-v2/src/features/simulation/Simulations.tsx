@@ -84,6 +84,15 @@ function renameVariable(
   };
 }
 
+function addPlotVariableOption(variable: VariableRead) {
+  return {
+    value: variable.id,
+    label: variable.description
+      ? `${variable.name} (${variable.description})`
+      : variable.name,
+  };
+}
+
 const getSliderInitialValues = (
   simulation?: SimulationRead,
   existingSliderValues?: SliderValues,
@@ -354,14 +363,9 @@ const Simulations: FC = () => {
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const addPlotOptions = outputsSorted
-    .map((variable) => renameVariable(variable, model))
-    .map((variable) => ({
-      value: variable.id,
-      label: variable.description
-        ? `${variable.name} (${variable.description})`
-        : variable.name,
-    }));
+  const addPlotOptions = outputsSorted.map((variable) =>
+    addPlotVariableOption(renameVariable(variable, model)),
+  );
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
