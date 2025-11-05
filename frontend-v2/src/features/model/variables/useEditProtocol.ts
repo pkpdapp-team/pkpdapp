@@ -61,6 +61,7 @@ export default function useEditProtocol({
         name: variable.name,
         project: project.id,
         mapped_qname: variable.qname,
+        amount_per_body_weight: isPerKg ? 1 : 0,
       },
     });
   };

@@ -1200,11 +1200,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 if defaultVal.get("unit", "") == "dimensionless":
                     defaultVal["unit"] = ""
                 unit = Unit.objects.filter(symbol=defaultVal.get("unit", "")).first()
+                is_vol = unit.m == 3 if unit else False
                 value = defaultVal.get("value", None)
                 if value is None or unit is None:
                     continue
                 v.default_value = value
-                v.unit_per_body_weight = is_preclinical
+                if is_vol:
+                    v.unit_per_body_weight = is_preclinical
                 v.unit = unit
                 if not v._state.adding:
                     v.save()

@@ -271,4 +271,3 @@ class TestPkpdModel(TestCase):
         model = combined.get_myokit_model()
         model_vars = [v.qname() for v in model.variables()]
         self.assertCountEqual(model_vars, expected_vars)
-        print("combined model validated", model.code())
