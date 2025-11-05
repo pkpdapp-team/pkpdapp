@@ -4,42 +4,34 @@
 # copyright notice and full license details.
 #
 from rest_framework import serializers
-from pkpdapp.models import (
-    Dose, Protocol
-)
+from pkpdapp.models import Dose, Protocol
 from pkpdapp.api.serializers import DoseSerializer
 
 
 class ProtocolSerializer(serializers.ModelSerializer):
-    doses = DoseSerializer(
-        many=True
-    )
-    variables = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
-    subjects = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
+    doses = DoseSerializer(many=True)
+    variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    subjects = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Protocol
-        fields = '__all__'
+        fields = "__all__"
 
     def get_dataset(self, protocol):
         return protocol.get_dataset()
 
     def create(self, validated_data):
-        doses = validated_data.pop('doses')
+        doses = validated_data.pop("doses")
         protocol = Protocol.objects.create(**validated_data)
         for dose in doses:
-            dose['protocol'] = protocol
+            dose["protocol"] = protocol
             Dose.objects.create(**dose)
         return protocol
 
     def update(self, instance, validated_data):
-        doses = validated_data.pop('doses')
-        Dose.objects.filter(protocol=instance).delete()
-        for dose in doses:
-            dose['protocol'] = instance
-            DoseSerializer.create(DoseSerializer(), dose)
+        validated_data.pop("doses")
+        # Dose.objects.filter(protocol=instance).delete()
+        # for dose in doses:
+        #    dose["protocol"] = instance
+        #    DoseSerializer.create(DoseSerializer(), dose)
         return super().update(instance, validated_data)

@@ -51,9 +51,10 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
       if (JSON.stringify(data) !== JSON.stringify(protocol)) {
         reset(data);
         await updateProtocol({ id: protocol.id, protocol: data });
+        onChange();
       }
     },
-    [protocol, updateProtocol, reset],
+    [protocol, updateProtocol, reset, onChange],
   );
 
   useEffect(() => {
