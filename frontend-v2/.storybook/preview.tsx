@@ -36,7 +36,6 @@ const preview: Preview = {
         order: [
           "Projects",
           "Drug and Target",
-          "Edit Model (version 1)",
           "Edit Model (version 3)",
           "Data Upload (create dataset)",
           "Data Upload (edit dataset)",
