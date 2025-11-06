@@ -74,7 +74,7 @@ function getVariableName(
   return variableName;
 }
 
-function renameVariable(
+export function renameVariable(
   variable: VariableRead,
   model?: CombinedModelRead,
 ): VariableRead {
