@@ -231,8 +231,9 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
+        const [compartmentName, name] = variable.qname.split(".");
         const aucVariable = variables?.find(
-          (v) => v.name === `calc_${variable.name}_AUC`,
+          (v) => v.qname === `${compartmentName}.calc_${name}_AUC`,
         );
         const [auc] = aucVariable
           ? variablePerInterval(intervals, aucVariable, simulation, interval)
