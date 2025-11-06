@@ -282,28 +282,38 @@ export const PkFiltering: Story = {
 
     await selectMenuOption(pkModelCombo, "None", userEvent);
 
-
-    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole("combobox", {
-      name: /Filter By Model Type/i,
-    });
+    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole(
+      "combobox",
+      {
+        name: /Filter By Model Type/i,
+      },
+    );
 
     expect(pkFilterTags).toBeInTheDocument();
     expect(pdFilterTags).toBeInTheDocument();
 
     // filter by 2-compartment
     await selectMenuOption(pkFilterTags, "2-compartment", userEvent);
-    assertMenuOptions(pkModelCombo, ["2-compartmental model"], ["1-compartmental model", "3-compartmental model"], userEvent);
-  }
-}
+    assertMenuOptions(
+      pkModelCombo,
+      ["2-compartmental model"],
+      ["1-compartmental model", "3-compartmental model"],
+      userEvent,
+    );
+  },
+};
 
 export const PdFiltering: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
 
-    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole("combobox", {
-      name: /Filter By Model Type/i,
-    });
+    const [pkFilterTags, pdFilterTags] = await canvas.findAllByRole(
+      "combobox",
+      {
+        name: /Filter By Model Type/i,
+      },
+    );
 
     expect(pkFilterTags).toBeInTheDocument();
     expect(pdFilterTags).toBeInTheDocument();
@@ -312,10 +322,14 @@ export const PdFiltering: Story = {
     expect(pdModelCombo).toHaveTextContent("Direct effect model (inhibitory)");
     await selectMenuOption(pdModelCombo, "None", userEvent);
     await selectMenuOption(pdFilterTags, "indirect", userEvent);
-    assertMenuOptions(pdModelCombo, ["Indirect effect model (inhibition of elimination)"], ["Direct effect model (inhibitory)", "Tumor growth model (linear)"], userEvent);
-  }
-}
-
+    assertMenuOptions(
+      pdModelCombo,
+      ["Indirect effect model (inhibition of elimination)"],
+      ["Direct effect model (inhibitory)", "Tumor growth model (linear)"],
+      userEvent,
+    );
+  },
+};
 
 export const Species: Story = {
   play: async ({ canvasElement, userEvent }) => {
@@ -488,7 +502,11 @@ export const LagTime: Story = {
     });
     expect(notLagTimeCheckbox).not.toBeInTheDocument();
 
-    await selectMenuOption(pkModelList, "First order absorption model", userEvent);
+    await selectMenuOption(
+      pkModelList,
+      "First order absorption model",
+      userEvent,
+    );
 
     await delay(1000);
 
@@ -545,7 +563,6 @@ export const MapVariables: Story = {
   },
 };
 
-
 export const Parameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
@@ -555,8 +572,8 @@ export const Parameters: Story = {
     await userEvent.click(parametersTab);
     const cl_parameter_text = await canvas.findByText("CL");
     expect(cl_parameter_text).toBeInTheDocument();
-  }
-}
+  },
+};
 
 export const SecondaryParameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
