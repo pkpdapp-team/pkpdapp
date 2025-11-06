@@ -268,6 +268,17 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             e_rate_abs = pk_model.get("Extravascular.RateAbs")
             pk_rate_abs.set_rhs(myokit.Name(e_rate_abs))
 
+        # add effect compartments
+        if self.number_of_effect_compartments > 0:
+            effect_compartment = PharmacokineticModel.objects.get(
+                name="Effect compartment model"
+            )
+            ec_myokit = effect_compartment.create_myokit_model()
+            for i in range(self.number_of_effect_compartments):
+                pk_model.import_component(
+                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                )
+
         # do derived variables for pk model first
         calc_C1_f_exists = False
         for derived_variable in self.derived_variables.all():
@@ -463,13 +474,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     f"Unknown derived variable type {derived_variable.type}"
                 )
 
-        # add effect compartments
+        # add effect compartment equations
         if self.number_of_effect_compartments > 0:
-            effect_compartment = PharmacokineticModel.objects.get(
-                name="Effect compartment model"
-            )
-            ec_myokit = effect_compartment.create_myokit_model()
-
             tags = list(self.pk_model.tags.all().values_list("name", flat=True))
             if "TMDD" in tags:
                 c1_variable_name = "PKCompartment.C1_f"
@@ -481,9 +487,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             c1_variable = pk_model.get(c1_variable_name)
             for i in range(self.number_of_effect_compartments):
-                pk_model.import_component(
-                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
-                )
                 c_drug = pk_model.get(f"EffectCompartment{i+1}.C_Drug")
                 c_drug.set_rhs(myokit.Name(c1_variable))
 

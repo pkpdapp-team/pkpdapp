@@ -95,7 +95,8 @@ const getSimulateInput = (
   );
   results?.forEach((v) => {
     outputs.push(v.qname);
-    outputs.push(`PKCompartment.calc_${v.name}_${derivedType}`);
+    const [compartmentName, name] = v.qname.split(".");
+    outputs.push(`${compartmentName}.calc_${name}_${derivedType}`);
   });
 
   return {
