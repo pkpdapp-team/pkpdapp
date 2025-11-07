@@ -667,8 +667,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_names = [
                     f"{var_name}_{second_var_name}_eMM",
                     f"Km_{var_name}",
-                    f"h_{var_name}",
-                    f"{var_name}_lin",
+                    f"hll_{var_name}",
+                    f"{var_name}_min",
                 ]
                 has_name = any(
                     [
@@ -685,12 +685,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 km_var.set_unit(myokit_second_var.unit())
                 km_var.set_rhs(myokit.Number(1))
 
-                h_var = myokit_compartment.add_variable(new_names[2])
-                h_var.meta["desc"] = (
+                hll_var = myokit_compartment.add_variable(new_names[2])
+                hll_var.meta["desc"] = (
                     f"Hill coefficient for {var_name} and {second_var_name}"
                 )
-                h_var.set_unit(myokit.units.dimensionless)
-                h_var.set_rhs(myokit.Number(1))
+                hll_var.set_unit(myokit.units.dimensionless)
+                hll_var.set_rhs(myokit.Number(1))
 
                 lin_var = myokit_compartment.add_variable(new_names[3])
                 lin_var.meta["desc"] = (
@@ -720,7 +720,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                                             myokit.Name(myokit_second_var),
                                             myokit.Name(km_var),
                                         ),
-                                        myokit.Name(h_var),
+                                        myokit.Name(hll_var),
                                     ),
                                 ),
                             ),
@@ -743,7 +743,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_names = [
                     f"{var_name}_Emax",
                     f"D50_{var_name}",
-                    f"h_{var_name}",
+                    f"hll_{var_name}",
                     f"{var_name}_min",
                 ]
                 has_name = any(
@@ -759,10 +759,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 d50_var.set_unit(first_dose_unit)
                 d50_var.set_rhs(myokit.Number(1))
 
-                h_var = myokit_compartment.add_variable(new_names[2])
-                h_var.meta["desc"] = f"Emax Hill coefficient for {var_name}"
-                h_var.set_unit(myokit.units.dimensionless)
-                h_var.set_rhs(myokit.Number(1))
+                hll_var = myokit_compartment.add_variable(new_names[2])
+                hll_var.meta["desc"] = f"Emax Hill coefficient for {var_name}"
+                hll_var.set_unit(myokit.units.dimensionless)
+                hll_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[3])
                 min_var.meta["desc"] = f"Emax min for {var_name}"
@@ -790,16 +790,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                             myokit.Divide(
                                 myokit.Power(
                                     myokit.Name(dose_var),
-                                    myokit.Name(h_var),
+                                    myokit.Name(hll_var),
                                 ),
                                 myokit.Plus(
                                     myokit.Power(
                                         myokit.Name(dose_var),
-                                        myokit.Name(h_var),
+                                        myokit.Name(hll_var),
                                     ),
                                     myokit.Power(
                                         myokit.Name(d50_var),
-                                        myokit.Name(h_var),
+                                        myokit.Name(hll_var),
                                     ),
                                 ),
                             ),
@@ -822,7 +822,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_names = [
                     f"{var_name}_Imax",
                     f"D50_{var_name}",
-                    f"h_{var_name}",
+                    f"hll_{var_name}",
                     f"{var_name}_min",
                 ]
                 has_name = any(
@@ -838,10 +838,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 d50_var.set_unit(first_dose_unit)
                 d50_var.set_rhs(myokit.Number(1))
 
-                h_var = myokit_compartment.add_variable(new_names[2])
-                h_var.meta["desc"] = f"Imax Hill coefficient for {var_name}"
-                h_var.set_unit(myokit.units.dimensionless)
-                h_var.set_rhs(myokit.Number(1))
+                hll_var = myokit_compartment.add_variable(new_names[2])
+                hll_var.meta["desc"] = f"Imax Hill coefficient for {var_name}"
+                hll_var.set_unit(myokit.units.dimensionless)
+                hll_var.set_rhs(myokit.Number(1))
 
                 min_var = myokit_compartment.add_variable(new_names[3])
                 min_var.meta["desc"] = f"Imax min for {var_name}"
@@ -871,16 +871,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                                 myokit.Divide(
                                     myokit.Power(
                                         myokit.Name(dose_var),
-                                        myokit.Name(h_var),
+                                        myokit.Name(hll_var),
                                     ),
                                     myokit.Plus(
                                         myokit.Power(
                                             myokit.Name(dose_var),
-                                            myokit.Name(h_var),
+                                            myokit.Name(hll_var),
                                         ),
                                         myokit.Power(
                                             myokit.Name(d50_var),
-                                            myokit.Name(h_var),
+                                            myokit.Name(hll_var),
                                         ),
                                     ),
                                 ),
