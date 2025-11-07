@@ -668,7 +668,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     f"{var_name}_{second_var_name}_eMM",
                     f"Km_{var_name}",
                     f"h_{var_name}",
-                    f"{var_name}_lin",
+                    f"{var_name}_min",
                 ]
                 has_name = any(
                     [
