@@ -152,8 +152,10 @@ const ParameterRow: FC<Props> = ({
 
   let nonlinearityDocImage = "";
   if (nonlinearityValue) {
-    if (nonlinearityValue === "MM" || nonlinearityValue === "EMM") {
+    if (nonlinearityValue === "MM") {
       nonlinearityDocImage = "Conc_Michaelis Menten.JPG";
+    } else if (nonlinearityValue === "EMM") {
+      nonlinearityDocImage = "Conc_Michaelis Menten (4Param).jpg";
     } else if (nonlinearityValue === "EMX") {
       nonlinearityDocImage = "Dose_increase_w.JPG";
     } else if (nonlinearityValue === "IMX") {
