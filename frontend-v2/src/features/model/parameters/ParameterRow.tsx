@@ -128,8 +128,8 @@ const ParameterRow: FC<Props> = ({
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
     nonlinearityOptions = [
-      { value: "MM", label: "Michaelis-Menten (sat CL)" },
-      { value: "EMM", label: "Michaelis-Menten (lin + sat CL)" },
+      { value: "MM", label: "Michaelis-Menten (2 parameters)" },
+      { value: "EMM", label: "Michaelis-Menten (4 parameters)" },
       ...nonlinearityOptions,
     ];
   }
