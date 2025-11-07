@@ -116,10 +116,10 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-      { value: "EMX", label: "Dose Maximum Effect" },
-      { value: "IMX", label: "Dose Maximum Inhibitory Effect" },
-      { value: "POW", label: "Dose Hill Effect" },
-      { value: "NPW", label: "Dose Negative Hill Effect" },
+      { value: "EMX", label: "Dose Emax" },
+      { value: "IMX", label: "Dose Imax" },
+      { value: "POW", label: "Dose Power Increase" },
+      { value: "NPW", label: "Dose Power Decrease" },
       { value: "TDI", label: "Time Decrease" },
       { value: "IND", label: "Time Increase" },
       { value: "", label: "None" },
