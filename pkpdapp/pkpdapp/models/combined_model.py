@@ -1180,6 +1180,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     model_name = "two_compartment"
                 elif "3-compartment" in tags:
                     model_name = "three_compartment"
+
+            # the ophtha extravascular model also has some defaults
+            model2_name = None
+            if self.pk_model2 is not None:
+                if self.pk_model2.name == "Occular PK model":
+                    model2_name = "ophtha"
             print(
                 "resetting params to defaults",
                 model_name,
@@ -1191,29 +1197,38 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             if variables is None:
                 variables = self.variables.all()
             for v in variables:
-                varName = v.name
-                defaultVal = (
-                    defaults.get(model_name, {})
-                    .get(varName, {})
-                    .get(species, {})
-                    .get(compoundType, None)
-                )
-                if defaultVal is None:
-                    continue
-                if defaultVal.get("unit", "") == "dimensionless":
-                    defaultVal["unit"] = ""
-                unit = Unit.objects.filter(symbol=defaultVal.get("unit", "")).first()
-                is_vol = False
-                if unit is not None:
-                    is_vol = unit.m == 3
-                value = defaultVal.get("value", None)
-                if value is None or unit is None:
-                    continue
-                v.default_value = value
-                v.unit_per_body_weight = is_preclinical and is_vol
-                v.unit = unit
-                if not v._state.adding:
-                    v.save()
+                for mn in [model_name, model2_name]:
+                    if mn is None:
+                        continue
+                    varName = v.name
+                    defaultVal = (
+                        defaults.get(mn, {})
+                        .get(varName, {})
+                        .get(species, {})
+                        .get(compoundType, None)
+                    )
+                    if defaultVal is None:
+                        continue
+                    if defaultVal.get("unit", "") == "dimensionless":
+                        defaultVal["unit"] = ""
+                    unit = Unit.objects.filter(
+                        symbol=defaultVal.get("unit", "")
+                    ).first()
+                    is_vol_per_kg = False
+                    if unit is not None:
+                        is_vol_per_kg = unit.m == 3 and unit.g == -1
+                        if is_vol_per_kg:
+                            unit = Unit.objects.filter(
+                                symbol=defaultVal.get("unit", "")[:-3]
+                            ).first()
+                    value = defaultVal.get("value", None)
+                    if value is None or unit is None:
+                        continue
+                    v.default_value = value
+                    v.unit_per_body_weight = is_preclinical and is_vol_per_kg
+                    v.unit = unit
+                    if not v._state.adding:
+                        v.save()
 
 
 class PkpdMapping(StoredModel):
