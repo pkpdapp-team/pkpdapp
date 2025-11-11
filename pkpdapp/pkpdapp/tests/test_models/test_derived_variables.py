@@ -111,7 +111,7 @@ class TestDerivedVariables(TestCase):
         )
         self.assertEqual(
             str(myokit_model.get("PKNonlinearities.C_Drug_C1_eMM").rhs()),
-            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 / (1 + (PKCompartment.C1 / PKNonlinearities.Km_C_Drug)^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
+            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 / (1 + (if(PKCompartment.C1 >= 0, PKCompartment.C1, 0) / PKNonlinearities.Km_C_Drug)^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
             str(myokit_model.get("PDCompartment.STIM").rhs()),
