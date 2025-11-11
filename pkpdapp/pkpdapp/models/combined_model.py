@@ -717,7 +717,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                                     myokit.Number(1),
                                     myokit.Power(
                                         myokit.Divide(
-                                            myokit.Name(myokit_second_var),
+                                            myokit.If(
+                                                myokit.MoreEqual(
+                                                    myokit.Name(myokit_second_var),
+                                                    myokit.Number(0),
+                                                ),
+                                                myokit.Name(myokit_second_var),
+                                                myokit.Number(0),
+                                            ),
                                             myokit.Name(km_var),
                                         ),
                                         myokit.Name(hll_var),
