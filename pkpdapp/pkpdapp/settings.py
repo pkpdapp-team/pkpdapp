@@ -114,6 +114,12 @@ if use_predi:
     AUTH_PREDILOGIN_BASE_URL = os.environ.get(
         "AUTH_PREDILOGIN_BASE_URL", "https://api.predilogin.com"
     )
+    AUTH_PREDILOGIN_USER_GROUP = os.environ.get(
+        "AUTH_PREDILOGIN_USER_GROUP", "pkpdapp-users"
+    )
+    AUTH_PREDILOGIN_ADMIN_GROUP = os.environ.get(
+        "AUTH_PREDILOGIN_ADMIN_GROUP", "pkpdapp-admins"
+    )
     AUTHENTICATION_BACKENDS = [
         "pkpdapp.predilogin.PrediBackend",
         "django.contrib.auth.backends.ModelBackend",
