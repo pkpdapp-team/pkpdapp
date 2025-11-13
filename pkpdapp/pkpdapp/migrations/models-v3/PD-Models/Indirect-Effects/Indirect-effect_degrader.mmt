@@ -1,0 +1,46 @@
+[[model]]
+name: Protein degradation model
+author: Michael Gertz
+
+
+# Initial values:
+PDCompartment.P = PDCompartment.P0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PDCompartment]
+
+kendo = 0.1 in [1/h]
+	desc: Endogenous degradation rate constant of the protein of interest
+
+kact = 0.5 in [1/h]
+	desc: Activation rate constant
+
+Kpc = 10000 in [pmol/L]
+	desc: Potency constant of first inflection point 
+
+Kci = 100000 in [pmol/L]
+	desc: Potency constant of first inflection point
+
+P0 = 100 in [dimensionless]
+	desc: Protein of interest baseline concentration
+
+HC1st = 1 in [dimensionless]
+	desc: Hill coefficient (first inflection point)
+	
+HC2nd = 1 in [dimensionless]
+	desc: Hill coefficient (second inflection point)	
+
+C_Drug = 0 in [pmol/L]
+	desc: Drug concentration causing the PD effect
+
+kdegPD = if(C_Drug <= 0, 
+	0,
+	kact/(1+(Kpc/C_Drug)^HC1st+(C_Drug/Kci)^HC2nd)) in [1/h]
+	desc: Degradation rate constant mediated by the protein degrader
+	
+dot(P) = kendo*(P0-P) -kdegPD*P in [dimensionless]
+	desc: Protein (target) concentration

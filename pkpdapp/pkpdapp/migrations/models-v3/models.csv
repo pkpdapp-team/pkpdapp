@@ -54,3 +54,4 @@ PD-Models/Indirect-Effects/TGI/Inhibition/TGI_cell-distribution_econc-prop-kill.
 PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_conc-prop-kill.mmt;Tumor-Inhibition;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_Emax-kill.mmt;Tumor-Inhibition;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_econc-prop-kill.mmt;Tumor-Inhibition;0;0;0;0;0;0;0;0;0;0;0;0;1;0
+PD-Models/Indirect-Effects/Indirect-effect_degrader.mmt;PD-Model;0;0;0;0;0;0;0;0;0;0;0;1;0;0

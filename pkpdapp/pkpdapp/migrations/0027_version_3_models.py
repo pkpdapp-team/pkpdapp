@@ -67,19 +67,29 @@ def load_pkpd_models(apps, schema_editor):
                     model_type = "TGI"
             mmt_filename = f"pkpdapp/migrations/models-v3/{filename}"
             mmt_string = open(mmt_filename, "r").read()
-            print("adding new model", mmt_filename)
             myokit_model = myokit.parse(mmt_string)[0]
             myokit_model.validate()
-            model = model_class.objects.create(
-                name=myokit_model.meta["name"],
-                description=myokit_model.meta["name"],
-                mmt=mmt_string,
-                is_library_model=True,
-                model_type=model_type,
-            )
+            try:
+                print("updating existing model", mmt_filename)
+                model = model_class.objects.get(name=myokit_model.meta["name"])
+                model.description = myokit_model.meta["name"]
+                model.mmt = mmt_string
+                model.model_type = model_type
+                model.tags.clear()
+            except model_class.DoesNotExist:
+                print("adding new model", mmt_filename)
+                model = model_class.objects.create(
+                    name=myokit_model.meta["name"],
+                    description=myokit_model.meta["name"],
+                    mmt=mmt_string,
+                    is_library_model=True,
+                    model_type=model_type,
+                )
+
             for tag in tags:
                 tag_model = Tag.objects.get(name=tag)
                 model.tags.add(tag_model)
+            model.save()
 
 
 class Migration(migrations.Migration):
