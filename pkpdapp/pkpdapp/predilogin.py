@@ -60,25 +60,25 @@ class PrediBackend(BaseBackend):
 
         user = None
         if password and authenticate(password, username):
+            is_user = check_groupmembership(
+                username, settings.AUTH_PREDILOGIN_USER_GROUP
+            )
+            is_superuser = check_groupmembership(
+                username, settings.AUTH_PREDILOGIN_ADMIN_GROUP
+            )
             try:
                 user = User.objects.get(username=username)
                 logger.debug(f"User found: {user.username}")
             except User.DoesNotExist:
                 logger.debug(f"User not found, creating new user: {username}")
-                is_user = check_groupmembership(
-                    username, settings.AUTH_PREDILOGIN_USER_GROUP
-                )
-                is_superuser = check_groupmembership(
-                    username, settings.AUTH_PREDILOGIN_ADMIN_GROUP
-                )
-                if is_user or is_superuser:
-                    user = User(username=username)
-                    user.set_password(password)
-                    user.is_staff = is_superuser
-                    user.is_superuser = is_superuser
-                    user.is_active = True
-                    user.save()
-            if user and not self.user_can_authenticate(user):
+                user = User(username=username)
+
+            user.set_password(password)
+            user.is_staff = is_superuser
+            user.is_superuser = is_superuser
+            user.is_active = is_superuser or is_user
+            user.save()
+            if not user.is_active:
                 user = None
         return user
 

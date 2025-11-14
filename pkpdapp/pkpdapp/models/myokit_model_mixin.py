@@ -232,7 +232,11 @@ class MyokitModelMixin:
                     "PKCompartment.Kp",
                 ]
             if not getattr(self, "has_hill_coefficient", True):
-                removed_variables += ["PDCompartment.HC"]
+                removed_variables += [
+                    "PDCompartment.HC",
+                    "PDCompartment.HC1st",
+                    "PDCompartment.HC2nd",
+                ]
             # tlag now on per variable basis
             removed_variables += ["PKCompartment.tlag"]
             if not getattr(self, "has_bioavailability", True):
