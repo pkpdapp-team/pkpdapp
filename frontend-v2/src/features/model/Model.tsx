@@ -192,7 +192,7 @@ function useModelFormDataCallback({
         .then((response) => {
           if (response?.data) {
             // if the pk model has changed, need to reset the parameters
-            if (modelData.pk_model !== model?.pk_model) {
+            if ((modelData.pk_model !== model?.pk_model) || (modelData.pk_model2 !== model?.pk_model2)) {
               setParamsToDefault({ id: model.id, combinedModel: modelData });
             }
           }
