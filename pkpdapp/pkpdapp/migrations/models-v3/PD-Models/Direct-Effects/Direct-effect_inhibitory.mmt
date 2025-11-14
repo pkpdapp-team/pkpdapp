@@ -30,7 +30,7 @@ PDO = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
 INH = Imax*PDO in [dimensionless]
 	desc: PD inhibition
 
-E = if(E0 = 0 , 
+E = if(E0 == 0 , 
 	-Imax*PDO , 
 	E0 * (1-Imax*PDO)) in [dimensionless]
 	desc: PD effect

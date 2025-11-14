@@ -9,7 +9,7 @@ v3models = importlib.import_module("pkpdapp.migrations.0027_version_3_models")
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("pkpdapp", "0037_second_target_mol_mass"),
+        ("pkpdapp", "0038_add_Indirect-effect_degrader-model"),
     ]
 
     operations = [
