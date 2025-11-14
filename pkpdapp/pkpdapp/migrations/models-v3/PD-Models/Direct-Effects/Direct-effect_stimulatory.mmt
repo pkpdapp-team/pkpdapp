@@ -24,10 +24,15 @@ HC = 1 in [dimensionless]
 C_Drug = 1 in [pmol/L]
 	desc: Drug concentration causing the PD effect 
 
-STIM = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
-	desc: Extent of stimulation
+PDO = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Pharmacodynamic occupancy
+	
+STM = if(E0 = 0 , 
+	+Emax*PDO , 
+	(1+(Emax-1)*PDO)) in [dimensionless]
+	desc: PD Stimulus	
 
-E = if(E0 == 0, 
-	+Emax*STIM, 
-	E0 * (1+(Emax-1)*STIM)) in [dimensionless]
+E = if(E0 = 0 , 
+	+Emax*PDO , 
+	E0 * (1+(Emax-1)*PDO)) in [dimensionless]
 	desc: PD effect
