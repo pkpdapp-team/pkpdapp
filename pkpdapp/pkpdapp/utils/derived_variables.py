@@ -5,6 +5,26 @@
 #
 
 import myokit
+from pkpdapp.models import DerivedVariable
+
+pd_model_var_types = [
+    DerivedVariable.Type.MICHAELIS_MENTEN,
+    DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
+    DerivedVariable.Type.EMAX,
+    DerivedVariable.Type.IMAX,
+    DerivedVariable.Type.POWER,
+    DerivedVariable.Type.NEGATIVE_POWER,
+    DerivedVariable.Type.EXP_DECAY,
+    DerivedVariable.Type.EXP_INCREASE,
+]
+
+pk_model_var_types = [
+    DerivedVariable.Type.AREA_UNDER_CURVE,
+    DerivedVariable.Type.RECEPTOR_OCCUPANCY,
+    DerivedVariable.Type.FRACTION_UNBOUND_PLASMA,
+    DerivedVariable.Type.BLOOD_PLASMA_RATIO,
+    DerivedVariable.Type.TLAG,
+]
 
 
 def add_area_under_curve(

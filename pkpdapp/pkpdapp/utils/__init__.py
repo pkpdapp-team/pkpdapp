@@ -13,6 +13,8 @@ from .monolix_project_parser import MonolixProjectParser
 from .data_parser import DataParser
 from .monolix_importer import monolix_import
 from .derived_variables import (
+    pd_model_var_types,
+    pk_model_var_types,
     add_area_under_curve,
     add_receptor_occupancy,
     add_fraction_unbound_plasma,

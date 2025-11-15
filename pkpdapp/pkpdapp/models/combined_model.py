@@ -19,6 +19,8 @@ from django.urls import reverse
 import logging
 from pkpdapp.utils.default_params import defaults
 from pkpdapp.utils.derived_variables import (
+    pd_model_var_types,
+    pk_model_var_types,
     add_area_under_curve,
     add_emax,
     add_exp_decay,
@@ -297,16 +299,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # do derived variables for pk model first
         calc_C1_f_exists = False
         for derived_variable in self.derived_variables.all():
-            if derived_variable.type in [
-                DerivedVariable.Type.MICHAELIS_MENTEN,
-                DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
-                DerivedVariable.Type.EMAX,
-                DerivedVariable.Type.IMAX,
-                DerivedVariable.Type.POWER,
-                DerivedVariable.Type.NEGATIVE_POWER,
-                DerivedVariable.Type.EXP_DECAY,
-                DerivedVariable.Type.EXP_INCREASE,
-            ]:
+            if derived_variable.type in pd_model_var_types:
                 continue
             try:
                 myokit_var = pk_model.get(derived_variable.pk_variable.qname)
@@ -481,19 +474,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             else:
                 myokit_compartment = pkpd_model.add_component("PKNonlinearities")
             var_name = derived_variable.pk_variable.name
-            if (
-                derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
-            ):  # noqa: E501
-                pass
-            elif (
-                derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
-            ):  # noqa: E501
-                pass
-            elif (
-                derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA
-            ):  # noqa: E501
-                pass
-            elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
+            if derived_variable.type in pk_model_var_types:
                 pass
             elif derived_variable.type == DerivedVariable.Type.MICHAELIS_MENTEN:
                 second_var = derived_variable.secondary_variable
