@@ -15,16 +15,6 @@ from .monolix_importer import monolix_import
 from .derived_variables import (
     pd_model_var_types,
     pk_model_var_types,
-    add_area_under_curve,
-    add_receptor_occupancy,
-    add_fraction_unbound_plasma,
-    add_blood_plasma_ratio,
-    add_tlag,
-    add_michaelis_menten,
-    add_extended_michaelis_menten,
-    add_emax,
-    add_imax,
-    add_power,
-    add_exp_decay,
-    add_exp_increase,
+    add_pd_variable,
+    add_pk_variable,
 )

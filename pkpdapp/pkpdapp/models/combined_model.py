@@ -19,20 +19,8 @@ from django.urls import reverse
 import logging
 from pkpdapp.utils.default_params import defaults
 from pkpdapp.utils.derived_variables import (
-    pd_model_var_types,
-    pk_model_var_types,
-    add_area_under_curve,
-    add_emax,
-    add_exp_decay,
-    add_exp_increase,
-    add_extended_michaelis_menten,
-    add_imax,
-    add_michaelis_menten,
-    add_power,
-    add_receptor_occupancy,
-    add_fraction_unbound_plasma,
-    add_blood_plasma_ratio,
-    add_tlag,
+    add_pk_variable,
+    add_pd_variable,
 )
 
 logger = logging.getLogger(__name__)
@@ -299,58 +287,19 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # do derived variables for pk model first
         calc_C1_f_exists = False
         for derived_variable in self.derived_variables.all():
-            if derived_variable.type in pd_model_var_types:
-                continue
-            try:
-                myokit_var = pk_model.get(derived_variable.pk_variable.qname)
-            except KeyError:
-                logger.warning(
-                    f"Derived variable handler: Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
-                )
-
-                continue
-            myokit_compartment = myokit_var.parent()
             var_name = derived_variable.pk_variable.name
-            if (
-                derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
-            ):  # noqa: E501
-                add_area_under_curve(
-                    myokit_var=myokit_var,
-                    myokit_model=pk_model,
-                )
-            elif (
-                derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
-            ):  # noqa: E501
-                add_receptor_occupancy(
-                    myokit_var=myokit_var,
-                    project=self.project,
-                )
 
-            elif (
+            if (
                 derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA
             ):  # noqa: E501
                 if var_name == "C1":
                     calc_C1_f_exists = True
-                add_fraction_unbound_plasma(
-                    myokit_var=myokit_var,
-                    project=self.project,
-                )
-            elif (
-                derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO
-            ):  # noqa: E501
-                add_blood_plasma_ratio(
-                    myokit_var=myokit_var,
-                    project=self.project,
-                )
-            elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
-                add_tlag(
-                    myokit_var=myokit_var,
-                    myokit_model=pk_model,
-                )
-            else:
-                raise ValueError(
-                    f"Unknown derived variable type {derived_variable.type}"
-                )
+
+            add_pk_variable(
+                derived_variable=derived_variable,
+                pk_model=pk_model,
+                project=self.project,
+            )
 
         # add effect compartment equations
         if self.number_of_effect_compartments > 0:
@@ -460,86 +409,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # now do any derived variables that are based on pd (or both)
         for derived_variable in self.derived_variables.all():
-            try:
-                myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
-            except KeyError:
-                logger.warning(
-                    f"Derived variable handler (PKPD): Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
-                )
-                continue
-
-            time_var = pkpd_model.binding("time")
-            if pkpd_model.has_component("PKNonlinearities"):
-                myokit_compartment = pkpd_model.get("PKNonlinearities")
-            else:
-                myokit_compartment = pkpd_model.add_component("PKNonlinearities")
-            var_name = derived_variable.pk_variable.name
-            if derived_variable.type in pk_model_var_types:
-                pass
-            elif derived_variable.type == DerivedVariable.Type.MICHAELIS_MENTEN:
-                second_var = derived_variable.secondary_variable
-                if second_var is None:
-                    continue
-                add_michaelis_menten(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    second_var=second_var,
-                    pk_model=pk_model,
-                )
-
-            elif (
-                derived_variable.type == DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN
-            ):
-                second_var = derived_variable.secondary_variable
-                if second_var is None:
-                    continue
-                add_extended_michaelis_menten(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    second_var=second_var,
-                    pk_model=pk_model,
-                )
-            elif derived_variable.type == DerivedVariable.Type.EMAX:
-                add_emax(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    project=self.project,
-                )
-            elif derived_variable.type == DerivedVariable.Type.IMAX:
-                add_imax(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    project=self.project,
-                )
-            elif (
-                derived_variable.type == DerivedVariable.Type.POWER
-                or derived_variable.type == DerivedVariable.Type.NEGATIVE_POWER
-            ):
-                add_power(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    project=self.project,
-                    is_negative=(
-                        derived_variable.type
-                        == DerivedVariable.Type.NEGATIVE_POWER
-                    ),
-                )
-            elif derived_variable.type == DerivedVariable.Type.EXP_DECAY:
-                add_exp_decay(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    time_var=time_var,
-                )
-            elif derived_variable.type == DerivedVariable.Type.EXP_INCREASE:
-                add_exp_increase(
-                    myokit_var=myokit_var,
-                    myokit_compartment=myokit_compartment,
-                    time_var=time_var,
-                )
-            else:
-                raise ValueError(
-                    f"Unknown derived variable type {derived_variable.type}"
-                )
+            add_pd_variable(
+                derived_variable=derived_variable,
+                pk_model=pk_model,
+                pkpd_model=pkpd_model,
+                project=self.project,
+            )
 
         # do mappings
         for mapping in self.mappings.all():

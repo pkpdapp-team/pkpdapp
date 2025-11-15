@@ -6,6 +6,9 @@
 
 import myokit
 from pkpdapp.models import DerivedVariable
+import logging
+
+logger = logging.getLogger(__name__)
 
 pd_model_var_types = [
     DerivedVariable.Type.MICHAELIS_MENTEN,
@@ -27,8 +30,184 @@ pk_model_var_types = [
 ]
 
 
+def add_pk_variable(
+    derived_variable: DerivedVariable,
+    pk_model: myokit.Model,
+    project
+) -> None:
+    """
+    Add a derived variable to the PK model.
+
+    Parameters
+    ----------
+    derived_variable
+        Derived variable to add.
+    pk_model
+        Myokit model to add the derived variable to.
+    project
+        Project containing compound information.
+
+    Returns
+    -------
+    None
+    """
+    type = derived_variable.type
+    if type in pd_model_var_types:
+        return
+
+    try:
+        myokit_var = pk_model.get(derived_variable.pk_variable.qname)
+    except KeyError:
+        logger.warning(
+            f"Derived variable handler: Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
+        )
+        return
+
+    time_var = pk_model.binding("time")
+    if type == DerivedVariable.Type.AREA_UNDER_CURVE:
+        add_area_under_curve(
+            myokit_var=myokit_var,
+            time_var=time_var,
+        )
+    elif type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:
+        add_receptor_occupancy(
+            myokit_var=myokit_var,
+            project=project,
+        )
+    elif type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:
+        add_fraction_unbound_plasma(
+            myokit_var=myokit_var,
+            project=project,
+        )
+    elif type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:
+        add_blood_plasma_ratio(
+            myokit_var=myokit_var,
+            project=project,
+        )
+    elif type == DerivedVariable.Type.TLAG:
+        add_tlag(
+            myokit_var=myokit_var,
+            time_var=time_var,
+        )
+    else:
+        raise ValueError(
+            f"Unknown derived variable type {type}"
+        )
+
+
+def add_pd_variable(
+    derived_variable: DerivedVariable,
+    pk_model: myokit.Model,
+    pkpd_model: myokit.Model,
+    project,
+) -> None:
+    """
+    Add a derived variable to the PKPD combined model.
+
+    Parameters
+    ----------
+    derived_variable
+        Derived variable to add.
+    pk_model
+        Myokit model containing the PK variables.
+    pkpd_model
+        Myokit model to add the derived variable to.
+    project
+        Project containing compound information.
+
+    Returns
+    -------
+    None
+    """
+    type = derived_variable.type
+    if type in pk_model_var_types:
+        return
+
+    try:
+        myokit_var: myokit.Variable = pkpd_model.get(derived_variable.pk_variable.qname)
+    except KeyError:
+        logger.warning(
+            f"Derived variable handler (PKPD): Variable {derived_variable.pk_variable.qname} not found in model"  # noqa: E501
+        )
+        return
+
+    second_var = derived_variable.secondary_variable
+    time_var = pkpd_model.binding("time")
+    myokit_compartment = None
+
+    if pkpd_model.has_component("PKNonlinearities"):
+        myokit_compartment = pkpd_model.get("PKNonlinearities")
+    else:
+        myokit_compartment = pkpd_model.add_component("PKNonlinearities")
+
+    var = None
+    if type == DerivedVariable.Type.MICHAELIS_MENTEN:
+        if second_var is None:
+            return
+        var = add_michaelis_menten(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            second_var=second_var,
+            pk_model=pk_model,
+        )
+    elif type == DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN:
+        if second_var is None:
+            return
+        var = add_extended_michaelis_menten(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            second_var=second_var,
+            pk_model=pk_model,
+        )
+    elif type == DerivedVariable.Type.EMAX:
+        var = add_emax(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            project=project,
+        )
+    elif type == DerivedVariable.Type.IMAX:
+        var = add_imax(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            project=project,
+        )
+    elif type == DerivedVariable.Type.POWER:
+        var = add_power(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            project=project,
+            is_negative=False,
+        )
+    elif type == DerivedVariable.Type.NEGATIVE_POWER:
+        var = add_power(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            project=project,
+            is_negative=True,
+        )
+    elif type == DerivedVariable.Type.EXP_DECAY:
+        var = add_exp_decay(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            time_var=time_var,
+        )
+    elif type == DerivedVariable.Type.EXP_INCREASE:
+        var = add_exp_increase(
+            myokit_var=myokit_var,
+            myokit_compartment=myokit_compartment,
+            time_var=time_var,
+        )
+    else:
+        raise ValueError(
+            f"Unknown derived variable type {type}"
+        )
+    if var is not None:
+        replace_nonlinearities(myokit_var, var)
+
+
 def add_area_under_curve(
-    myokit_var: myokit.Variable, myokit_model: myokit.Model
+    myokit_var: myokit.Variable,
+    time_var: myokit.Variable,
 ) -> myokit.Variable:
     """
     Create an AUC variable for the given variable in the Myokit model.
@@ -37,8 +216,8 @@ def add_area_under_curve(
     ----------
     myokit_var
         Variable to create AUC for.
-    myokit_model
-        Myokit model to add the AUC variable to.
+    time_var
+        Time variable.
 
     Returns
     -------
@@ -47,7 +226,6 @@ def add_area_under_curve(
     """
     var_name = myokit_var.name()
     myokit_compartment = myokit_var.parent()
-    time_var = myokit_model.binding("time")
     auc_var_name = f"calc_{var_name}_AUC"
     if myokit_compartment.has_variable(auc_var_name):
         return myokit_compartment.get(auc_var_name)
@@ -256,15 +434,15 @@ def add_blood_plasma_ratio(
 
 def add_tlag(
         myokit_var: myokit.Variable,
-        myokit_model: myokit.Model
+        time_var: myokit.Variable,
 ) -> myokit.Variable:
     """Create a TLAG variable for the given variable in the Myokit model.
     Parameters
     ----------
     myokit_var
         Variable to create TLAG for.
-    myokit_model
-        Myokit model to add the TLAG variable to.
+    time_var
+        Time variable.
 
     Returns
     -------
@@ -273,7 +451,6 @@ def add_tlag(
     """
     var_name = myokit_var.name()
     myokit_compartment = myokit_var.parent()
-    time_var = myokit_model.binding("time")
     tlag_var_name = f"{var_name}_tlag_ud"
     if myokit_compartment.has_variable(tlag_var_name):
         return myokit_compartment.get(tlag_var_name)
@@ -352,7 +529,6 @@ def add_michaelis_menten(
             ),
         )
     )
-    replace_nonlinearities(myokit_var, mm_var)
     return mm_var
 
 
@@ -460,7 +636,6 @@ def add_extended_michaelis_menten(
             myokit.Name(lin_var),
         )
     )
-    replace_nonlinearities(myokit_var, emm_var)
     return emm_var
 
 
@@ -567,7 +742,6 @@ def add_emax(
             myokit.Name(min_var),
         )
     )
-    replace_nonlinearities(myokit_var, emax_var)
     return emax_var
 
 
@@ -677,7 +851,6 @@ def add_imax(
             myokit.Name(min_var),
         )
     )
-    replace_nonlinearities(myokit_var, imax_var)
     return imax_var
 
 
@@ -770,7 +943,6 @@ def add_power(
             ),
         )
     )
-    replace_nonlinearities(myokit_var, power_var)
     return power_var
 
 
@@ -825,7 +997,6 @@ def add_exp_decay(
             myokit.Name(min_var),
         )
     )
-    replace_nonlinearities(myokit_var, tdi_var)
     return tdi_var
 
 
@@ -883,7 +1054,6 @@ def add_exp_increase(
             myokit.Name(min_var),
         )
     )
-    replace_nonlinearities(myokit_var, ind_var)
     return ind_var
 
 
