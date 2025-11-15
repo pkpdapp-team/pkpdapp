@@ -332,6 +332,7 @@ def add_michaelis_menten(
             ),
         )
     )
+    replace_nonlinearities(myokit_var, mm_var)
     return mm_var
 
 
@@ -439,6 +440,7 @@ def add_extended_michaelis_menten(
             myokit.Name(lin_var),
         )
     )
+    replace_nonlinearities(myokit_var, emm_var)
     return emm_var
 
 
@@ -545,6 +547,7 @@ def add_emax(
             myokit.Name(min_var),
         )
     )
+    replace_nonlinearities(myokit_var, emax_var)
     return emax_var
 
 
@@ -654,6 +657,7 @@ def add_imax(
             myokit.Name(min_var),
         )
     )
+    replace_nonlinearities(myokit_var, imax_var)
     return imax_var
 
 
@@ -746,6 +750,7 @@ def add_power(
             ),
         )
     )
+    replace_nonlinearities(myokit_var, power_var)
     return power_var
 
 
@@ -800,6 +805,7 @@ def add_exp_decay(
             myokit.Name(min_var),
         )
     )
+    replace_nonlinearities(myokit_var, tdi_var)
     return tdi_var
 
 
@@ -857,4 +863,19 @@ def add_exp_increase(
             myokit.Name(min_var),
         )
     )
+    replace_nonlinearities(myokit_var, ind_var)
     return ind_var
+
+
+def replace_nonlinearities(
+    myokit_var: myokit.Variable,
+    var: myokit.Variable,
+):
+    # replace the original variable with the new one in the model
+    for comp_var in myokit_var.parent().variables():
+        if var is None or comp_var == var:
+            continue
+        new_expr = comp_var.rhs().clone(
+            {myokit.Name(myokit_var): myokit.Name(var)}
+        )
+        comp_var.set_rhs(new_expr)

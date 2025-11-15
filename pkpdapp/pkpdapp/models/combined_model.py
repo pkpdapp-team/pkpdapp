@@ -320,14 +320,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             if (
                 derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
             ):  # noqa: E501
-                var = add_area_under_curve(
+                add_area_under_curve(
                     myokit_var=myokit_var,
                     myokit_model=pk_model,
                 )
             elif (
                 derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
             ):  # noqa: E501
-                var = add_receptor_occupancy(
+                add_receptor_occupancy(
                     myokit_var=myokit_var,
                     project=self.project,
                 )
@@ -337,19 +337,19 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             ):  # noqa: E501
                 if var_name == "C1":
                     calc_C1_f_exists = True
-                var = add_fraction_unbound_plasma(
+                add_fraction_unbound_plasma(
                     myokit_var=myokit_var,
                     project=self.project,
                 )
             elif (
                 derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO
             ):  # noqa: E501
-                var = add_blood_plasma_ratio(
+                add_blood_plasma_ratio(
                     myokit_var=myokit_var,
                     project=self.project,
                 )
             elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
-                var = add_tlag(
+                add_tlag(
                     myokit_var=myokit_var,
                     myokit_model=pk_model,
                 )
@@ -480,7 +480,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             else:
                 myokit_compartment = pkpd_model.add_component("PKNonlinearities")
             var_name = derived_variable.pk_variable.name
-            var = None
             if (
                 derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
             ):  # noqa: E501
@@ -499,7 +498,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 second_var = derived_variable.secondary_variable
                 if second_var is None:
                     continue
-                var = add_michaelis_menten(
+                add_michaelis_menten(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     second_var=second_var,
@@ -512,20 +511,20 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 second_var = derived_variable.secondary_variable
                 if second_var is None:
                     continue
-                var = add_extended_michaelis_menten(
+                add_extended_michaelis_menten(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     second_var=second_var,
                     pk_model=pk_model,
                 )
             elif derived_variable.type == DerivedVariable.Type.EMAX:
-                var = add_emax(
+                add_emax(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     project=self.project,
                 )
             elif derived_variable.type == DerivedVariable.Type.IMAX:
-                var = add_imax(
+                add_imax(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     project=self.project,
@@ -534,7 +533,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 derived_variable.type == DerivedVariable.Type.POWER
                 or derived_variable.type == DerivedVariable.Type.NEGATIVE_POWER
             ):
-                var = add_power(
+                add_power(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     project=self.project,
@@ -544,13 +543,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     ),
                 )
             elif derived_variable.type == DerivedVariable.Type.EXP_DECAY:
-                var = add_exp_decay(
+                add_exp_decay(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     time_var=time_var,
                 )
             elif derived_variable.type == DerivedVariable.Type.EXP_INCREASE:
-                var = add_exp_increase(
+                add_exp_increase(
                     myokit_var=myokit_var,
                     myokit_compartment=myokit_compartment,
                     time_var=time_var,
@@ -559,14 +558,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 raise ValueError(
                     f"Unknown derived variable type {derived_variable.type}"
                 )
-            # replace the original variable with the new one in the model
-            for comp_var in myokit_var.parent().variables():
-                if var is None or comp_var == var:
-                    continue
-                new_expr = comp_var.rhs().clone(
-                    {myokit.Name(myokit_var): myokit.Name(var)}
-                )
-                comp_var.set_rhs(new_expr)
 
         # do mappings
         for mapping in self.mappings.all():
