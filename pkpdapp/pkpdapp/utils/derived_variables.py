@@ -10,25 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-pd_model_var_types = [
-    DerivedVariable.Type.MICHAELIS_MENTEN,
-    DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
-    DerivedVariable.Type.EMAX,
-    DerivedVariable.Type.IMAX,
-    DerivedVariable.Type.POWER,
-    DerivedVariable.Type.NEGATIVE_POWER,
-    DerivedVariable.Type.EXP_DECAY,
-    DerivedVariable.Type.EXP_INCREASE,
-]
-
-pk_model_var_types = [
-    DerivedVariable.Type.AREA_UNDER_CURVE,
-    DerivedVariable.Type.RECEPTOR_OCCUPANCY,
-    DerivedVariable.Type.FRACTION_UNBOUND_PLASMA,
-    DerivedVariable.Type.BLOOD_PLASMA_RATIO,
-    DerivedVariable.Type.TLAG,
-]
-
 
 def add_pk_variable(
     derived_variable: DerivedVariable,
@@ -64,30 +45,12 @@ def add_pk_variable(
         return
 
     time_var = pk_model.binding("time")
-    if type == DerivedVariable.Type.AREA_UNDER_CURVE:
-        add_area_under_curve(
+    add_var = pk_model_var_types.get(type)
+    if add_var is not None:
+        add_var(
             myokit_var=myokit_var,
             time_var=time_var,
-        )
-    elif type == DerivedVariable.Type.RECEPTOR_OCCUPANCY:
-        add_receptor_occupancy(
-            myokit_var=myokit_var,
             project=project,
-        )
-    elif type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA:
-        add_fraction_unbound_plasma(
-            myokit_var=myokit_var,
-            project=project,
-        )
-    elif type == DerivedVariable.Type.BLOOD_PLASMA_RATIO:
-        add_blood_plasma_ratio(
-            myokit_var=myokit_var,
-            project=project,
-        )
-    elif type == DerivedVariable.Type.TLAG:
-        add_tlag(
-            myokit_var=myokit_var,
-            time_var=time_var,
         )
     else:
         raise ValueError(
@@ -132,6 +95,14 @@ def add_pd_variable(
         return
 
     second_var = derived_variable.secondary_variable
+
+    if type in (
+        DerivedVariable.Type.MICHAELIS_MENTEN,
+        DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
+    ):
+        if second_var is None:
+            return
+
     time_var = pkpd_model.binding("time")
     myokit_compartment = None
 
@@ -140,61 +111,15 @@ def add_pd_variable(
     else:
         myokit_compartment = pkpd_model.add_component("PKNonlinearities")
 
+    add_var = pd_model_var_types.get(type)
     var = None
-    if type == DerivedVariable.Type.MICHAELIS_MENTEN:
-        if second_var is None:
-            return
-        var = add_michaelis_menten(
+    if add_var is not None:
+        var = add_var(
             myokit_var=myokit_var,
             myokit_compartment=myokit_compartment,
             second_var=second_var,
             pk_model=pk_model,
-        )
-    elif type == DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN:
-        if second_var is None:
-            return
-        var = add_extended_michaelis_menten(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
-            second_var=second_var,
-            pk_model=pk_model,
-        )
-    elif type == DerivedVariable.Type.EMAX:
-        var = add_emax(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
             project=project,
-        )
-    elif type == DerivedVariable.Type.IMAX:
-        var = add_imax(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
-            project=project,
-        )
-    elif type == DerivedVariable.Type.POWER:
-        var = add_power(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
-            project=project,
-            is_negative=False,
-        )
-    elif type == DerivedVariable.Type.NEGATIVE_POWER:
-        var = add_power(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
-            project=project,
-            is_negative=True,
-        )
-    elif type == DerivedVariable.Type.EXP_DECAY:
-        var = add_exp_decay(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
-            time_var=time_var,
-        )
-    elif type == DerivedVariable.Type.EXP_INCREASE:
-        var = add_exp_increase(
-            myokit_var=myokit_var,
-            myokit_compartment=myokit_compartment,
             time_var=time_var,
         )
     else:
@@ -208,6 +133,7 @@ def add_pd_variable(
 def add_area_under_curve(
     myokit_var: myokit.Variable,
     time_var: myokit.Variable,
+    **kwargs,
 ) -> myokit.Variable:
     """
     Create an AUC variable for the given variable in the Myokit model.
@@ -245,6 +171,7 @@ def add_area_under_curve(
 def add_receptor_occupancy(
     myokit_var: myokit.Variable,
     project,
+    **kwargs,
 ) -> myokit.Variable:
     """Create a Receptor Occupancy variable for the given variable in the Myokit model.
 
@@ -343,6 +270,7 @@ def add_receptor_occupancy(
 def add_fraction_unbound_plasma(
     myokit_var: myokit.Variable,
     project,
+    **kwargs,
 ) -> myokit.Variable:
     """
     Create a Fraction Unbound Plasma variable for the given variable
@@ -390,6 +318,7 @@ def add_fraction_unbound_plasma(
 def add_blood_plasma_ratio(
     myokit_var: myokit.Variable,
     project,
+    **kwargs,
 ) -> myokit.Variable:
     """Create a Blood Plasma Ratio variable for the given variable in the Myokit model.
     Parameters
@@ -433,8 +362,9 @@ def add_blood_plasma_ratio(
 
 
 def add_tlag(
-        myokit_var: myokit.Variable,
-        time_var: myokit.Variable,
+    myokit_var: myokit.Variable,
+    time_var: myokit.Variable,
+    **kwargs,
 ) -> myokit.Variable:
     """Create a TLAG variable for the given variable in the Myokit model.
     Parameters
@@ -464,10 +394,11 @@ def add_tlag(
 
 
 def add_michaelis_menten(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        second_var: myokit.Variable,
-        pk_model: myokit.Model,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    second_var: myokit.Variable,
+    pk_model: myokit.Model,
+    **kwargs,
 ) -> myokit.Variable:
     """Create a Michaelis Menten variable for the given variable in the Myokit model.
     Parameters
@@ -533,10 +464,11 @@ def add_michaelis_menten(
 
 
 def add_extended_michaelis_menten(
-        myokit_var: myokit.Variable,
-        second_var: myokit.Variable,
-        pk_model: myokit.Model,
-        myokit_compartment: myokit.Component,
+    myokit_var: myokit.Variable,
+    second_var: myokit.Variable,
+    pk_model: myokit.Model,
+    myokit_compartment: myokit.Component,
+    **kwargs,
 ) -> myokit.Variable:
     """
     Create an Extended Michaelis Menten variable for the given variable
@@ -640,9 +572,10 @@ def add_extended_michaelis_menten(
 
 
 def add_emax(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        project,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    project,
+    **kwargs,
 ) -> myokit.Variable:
     """Create an Emax variable for the given variable in the Myokit model.
     Parameters
@@ -746,9 +679,10 @@ def add_emax(
 
 
 def add_imax(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        project,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    project,
+    **kwargs,
 ) -> myokit.Variable:
     """Create an Imax variable for the given variable in the Myokit model.
     Parameters
@@ -855,10 +789,11 @@ def add_imax(
 
 
 def add_power(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        project,
-        is_negative: bool,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    project,
+    is_negative: bool = False,
+    **kwargs,
 ) -> myokit.Variable:
     """Create a Power variable for the given variable in the Myokit model.
     Parameters
@@ -946,10 +881,25 @@ def add_power(
     return power_var
 
 
+def add_negative_power(
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    project,
+    **kwargs,
+) -> myokit.Variable:
+    return add_power(
+        myokit_var=myokit_var,
+        myokit_compartment=myokit_compartment,
+        project=project,
+        is_negative=True,
+    )
+
+
 def add_exp_decay(
         myokit_var: myokit.Variable,
         myokit_compartment: myokit.Component,
         time_var: myokit.Variable,
+        **kwargs,
 ) -> myokit.Variable:
     var_name = myokit_var.name()
     # base_variable_TDI = base_variable * exp(-k_X*time) +Xmin
@@ -1001,9 +951,10 @@ def add_exp_decay(
 
 
 def add_exp_increase(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        time_var: myokit.Variable,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    time_var: myokit.Variable,
+    **kwargs,
 ) -> myokit.Variable:
     var_name = myokit_var.name()
     # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
@@ -1069,3 +1020,24 @@ def replace_nonlinearities(
             {myokit.Name(myokit_var): myokit.Name(var)}
         )
         comp_var.set_rhs(new_expr)
+
+
+pk_model_var_types = {
+    DerivedVariable.Type.AREA_UNDER_CURVE: add_area_under_curve,
+    DerivedVariable.Type.RECEPTOR_OCCUPANCY: add_receptor_occupancy,
+    DerivedVariable.Type.FRACTION_UNBOUND_PLASMA: add_fraction_unbound_plasma,
+    DerivedVariable.Type.BLOOD_PLASMA_RATIO: add_blood_plasma_ratio,
+    DerivedVariable.Type.TLAG: add_tlag,
+}
+
+
+pd_model_var_types = {
+    DerivedVariable.Type.MICHAELIS_MENTEN: add_michaelis_menten,
+    DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN: add_extended_michaelis_menten,
+    DerivedVariable.Type.EMAX: add_emax,
+    DerivedVariable.Type.IMAX: add_imax,
+    DerivedVariable.Type.POWER: add_power,
+    DerivedVariable.Type.NEGATIVE_POWER: add_negative_power,
+    DerivedVariable.Type.EXP_DECAY: add_exp_decay,
+    DerivedVariable.Type.EXP_INCREASE: add_exp_increase,
+}
