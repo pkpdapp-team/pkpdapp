@@ -919,7 +919,7 @@ def add_exp_decay(
     """
     Create an Exponential Decay variable for the given variable in the Myokit model.
 
-    base_variable_TDI = base_variable_TDI = base_variable * exp(-k_X*time) + Xmin
+    base_variable_TDI = base_variable * exp(-k_X*time) + Xmin
     where k_X is the decay rate and Xmin is the minimum value.
 
     Parameters
