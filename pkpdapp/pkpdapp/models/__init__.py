@@ -26,7 +26,8 @@ from .pharmacodynamic_model import (
 from .pharmacokinetic_model import (
     PharmacokineticModel,
 )
-from .combined_model import CombinedModel, PkpdMapping, DerivedVariable, TimeInterval
+from .derived_variable import DerivedVariable
+from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .dataset import Dataset
 from .variable import Variable
 from .profile import Profile
