@@ -304,16 +304,11 @@ def add_fraction_unbound_plasma(
     compound = project.compound
     f_var_name = f"calc_{var_name}_f"
     fup_var_name = "FUP_ud"
-    new_names = [f_var_name, fup_var_name]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(f_var_name):
         # return existing derived variable if already present
         return myokit_compartment.get(f_var_name)
+
     f_var = myokit_compartment.add_variable(f_var_name)
     f_var.meta["desc"] = (
         f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
@@ -354,16 +349,11 @@ def add_blood_plasma_ratio(
     compound = project.compound
     bl_var_name = f"calc_{var_name}_bl"
     bpr_var_name = "BP_ud"
-    new_names = [bl_var_name, bpr_var_name]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(bl_var_name):
         # return existing derived variable if already present
         return myokit_compartment.get(bl_var_name)
+
     bl_var = myokit_compartment.add_variable(bl_var_name)
     bl_var.meta["desc"] = (
         f'Blood Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
