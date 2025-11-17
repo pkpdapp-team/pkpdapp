@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+from typing import Optional
 import myokit
 from pkpdapp.models import DerivedVariable
 import logging
@@ -32,8 +33,8 @@ def add_pk_variable(
     -------
     None
     """
-    type = derived_variable.type
-    if type in pd_model_var_types:
+    var_type = derived_variable.type
+    if var_type in pd_model_var_types:
         return
 
     try:
@@ -45,7 +46,7 @@ def add_pk_variable(
         return
 
     time_var = pk_model.binding("time")
-    add_var = pk_model_var_types.get(type)
+    add_var = pk_model_var_types.get(var_type)
     if add_var is not None:
         add_var(
             myokit_var=myokit_var,
@@ -54,7 +55,7 @@ def add_pk_variable(
         )
     else:
         raise ValueError(
-            f"Unknown derived variable type {type}"
+            f"Unknown derived variable type {var_type}"
         )
 
 
@@ -82,8 +83,8 @@ def add_pd_variable(
     -------
     None
     """
-    type = derived_variable.type
-    if type in pk_model_var_types:
+    var_type = derived_variable.type
+    if var_type in pk_model_var_types:
         return
 
     try:
@@ -96,7 +97,7 @@ def add_pd_variable(
 
     second_var = derived_variable.secondary_variable
 
-    if type in (
+    if var_type in (
         DerivedVariable.Type.MICHAELIS_MENTEN,
         DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
     ):
@@ -111,7 +112,7 @@ def add_pd_variable(
     else:
         myokit_compartment = pkpd_model.add_component("PKNonlinearities")
 
-    add_var = pd_model_var_types.get(type)
+    add_var = pd_model_var_types.get(var_type)
     var = None
     if add_var is not None:
         var = add_var(
@@ -124,7 +125,7 @@ def add_pd_variable(
         )
     else:
         raise ValueError(
-            f"Unknown derived variable type {type}"
+            f"Unknown derived variable type {var_type}"
         )
     if var is not None:
         replace_nonlinearities(myokit_var, var)
@@ -137,6 +138,8 @@ def add_area_under_curve(
 ) -> myokit.Variable:
     """
     Create an AUC variable for the given variable in the Myokit model.
+
+    calc_base_variable_AUC = integral(base_variable) dt
 
     Parameters
     ----------
@@ -173,7 +176,13 @@ def add_receptor_occupancy(
     project,
     **kwargs,
 ) -> myokit.Variable:
-    """Create a Receptor Occupancy variable for the given variable in the Myokit model.
+    """
+    Create a Receptor Occupancy variable for the given variable in the Myokit model.
+
+    calc_base_variable_RO = 100 * (b - sqrt(b^2 - c)) / (2 * CT1_0_ud)
+    where
+    b = KD_ud + CT1_0_ud + base_variable
+    c = 4 * CT1_0_ud * base_variable
 
     Parameters
     ----------
@@ -275,6 +284,9 @@ def add_fraction_unbound_plasma(
     """
     Create a Fraction Unbound Plasma variable for the given variable
     in the Myokit model.
+
+    calc_base_variable_f = base_variable * FUP_ud
+
     Parameters
     ----------
     myokit_var
@@ -320,7 +332,11 @@ def add_blood_plasma_ratio(
     project,
     **kwargs,
 ) -> myokit.Variable:
-    """Create a Blood Plasma Ratio variable for the given variable in the Myokit model.
+    """
+    Create a Blood Plasma Ratio variable for the given variable in the Myokit model.
+
+    calc_base_variable_BPR = base_variable * BPR_ud
+
     Parameters
     ----------
     myokit_var
@@ -366,7 +382,9 @@ def add_tlag(
     time_var: myokit.Variable,
     **kwargs,
 ) -> myokit.Variable:
-    """Create a TLAG variable for the given variable in the Myokit model.
+    """
+    Create a TLAG variable for the given variable in the Myokit model.
+
     Parameters
     ----------
     myokit_var
@@ -400,7 +418,13 @@ def add_michaelis_menten(
     pk_model: myokit.Model,
     **kwargs,
 ) -> myokit.Variable:
-    """Create a Michaelis Menten variable for the given variable in the Myokit model.
+    """
+    Create a Michaelis Menten variable for the given variable in the Myokit model.
+
+    base_variable_secondary_variable_MM = [
+        base_variable * 1/(1+[secondary_variable/Km_X])
+    ]
+
     Parameters
     ----------
     myokit_var
@@ -473,6 +497,11 @@ def add_extended_michaelis_menten(
     """
     Create an Extended Michaelis Menten variable for the given variable
     in the Myokit model.
+
+    base_variable_secondary_variable_eMM = [
+        base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin
+    ]
+
     Parameters
     ----------
     myokit_var
@@ -576,8 +605,12 @@ def add_emax(
     myokit_compartment: myokit.Component,
     project,
     **kwargs,
-) -> myokit.Variable:
-    """Create an Emax variable for the given variable in the Myokit model.
+) -> Optional[myokit.Variable]:
+    """
+    Create an Emax variable for the given variable in the Myokit model.
+
+    base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin
+
     Parameters
     ----------
     myokit_var
@@ -589,8 +622,8 @@ def add_emax(
 
     Returns
     -------
-    myokit.Variable
-        The created Emax variable.
+    Optional[myokit.Variable]
+        The created Emax variable or None if the project has no dose protocols.
     """
     var_name = myokit_var.name()
     # base_variable_Emax = base_variable * C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL) + Xmin  # noqa: E501
@@ -603,7 +636,7 @@ def add_emax(
             first_dose_value = dose.amount
             first_dose_unit = protocol.amount_unit.get_myokit_unit()
     if first_dose_value is None:
-        return
+        return None
     emax_var_name = f"{var_name}_Emax"
     d50_var_name = f"D50_{var_name}"
     hll_var_name = f"hll_{var_name}"
@@ -683,8 +716,14 @@ def add_imax(
     myokit_compartment: myokit.Component,
     project,
     **kwargs,
-) -> myokit.Variable:
-    """Create an Imax variable for the given variable in the Myokit model.
+) -> Optional[myokit.Variable]:
+    """
+    Create an Imax variable for the given variable in the Myokit model.
+
+    base_variable_Imax = base_variable * [
+        1 - C_Drug**h_CL/(C_Drug**h_CL + D50**h_CL)
+    ] + Xmin
+
     Parameters
     ----------
     myokit_var
@@ -696,8 +735,8 @@ def add_imax(
 
     Returns
     -------
-    myokit.Variable
-        The created Imax variable.
+    Optional[myokit.Variable]
+        The created Imax variable or None if the project has no dose protocols.
     """
     var_name = myokit_var.name()
     # base_variable_Imax = base_variable * [1-C_Drug**h_CL/(C_Drug**h_CL+D50**h_CL)] + Xmin  # noqa: E501
@@ -710,7 +749,7 @@ def add_imax(
             first_dose_value = dose.amount
             first_dose_unit = protocol.amount_unit.get_myokit_unit()
     if first_dose_value is None:
-        return
+        return None
     imax_var_name = f"{var_name}_Imax"
     d50_var_name = f"D50_{var_name}"
     hll_var_name = f"hll_{var_name}"
@@ -794,8 +833,12 @@ def add_power(
     project,
     is_negative: bool = False,
     **kwargs,
-) -> myokit.Variable:
-    """Create a Power variable for the given variable in the Myokit model.
+) -> Optional[myokit.Variable]:
+    """
+    Create a Power variable for the given variable in the Myokit model.
+
+    base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
+
     Parameters
     ----------
     myokit_var
@@ -809,8 +852,8 @@ def add_power(
 
     Returns
     -------
-    myokit.Variable
-        The created Power variable.
+    Optional[myokit.Variable]
+        The created Power variable or None if the project has no dose protocols.
     """
     var_name = myokit_var.name()
     # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
@@ -823,7 +866,7 @@ def add_power(
             first_dose_value = dose.amount
             first_dose_unit = protocol.amount_unit.get_myokit_unit()
     if first_dose_value is None:
-        return
+        return None
 
     power_var_name = f"{var_name}_Power"
     ref_d_var_name = f"Ref_D_{var_name}"
@@ -886,7 +929,26 @@ def add_negative_power(
     myokit_compartment: myokit.Component,
     project,
     **kwargs,
-) -> myokit.Variable:
+) -> Optional[myokit.Variable]:
+    """
+    Create a Negative Power variable for the given variable in the Myokit model.
+
+    base_variable_NPW = base_variable * (C_Drug/Ref_D)**(-a_D)
+
+    Parameters
+    ----------
+    myokit_var
+        Variable to create Negative Power for.
+    myokit_compartment
+        Myokit compartment to add the Negative Power variable to.
+    project
+        Project instance containing protocol information.
+
+    Returns
+    -------
+    Optional[myokit.Variable]
+        The created Negative Power variable, or None if creation failed.
+    """
     return add_power(
         myokit_var=myokit_var,
         myokit_compartment=myokit_compartment,
@@ -896,11 +958,31 @@ def add_negative_power(
 
 
 def add_exp_decay(
-        myokit_var: myokit.Variable,
-        myokit_compartment: myokit.Component,
-        time_var: myokit.Variable,
-        **kwargs,
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    time_var: myokit.Variable,
+    **kwargs,
 ) -> myokit.Variable:
+    """
+    Create an Exponential Decay variable for the given variable in the Myokit model.
+
+    base_variable_TDI = base_variable_TDI = base_variable * exp(-k_X*time) + Xmin
+    where k_X is the decay rate and Xmin is the minimum value.
+
+    Parameters
+    ----------
+    myokit_var
+        Variable to create Exponential Decay for.
+    myokit_compartment
+        Myokit compartment to add the Exponential Decay variable to.
+    time_var
+        Time variable.
+
+    Returns
+    -------
+    myokit.Variable
+        The created Exponential Decay variable.
+    """
     var_name = myokit_var.name()
     # base_variable_TDI = base_variable * exp(-k_X*time) +Xmin
     tdi_var_name = f"{var_name}_TDI"
@@ -956,6 +1038,26 @@ def add_exp_increase(
     time_var: myokit.Variable,
     **kwargs,
 ) -> myokit.Variable:
+    """
+    Create an Exponential Increase variable for the given variable in the Myokit model.
+
+    base_variable_IND = base_variable * [1-exp(-k_X*time)] + Xmin
+    where k_X is the increase rate and Xmin is the minimum value.
+
+    Parameters
+    ----------
+    myokit_var
+        Variable to create Exponential Increase for.
+    myokit_compartment
+        Myokit compartment to add the Exponential Increase variable to.
+    time_var
+        Time variable.
+
+    Returns
+    -------
+    myokit.Variable
+        The created Exponential Increase variable.
+    """
     var_name = myokit_var.name()
     # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
     ind_var_name = f"{var_name}_IND"

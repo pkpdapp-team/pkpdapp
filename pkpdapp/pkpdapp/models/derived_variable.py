@@ -34,7 +34,7 @@ class DerivedVariable(StoredModel):
     class Type(models.TextChoices):
         AREA_UNDER_CURVE = "AUC", "area under curve"
         RECEPTOR_OCCUPANCY = "RO", "receptor occupancy"
-        FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
+        FRACTION_UNBOUND_PLASMA = "FUP", "fraction unbound plasma"
         BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
         TLAG = "TLG", "dosing lag time"
         MICHAELIS_MENTEN = "MM", "Michaelis-Menten"
