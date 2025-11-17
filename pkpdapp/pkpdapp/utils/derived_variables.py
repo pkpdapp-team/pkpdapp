@@ -447,15 +447,10 @@ def add_michaelis_menten(
     myokit_second_var = pk_model.get(second_var.qname)
     mm_var_name = f"{var_name}_{second_var_name}_MM"
     km_var_name = f"Km_{var_name}"
-    new_names = [mm_var_name, km_var_name]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(mm_var_name):
         return myokit_compartment.get(mm_var_name)
+
     km_var = myokit_compartment.add_variable(km_var_name)
     km_var.meta["desc"] = (
         f"Michaelis Menten constant for {var_name} and {second_var_name}"
@@ -526,20 +521,10 @@ def add_extended_michaelis_menten(
     km_var_name = f"Km_{var_name}"
     hll_var_name = f"hll_{var_name}"
     lin_var_name = f"{var_name}_min"
-    new_names = [
-        emm_var_name,
-        km_var_name,
-        hll_var_name,
-        lin_var_name,
-    ]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(emm_var_name):
         return myokit_compartment.get(emm_var_name)
+
     km_var = myokit_compartment.add_variable(km_var_name)
     km_var.meta["desc"] = (
         f"Michaelis Menten constant for {var_name} and {second_var_name}"
@@ -641,19 +626,8 @@ def add_emax(
     d50_var_name = f"D50_{var_name}"
     hll_var_name = f"hll_{var_name}"
     min_var_name = f"{var_name}_min"
-    new_names = [
-        emax_var_name,
-        d50_var_name,
-        hll_var_name,
-        min_var_name,
-    ]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(emax_var_name):
         return myokit_compartment.get(emax_var_name)
     d50_var = myokit_compartment.add_variable(d50_var_name)
     d50_var.meta["desc"] = f"Emax D50 for {var_name}"
@@ -754,19 +728,8 @@ def add_imax(
     d50_var_name = f"D50_{var_name}"
     hll_var_name = f"hll_{var_name}"
     min_var_name = f"{var_name}_min"
-    new_names = [
-        imax_var_name,
-        d50_var_name,
-        hll_var_name,
-        min_var_name,
-    ]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(imax_var_name):
         return myokit_compartment.get(imax_var_name)
     d50_var = myokit_compartment.add_variable(d50_var_name)
     d50_var.meta["desc"] = f"Imax D50 for {var_name}"
@@ -871,18 +834,8 @@ def add_power(
     power_var_name = f"{var_name}_Power"
     ref_d_var_name = f"Ref_D_{var_name}"
     a_d_var_name = f"a_D_{var_name}"
-    new_names = [
-        power_var_name,
-        ref_d_var_name,
-        a_d_var_name,
-    ]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(power_var_name):
         return myokit_compartment.get(power_var_name)
     ref_d_var = myokit_compartment.add_variable(ref_d_var_name)
     ref_d_var.meta["desc"] = f"Power Reference for {var_name}"
@@ -988,14 +941,8 @@ def add_exp_decay(
     tdi_var_name = f"{var_name}_TDI"
     k_var_name = f"k_{var_name}"
     min_var_name = f"{var_name}_min"
-    new_names = [tdi_var_name, k_var_name, min_var_name]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )  # noqa: E501
-    if has_name:
+
+    if myokit_compartment.has_variable(tdi_var_name):
         return myokit_compartment.get(tdi_var_name)
 
     k_var = myokit_compartment.add_variable(k_var_name)
@@ -1063,14 +1010,8 @@ def add_exp_increase(
     ind_var_name = f"{var_name}_IND"
     k_var_name = f"k_{var_name}"
     min_var_name = f"{var_name}_min"
-    new_names = [ind_var_name, k_var_name, min_var_name]
-    has_name = any(
-        [
-            myokit_compartment.has_variable(new_name)
-            for new_name in new_names
-        ]
-    )
-    if has_name:
+
+    if myokit_compartment.has_variable(ind_var_name):
         return myokit_compartment.get(ind_var_name)
 
     k_var = myokit_compartment.add_variable(k_var_name)
