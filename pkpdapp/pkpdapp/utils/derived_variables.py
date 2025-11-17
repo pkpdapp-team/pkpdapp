@@ -313,11 +313,14 @@ def add_fraction_unbound_plasma(
     f_var.meta["desc"] = (
         f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
     )
-    fup = myokit_compartment.add_variable(fup_var_name)
-    fup.meta["desc"] = "User-defined Fraction Unbound Plasma"  # noqa: E501
     f_var.set_unit(myokit_var.unit())
-    fup.set_rhs(compound.fraction_unbound_plasma)
-    fup.set_unit(myokit.units.dimensionless)
+    if myokit_compartment.has_variable(fup_var_name):
+        fup = myokit_compartment.get(fup_var_name)
+    else:
+        fup = myokit_compartment.add_variable(fup_var_name)
+        fup.meta["desc"] = "User-defined Fraction Unbound Plasma"  # noqa: E501
+        fup.set_rhs(compound.fraction_unbound_plasma)
+        fup.set_unit(myokit.units.dimensionless)
     f_var.set_rhs(myokit.Multiply(myokit.Name(fup), myokit.Name(myokit_var)))
     return f_var
 
@@ -358,11 +361,14 @@ def add_blood_plasma_ratio(
     bl_var.meta["desc"] = (
         f'Blood Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
     )
-    bpr = myokit_compartment.add_variable(bpr_var_name)
-    bpr.meta["desc"] = "User-defined Blood to Plasma Ratio"  # noqa: E501
     bl_var.set_unit(myokit_var.unit())
-    bpr.set_rhs(compound.blood_to_plasma_ratio)
-    bpr.set_unit(myokit.units.dimensionless)
+    if myokit_compartment.has_variable(bpr_var_name):
+        bpr = myokit_compartment.get(bpr_var_name)
+    else:
+        bpr = myokit_compartment.add_variable(bpr_var_name)
+        bpr.meta["desc"] = "User-defined Blood to Plasma Ratio"  # noqa: E501
+        bpr.set_rhs(compound.blood_to_plasma_ratio)
+        bpr.set_unit(myokit.units.dimensionless)
     bl_var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))
     return bl_var
 
