@@ -1,4 +1,4 @@
-import { Field } from "./LoadData";
+import { Field, Row } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
 
 const normalisation = {
@@ -342,4 +342,34 @@ export function normaliseHeader(header: string): [Field, string] {
     }
   }
   return [header, "Ignore"];
+}
+
+/**
+ * Extract a list of unique field names from all rows in a CSV dataset.
+ * @param data CSV dataset
+ * @returns Array of field names
+ */
+export function csvFieldsFromData(data: Row[]): string[] {
+  const fieldSet = new Set<string>(data.map((row) => Object.keys(row)).flat());
+  return Array.from(fieldSet);
+}
+
+/**
+ * Generate a new normalised fields mapping based on the provided data and existing normalised fields.
+ * @param data CSV dataset
+ * @param normalisedFields Current normalised fields mapping
+ * @returns Updated normalised fields mapping
+ */
+export function normalisedFieldsFromData(
+  data: Row[],
+  normalisedFields: Map<string, string>,
+): Map<string, string> {
+  const fields = csvFieldsFromData(data);
+  return new Map(
+    fields.map((field) =>
+      normalisedFields.has(field)
+        ? [field, normalisedFields.get(field)]
+        : normaliseHeader(field),
+    ),
+  ) as Map<string, string>;
 }
