@@ -1,5 +1,5 @@
 import { StepperState } from "./LoadDataStepper";
-import { normaliseHeader } from "./dataValidation";
+import { normalisedFieldsFromData } from "./dataValidation";
 import { Row } from "./LoadData";
 
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";
@@ -39,7 +39,7 @@ function mergeObservationColumns(
 
 export default function useObservationRows(state: StepperState, tab: string) {
   const fields = state.fields;
-  let normalisedFields = state.normalisedFields;
+  const { normalisedFields } = state;
   const observationFields =
     fields.filter((field) => normalisedFields.get(field) === "Observation") ||
     [];
@@ -52,23 +52,22 @@ export default function useObservationRows(state: StepperState, tab: string) {
     rows = mergeObservationColumns(state, observationFields);
     observationField = "Observation";
     observationIdField = "Observation ID";
-    const mergedFields = Object.keys(rows[0]);
-    normalisedFields = new Map(
-      mergedFields.map((field) =>
-        state.normalisedFields.has(field)
-          ? [field, state.normalisedFields.get(field)]
-          : normaliseHeader(field),
-      ),
-    ) as Map<string, string>;
-    normalisedFields.set("Observation", "Observation");
-    normalisedFields.set("Observation ID", "Observation ID");
-    state.normalisedFields = normalisedFields;
+    const newNormalisedFields = normalisedFieldsFromData(
+      rows,
+      state.normalisedFields,
+    );
+    newNormalisedFields.set("Observation", "Observation");
+    newNormalisedFields.set("Observation ID", "Observation ID");
+    state.normalisedFields = newNormalisedFields;
     state.data = rows;
   }
   const observationRows = observationField
     ? rows.filter(
-      (row) => row["Group ID"] === tab && observationField in row && row[observationField] !== ".",
-    )
+        (row) =>
+          row["Group ID"] === tab &&
+          observationField in row &&
+          row[observationField] !== ".",
+      )
     : [];
   const observationIds = observationIdField
     ? observationRows.map((row) => row[observationIdField || "Observation ID"])
