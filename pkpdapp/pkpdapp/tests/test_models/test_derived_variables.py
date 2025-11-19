@@ -79,7 +79,7 @@ class TestDerivedVariables(TestCase):
             "PDCompartment.C_Drug * (1 / (1 + PKCompartment.C1 / PKNonlinearities.Km_C_Drug))",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_C1_MM^PDCompartment.HC / (PKNonlinearities.C_Drug_C1_MM^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -114,7 +114,7 @@ class TestDerivedVariables(TestCase):
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 / (1 + (if(PKCompartment.C1 >= 0, PKCompartment.C1, 0) / PKNonlinearities.Km_C_Drug)^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_C1_eMM^PDCompartment.HC / (PKNonlinearities.C_Drug_C1_eMM^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -147,7 +147,7 @@ class TestDerivedVariables(TestCase):
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug / (PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_Emax^PDCompartment.HC / (PKNonlinearities.C_Drug_Emax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -178,7 +178,7 @@ class TestDerivedVariables(TestCase):
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 - PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug / (PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_Imax^PDCompartment.HC / (PKNonlinearities.C_Drug_Imax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -209,7 +209,7 @@ class TestDerivedVariables(TestCase):
             "PDCompartment.C_Drug * (PKNonlinearities.C_Drug / PKNonlinearities.Ref_D_C_Drug)^PKNonlinearities.a_D_C_Drug",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_Power^PDCompartment.HC / (PKNonlinearities.C_Drug_Power^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -238,7 +238,7 @@ class TestDerivedVariables(TestCase):
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * exp(-(PKNonlinearities.k_C_Drug * environment.t)) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_TDI^PDCompartment.HC / (PKNonlinearities.C_Drug_TDI^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
@@ -268,7 +268,7 @@ class TestDerivedVariables(TestCase):
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 - exp(-(PKNonlinearities.k_C_Drug * environment.t))) + PKNonlinearities.C_Drug_min",  # noqa E501
         )
         self.assertEqual(
-            str(myokit_model.get("PDCompartment.STIM").rhs()),
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_IND^PDCompartment.HC / (PKNonlinearities.C_Drug_IND^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 

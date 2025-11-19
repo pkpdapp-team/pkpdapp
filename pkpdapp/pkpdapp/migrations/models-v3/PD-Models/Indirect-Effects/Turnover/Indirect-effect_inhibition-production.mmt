@@ -31,8 +31,11 @@ HC = 1 in [dimensionless]
 C_Drug = 1 in [pmol/L]	
 	desc: Drug concentration causing the PD effect 
  
-INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
-	desc: Extent of inhibition
+PDO = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Pharmacodynamic occupancy
 
-dot(E) = kdegE*(E0*(1-Imax*INH)-E) in [dimensionless]
+INH = Imax*PDO in [dimensionless]
+	desc: PD inhibition
+
+dot(E) = kdegE*(E0*(1-Imax*PDO)-E) in [dimensionless]
 	desc: PD effect

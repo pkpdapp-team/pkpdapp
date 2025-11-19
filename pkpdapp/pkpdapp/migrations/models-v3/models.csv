@@ -55,3 +55,9 @@ PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_conc-prop-kill
 PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_Emax-kill.mmt;Tumor-Inhibition;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 PD-Models/Indirect-Effects/TGI/Inhibition/TGI_signal-distribution_econc-prop-kill.mmt;Tumor-Inhibition;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 PD-Models/Indirect-Effects/Indirect-effect_degrader.mmt;PD-Model;0;0;0;0;0;0;0;0;0;0;0;1;0;0
+PK-Models/Disposition/TMDD/1-compartmental-bispecific-TMDD-model_soluble.mmt;PK-Model;1;0;0;0;1;0;0;1;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-bispecific-TMDD-model_soluble.mmt;PK-Model;0;1;0;0;1;0;0;1;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/1-compartmental-full-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;1;0;0;0;1;0;0;0;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/1-compartmental-QSS-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;1;0;0;0;1;1;0;0;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-QSS-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;0;1;0;0;1;1;0;0;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-full-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;0;1;0;0;1;0;0;0;1;0;0;0;0;0

@@ -66,6 +66,7 @@ def load_pkpd_models(apps, schema_editor):
                 else:
                     model_type = "TGI"
             mmt_filename = f"pkpdapp/migrations/models-v3/{filename}"
+            print("parsing model file", mmt_filename)
             mmt_string = open(mmt_filename, "r").read()
             myokit_model = myokit.parse(mmt_string)[0]
             myokit_model.validate()

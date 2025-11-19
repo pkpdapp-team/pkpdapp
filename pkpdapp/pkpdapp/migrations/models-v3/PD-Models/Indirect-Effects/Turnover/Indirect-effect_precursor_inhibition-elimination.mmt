@@ -41,11 +41,14 @@ C_Drug = 1 in [pmol/L]
 P0 = E0*kdegE/(kdegP*FE) in [dimensionless]
 	desc: Baseline of precursor	
 
-INH = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
-	desc: Extent of inhibition
+PDO = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
+	desc: Pharmacodynamic occupancy
 
-dot(P) = kdegP*P0 - kdegP*P*(FE*(1-Imax*INH) + (1-FE)) in [dimensionless]
+INH = Imax*PDO in [dimensionless]
+	desc: PD inhibition
+
+dot(P) = kdegP*P0 - kdegP*P*(FE*(1-Imax*PDO) + (1-FE)) in [dimensionless]
 	desc: Precursor
 
-dot(E) = kdegP*P*(FE*(1-Imax*INH)) - kdegE*E in [dimensionless]
+dot(E) = kdegP*P*(FE*(1-Imax*PDO)) - kdegE*E in [dimensionless]
 	desc: PD effect
