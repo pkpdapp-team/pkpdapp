@@ -7,7 +7,7 @@ import {
   UnitRead,
 } from "../../app/backendApi";
 
-type Row = { [key: string]: string | number | null | undefined };
+type Row = { [key: string]: string | number | boolean | null | undefined };
 type Data = Row[];
 type SubjectBiomarker = {
   subjectId: number;
@@ -33,6 +33,7 @@ const HEADERS: string[] = [
   "Administration ID",
   "Amount",
   "Amount Unit",
+  "Per Body Weight(kg)",
   "Amount Variable",
   "Infusion Duration",
   "Interdose Interval",
@@ -50,11 +51,13 @@ function parseDosingRow(
   const timeUnit =
     units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
   const qname = protocol.mapped_qname;
+  const perKg = protocol.amount_per_body_weight;
   return protocol.doses.map((dose) => ({
     "Administration ID": adminId,
     Group: groupId,
     Amount: dose.amount.toString(),
     "Amount Unit": amountUnit,
+    "Per Body Weight(kg)": perKg ? "1" : "0",
     Time: dose.start_time.toString(),
     "Time Unit": timeUnit,
     "Infusion Duration": dose.duration,

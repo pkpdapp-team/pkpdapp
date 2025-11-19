@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import SubjectGroupForm from "./SubjectGroupForm";
+import { parsePerKgDoses } from "./dataValidation";
 
 type SubjectGroup = {
   id: string;
@@ -14,25 +15,29 @@ interface IProtocolDataGrid {
   state: StepperState;
 }
 
-const ROW_COLS = ["Administration Name", "Amount", "Amount Unit"];
+const ROW_COLS = new Set([
+  "Administration Name",
+  "Amount",
+  "Amount Unit",
+  "Per Body Weight(kg)",
+]);
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
+  const { data = [], normalisedFields = new Map() } = parsePerKgDoses(state);
+  const fields = Array.from(normalisedFields.keys());
   const [selected, setSelected] = useState<GridRowSelectionModel>({
     type: "include",
     ids: new Set(),
   });
-  const idField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "ID",
-  );
+  const idField = fields.find((field) => normalisedFields.get(field) === "ID");
   const { subjects } = group;
-  const outputColumns = state.fields.filter((field) =>
-    ROW_COLS.includes(state.normalisedFields.get(field) || ""),
+  const outputColumns = fields.filter((field) =>
+    ROW_COLS.has(normalisedFields.get(field)),
   );
   const amountField =
-    state.fields.find(
-      (field) => state.normalisedFields.get(field) === "Amount",
-    ) || "Amount";
-  const dosingRows = state.data.filter((row) => row[amountField] !== ".");
+    fields.find((field) => normalisedFields.get(field) === "Amount") ||
+    "Amount";
+  const dosingRows = data.filter((row) => row[amountField] !== ".");
   const subjectRows = subjects
     .map((subject) => {
       const row = dosingRows.find((row) => idField && row[idField] === subject);

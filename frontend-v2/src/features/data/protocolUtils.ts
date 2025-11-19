@@ -1,9 +1,11 @@
 import { StepperState } from "./LoadDataStepper";
+import { parsePerKgDoses } from "./dataValidation";
 
 export interface IDose {
   subject: string;
   amount: number;
   amountUnit?: string;
+  perBodyWeight?: string;
   label: string;
   route?: string;
   time?: number;
@@ -37,16 +39,23 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
   const routeField = state.fields.find(
     (field) => field.toLowerCase() === "route",
   );
-  const subjectIds = state.data.map((row) => idField && row[idField]);
+  const { data: perKgData = [], normalisedFields = new Map() } =
+    parsePerKgDoses(state);
+  const subjectIds = perKgData.map((row) => idField && row[idField]);
+  const perKgFields = Array.from(normalisedFields.keys());
+  const perBodyWeightField = perKgFields.find(
+    (field) => normalisedFields.get(field) === "Per Body Weight(kg)",
+  );
   const uniqueSubjectIds = [...new Set(subjectIds)];
   const subjectDoses = uniqueSubjectIds.map((subjectId) => {
-    const subjectRows = state.data.filter(
+    const subjectRows = perKgData.filter(
       (row) => idField && row[idField] === subjectId,
     );
     return subjectRows
       .map((row) => {
         const amount = amountField && +row[amountField];
         const amountUnit = amountUnitField && row[amountUnitField];
+        const perBodyWeight = perBodyWeightField && row[perBodyWeightField];
         const time = timeField && +row[timeField];
         const timeUnit = timeUnitField && row[timeUnitField];
         const route = routeField ? row[routeField] : "";
@@ -54,6 +63,7 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
           subject: subjectId || "",
           amount: amount || 0,
           amountUnit,
+          perBodyWeight,
           label: `Dose: ${amount} ${route}`,
           route,
           time: time || 0,

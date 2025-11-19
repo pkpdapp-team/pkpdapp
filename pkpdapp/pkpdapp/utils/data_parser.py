@@ -32,6 +32,10 @@ class DataParser:
             "amount_unit", "units_amt", "unit_amount", "unit amount",
             "dose unit", "dose_unit", "unit dose", "unit_dose"
         ],
+        "PER_BODY_WEIGHT_KG": [
+            "per body weight(kg)", "per body weight", "per_body_weight",
+            "per kg", "per_kg",
+        ],
         "AMOUNT_VARIABLE": [
             "amount variable", "amount_variable", "amount_var",
             "amt_var", "amtvar", "amt_variable"
@@ -88,6 +92,7 @@ class DataParser:
         "ADMINISTRATION_ID",
         "ADMINISTRATION_NAME",
         "AMOUNT_UNIT",
+        "PER_BODY_WEIGHT_KG",
         "AMOUNT_VARIABLE",
         "OBSERVATION_UNIT",
         "OBSERVATION_NAME",
@@ -238,6 +243,10 @@ class DataParser:
                     else:
                         return x
                 data[unit_col] = data[unit_col].map(convert_percent_to_dim)
+
+        # put in default per body weight flag if not present
+        if "PER_BODY_WEIGHT_KG" not in found_cols:
+            data["PER_BODY_WEIGHT_KG"] = 0.0
 
         # check that time is set for all rows
         if pd.to_numeric(data["TIME"], errors='coerce').isna().any():

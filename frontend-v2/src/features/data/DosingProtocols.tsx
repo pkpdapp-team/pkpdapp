@@ -13,6 +13,7 @@ import {
   Typography,
   SelectChangeEvent,
   TableContainer,
+  Checkbox,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { UnitRead, VariableRead } from "../../app/backendApi";
@@ -62,12 +63,13 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const groupIdField = findFieldByType("Group ID", state);
   const addlDosesField = findFieldByType("Additional Doses", state);
   const interDoseField = findFieldByType("Interdose Interval", state);
+  const perKgField = findFieldByType("Per Body Weight(kg)", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
-      (row) =>
-        (row[amountField] && row[amountField] !== ".") ||
-        parseInt(row[administrationIdField]),
-    )
+        (row) =>
+          (row[amountField] && row[amountField] !== ".") ||
+          parseInt(row[administrationIdField]),
+      )
     : state.data.filter((row) => parseInt(row[administrationIdField]));
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -89,7 +91,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       variable.constant === false &&
       variableUnit?.symbol !== "" &&
       amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-      undefined
+        undefined
     );
   };
   const modelAmounts = variables?.filter(isAmount) || [];
@@ -136,6 +138,20 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     state.warnings = warnings;
   };
 
+  const handlePerBodyWeightChange =
+    (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextData = [...state.data];
+      const { checked } = event.target;
+      nextData
+        .filter((row) =>
+          administrationIdField ? row[administrationIdField] === id : true,
+        )
+        .forEach((row) => {
+          row[perKgField] = checked ? "1" : "0";
+        });
+      state.data = nextData;
+    };
+
   return (
     <Box component="div">
       <TableHeader
@@ -172,6 +188,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 <Typography>Amount Unit</Typography>
               </TableCell>
               <TableCell>
+                <Typography>Per Body Weight(kg)</Typography>
+              </TableCell>
+              <TableCell>
                 <Typography>Time</Typography>
               </TableCell>
               <TableCell>
@@ -204,6 +223,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 amountUnitField && currentRow && currentRow[amountUnitField];
               const amount = currentRow?.[amountField];
               const time = currentRow?.[timeField];
+              const isPerKg = currentRow?.[perKgField] === "1";
               const displayedUnit = compatibleUnits?.find(
                 (unit) => unit.symbol === adminUnit,
               )
@@ -271,6 +291,13 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         ))}
                       </Select>
                     </FormControl>
+                  </TableCell>
+                  <TableCell>
+                    <Checkbox
+                      name={"amount_per_body_weight"}
+                      onChange={handlePerBodyWeightChange(adminId)}
+                      checked={isPerKg}
+                    />
                   </TableCell>
                   <TableCell sx={{ width: "5rem" }}>
                     <Typography>{time}</Typography>

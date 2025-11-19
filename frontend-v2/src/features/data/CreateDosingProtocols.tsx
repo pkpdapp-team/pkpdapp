@@ -1,6 +1,7 @@
 import { ChangeEvent, FC } from "react";
 import {
   Box,
+  Checkbox,
   Select,
   FormControl,
   MenuItem,
@@ -75,13 +76,13 @@ function createDosingRows(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
-  amountUnit?: UnitRead,
 ) {
   const idField = findFieldByType("ID", state);
   const timeField = findFieldByType("Time", state);
   const timeUnitField = findFieldByType("Time Unit", state);
   const amountField = findFieldByType("Amount", state);
   const amountUnitField = findFieldByType("Amount Unit", state);
+  const perKgField = findFieldByType("Per Body Weight(kg)", state);
   const covariateFields = state.fields.filter(
     (field) => state.normalisedFields.get(field) === "Cat Covariate",
   );
@@ -100,7 +101,8 @@ function createDosingRows(
         [idField]: id,
         [administrationIdField]: adminId.toString(),
         "Amount Variable": compartment,
-        [amountUnitField]: amountUnit?.symbol === "pmol" ? "mg" : "mg/kg",
+        [amountUnitField]: "mg",
+        [perKgField]: "0",
         [amountField]: "0",
         [timeField]: "0",
         [timeUnitField]: timeUnit,
@@ -124,6 +126,7 @@ function createDosingRows(
     ...state.normalisedFields.entries(),
     ["Amount Variable", "Amount Variable"],
     ["Amount Unit", "Amount Unit"],
+    ["Per Body Weight(kg)", "Per Body Weight(kg)"],
     ["Infusion Duration", "Infusion Duration"],
     ["Additional Doses", "Additional Doses"],
     ["Interdose Interval", "Interdose Interval"],
@@ -168,7 +171,6 @@ const NumericTableCell: FC<NumericTableCellProps> = ({
 interface IDosingProtocols {
   administrationIdField: string;
   amountUnitField?: string;
-  amountUnit?: UnitRead;
   dosingCompartments?: string[];
   state: StepperState;
   units: UnitRead[];
@@ -181,7 +183,6 @@ interface IDosingProtocols {
 
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
   administrationIdField,
-  amountUnit,
   dosingCompartments = [],
   state,
   units,
@@ -195,17 +196,13 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   const amountUnitField = findFieldByType("Amount Unit", state);
   const timeField = findFieldByType("Time", state);
   const groupIdField = findFieldByType("Group ID", state);
+  const perKgField = findFieldByType("Per Body Weight(kg)", state);
   // ignore rows with no amount and administration ID set to 0.
   let dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
   );
   if (!dosingRows.length) {
-    createDosingRows(
-      state,
-      administrationIdField,
-      dosingCompartments,
-      amountUnit,
-    );
+    createDosingRows(state, administrationIdField, dosingCompartments);
   }
   if (!amountField) {
     const newNormalisedFields = new Map([
@@ -240,6 +237,20 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
         )
         .forEach((row) => {
           row[field] = value;
+        });
+      state.data = nextData;
+    };
+
+  const handlePerBodyWeightChange =
+    (id: string) => (event: ChangeEvent<HTMLInputElement>) => {
+      const nextData = [...state.data];
+      const { checked } = event.target;
+      nextData
+        .filter(
+          (row) => row[administrationIdField] === id && row["Amount"] !== ".",
+        )
+        .forEach((row) => {
+          row[perKgField] = checked ? "1" : "0";
         });
       state.data = nextData;
     };
@@ -286,6 +297,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 <Typography>Amount Unit</Typography>
               </TableCell>
               <TableCell>
+                <Typography>Per Body Weight(kg)</Typography>
+              </TableCell>
+              <TableCell>
                 <Typography>Time</Typography>
               </TableCell>
               <TableCell>
@@ -323,10 +337,10 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                 const compatibleUnits = units?.find(
                   (unit) => unit.id === selectedVariable?.unit,
                 )?.compatible_units;
-                const defaultAmountUnit =
-                  amountUnit?.symbol === "pmol" ? "mg" : "mg/kg";
+                const defaultAmountUnit = "mg";
                 const selectedAmountUnit =
                   currentRow?.[amountUnitField] || defaultAmountUnit;
+                const isPerKg = currentRow?.[perKgField] === "1";
                 return (
                   <TableRow key={adminId}>
                     <TableCell sx={{ width: "5rem" }}>
@@ -371,6 +385,13 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                           ))}
                         </Select>
                       </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        name={"amount_per_body_weight"}
+                        checked={isPerKg}
+                        onChange={handlePerBodyWeightChange(adminId)}
+                      />
                     </TableCell>
                     <NumericTableCell
                       id={`input-time-${adminId}`}

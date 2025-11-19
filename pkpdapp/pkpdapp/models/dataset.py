@@ -128,7 +128,8 @@ class Dataset(models.Model):
                 "GROUP_ID",
                 "ADMINISTRATION_NAME",
                 "AMOUNT_UNIT",
-                "AMOUNT_VARIABLE"
+                "AMOUNT_VARIABLE",
+                "PER_BODY_WEIGHT_KG",
             ]]
             .drop_duplicates()
             .iterrows()
@@ -136,6 +137,7 @@ class Dataset(models.Model):
             group_id = row["GROUP_ID"]
             route = row["ADMINISTRATION_NAME"]
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
+            amount_per_body_weight = row["PER_BODY_WEIGHT_KG"] == 1.0
             group = groups[group_id]
             mapped_qname = row["AMOUNT_VARIABLE"]
             if route == "IV":
@@ -150,6 +152,7 @@ class Dataset(models.Model):
                 mapped_qname=mapped_qname,
                 group=group,
                 dataset=self,
+                amount_per_body_weight=amount_per_body_weight,
             )
             group.protocols.add(protocol)
             group.save()
