@@ -1,0 +1,209 @@
+[[model]]
+name: Ocular PKPD bispecific (two different targets) model
+author: Michael Gertz
+
+# tags: no tags
+
+# Initial values:
+PKCompartment.Avh_f = 0
+PKCompartment.AvhT1_f = PKCompartment.CvhT1_0*PKCompartment.Vvh
+PKCompartment.AvhT2_f = PKCompartment.CvhT2_0*PKCompartment.Vvh
+PKCompartment.AvhDT1 = 0
+PKCompartment.AvhDT2 = 0
+PKCompartment.AvhDT1T2 = 0
+PKCompartment.Aah_f = 0
+PKCompartment.AahT1_f = PKCompartment.CvhT1_0*PKCompartment.Vah*PKCompartment.CLdifT1/PKCompartment.Qah
+PKCompartment.AahT2_f = PKCompartment.CvhT2_0*PKCompartment.Vah*PKCompartment.CLdifT2/PKCompartment.Qah
+PKCompartment.AahDT1 = 0
+PKCompartment.AahDT2 = 0
+PKCompartment.AahDT1T2 = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+Vvh = 0.004 in [L]
+	desc: Vitreous humour volume
+	
+Vah = 0.00015 in [L]
+	desc: Aqueous humour volume 	
+
+Qah = 0.00015 in [L/h]
+	desc: Aqueous humour flow 
+
+CvhT1_0 = 1 in [pmol/L]
+	desc: Baseline concentration of target 1 in the vitreous humour
+	
+CvhT2_0 = 1 in [pmol/L]
+	desc: Baseline concentration of target 2 in the vitreous humour	
+	
+CLdif = 0.00002 in [L/h]
+	desc: Apparent clearance due to diffusion from the vitreous to aqueous humour 	
+	
+CLdifT1 = 0.00002 in [L/h]
+	desc: Apparent clearance due to diffusion of T1 from the vitreous to aqueous humour 
+
+CLdifT2 = 0.00002 in [L/h]
+	desc: Apparent clearance due to diffusion of T2 from the vitreous to aqueous humour 
+	
+KD1 = 1 in [pmol/L]
+	desc: Dissociation constant of the interaction with the first target 
+	
+KD2 = 1 in [pmol/L]
+	desc: Dissociation constant of the interaction with the second target	
+
+koff1 = 1 in [1/h]
+	desc: Dissociation rate constant of the first drug-target complex
+	
+koff2 = 1 in [1/h]
+	desc: Dissociation rate constant of the second drug-target complex
+
+kon1 = koff1/KD1 in [1/h*L/pmol]
+	desc: Secondary parameter: association rate constant of the interaction with the first target (2nd order)
+
+kon2 = koff2/KD2 in [1/h*L/pmol]
+	desc: Secondary parameter: association rate constant of the interaction with the second target (2nd order)	
+	
+FAvid = 1 in [dimensionless]
+    desc: Avidity factor (0 = only one target can be bound by the antibody, > 0 but < 1 = reduced binding affinity of 2nd partner, 1 = binding of 2nd partner unaffected by first binding event, > 1 = 2nd partner binds with increased avidity) 	
+
+RateAbs = Qah*Cah_f + Qah/Vah*AahDT1 + Qah/Vah*AahDT2 + Qah/Vah*AahDT1T2 in [pmol/h]
+	desc: Absorption rate
+	
+Cvh_f = Avh_f/Vvh in [pmol/L]
+	desc: Concentration of FREE drug in the vitreous humour
+
+Cvh_b = (AvhDT1 + AvhDT2 + AvhDT1T2)/Vvh in [pmol/L]
+  desc: Concentration of BOUND drug in the vitreous humour compartment (Mw drug)
+	
+Cvh_t = (Avh_f + AvhDT1 + AvhDT2 + AvhDT1T2)/Vvh in [pmol/L]
+  desc: Concentration of TOTAL drug in the vitreous humour compartment (Mw drug)	
+	
+Cah_f = Aah_f/Vah in [pmol/L]
+	desc: Concentration of FREE drug in the aqueous humour
+	
+Cah_b = (AahDT1 + AahDT2 + AahDT1T2)/Vah in [pmol/L]
+  desc: Concentration of BOUND drug in the aqeuous humour compartment (Mw drug)
+	
+Cah_t = (Aah_f + AahDT1 + AahDT2 + AahDT1T2)/Vah in [pmol/L]
+  desc: Concentration of TOTAL drug in the aqeuous humour compartment (Mw drug)		
+	
+CvhT1_f = AvhT1_f/Vvh in [pmol/L]
+	desc: Concentration of FREE target 1 in the vitreous humour
+
+CvhT2_f = AvhT2_f/Vvh in [pmol/L]
+	desc: Concentration of FREE target 2 in the vitreous humour
+	
+CvhT1_b = (AvhDT1 + AvhDT1T2)/Vvh in [pmol/L]	
+  desc: Concentration of BOUND target 1 in the vitreous humour compartment (Mw T1)
+  
+CvhT2_b = (AvhDT2 + AvhDT1T2)/Vvh in [pmol/L]	
+  desc: Concentration of BOUND target 2 in the vitreous humour compartment (Mw T2)
+	
+CvhT1_t = (AvhT1_f + AvhDT1 + AvhDT1T2)/Vvh in [pmol/L]	
+  desc: Concentration of TOTAL target 1 in the vitreous humour compartment (Mw T1)
+  
+CvhT2_t = (AvhT2_f + AvhDT2 + AvhDT1T2)/Vvh in [pmol/L]	
+  desc: Concentration of TOTAL target 2 in the vitreous humour compartment (Mw T2)
+
+CvhDT1T2_b = AvhDT1T2/Vvh in [pmol/L]	
+  desc: Concentration of TERNARY complexe in the vitreous humour compartment (Mw drug)	
+	
+CahT1_f = AahT1_f/Vah in [pmol/L]
+	desc: Concentration of free T1 in the aqueous humour
+
+CahT2_f = AahT2_f/Vah in [pmol/L]
+	desc: Concentration of free T2 in the aqueous humour
+	
+CahT1_b = (AahDT1 + AahDT1T2)/Vah in [pmol/L]	
+  desc: Concentration of BOUND target 1 in the aqeuous humour compartment (Mw T1)
+  
+CahT2_b = (AahDT2 + AahDT1T2)/Vah in [pmol/L]	
+  desc: Concentration of BOUND target 2 in the aqeuous humour compartment (Mw T2)
+	
+CahT1_t = (AahT1_f + AahDT1 + AahDT1T2)/Vah in [pmol/L]	
+  desc: Concentration of TOTAL target 1 in the aqeuous humour compartment (Mw T1)
+  
+CahT2_t = (AahT2_f + AahDT2 + AahDT1T2)/Vah in [pmol/L]	
+  desc: Concentration of TOTAL target 2 in the aqeuous humour compartment (Mw T2)
+
+CahDT1T2_b = AahDT1T2/Vah in [pmol/L]	
+  desc: Concentration of TERNARY complexe in the aqeuous humour compartment (Mw drug)	
+  
+
+ROvh_T1_Model = CvhT1_b/CvhT1_t*100 in [dimensionless]
+  desc: Receptor (Target 1) occupancy in vitreous humour
+  
+ROvh_T2_Model = CvhT2_b/CvhT2_t*100 in [dimensionless]
+  desc: Receptor (Target 2) occupancy in vitreous humour
+	
+PerInhvhT1 = (1-CvhT1_f/CvhT1_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 1 in vitreous humour
+  
+PerInhvhT2 = (1-CvhT2_f/CvhT2_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 2 in vitreous humour
+	
+PerInhvh_BaselineT1 = (1-CvhT1_f/CvhT1_0)*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 1 in vitreous humour
+  
+PerInhvh_BaselineT2 = (1-CvhT2_f/CvhT2_0)*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 2 in vitreous humour  
+  
+
+ROah_T1_Model = CahT1_b/CahT1_t*100 in [dimensionless]
+  desc: Receptor (Target 1) occupancy in vitreous humour
+  
+ROah_T2_Model = CahT2_b/CahT2_t*100 in [dimensionless]
+  desc: Receptor (Target 2) occupancy in vitreous humour
+	
+PerInhahT1 = (1-CahT1_f/CahT1_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 1 in vitreous humour
+  
+PerInhahT2 = (1-CahT2_f/CahT2_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 2 in vitreous humour
+	
+PerInhah_BaselineT1 = (1-CahT1_f/(CvhT1_0*CLdifT1/Qah))*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 1 in vitreous humour
+  
+PerInhah_BaselineT2 = (1-CahT2_f/(CvhT2_0*CLdifT2/Qah))*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 2 in vitreous humour  
+
+
+dot(Avh_f) = -CLdif*Cvh_f - kon1*Cvh_f*CvhT1_f*Vvh + koff1*AvhDT1 - kon2*Cvh_f*CvhT2_f*Vvh + koff2*AvhDT2 in [pmol]
+    desc: Amount of FREE drug in the vitreous humour
+	
+dot(AvhT1_f) = CLdifT1*(CvhT1_0 - CvhT1_f) - kon1*Cvh_f*CvhT1_f*Vvh + koff1*AvhDT1 -kon1*FAvid*AvhDT2*CvhT1_f +koff1*AvhDT1T2 in [pmol]
+  desc: Amount of FREE target 1 in the vitreous humour compartment
+  
+dot(AvhT2_f) = CLdifT2*(CvhT2_0 - CvhT2_f) - kon2*Cvh_f*CvhT2_f*Vvh + koff2*AvhDT2 -kon2*FAvid*AvhDT1*CvhT2_f +koff2*AvhDT1T2 in [pmol]
+  desc: Amount of FREE target 2 in the vitreous humour compartment 	
+  
+dot(AvhDT1) = kon1*Cvh_f*CvhT1_f*Vvh - (koff1+CLdif/Vvh)*AvhDT1 -kon2*FAvid*AvhDT1*CvhT2_f +koff2*AvhDT1T2 in [pmol]
+  desc: Amount of BOUND drug/ target 1 in the vitreous humour compartment
+  
+dot(AvhDT2) = kon2*Cvh_f*CvhT2_f*Vvh - (koff2+CLdif/Vvh)*AvhDT2 -kon1*FAvid*AvhDT2*CvhT1_f +koff1*AvhDT1T2 in [pmol]
+  desc: Amount of BOUND drug/ target 2 in the vitreous humour compartment 
+  
+dot(AvhDT1T2) = kon2*FAvid*AvhDT1*CvhT2_f +kon1*FAvid*AvhDT2*CvhT1_f -(koff1+koff2+CLdif/Vvh)*AvhDT1T2 in [pmol]
+  desc: Amount of ternary complexes between drug, T1 and T2 in the vitreous humour compartment  
+	
+
+dot(Aah_f) = CLdif*Cvh_f - Qah*Cah_f - kon1*Cah_f*CahT1_f*Vah + koff1*AahDT1 - kon2*Cah_f*CahT2_f*Vah + koff2*AahDT2 in [pmol]
+    desc: Amount of FREE drug in the aqueous humour	
+
+dot(AahT1_f) = CLdifT1*CvhT1_f - Qah*CahT1_f - kon1*Cah_f*CahT1_f*Vah + koff1*AahDT1 -kon1*FAvid*AahDT2*CahT1_f +koff1*AahDT1T2 in [pmol]
+  desc: Amount of FREE target 1 in the vitreous humour compartment
+
+dot(AahT2_f) = CLdifT2*CvhT2_f - Qah*CahT2_f - kon2*Cah_f*CahT2_f*Vah + koff2*AahDT2 -kon2*FAvid*AahDT1*CahT2_f +koff2*AahDT1T2 in [pmol]
+  desc: Amount of FREE target 2 in the vitreous humour compartment 	
+
+dot(AahDT1) = CLdif/Vvh*AvhDT1 + kon1*Cah_f*CahT1_f*Vah - (koff1+Qah/Vah)*AahDT1 -kon2*FAvid*AahDT1*CahT2_f +koff2*AahDT1T2 in [pmol]
+  desc: Amount of BOUND drug/ target 1 in the vitreous humour compartment
+
+dot(AahDT2) = CLdif/Vvh*AvhDT2 + kon2*Cah_f*CahT2_f*Vah - (koff2+Qah/Vah)*AahDT2 -kon1*FAvid*AahDT2*CahT1_f +koff1*AahDT1T2 in [pmol]
+  desc: Amount of BOUND drug/ target 2 in the vitreous humour compartment 
+
+dot(AahDT1T2) = CLdif/Vvh*AvhDT1T2 + kon2*FAvid*AahDT1*CahT2_f +kon1*FAvid*AahDT2*CahT1_f -(koff1+koff2+Qah/Vah)*AahDT1T2 in [pmol]
+  desc: Amount of ternary complexes between drug, T1 and T2 in the vitreous humour compartment	
