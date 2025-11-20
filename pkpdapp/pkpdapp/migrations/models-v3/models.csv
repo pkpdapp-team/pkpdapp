@@ -61,3 +61,5 @@ PK-Models/Disposition/TMDD/1-compartmental-full-TMDD-model_1-binding-site_solubl
 PK-Models/Disposition/TMDD/1-compartmental-QSS-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;1;0;0;0;1;1;0;0;1;0;0;0;0;0
 PK-Models/Disposition/TMDD/2-compartmental-QSS-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;0;1;0;0;1;1;0;0;1;0;0;0;0;0
 PK-Models/Disposition/TMDD/2-compartmental-full-TMDD-model_1-binding-site_soluble-target_catch_and_release.mmt;PK-Model;0;1;0;0;1;0;0;0;1;0;0;0;0;0
+PK-Models/Extravascular/Ocular-PKPD-bispecific-model.mmt;PK-Extravascular;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+PK-Models/Extravascular/Ocular-PKPD-VEGF-model.mmt;PK-Extravascular;0;0;0;0;0;0;0;0;0;0;0;0;0;0
