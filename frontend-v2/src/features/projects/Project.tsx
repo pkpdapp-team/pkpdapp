@@ -110,8 +110,6 @@ const ProjectEditorRow: FC<Props> = ({
     { value: "LM", label: "Large Molecule" },
   ];
 
-  const { dataset, addDataset } = useDataset(project.id);
-
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
   const formValues = { project, compound };
@@ -207,9 +205,6 @@ const ProjectEditorRow: FC<Props> = ({
   };
 
   const handleSelectProject = () => {
-    if (dataset === undefined) {
-      addDataset(project.id);
-    }
     dispatch(setProject(project.id));
   };
 
