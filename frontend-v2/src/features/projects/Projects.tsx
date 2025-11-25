@@ -238,7 +238,7 @@ const ProjectTable: FC = () => {
               name: "Table 1",
               project: newProject.data.id,
               columns: "parameters",
-              rows: "variables",
+              rows: "groups",
               filters: {
                 parameterIndex: "columns",
                 variableIndex: "rows",
