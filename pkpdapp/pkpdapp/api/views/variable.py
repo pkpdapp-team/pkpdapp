@@ -15,7 +15,6 @@ from pkpdapp.api.views import (
 )
 from pkpdapp.api.serializers import VariableSerializer
 from pkpdapp.models import Variable
-import cProfile
 
 
 class VariableView(viewsets.ModelViewSet):
