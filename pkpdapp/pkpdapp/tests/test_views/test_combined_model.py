@@ -21,9 +21,9 @@ import numpy as np
 
 class CombinedModelTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.compound = Compound.objects.create(name='test')
-        self.project = Project.objects.create(name='demo', compound=self.compound)
+        self.user = User.objects.create_user(username="testuser", password="12345")
+        self.compound = Compound.objects.create(name="test")
+        self.project = Project.objects.create(name="demo", compound=self.compound)
         self.project.users.add(self.user)
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -39,7 +39,7 @@ class CombinedModelTestCase(APITestCase):
         self.assertEqual(len(response_data), 1)
 
     def test_cannot_create_in_read_only_project(self):
-        user = User.objects.create(username='testuser2', password='12345')
+        user = User.objects.create(username="testuser2", password="12345")
         self.project.users.add(user)
         access = ProjectAccess.objects.get(user=user, project=self.project)
         access.read_only = True
@@ -94,7 +94,7 @@ class CombinedModelTestCase(APITestCase):
         # attach it to the A1 variables
         a1 = cm.variables.get(name="A1")
         response = self.client.patch(
-            f"/api/variable/{a1.id}/",
+            f"/api/variable/{a1.id}/?dosed_pk_model_id={cm.id}",
             data={
                 "protocol": response.data["id"],
             },

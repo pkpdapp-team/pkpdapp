@@ -125,6 +125,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         ),
     )
     __original_pk_model = None
+    __original_pk_model2 = None
     __original_pd_model = None
     __original_pd_model2 = None
     __original_has_saturation = None
@@ -143,6 +144,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # fix for infinite recursion when deleting project
         if "pk_model_id" in field_names:
             instance.__original_pk_model = instance.pk_model
+        if "pk_model2_id" in field_names:
+            instance.__original_pk_model2 = instance.pk_model2
         if "pd_model_id" in field_names:
             instance.__original_pd_model = instance.pd_model
         if "pd_model2_id" in field_names:
@@ -471,17 +474,19 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # if the pk or pd models have changed then remove the mappings and
         # derived variables
-        if (
-            self.pk_model != self.__original_pk_model
-            or self.pd_model != self.__original_pd_model
-            or self.pd_model2 != self.__original_pd_model2
-        ):
-            self.mappings.all().delete()
-            self.derived_variables.all().delete()
+        # if (
+        #    self.pk_model != self.__original_pk_model
+        #    or self.pk_model2 != self.__original_pk_model2
+        #    or self.pd_model != self.__original_pd_model
+        #    or self.pd_model2 != self.__original_pd_model2
+        # ):
+        #    self.mappings.all().delete()
+        #    self.derived_variables.all().delete()
 
         if (
             created
             or self.pk_model != self.__original_pk_model
+            or self.pk_model2 != self.__original_pk_model2
             or self.pd_model != self.__original_pd_model
             or self.pd_model2 != self.__original_pd_model2
             or self.has_saturation != self.__original_has_saturation
@@ -497,6 +502,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_pd_model = self.pd_model
         self.__original_pd_model2 = self.pd_model2
         self.__original_pk_model = self.pk_model
+        self.__original_pk_model2 = self.pk_model2
         self.__original_has_saturation = self.has_saturation
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag

@@ -174,7 +174,7 @@ const ParameterRow: FC<Props> = ({
     (v) =>
       !v.constant &&
       v.qname.startsWith("PK") &&
-      !variable.refs_by.includes(v.id),
+      !v.qname.endsWith("_MM")
   );
   const concentrationOptions = timeVaryingVariables.map((variable) => ({
     value: variable.id,

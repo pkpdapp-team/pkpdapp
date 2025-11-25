@@ -4160,7 +4160,6 @@ export type Variable = {
 };
 export type VariableRead = {
   id: number;
-  refs_by: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4268,7 +4267,6 @@ export type PatchedVariable = {
 };
 export type PatchedVariableRead = {
   id?: number;
-  refs_by?: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */

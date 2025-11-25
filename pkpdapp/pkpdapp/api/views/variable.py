@@ -13,46 +13,41 @@ from pkpdapp.api.views import (
     DosedPkModelFilter,
     PdModelFilter,
 )
-from pkpdapp.api.serializers import (
-    VariableSerializer
-)
+from pkpdapp.api.serializers import VariableSerializer
 from pkpdapp.models import Variable
 
 
 class VariableView(viewsets.ModelViewSet):
-    queryset = Variable.objects.all()
+    queryset = Variable.objects.none()  # this is overridden in the filters
     serializer_class = VariableSerializer
-    filter_backends = [
-        ProjectFilter, DosedPkModelFilter, PdModelFilter
-    ]
-    permission_classes = [
-        IsAuthenticated & CheckAccessToProject
-    ]
+    filter_backends = [ProjectFilter, DosedPkModelFilter, PdModelFilter]
+    permission_classes = [IsAuthenticated & CheckAccessToProject]
 
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='project_id',
-                description='Filter results by project ID',
+                name="project_id",
+                description="Filter results by project ID",
                 required=False,
                 type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
+                location=OpenApiParameter.QUERY,
             ),
             OpenApiParameter(
-                name='dosed_pk_model_id',
-                description='Filter results by dosed_pk_model ID',
+                name="dosed_pk_model_id",
+                description="Filter results by dosed_pk_model ID",
                 required=False,
                 type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
+                location=OpenApiParameter.QUERY,
             ),
             OpenApiParameter(
-                name='pd_model_id',
-                description='Filter results by pd_model ID',
+                name="pd_model_id",
+                description="Filter results by pd_model ID",
                 required=False,
                 type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY
+                location=OpenApiParameter.QUERY,
             ),
         ],
     )
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        result = super().list(request, *args, **kwargs)
+        return result

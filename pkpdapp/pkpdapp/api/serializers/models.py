@@ -123,9 +123,13 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         if "pd_model" in validated_data:
             pd_model_changed = instance.pd_model != validated_data.get("pd_model")
 
+        # turn on read_only so we don't try to update mappings yet
+        is_read_only = validated_data.get("read_only", False)
+        validated_data["read_only"] = True
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
+        validated_data["read_only"] = is_read_only
 
         # if pd model has changed, update effect variable
         if pd_model_changed:
@@ -140,7 +144,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             mappings_data = [m for m in mappings_data if m["pd_variable"] is not None]
 
         # don't update mappings if read_only
-        if not instance.read_only:
+        if not is_read_only:
             for derived_var in derived_var_data:
                 serializer = DerivedVariableSerializer()
                 try:
@@ -188,8 +192,10 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             for old_model in old_time_intervals:
                 old_model.delete()
 
-        # update model since mappings might have changed
-        new_pkpd_model.update_model()
+        # save and update model
+        new_pkpd_model.refresh_from_db()
+        new_pkpd_model.read_only = is_read_only
+        new_pkpd_model.save()
 
         if pk_model_changed:
             # go through all protocols of the project and delete
