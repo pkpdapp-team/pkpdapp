@@ -4,7 +4,6 @@ import { useForm, useFieldArray, useFormState } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import useDataset from "../../hooks/useDataset";
 import {
   TableCell,
   TableRow,
@@ -308,7 +307,10 @@ const ProjectEditorRow: FC<Props> = ({
         </TableCell>
         <TableCell>
           {isEditMode ? (
-            <Tooltip title="Select tags. You can create a new tag by typing the name and pressing enter" placement="top">
+            <Tooltip
+              title="Select tags. You can create a new tag by typing the name and pressing enter"
+              placement="top"
+            >
               <Autocomplete
                 multiple
                 freeSolo
@@ -317,7 +319,9 @@ const ProjectEditorRow: FC<Props> = ({
                 getOptionLabel={(option) => option}
                 defaultValue={tags}
                 onChange={(event, value) =>
-                  setValue("project.tags", value.join(","), { shouldDirty: true })
+                  setValue("project.tags", value.join(","), {
+                    shouldDirty: true,
+                  })
                 }
                 renderInput={(params) => (
                   <MaterialTextField {...params} variant="standard" />
