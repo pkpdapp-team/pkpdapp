@@ -544,7 +544,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             # the ophtha extravascular model also has some defaults
             model2_name = None
             if self.pk_model2 is not None:
-                if self.pk_model2.name == "Occular PK model":
+                if "Ocular" in self.pk_model2.name:
                     model2_name = "ophtha"
             print(
                 "resetting params to defaults",
@@ -553,6 +553,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 compoundType,
                 self.pk_model.name,
                 is_preclinical,
+                model2_name,
             )
             if variables is None:
                 variables = self.variables.all()
