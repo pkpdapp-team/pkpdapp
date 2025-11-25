@@ -246,7 +246,12 @@ class DataParser:
 
         # put in default per body weight flag if not present
         if "PER_BODY_WEIGHT_KG" not in found_cols:
-            data["PER_BODY_WEIGHT_KG"] = 0.0
+            data["PER_BODY_WEIGHT_KG"] = False
+
+        # convert per body weight to boolean
+        data["PER_BODY_WEIGHT_KG"] = data["PER_BODY_WEIGHT_KG"].apply(
+            lambda x: x in [1, '1', True, 'True', 'true']
+        )
 
         # check that time is set for all rows
         if pd.to_numeric(data["TIME"], errors='coerce').isna().any():

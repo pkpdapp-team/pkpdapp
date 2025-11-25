@@ -137,7 +137,7 @@ class Dataset(models.Model):
             group_id = row["GROUP_ID"]
             route = row["ADMINISTRATION_NAME"]
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
-            amount_per_body_weight = row["PER_BODY_WEIGHT_KG"] == 1.0
+            amount_per_body_weight = row["PER_BODY_WEIGHT_KG"]
             group = groups[group_id]
             mapped_qname = row["AMOUNT_VARIABLE"]
             if route == "IV":
