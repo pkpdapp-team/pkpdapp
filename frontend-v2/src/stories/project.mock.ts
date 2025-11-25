@@ -200,7 +200,6 @@ export const simulation: SimulationRead = {
 export const variables: VariableRead[] = [
   {
     id: 2180,
-    refs_by: [2187, 2193],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -229,7 +228,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2181,
-    refs_by: [2193, 2187],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -259,7 +257,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2182,
-    refs_by: [2193, 2187],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -288,7 +285,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2183,
-    refs_by: [2191],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -318,7 +314,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2184,
-    refs_by: [2192],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -347,7 +342,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2185,
-    refs_by: [2190, 2187],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -376,7 +370,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2186,
-    refs_by: [2191],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -405,7 +398,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2187,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -434,7 +426,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2188,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -463,7 +454,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2189,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -492,7 +482,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2190,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -521,7 +510,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2191,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -550,7 +538,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2192,
-    refs_by: [2196, 2191, 2188, 2187, 2417, 2193],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -579,7 +566,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2193,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -608,7 +594,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2194,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -637,7 +622,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2195,
-    refs_by: [2200],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -666,7 +650,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2196,
-    refs_by: [2200],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -695,7 +678,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2197,
-    refs_by: [2199],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -724,7 +706,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2198,
-    refs_by: [2199],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -754,7 +735,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2199,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -783,7 +763,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2200,
-    refs_by: [2199],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -812,7 +791,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2411,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -841,7 +819,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2412,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
@@ -870,7 +847,6 @@ export const variables: VariableRead[] = [
   },
   {
     id: 2417,
-    refs_by: [],
     read_only: false,
     datetime: null,
     is_public: false,
