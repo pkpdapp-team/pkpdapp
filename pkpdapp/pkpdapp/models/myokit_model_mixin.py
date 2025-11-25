@@ -460,7 +460,10 @@ class MyokitModelMixin:
         return conversion_factor * value
 
     def _convert_unit_qname(self, qname, value, myokit_model):
-        variable = self.variables.get(qname=qname)
+        try:
+            variable = self.variables.get(qname=qname)
+        except pkpdapp.models.Variable.DoesNotExist:
+            raise ValueError(f"Variable with qname {qname} does not exist in model.")
         myokit_variable_sbml = myokit_model.get(qname)
         new_value = self._convert_unit(variable, myokit_variable_sbml, value)
         return new_value

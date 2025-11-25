@@ -5,6 +5,7 @@
 #
 from rest_framework import filters
 from django.db.models import Q
+import time
 
 from pkpdapp.models import (
     Dataset,
@@ -52,7 +53,10 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
             try:
                 dosed_pk_model = CombinedModel.objects.get(id=dosed_pk_model_id)
                 if queryset.model == Variable:
+                    t0 = time.perf_counter()
                     queryset = dosed_pk_model.variables.all()
+                    t1 = time.perf_counter()
+                    print("Filtered variables in ", t1 - t0, " seconds")
                 elif queryset.model == Unit:
                     unit_ids = dosed_pk_model.variables.values_list("unit", flat=True)
                     queryset = Unit.objects.filter(id__in=unit_ids)
@@ -178,9 +182,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == ResultsTable:
                     queryset = project.results.all()
                 elif queryset.model == Variable:
-                    queryset = queryset.filter(
-                        Q(pd_model__project=project)
-                        | Q(dosed_pk_model__project=project)
+                    queryset = Variable.objects.filter(
+                        Q(pk_model__project=project) | Q(pd_model__project=project)
                     )
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)

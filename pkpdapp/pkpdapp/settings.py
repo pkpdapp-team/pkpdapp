@@ -270,7 +270,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "user_visit.middleware.UserVisitMiddleware",
+    # "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
+
+# DJANGO_CPROFILE_MIDDLEWARE_REQUIRE_STAFF = False
 
 CORS_ALLOWED_ORIGINS = [
     f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
