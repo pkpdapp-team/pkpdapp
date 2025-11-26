@@ -352,11 +352,18 @@ export function normaliseHeader(header: string): [Field, string] {
   return [header, "Ignore"];
 }
 
-export function parsePerKgDoses(state: StepperState): Partial<StepperState> {
+export function parsePerKgDoses(state: StepperState): void {
   const { data, fields, normalisedFields } = state;
   const amountUnitField =
     fields.find((field) => normalisedFields.get(field) === "Amount Unit") ||
     "Amount Unit";
+  const hasPerKgDosing = data.some((row) => {
+    const amountUnit = row[amountUnitField];
+    return amountUnit?.endsWith("/kg");
+  });
+  if (!hasPerKgDosing) {
+    return;
+  }
   const perKgField =
     fields.find(
       (field) => normalisedFields.get(field) === "Per Body Weight(kg)",
@@ -375,10 +382,8 @@ export function parsePerKgDoses(state: StepperState): Partial<StepperState> {
     newData,
     normalisedFields,
   );
-  return {
-    data: newData,
-    normalisedFields: newNormalisedFields,
-  };
+  state.data = newData;
+  state.normalisedFields = newNormalisedFields;
 }
 
 /**

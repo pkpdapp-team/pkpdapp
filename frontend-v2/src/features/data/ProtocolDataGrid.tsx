@@ -2,7 +2,6 @@ import { FC, useState } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
 import SubjectGroupForm from "./SubjectGroupForm";
-import { parsePerKgDoses } from "./dataValidation";
 
 type SubjectGroup = {
   id: string;
@@ -23,7 +22,7 @@ const ROW_COLS = new Set([
 ]);
 
 const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
-  const { data = [], normalisedFields = new Map() } = parsePerKgDoses(state);
+  const { data = [], normalisedFields = new Map() } = state;
   const fields = Array.from(normalisedFields.keys());
   const [selected, setSelected] = useState<GridRowSelectionModel>({
     type: "include",

@@ -1,5 +1,4 @@
 import { StepperState } from "./LoadDataStepper";
-import { parsePerKgDoses } from "./dataValidation";
 
 export interface IDose {
   subject: string;
@@ -39,16 +38,13 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
   const routeField = state.fields.find(
     (field) => field.toLowerCase() === "route",
   );
-  const { data: perKgData = [], normalisedFields = new Map() } =
-    parsePerKgDoses(state);
-  const subjectIds = perKgData.map((row) => idField && row[idField]);
-  const perKgFields = Array.from(normalisedFields.keys());
-  const perBodyWeightField = perKgFields.find(
-    (field) => normalisedFields.get(field) === "Per Body Weight(kg)",
+  const subjectIds = state.data.map((row) => idField && row[idField]);
+  const perBodyWeightField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Per Body Weight(kg)",
   );
   const uniqueSubjectIds = [...new Set(subjectIds)];
   const subjectDoses = uniqueSubjectIds.map((subjectId) => {
-    const subjectRows = perKgData.filter(
+    const subjectRows = state.data.filter(
       (row) => idField && row[idField] === subjectId,
     );
     return subjectRows

@@ -11,7 +11,6 @@ import {
   useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
-import { parsePerKgDoses } from "./dataValidation";
 
 interface IMapDosing {
   state: StepperState;
@@ -73,17 +72,6 @@ const MapDosing: FC<IMapDosing> = ({
   const administrationIdField = state.fields.find(
     (field) => state.normalisedFields.get(field) === "Administration ID",
   );
-
-  const hasPerKgDosing = state.data.some((row) => {
-    const amountUnit = row[amountUnitField];
-    return amountUnit?.endsWith("/kg");
-  });
-
-  if (hasPerKgDosing) {
-    const { data = [], normalisedFields = new Map() } = parsePerKgDoses(state);
-    state.data = data;
-    state.normalisedFields = normalisedFields;
-  }
 
   // Fetch API data.
   const { isLoading, amountUnit, projectProtocols, units, variables } =
