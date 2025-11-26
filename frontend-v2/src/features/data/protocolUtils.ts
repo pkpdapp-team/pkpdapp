@@ -4,6 +4,7 @@ export interface IDose {
   subject: string;
   amount: number;
   amountUnit?: string;
+  perBodyWeight?: string;
   label: string;
   route?: string;
   time?: number;
@@ -38,6 +39,9 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
     (field) => field.toLowerCase() === "route",
   );
   const subjectIds = state.data.map((row) => idField && row[idField]);
+  const perBodyWeightField = state.fields.find(
+    (field) => state.normalisedFields.get(field) === "Per Body Weight(kg)",
+  );
   const uniqueSubjectIds = [...new Set(subjectIds)];
   const subjectDoses = uniqueSubjectIds.map((subjectId) => {
     const subjectRows = state.data.filter(
@@ -47,6 +51,7 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
       .map((row) => {
         const amount = amountField && +row[amountField];
         const amountUnit = amountUnitField && row[amountUnitField];
+        const perBodyWeight = perBodyWeightField && row[perBodyWeightField];
         const time = timeField && +row[timeField];
         const timeUnit = timeUnitField && row[timeUnitField];
         const route = routeField ? row[routeField] : "";
@@ -54,6 +59,7 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
           subject: subjectId || "",
           amount: amount || 0,
           amountUnit,
+          perBodyWeight,
           label: `Dose: ${amount} ${route}`,
           route,
           time: time || 0,

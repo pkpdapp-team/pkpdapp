@@ -125,7 +125,6 @@ const MapDosing: FC<IMapDosing> = ({
     <CreateDosingProtocols
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField || ""}
-      amountUnit={amountUnit}
       dosingCompartments={dosingCompartments}
       state={state}
       units={units || []}

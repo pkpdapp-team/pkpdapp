@@ -18,6 +18,7 @@ import Stratification from "./Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
   normaliseHeader,
+  parsePerKgDoses,
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
@@ -171,6 +172,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       return [...normalisedFields.values()];
     },
   };
+  parsePerKgDoses(state);
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
   const areValidProtocols = validateSubjectProtocols(protocols);

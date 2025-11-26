@@ -145,6 +145,7 @@ const Data: FC = () => {
         .map((dose) => ({
           Amount: dose.amount,
           "Amount Unit": amountUnit,
+          "Per Body Weight(kg)": protocol.amount_per_body_weight ? "1" : "0",
           Time: dose.start_time,
           "Time Unit": timeUnit,
           Duration: dose.duration,

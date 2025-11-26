@@ -16,7 +16,9 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
 
-export type Row = { [key: string]: string };
+export type Row = {
+  [key: string]: string;
+};
 export type Data = Row[];
 export type Field = string;
 
@@ -171,7 +173,6 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           const csvData = Papa.parse(rawCsv.trim(), { header: true });
           const fields = csvData.meta.fields || [];
           const normalisedFields = new Map(fields.map(normaliseHeader));
-          state.data = csvData.data as Data;
           state.normalisedFields = normalisedFields;
           // Make a copy of the new state that we can pass to validators.
           const csvState = {
@@ -183,6 +184,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           };
           const fieldValidation = validateState(csvState);
           state.hasDosingRows = validateDosingRows(csvState);
+          state.data = csvState.data as Data;
           const groupColumn =
             fields.find(
               (field) => normalisedFields.get(field) === "Cat Covariate",

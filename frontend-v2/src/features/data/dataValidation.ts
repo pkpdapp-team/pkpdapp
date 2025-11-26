@@ -22,6 +22,13 @@ const normalisation = {
     "unit dose",
     "unit_dose",
   ],
+  "Per Body Weight(kg)": [
+    "per body weight(kg)",
+    "per body weight",
+    "per_body_weight",
+    "per kg",
+    "per_kg",
+  ],
   "Amount Variable": ["amount variable", "amount_var", "amt_var"],
   "Cat Covariate": [
     "cat covariate",
@@ -106,6 +113,7 @@ export const groupedHeaders = {
     "Observation Unit",
     "Amount",
     "Amount Unit",
+    "Per Body Weight(kg)",
   ],
   Dosing: [
     "Administration ID",
@@ -342,6 +350,40 @@ export function normaliseHeader(header: string): [Field, string] {
     }
   }
   return [header, "Ignore"];
+}
+
+export function parsePerKgDoses(state: StepperState): void {
+  const { data, fields, normalisedFields } = state;
+  const amountUnitField =
+    fields.find((field) => normalisedFields.get(field) === "Amount Unit") ||
+    "Amount Unit";
+  const hasPerKgDosing = data.some((row) => {
+    const amountUnit = row[amountUnitField];
+    return amountUnit?.endsWith("/kg");
+  });
+  if (!hasPerKgDosing) {
+    return;
+  }
+  const perKgField =
+    fields.find(
+      (field) => normalisedFields.get(field) === "Per Body Weight(kg)",
+    ) || "Per Body Weight(kg)";
+  const newData = data.map((row) => {
+    const newRow = { ...row };
+    const amountUnit = newRow[amountUnitField];
+    newRow[perKgField] = "0";
+    if (amountUnit?.endsWith("/kg")) {
+      newRow[amountUnitField] = amountUnit.replace("/kg", "");
+      newRow[perKgField] = "1";
+    }
+    return newRow;
+  });
+  const newNormalisedFields = normalisedFieldsFromData(
+    newData,
+    normalisedFields,
+  );
+  state.data = newData;
+  state.normalisedFields = newNormalisedFields;
 }
 
 /**
