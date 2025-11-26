@@ -297,6 +297,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                       name={"amount_per_body_weight"}
                       onChange={handlePerBodyWeightChange(adminId)}
                       checked={isPerKg}
+                      slotProps={{
+                        input: { "aria-label": "Per Body Weight(kg)" },
+                      }}
                     />
                   </TableCell>
                   <TableCell sx={{ width: "5rem" }}>
