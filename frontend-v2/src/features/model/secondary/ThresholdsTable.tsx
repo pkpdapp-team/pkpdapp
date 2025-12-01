@@ -21,6 +21,7 @@ import {
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
+  useVariableRetrieveQuery,
   useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
@@ -95,17 +96,22 @@ function useVariables() {
 }
 
 function VariableRow({
-  variable,
+  variable_id,
   unit,
 }: {
-  variable: VariableRead;
+  variable_id: number;
   unit: UnitRead | undefined;
 }) {
   const units = useUnits();
+  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
+  if (!variable_read) {
+    return "Loading...";
+  }
+  const variable = variable_read as VariableRead;
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
     if (!isNaN(newValue)) {
@@ -222,7 +228,7 @@ const ThresholdsTable: FC<TableProps> = (props) => {
           {concentrationVariables?.map((variable) => (
             <VariableRow
               key={variable.id}
-              variable={variable}
+              variable_id={variable.id}
               unit={units?.find(
                 (unit) =>
                   unit.id === (variable.threshold_unit || variable.unit),
