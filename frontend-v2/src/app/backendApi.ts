@@ -2193,7 +2193,7 @@ export type DerivedVariable = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
     * `TLG` - dosing lag time
     * `MM` - Michaelis-Menten
@@ -2222,7 +2222,7 @@ export type DerivedVariableRead = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
     * `TLG` - dosing lag time
     * `MM` - Michaelis-Menten
@@ -2741,8 +2741,6 @@ export type Protocol = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2753,13 +2751,15 @@ export type Protocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type ProtocolRead = {
   id: number;
   doses: DoseRead[];
-  variables: number[];
+  variables: string[];
   subjects: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -2770,8 +2770,6 @@ export type ProtocolRead = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2782,6 +2780,8 @@ export type ProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -3531,8 +3531,6 @@ export type PatchedProtocol = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3543,13 +3541,15 @@ export type PatchedProtocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type PatchedProtocolRead = {
   id?: number;
   doses?: DoseRead[];
-  variables?: number[];
+  variables?: string[];
   subjects?: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -3560,8 +3560,6 @@ export type PatchedProtocolRead = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3572,6 +3570,8 @@ export type PatchedProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -4155,8 +4155,6 @@ export type Variable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type VariableRead = {
   id: number;
@@ -4209,8 +4207,6 @@ export type VariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariable = {
   /** true if object has been stored */
@@ -4262,8 +4258,6 @@ export type PatchedVariable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariableRead = {
   id?: number;
@@ -4316,8 +4310,6 @@ export type PatchedVariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export const {
   useAlgorithmListQuery,
