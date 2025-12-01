@@ -60,13 +60,13 @@ const VariableRow: FC<Props> = ({
     derivedVariablesAppend,
     derivedVariablesRemove,
   } = useFormData({ control });
-  const { addProtocol, removeProtocol, setValue, updateVariable, hasProtocol } =
+  const { addProtocol, removeProtocol, updateProtocol, setValue, updateVariable, hasProtocol } =
     useVariableFormState({
       compound,
       project,
       timeVariable,
       units,
-      variable,
+      variable_from_list: variable,
     });
 
   const addTLG = () => {
@@ -90,15 +90,14 @@ const VariableRow: FC<Props> = ({
   async function onAddProtocol() {
     const value = await addProtocol();
     if (value?.data) {
-      setValue("protocol", value.data.id);
-      updateVariable({
+      await updateVariable({
         id: variable.id,
         variable: { ...variable, protocol: value.data.id },
       });
+      updateProtocol({ id: value.data.id, protocol: value.data });
     }
   }
   async function onRemoveProtocol() {
-    setValue("protocol", null);
     updateVariable({
       id: variable.id,
       variable: { ...variable, protocol: null },
@@ -114,7 +113,7 @@ const VariableRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
+    undefined;
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);

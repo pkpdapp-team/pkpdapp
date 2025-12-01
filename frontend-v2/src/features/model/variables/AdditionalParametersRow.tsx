@@ -69,7 +69,7 @@ const AdditionalParametersRow: FC<Props> = ({
     project,
     timeVariable,
     units,
-    variable,
+    variable_from_list: variable,
   });
 
   const isSharedWithMe = useSelector((state: RootState) =>

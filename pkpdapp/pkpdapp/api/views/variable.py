@@ -18,7 +18,7 @@ from pkpdapp.models import Variable
 
 
 class VariableView(viewsets.ModelViewSet):
-    queryset = Variable.objects.none()  # this is overridden in the filters
+    queryset = Variable.objects.all()  # this is overridden in the filters
     serializer_class = VariableSerializer
     filter_backends = [ProjectFilter, DosedPkModelFilter, PdModelFilter]
     permission_classes = [IsAuthenticated & CheckAccessToProject]

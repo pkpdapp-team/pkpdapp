@@ -7,6 +7,7 @@ import {
   VariableRead,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
+  useProtocolUpdateMutation,
 } from "../../../app/backendApi";
 
 interface EditProtocolProps {
@@ -28,15 +29,14 @@ export default function useEditProtocol({
   variable,
   watchProtocolId,
 }: EditProtocolProps) {
-  const [hasProtocol, setHasProtocol] = useState<boolean>(
-    watchProtocolId !== null,
-  );
+  const hasProtocol = watchProtocolId !== null && watchProtocolId !== undefined;
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
     : units?.find((unit) => unit.symbol === "h");
   const [createProtocol] = useProtocolCreateMutation();
   const [destroyProtocol] = useProtocolDestroyMutation();
+  const [updateProtocol] = useProtocolUpdateMutation();
 
   const addProtocol = () => {
     const isPerKg = variableUnit?.g !== 0;
@@ -52,7 +52,6 @@ export default function useEditProtocol({
       repeats: 1,
       duration: 0.0833,
     };
-    setHasProtocol(true);
     return createProtocol({
       protocol: {
         doses: [defaultDose],
@@ -65,11 +64,9 @@ export default function useEditProtocol({
     });
   };
 
+
   const removeProtocol = () => {
-    if (hasProtocol && watchProtocolId) {
-      setHasProtocol(false);
-      return destroyProtocol({ id: watchProtocolId });
-    }
+    return destroyProtocol({ id: watchProtocolId });
   };
-  return { addProtocol, removeProtocol, hasProtocol };
+  return { addProtocol, removeProtocol, hasProtocol, updateProtocol };
 }

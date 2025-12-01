@@ -18,6 +18,7 @@ import {
   UnitRead,
   VariableRead,
   CombinedModelRead,
+  useVariableRetrieveQuery,
 } from "../../../app/backendApi";
 import UnitField from "../../../components/UnitField";
 import Checkbox from "../../../components/Checkbox";
@@ -32,7 +33,7 @@ import { DerivedVariableType } from "../derivedVariable";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
-  variable: VariableRead;
+  variable_id: number;
   variables: VariableRead[];
   units: UnitRead[];
   modelControl: Control<FormData>;
@@ -41,18 +42,19 @@ interface Props {
 const ParameterRow: FC<Props> = ({
   model,
   project,
-  variable,
+  variable_id,
   variables,
   units,
   modelControl,
 }) => {
+  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const {
     control,
     handleSubmit,
     formState: { isDirty, submitCount },
-  } = useForm<Variable>({
-    defaultValues: variable || { id: 0, name: "" },
-    values: variable,
+  } = useForm<VariableRead>({
+    defaultValues: variable_read || { name: "" },
+    values: variable_read,
   });
   const [updateVariable] = useVariableUpdateMutation();
   useDirty(isDirty);
@@ -74,11 +76,11 @@ const ParameterRow: FC<Props> = ({
   const submit = useMemo(
     () =>
       handleSubmit((data) => {
-        if (JSON.stringify(data) !== JSON.stringify(variable)) {
-          updateVariable({ id: variable.id, variable: data });
+        if (variable_read && JSON.stringify(data) !== JSON.stringify(variable_read)) {
+          updateVariable({ id: variable_read.id, variable: data });
         }
       }),
-    [handleSubmit, updateVariable, variable],
+    [handleSubmit, updateVariable, variable_read],
   );
 
   useEffect(() => {
@@ -86,6 +88,12 @@ const ParameterRow: FC<Props> = ({
       submit();
     }
   }, [isDirty, submitCount, submit]);
+
+  if (!variable_read) {
+    return "Loading...";
+  }
+
+  const variable = variable_read as VariableRead;
 
   if (variable.constant !== true) {
     return null;

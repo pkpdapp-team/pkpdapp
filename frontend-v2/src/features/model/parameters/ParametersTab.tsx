@@ -150,7 +150,7 @@ const ParametersTab: FC<Props> = ({
                 variables={variables}
                 modelControl={control}
                 key={variable.id}
-                variable={variable}
+                variable_id={variable.id}
                 project={project}
                 units={units}
               />
