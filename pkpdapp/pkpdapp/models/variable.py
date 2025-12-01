@@ -155,15 +155,6 @@ class Variable(StoredModel):
         help_text="dosed pharmacokinetic model",
     )
 
-    protocol = models.ForeignKey(
-        Protocol,
-        on_delete=models.SET_NULL,
-        related_name="variables",
-        blank=True,
-        null=True,
-        help_text="dosing protocol",
-    )
-
     class Meta:
         constraints = [
             models.CheckConstraint(

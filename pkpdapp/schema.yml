@@ -4121,7 +4121,7 @@ components:
 
             * `AUC` - area under curve
             * `RO` - receptor occupancy
-            * `FUP` - faction unbound plasma
+            * `FUP` - fraction unbound plasma
             * `BPR` - blood plasma ratio
             * `TLG` - dosing lag time
             * `MM` - Michaelis-Menten
@@ -5183,7 +5183,7 @@ components:
         variables:
           type: array
           items:
-            type: integer
+            type: string
           readOnly: true
         subjects:
           type: array
@@ -5207,11 +5207,6 @@ components:
         amount_per_body_weight:
           type: boolean
           description: whether the amount is per body weight
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
         dataset:
           type: integer
           nullable: true
@@ -5233,6 +5228,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -5581,10 +5580,6 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
     Pharmacodynamic:
       type: object
       properties:
@@ -5873,7 +5868,7 @@ components:
         variables:
           type: array
           items:
-            type: integer
+            type: string
           readOnly: true
         subjects:
           type: array
@@ -5897,11 +5892,6 @@ components:
         amount_per_body_weight:
           type: boolean
           description: whether the amount is per body weight
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
         dataset:
           type: integer
           nullable: true
@@ -5923,6 +5913,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -6346,7 +6340,7 @@ components:
       description: |-
         * `AUC` - area under curve
         * `RO` - receptor occupancy
-        * `FUP` - faction unbound plasma
+        * `FUP` - fraction unbound plasma
         * `BPR` - blood plasma ratio
         * `TLG` - dosing lag time
         * `MM` - Michaelis-Menten
@@ -6556,10 +6550,6 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
       required:
       - id
       - name

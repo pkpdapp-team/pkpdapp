@@ -88,12 +88,13 @@ class Protocol(StoredModel):
         default=False, help_text="whether the amount is per body weight"
     )
 
-    mapped_qname = models.CharField(
-        default="",
+    variable = models.ForeignKey(
+        "Variable",
+        on_delete=models.CASCADE,
+        related_name="protocols",
         blank=True,
         null=True,
-        max_length=50,
-        help_text="qname of the mapped dosing compartment for each dose",
+        help_text="dosing variable",
     )
 
     group = models.ForeignKey(
