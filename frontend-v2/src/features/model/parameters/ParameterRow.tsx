@@ -33,7 +33,7 @@ import { DerivedVariableType } from "../derivedVariable";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
-  variable_id: number;
+  variable_from_list: VariableRead;
   variables: VariableRead[];
   units: UnitRead[];
   modelControl: Control<FormData>;
@@ -42,19 +42,20 @@ interface Props {
 const ParameterRow: FC<Props> = ({
   model,
   project,
-  variable_id,
+  variable_from_list,
   variables,
   units,
   modelControl,
 }) => {
-  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
+  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_from_list.id });
+  const variable = variable_read || variable_from_list;
   const {
     control,
     handleSubmit,
     formState: { isDirty, submitCount },
   } = useForm<VariableRead>({
-    defaultValues: variable_read || { name: "" },
-    values: variable_read,
+    defaultValues: variable || { name: "" },
+    values: variable,
   });
   const [updateVariable] = useVariableUpdateMutation();
   useDirty(isDirty);
@@ -88,12 +89,6 @@ const ParameterRow: FC<Props> = ({
       submit();
     }
   }, [isDirty, submitCount, submit]);
-
-  if (!variable_read) {
-    return "Loading...";
-  }
-
-  const variable = variable_read as VariableRead;
 
   if (variable.constant !== true) {
     return null;

@@ -53,7 +53,8 @@ export function useVariableFormState({
   units: UnitRead[];
   variable_from_list: VariableRead;
 }) {
-  const { data: variable } = useVariableRetrieveQuery({ id: variable_from_list.id });
+  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_from_list.id });
+  const variable = variable_read || variable_from_list;
   const {
     handleSubmit,
     formState: { isDirty: isDirtyVariable, submitCount },
@@ -64,7 +65,7 @@ export function useVariableFormState({
     defaultValues: variable || { name: "" },
     values: variable,
   });
-  const watchProtocolId = watch("protocol");
+  const watchProtocolId = variable.protocol;
   const isDirty = watchProtocolId !== variable?.protocol || isDirtyVariable;
   useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
@@ -79,8 +80,8 @@ export function useVariableFormState({
 
 
   useEffect(() => {
-    reset(variable);
-  }, [reset, variable]);
+    reset(variable_read);
+  }, [reset, variable_read]);
 
   return {
     handleSubmit,

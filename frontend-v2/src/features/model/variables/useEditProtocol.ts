@@ -66,7 +66,9 @@ export default function useEditProtocol({
 
 
   const removeProtocol = () => {
-    return destroyProtocol({ id: watchProtocolId });
+    if (watchProtocolId !== null && watchProtocolId !== undefined) {
+      return destroyProtocol({ id: watchProtocolId });
+    }
   };
   return { addProtocol, removeProtocol, hasProtocol, updateProtocol };
 }
