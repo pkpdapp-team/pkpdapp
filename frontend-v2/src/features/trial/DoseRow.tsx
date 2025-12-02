@@ -20,7 +20,7 @@ type Props = {
   baseUnit?: UnitRead;
   control: Control<Protocol>;
   disabled: boolean;
-  doseId: number;
+  dose: DoseRead;
   index: number;
   isPreclinical: boolean;
   minStartTime: number;
@@ -34,7 +34,7 @@ const DoseRow: FC<Props> = ({
   baseUnit,
   control,
   disabled,
-  doseId,
+  dose,
   index,
   isPreclinical,
   minStartTime,
@@ -43,10 +43,6 @@ const DoseRow: FC<Props> = ({
   timeUnit,
   version_greater_than_2 = false,
 }) => {
-  const { data: dose, refetch: refetchDose } = useDoseRetrieveQuery(
-    { id: doseId },
-    { skip: !doseId },
-  );
   const {
     control: doseControl,
     handleSubmit,
@@ -65,16 +61,16 @@ const DoseRow: FC<Props> = ({
     async (data: DoseRead) => {
       if (JSON.stringify(data) !== JSON.stringify(dose)) {
         reset(data);
-        await updateDose({ id: doseId, dose: data });
-        refetchDose();
+        await updateDose({ id: dose.id, dose: data });
         onChange();
       }
     },
-    [dose, doseId, refetchDose, updateDose, onChange, reset],
+    [dose, updateDose, reset, onChange],
   );
 
   useEffect(() => {
     if (isDirty && !isSubmitting) {
+      console.log("Saving dose changes...", isDirty, isSubmitting);
       const handleSave = handleSubmit(handleFormData);
       handleSave();
     }
@@ -85,7 +81,7 @@ const DoseRow: FC<Props> = ({
   };
 
   const handleDeleteRow = async () => {
-    await destroyDose({ id: doseId });
+    await destroyDose({ id: dose.id });
     onChange();
   };
 

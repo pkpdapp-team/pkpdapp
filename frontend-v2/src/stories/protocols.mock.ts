@@ -41,13 +41,12 @@ export const projectProtocols: ProtocolRead[] = [
         protocol: 4083,
       },
     ],
-    variables: [2401],
+    variable: 2401,
     subjects: [],
     read_only: false,
     datetime: null,
     name: "A1",
     dose_type: "D",
-    mapped_qname: "PKCompartment.A1",
     dataset: null,
     project: 65,
     compound: null,
@@ -70,13 +69,12 @@ export const projectProtocols: ProtocolRead[] = [
         protocol: 4084,
       },
     ],
-    variables: [],
+    variable: 2401,
     subjects: [],
     read_only: false,
     datetime: null,
     name: "A1 - Group 1",
     dose_type: "D",
-    mapped_qname: "PKCompartment.A1",
     dataset: null,
     project: 65,
     compound: null,
@@ -112,7 +110,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2399,
@@ -140,7 +138,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2400,
@@ -168,7 +166,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2401,
@@ -196,7 +194,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: 4083,
+    protocols: [4083],
   },
   {
     id: 2402,
@@ -224,7 +222,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2403,
@@ -252,7 +250,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2404,
@@ -280,7 +278,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2405,
@@ -308,7 +306,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2406,
@@ -336,7 +334,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2407,
@@ -364,7 +362,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2408,
@@ -393,7 +391,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2409,
@@ -421,7 +419,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2410,
@@ -449,7 +447,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 65,
-    protocol: null,
+    protocols: [],
   },
 ];
 export const units = [

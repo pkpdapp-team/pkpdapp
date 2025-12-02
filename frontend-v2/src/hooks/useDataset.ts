@@ -47,8 +47,10 @@ export default function useDataset(selectedProject: number | null) {
     { datasetId: datasetIdOrZero },
     { skip: !datasetIdOrZero },
   );
-  const { datasetGroups: datasetGroupData, refetchDatasetGroups } =
-    useSubjectGroups();
+  const { groups, refetchGroups } = useSubjectGroups();
+  const datasetGroupData = groups?.filter(
+    (group) => group.dataset === datasetIdOrZero,
+  );
   const subjectGroups = datasetGroupData || DEFAULT_GROUPS;
   const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } =
     useBiomarkerTypeListQuery(
@@ -75,10 +77,10 @@ export default function useDataset(selectedProject: number | null) {
       console.log("updating dataset", newDataset);
       refetch();
       refetchSubjects();
-      refetchDatasetGroups();
+      refetchGroups();
       refetchBiomarkerTypes();
     },
-    [refetch, refetchSubjects, refetchDatasetGroups, refetchBiomarkerTypes],
+    [refetch, refetchSubjects, refetchGroups, refetchBiomarkerTypes],
   );
 
   const subjectBiomarkers: SubjectBiomarker[][] = biomarkerTypes

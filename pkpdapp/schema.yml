@@ -3751,10 +3751,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3770,6 +3766,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
       required:
       - data
       - dataset
@@ -4580,10 +4580,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4599,6 +4595,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
     PatchedCombinedModel:
       type: object
       properties:

@@ -99,7 +99,7 @@ class Protocol(StoredModel):
 
     group = models.ForeignKey(
         SubjectGroup,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="protocols",
         blank=True,
         null=True,
@@ -141,7 +141,7 @@ class Protocol(StoredModel):
             return False
         if self.amount_unit != protocol.amount_unit:
             return False
-        if self.mapped_qname != protocol.mapped_qname:
+        if self.variable != protocol.variable:
             return False
         if self.group != protocol.group:
             return False

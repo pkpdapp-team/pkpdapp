@@ -155,10 +155,6 @@ export const Protocols: FC<ProtocolsProps> = ({
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
 
-  const filteredProtocols = projectProtocols?.filter(
-    (protocol) => protocol.variables.length > 0,
-  );
-
   const handleTabChange = (
     event: SyntheticEvent<Element, Event>,
     newValue: number,
@@ -169,14 +165,16 @@ export const Protocols: FC<ProtocolsProps> = ({
     setTab(newValue);
   };
 
+  const filteredProtocols = projectProtocols.filter((p => p.group === null));
+
   const handleAddTab = async () => {
     const newValue = groups?.length || 1;
     const existingNames = groups?.map((g) => g.name);
     let newGroupId = newValue;
-    let newGroupName = `Group ${newValue}`;
+    let newGroupName = `Sim-Group ${newValue}`;
     while (existingNames?.includes(newGroupName)) {
       newGroupId++;
-      newGroupName = `Group ${newGroupId}`;
+      newGroupName = `Sim-Group ${newGroupId}`;
     }
     await createSubjectGroup({
       subjectGroup: {
@@ -184,22 +182,18 @@ export const Protocols: FC<ProtocolsProps> = ({
         id_in_dataset: `${newGroupId}`,
         project: project.id,
         protocols: filteredProtocols.map((p) => {
-          const { project, mapped_qname, ...newProtocol } = p;
-          const linkedVariableId = p.variables[0];
-          const mappedQName =
-            mapped_qname ||
-            variables?.find((v) => v.id === linkedVariableId)?.qname;
+          const { project, ...newProtocol } = p;
           return {
             ...newProtocol,
             dataset: null,
             project,
             name: `${newProtocol.name} - Group ${newValue}`,
-            mapped_qname: mappedQName,
           };
         }),
       },
     });
     await refetchGroups();
+    await refetchProtocols();
     setTab(groups.length + 1);
   };
 
@@ -224,6 +218,7 @@ export const Protocols: FC<ProtocolsProps> = ({
   };
 
   const onProtocolChange = () => {
+    console.log("Protocol changed, refetching groups and protocols...");
     refetchGroups();
     refetchProtocols();
   };
@@ -236,12 +231,11 @@ export const Protocols: FC<ProtocolsProps> = ({
   }
 
   const subjectGroup = tab === 0 ? null : groups?.[tab - 1];
-  const selectedProtocols =
-    tab === 0
-      ? filteredProtocols
-      : subjectGroup
-        ? [...subjectGroup.protocols]
-        : [];
+  const selectedProtocols = projectProtocols.filter((protocol) =>
+    subjectGroup
+      ? protocol.group === subjectGroup.id
+      : protocol.group === null,
+  );
 
   // sort protocols alphabetically by name
   selectedProtocols?.sort((a, b) => {
@@ -273,12 +267,12 @@ export const Protocols: FC<ProtocolsProps> = ({
         >
           <Tab label={"Project"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
-            const selectedDoses =
-              group.protocols?.flatMap((p) => p?.doses) || [];
-            const mappedVariableQnames = group.protocols?.map((p) => p.mapped_qname);
-            const aMappedVariableDoesNotExist = mappedVariableQnames?.some((v) => {
-              return !variables?.some((variable) => variable.qname === v);
-            });
+            const selectedProtocols = projectProtocols.filter((protocol) =>
+              protocol.group === group.id,
+            );
+            const selectedDoses = selectedProtocols.flatMap((protocol) =>
+              protocol.doses || []
+            );
             return (
               <Tab
                 key={group.id}
@@ -295,11 +289,6 @@ export const Protocols: FC<ProtocolsProps> = ({
                     >
                       {selectedDoses.length === 0 && (
                         <Error color="error" sx={{ marginRight: ".5rem" }} />
-                      )}
-                      {aMappedVariableDoesNotExist && (
-                        <Tooltip title="One or more variables linked to this protocol no longer exist in the model, please delete this group." arrow>
-                          <Error color="error" sx={{ marginRight: ".5rem" }} />
-                        </Tooltip>
                       )}
                       <RemoveCircleOutlineIcon fontSize="small" />
                     </IconButton>

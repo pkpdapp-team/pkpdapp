@@ -16,6 +16,7 @@ from pkpdapp.models import (
     Unit,
     CategoricalBiomarker,
     SubjectGroup,
+    CombinedModel,
 )
 from pkpdapp.utils import DataParser
 
@@ -60,6 +61,9 @@ class Dataset(models.Model):
         Subject.objects.filter(dataset=self).delete()
         Protocol.objects.filter(dataset=self).delete()
         SubjectGroup.objects.filter(dataset=self).delete()
+        project = self.get_project()
+        model = CombinedModel.objects.filter(project=project).first()
+        variables = model.variables.all()
 
         data_without_dose = data.query('OBSERVATION != "."')
 
@@ -79,7 +83,7 @@ class Dataset(models.Model):
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
             observation_name = row["OBSERVATION_NAME"]
-            observation_variable = row["OBSERVATION_VARIABLE"]
+            observation_variable = variables.get(qname=row["OBSERVATION_VARIABLE"])
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -89,7 +93,7 @@ class Dataset(models.Model):
                 display_time_unit=time_unit,
                 dataset=self,
                 color=i,
-                mapped_qname=observation_variable,
+                variable=observation_variable,
             )
 
         # create subjects
@@ -107,9 +111,12 @@ class Dataset(models.Model):
         groups = {}
         for i, row in data[["GROUP_ID"]].drop_duplicates().iterrows():
             group_id = row["GROUP_ID"]
-            group_name = f"Group {group_id}"
+            group_name = f"Data-Group {group_id}"
             group = SubjectGroup.objects.create(
-                name=group_name, id_in_dataset=group_id, dataset=self
+                name=group_name,
+                id_in_dataset=group_id,
+                dataset=self,
+                project=self.project,
             )
             groups[group_id] = group
             for i, row in (
@@ -124,13 +131,15 @@ class Dataset(models.Model):
         # create group protocol
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
-            dosing_rows[[
-                "GROUP_ID",
-                "ADMINISTRATION_NAME",
-                "AMOUNT_UNIT",
-                "AMOUNT_VARIABLE",
-                "PER_BODY_WEIGHT_KG",
-            ]]
+            dosing_rows[
+                [
+                    "GROUP_ID",
+                    "ADMINISTRATION_NAME",
+                    "AMOUNT_UNIT",
+                    "AMOUNT_VARIABLE",
+                    "PER_BODY_WEIGHT_KG",
+                ]
+            ]
             .drop_duplicates()
             .iterrows()
         ):
@@ -149,10 +158,11 @@ class Dataset(models.Model):
                 time_unit=time_unit,
                 amount_unit=amount_unit,
                 dose_type=route,
-                mapped_qname=mapped_qname,
+                variable=variables.get(qname=mapped_qname),
                 group=group,
                 dataset=self,
                 amount_per_body_weight=amount_per_body_weight,
+                project=self.project,
             )
             group.protocols.add(protocol)
             group.save()
@@ -180,18 +190,20 @@ class Dataset(models.Model):
         # parse dosing rows
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
-            dosing_rows[[
-                "GROUP_ID",
-                "TIME",
-                "AMOUNT",
-                "AMOUNT_UNIT",
-                "AMOUNT_VARIABLE",
-                "INFUSION_TIME",
-                "EVENT_ID",
-                "ADMINISTRATION_NAME",
-                "ADDITIONAL_DOSES",
-                "INTERDOSE_INTERVAL",
-            ]]
+            dosing_rows[
+                [
+                    "GROUP_ID",
+                    "TIME",
+                    "AMOUNT",
+                    "AMOUNT_UNIT",
+                    "AMOUNT_VARIABLE",
+                    "INFUSION_TIME",
+                    "EVENT_ID",
+                    "ADMINISTRATION_NAME",
+                    "ADDITIONAL_DOSES",
+                    "INTERDOSE_INTERVAL",
+                ]
+            ]
             .drop_duplicates()
             .iterrows()
         ):

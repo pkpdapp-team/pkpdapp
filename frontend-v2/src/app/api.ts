@@ -10,8 +10,28 @@ export const api = backendApi.enhanceEndpoints({
     "Simulation",
     "Protocol",
     "Unit",
+    "Dose",
   ],
   endpoints: {
+    // Doses
+    doseList: {
+      providesTags: (result) => [{ type: "Dose", id: "LIST" }]
+    },
+    doseRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: "Dose", id }],
+    },
+    doseUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "Dose", id }],
+    },
+    doseCreate: {
+      invalidatesTags: [{ type: "Dose", id: "LIST" }],
+    },
+    doseDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Dose", id },
+        { type: "Dose", id: "LIST" },
+      ],
+    },
     // Projects
     projectList: {
       providesTags: (result) =>

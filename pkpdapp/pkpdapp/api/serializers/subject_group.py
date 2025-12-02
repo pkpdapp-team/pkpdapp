@@ -10,21 +10,17 @@ from pkpdapp.api.serializers import ProtocolSerializer
 
 
 class SubjectGroupSerializer(serializers.ModelSerializer):
-    subjects = serializers.PrimaryKeyRelatedField(
-        many=True, read_only=True
-    )
-    protocols = ProtocolSerializer(
-        many=True
-    )
+    subjects = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    protocols = ProtocolSerializer(many=True)
 
     class Meta:
         model = SubjectGroup
-        fields = '__all__'
+        fields = "__all__"
 
     def create(self, validated_data):
-        protocols = validated_data.pop('protocols')
+        protocols = validated_data.pop("protocols")
         subject_group = SubjectGroup.objects.create(**validated_data)
         for protocol in protocols:
-            protocol['group'] = subject_group
-            ProtocolSerializer.create(ProtocolSerializer(), protocol)
+            protocol["group"] = subject_group
+            ProtocolSerializer().create(protocol)
         return subject_group

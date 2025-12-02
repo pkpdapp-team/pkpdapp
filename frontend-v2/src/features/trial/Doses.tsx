@@ -35,10 +35,10 @@ interface Props {
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
-      { id: protocol.variables[0] || 0 },
-      { skip: !protocol.variables.length },
+      { id: protocol.variable || 0 },
+      { skip: !protocol.variable },
     );
-  const mappedVariable = protocol.mapped_qname || variable?.qname || "";
+  const mappedVariable = variable?.qname || "";
   const { control, reset, handleSubmit } = useForm<Protocol>({
     defaultValues: protocol,
   });
@@ -86,12 +86,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     async function setDefaultAmountUnit() {
       const newProtocol = { ...protocol, amount_unit: defaultUnit?.id };
       await updateProtocol({ id: protocol.id, protocol: newProtocol });
-      onChange();
     }
     if (defaultUnit?.id && baseUnit?.symbol === "") {
       setDefaultAmountUnit();
     }
-  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol, onChange]);
+  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol]);
 
   if (isVariableLoading) {
     return <div>Loading...</div>;
@@ -188,7 +187,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           index={index}
           baseUnit={baseUnit}
           disabled={isSharedWithMe}
-          doseId={dose.id}
+          dose={dose}
           control={control}
           isPreclinical={isPreclinical}
           minStartTime={
