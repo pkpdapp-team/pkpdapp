@@ -2054,8 +2054,6 @@ export type BiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2066,6 +2064,8 @@ export type BiomarkerType = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type BiomarkerTypeRead = {
   id: number;
@@ -2084,8 +2084,6 @@ export type BiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2096,6 +2094,8 @@ export type BiomarkerTypeRead = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerType = {
   /** name of the biomarker type */
@@ -2108,8 +2108,6 @@ export type PatchedBiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2120,6 +2118,8 @@ export type PatchedBiomarkerType = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerTypeRead = {
   id?: number;
@@ -2138,8 +2138,6 @@ export type PatchedBiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2150,6 +2148,8 @@ export type PatchedBiomarkerTypeRead = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */
