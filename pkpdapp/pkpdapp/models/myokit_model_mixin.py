@@ -576,7 +576,9 @@ class MyokitModelMixin:
         project = self.get_project()
         protocols = project.protocols.all()
         project_dosing_protocols = {
-            p.variable.qname: p for p in protocols if p.group is None
+            p.variable.qname: p
+            for p in protocols
+            if p.group is None and p.variable is not None
         }
         model_dosing_protocols = [project_dosing_protocols]
 

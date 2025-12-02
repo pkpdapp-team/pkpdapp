@@ -7,17 +7,24 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0043_alter_protocol_group'),
+        ("pkpdapp", "0043_alter_protocol_group"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='biomarkertype',
-            name='mapped_qname',
+            model_name="biomarkertype",
+            name="mapped_qname",
         ),
         migrations.AddField(
-            model_name='biomarkertype',
-            name='variable',
-            field=models.ForeignKey(blank=True, help_text='mapped variable', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='biomarker_types', to='pkpdapp.variable'),
+            model_name="biomarkertype",
+            name="variable",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="mapped variable",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="biomarker_types",
+                to="pkpdapp.variable",
+            ),
         ),
     ]

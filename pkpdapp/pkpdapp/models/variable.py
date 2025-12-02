@@ -9,7 +9,6 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     StoredModel,
-    Protocol,
 )
 import numpy as np
 from django.db.models import Q
@@ -429,4 +428,10 @@ class Variable(StoredModel):
         self.constant = variable.constant
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
+
+        # copy protocols
+        for p in variable.protocols.all():
+            new_protocol = p.copy(new_project, self)
+            new_protocol.save()
+
         self.save()

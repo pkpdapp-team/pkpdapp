@@ -162,7 +162,7 @@ class Protocol(StoredModel):
 
         self.__original_dose_type = self.dose_type
 
-    def copy(self, new_project):
+    def copy(self, new_project, new_variable):
         stored_protocol_kwargs = {
             "name": self.name,
             "project": new_project,
@@ -170,6 +170,7 @@ class Protocol(StoredModel):
             "dose_type": self.dose_type,
             "time_unit": self.time_unit,
             "amount_unit": self.amount_unit,
+            "variable": new_variable,
         }
         stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
         for dose in self.doses.all():

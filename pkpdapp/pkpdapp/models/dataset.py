@@ -18,7 +18,6 @@ from pkpdapp.models import (
     SubjectGroup,
     CombinedModel,
 )
-from pkpdapp.models.variable import Variable
 from pkpdapp.utils import DataParser
 
 
@@ -63,11 +62,12 @@ class Dataset(models.Model):
         Protocol.objects.filter(dataset=self).delete()
         SubjectGroup.objects.filter(dataset=self).delete()
         project = self.get_project()
-        if project is None:
-            variables = Variable.objects.none()
-        else:
+        has_combined_model = False
+        if project is not None:
             model = CombinedModel.objects.filter(project=project).first()
-            variables = model.variables.all()
+            if model is not None:
+                variables = model.variables.all()
+                has_combined_model = True
 
         data_without_dose = data.query('OBSERVATION != "." and OBSERVATION != ""')
 
@@ -88,7 +88,7 @@ class Dataset(models.Model):
             unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
             observation_name = row["OBSERVATION_NAME"]
             observation_qname = row["OBSERVATION_VARIABLE"]
-            if project is None:
+            if not has_combined_model:
                 observation_variable = None
             else:
                 observation_variable = variables.get(qname=observation_qname)
@@ -163,7 +163,7 @@ class Dataset(models.Model):
                 route = Protocol.DoseType.DIRECT
             else:
                 route = Protocol.DoseType.INDIRECT
-            if project is None:
+            if not has_combined_model:
                 mapped_variable = None
             else:
                 mapped_variable = variables.get(qname=mapped_qname)
