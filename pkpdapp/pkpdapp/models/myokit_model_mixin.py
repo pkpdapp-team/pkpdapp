@@ -154,12 +154,10 @@ class MyokitModelMixin:
         if dosing_protocols is None:
             # add a dose_rate variable to the model for each
             # dosed variable
-            dosing_variables = [
-                v for v in self.variables.filter(state=True) if v.protocol
-            ]
             dosing_protocols = {}
-            for v in dosing_variables:
-                dosing_protocols[v.qname] = v.protocol
+            for v in self.variables.filter(state=True):
+                for p in v.protocols.all():
+                    dosing_protocols[v.qname] = p
 
         protocols = self._get_myokit_protocols(
             model=model,

@@ -412,11 +412,6 @@ class Variable(StoredModel):
         if self.qname != variable.qname:
             raise RuntimeError("cannot copy variable with different qname")
 
-        if variable.protocol is None:
-            new_protocol = None
-        else:
-            new_protocol = variable.protocol.copy(new_project)
-
         self.name = variable.name
         self.description = variable.description
         self.unit = variable.unit
@@ -432,7 +427,6 @@ class Variable(StoredModel):
         self.state = variable.state
         self.unit_symbol = variable.unit_symbol
         self.constant = variable.constant
-        self.protocol = new_protocol
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
         self.save()

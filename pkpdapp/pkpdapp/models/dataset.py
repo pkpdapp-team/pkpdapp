@@ -18,6 +18,7 @@ from pkpdapp.models import (
     SubjectGroup,
     CombinedModel,
 )
+from pkpdapp.models.variable import Variable
 from pkpdapp.utils import DataParser
 
 
@@ -62,10 +63,11 @@ class Dataset(models.Model):
         Protocol.objects.filter(dataset=self).delete()
         SubjectGroup.objects.filter(dataset=self).delete()
         project = self.get_project()
-        model = CombinedModel.objects.filter(project=project).first()
-        variables = model.variables.all()
-        for v in variables:
-            print(f"Variable: {v.qname} (id={v.id})")
+        if project is None:
+            variables = Variable.objects.none()
+        else:
+            model = CombinedModel.objects.filter(project=project).first()
+            variables = model.variables.all()
 
         data_without_dose = data.query('OBSERVATION != "." and OBSERVATION != ""')
 
@@ -86,8 +88,11 @@ class Dataset(models.Model):
             unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
             observation_name = row["OBSERVATION_NAME"]
             observation_qname = row["OBSERVATION_VARIABLE"]
-            print(f"Creating biomarker type: {observation_qname}")
-            observation_variable = variables.get(qname=observation_qname)
+            if project is None:
+                observation_variable = None
+            else:
+                observation_variable = variables.get(qname=observation_qname)
+
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -133,6 +138,7 @@ class Dataset(models.Model):
                 subject.group = group
                 subject.save()
         # create group protocol
+        qname_to_protocol = {}
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
             dosing_rows[
@@ -157,17 +163,22 @@ class Dataset(models.Model):
                 route = Protocol.DoseType.DIRECT
             else:
                 route = Protocol.DoseType.INDIRECT
+            if project is None:
+                mapped_variable = None
+            else:
+                mapped_variable = variables.get(qname=mapped_qname)
             protocol = Protocol.objects.create(
                 name="{}-{}".format(self.name, group.name),
                 time_unit=time_unit,
                 amount_unit=amount_unit,
                 dose_type=route,
-                variable=variables.get(qname=mapped_qname),
+                variable=mapped_variable,
                 group=group,
                 dataset=self,
                 amount_per_body_weight=amount_per_body_weight,
                 project=self.project,
             )
+            qname_to_protocol[mapped_qname] = protocol
             group.protocols.add(protocol)
             group.save()
 
@@ -220,7 +231,7 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = group.protocols.get(variable__qname=mapped_qname)
+            protocol = qname_to_protocol.get(mapped_qname)
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1

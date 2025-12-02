@@ -8,7 +8,7 @@ import codecs
 from django.utils import timezone
 import urllib.request
 from django.test import TestCase
-from pkpdapp.models.dataset import Dataset
+from pkpdapp.models import Dataset, Project
 from pkpdapp.utils import DataParser
 
 django.setup()
@@ -138,7 +138,10 @@ class TestDataParser(TestCase):
                     "stored_unit__symbol", flat=True
                 )
                 self.assertCountEqual(biomarker_units, expected_units)
-            if filename == "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv":  # noqa: E501
+            if (
+                filename
+                == "datasets/Mean%20IL6R%20for%20PKD%20explor%20plasma%20only%20with%20dosing%20export.csv"
+            ):  # noqa: E501
                 # check the right number of subjects and protocols added
                 self.assertEqual(dataset.subjects.count(), 3)
                 protocols = list(dataset.protocols.all())
