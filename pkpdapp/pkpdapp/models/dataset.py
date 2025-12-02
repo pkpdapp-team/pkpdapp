@@ -64,8 +64,10 @@ class Dataset(models.Model):
         project = self.get_project()
         model = CombinedModel.objects.filter(project=project).first()
         variables = model.variables.all()
+        for v in variables:
+            print(f"Variable: {v.qname} (id={v.id})")
 
-        data_without_dose = data.query('OBSERVATION != "."')
+        data_without_dose = data.query('OBSERVATION != "." and OBSERVATION != ""')
 
         time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
 
@@ -83,7 +85,9 @@ class Dataset(models.Model):
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
             observation_name = row["OBSERVATION_NAME"]
-            observation_variable = variables.get(qname=row["OBSERVATION_VARIABLE"])
+            observation_qname = row["OBSERVATION_VARIABLE"]
+            print(f"Creating biomarker type: {observation_qname}")
+            observation_variable = variables.get(qname=observation_qname)
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -216,7 +220,7 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = group.protocols.get(mapped_qname=mapped_qname)
+            protocol = group.protocols.get(variable__qname=mapped_qname)
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1

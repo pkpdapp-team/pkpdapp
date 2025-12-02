@@ -6175,8 +6175,9 @@ export const projectHandlers = [
   http.get("/api/variable", async ({ request }) => {
     await delay();
     const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
     const pkModel = url.searchParams.get("dosed_pk_model_id");
-    if (pkModel) {
+    if (pkModel || projectId) {
       return HttpResponse.json(variables, {
         status: 200,
       });

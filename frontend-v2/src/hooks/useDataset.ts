@@ -10,6 +10,8 @@ import {
   useUnitListQuery,
   useBiomarkerTypeListQuery,
   UnitRead,
+  useVariableListQuery,
+  useProtocolListQuery,
 } from "../app/backendApi";
 import useSubjectGroups from "./useSubjectGroups";
 
@@ -59,6 +61,16 @@ export default function useDataset(selectedProject: number | null) {
     );
   const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
 
+  const { data: variables } = useVariableListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
+
+  const { refetch: refetchProtocols } = useProtocolListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
+
   const [createDataset] = useDatasetCreateMutation();
 
   async function addDataset(projectId: number) {
@@ -77,6 +89,7 @@ export default function useDataset(selectedProject: number | null) {
       console.log("updating dataset", newDataset);
       refetch();
       refetchSubjects();
+      refetchProtocols();
       refetchGroups();
       refetchBiomarkerTypes();
     },
@@ -88,7 +101,7 @@ export default function useDataset(selectedProject: number | null) {
     .map((b) => {
       const timeUnit = units?.find((u) => u.id === b.display_time_unit);
       const unit = units?.find((u) => u.id === b.display_unit);
-      const qname = b.mapped_qname;
+      const qname = variables?.find((v) => v.id === b.variable)?.qname;
       const label = b.name;
       return (
         b.data?.subjects
