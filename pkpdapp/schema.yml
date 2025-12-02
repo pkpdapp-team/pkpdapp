@@ -5180,11 +5180,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: string
-          readOnly: true
         subjects:
           type: array
           items:
@@ -5476,6 +5471,11 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
           readOnly: true
         read_only:
           type: boolean
@@ -5865,11 +5865,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: string
-          readOnly: true
         subjects:
           type: array
           items:
@@ -5926,7 +5921,6 @@ components:
       - id
       - name
       - subjects
-      - variables
     ResultsTable:
       type: object
       properties:
@@ -6447,6 +6441,11 @@ components:
         id:
           type: integer
           readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -6553,6 +6552,7 @@ components:
       required:
       - id
       - name
+      - protocols
       - qname
     Y2ScaleEnum:
       enum:

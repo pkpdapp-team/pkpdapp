@@ -10,7 +10,6 @@ from pkpdapp.api.serializers import DoseSerializer
 
 class ProtocolSerializer(serializers.ModelSerializer):
     doses = DoseSerializer(many=True)
-    variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     subjects = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
