@@ -100,16 +100,13 @@ const MapDosing: FC<IMapDosing> = ({
     return null;
   }
 
-  const dosingCompartments = projectProtocols
-    ?.filter((protocol) => protocol.variables.length > 0)
-    .map((protocol) => {
-      return (
-        protocol.mapped_qname ||
-        variables?.find((variable) => variable.id === protocol.variables[0])
-          ?.qname ||
-        ""
-      );
-    });
+  const dosingCompartments = projectProtocols?.map((protocol) => {
+    return (
+      variables?.find((variable) => variable.id === protocol.variable)
+        ?.qname ||
+      ""
+    );
+  });
 
   return state.hasDosingRows ? (
     <DosingProtocols

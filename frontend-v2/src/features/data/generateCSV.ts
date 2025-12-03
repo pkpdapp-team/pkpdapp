@@ -5,6 +5,8 @@ import {
   SubjectGroupListApiResponse,
   UnitListApiResponse,
   UnitRead,
+  Variable,
+  VariableListApiResponse,
 } from "../../app/backendApi";
 
 type Row = { [key: string]: string | number | boolean | null | undefined };
@@ -45,12 +47,13 @@ function parseDosingRow(
   units: UnitListApiResponse | undefined,
   groupId: string | undefined,
   adminId: number,
+  variable: Variable | undefined,
 ) {
   const amountUnit =
     units?.find((unit) => unit.id === protocol.amount_unit)?.symbol || "";
   const timeUnit =
     units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
-  const qname = protocol.mapped_qname;
+  const qname = variable?.qname;
   const perKg = protocol.amount_per_body_weight;
   return protocol.doses.map((dose) => ({
     "Administration ID": adminId,
@@ -91,6 +94,7 @@ export default function generateCSV(
   subjectBiomarkers: SubjectBiomarker[][] | undefined,
   units: UnitListApiResponse | undefined,
   format: "default" | "nonmem",
+  variables: VariableListApiResponse | undefined,
 ) {
   const rows: Data = [];
   groups.forEach((group, groupIndex) => {
@@ -99,7 +103,10 @@ export default function generateCSV(
     const dosingRows: Row[] = group.protocols.flatMap(
       (protocol, protocolIndex) => {
         const adminId = (groupIndex + 1) * 10 + protocolIndex;
-        return parseDosingRow(protocol, units, groupId, adminId);
+        const variable = variables?.find(
+          (v) => v.id === protocol.variable,
+        );
+        return parseDosingRow(protocol, units, groupId, adminId, variable);
       },
     );
 

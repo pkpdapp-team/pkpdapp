@@ -3751,10 +3751,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3770,6 +3766,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
       required:
       - data
       - dataset
@@ -4121,7 +4121,7 @@ components:
 
             * `AUC` - area under curve
             * `RO` - receptor occupancy
-            * `FUP` - faction unbound plasma
+            * `FUP` - fraction unbound plasma
             * `BPR` - blood plasma ratio
             * `TLG` - dosing lag time
             * `MM` - Michaelis-Menten
@@ -4580,10 +4580,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4599,6 +4595,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
     PatchedCombinedModel:
       type: object
       properties:
@@ -5180,11 +5180,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
         subjects:
           type: array
           items:
@@ -5207,11 +5202,6 @@ components:
         amount_per_body_weight:
           type: boolean
           description: whether the amount is per body weight
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
         dataset:
           type: integer
           nullable: true
@@ -5233,6 +5223,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -5478,6 +5472,11 @@ components:
         id:
           type: integer
           readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -5581,10 +5580,6 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
     Pharmacodynamic:
       type: object
       properties:
@@ -5870,11 +5865,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
         subjects:
           type: array
           items:
@@ -5897,11 +5887,6 @@ components:
         amount_per_body_weight:
           type: boolean
           description: whether the amount is per body weight
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
         dataset:
           type: integer
           nullable: true
@@ -5923,6 +5908,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -5932,7 +5921,6 @@ components:
       - id
       - name
       - subjects
-      - variables
     ResultsTable:
       type: object
       properties:
@@ -6346,7 +6334,7 @@ components:
       description: |-
         * `AUC` - area under curve
         * `RO` - receptor occupancy
-        * `FUP` - faction unbound plasma
+        * `FUP` - fraction unbound plasma
         * `BPR` - blood plasma ratio
         * `TLG` - dosing lag time
         * `MM` - Michaelis-Menten
@@ -6453,6 +6441,11 @@ components:
         id:
           type: integer
           readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -6556,13 +6549,10 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
       required:
       - id
       - name
+      - protocols
       - qname
     Y2ScaleEnum:
       enum:

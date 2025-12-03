@@ -154,12 +154,10 @@ class MyokitModelMixin:
         if dosing_protocols is None:
             # add a dose_rate variable to the model for each
             # dosed variable
-            dosing_variables = [
-                v for v in self.variables.filter(state=True) if v.protocol
-            ]
             dosing_protocols = {}
-            for v in dosing_variables:
-                dosing_protocols[v.qname] = v.protocol
+            for v in self.variables.filter(state=True):
+                for p in v.protocols.all():
+                    dosing_protocols[v.qname] = p
 
         protocols = self._get_myokit_protocols(
             model=model,
@@ -575,15 +573,18 @@ class MyokitModelMixin:
 
         # add a dose_rate variable to the model for each
         # dosed variable
-        dosing_variables = [v for v in self.variables.filter(state=True) if v.protocol]
-        project_dosing_protocols = {v.qname: v.protocol for v in dosing_variables}
+        project = self.get_project()
+        protocols = project.protocols.all()
+        project_dosing_protocols = {
+            p.variable.qname: p
+            for p in protocols
+            if p.group is None and p.variable is not None
+        }
         model_dosing_protocols = [project_dosing_protocols]
 
-        project = self.get_project()
         for group in get_subject_groups(project):
-            protocols = group.protocols.all()
             dosing_protocols = {
-                protocol.mapped_qname: protocol for protocol in protocols
+                p.variable.qname: p for p in protocols if p.group == group
             }
             model_dosing_protocols.append(dosing_protocols)
 

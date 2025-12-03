@@ -9,7 +9,6 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     StoredModel,
-    Protocol,
 )
 import numpy as np
 from django.db.models import Q
@@ -153,15 +152,6 @@ class Variable(StoredModel):
         on_delete=models.CASCADE,
         related_name="variables",
         help_text="dosed pharmacokinetic model",
-    )
-
-    protocol = models.ForeignKey(
-        Protocol,
-        on_delete=models.SET_NULL,
-        related_name="variables",
-        blank=True,
-        null=True,
-        help_text="dosing protocol",
     )
 
     class Meta:
@@ -421,11 +411,6 @@ class Variable(StoredModel):
         if self.qname != variable.qname:
             raise RuntimeError("cannot copy variable with different qname")
 
-        if variable.protocol is None:
-            new_protocol = None
-        else:
-            new_protocol = variable.protocol.copy(new_project)
-
         self.name = variable.name
         self.description = variable.description
         self.unit = variable.unit
@@ -441,7 +426,12 @@ class Variable(StoredModel):
         self.state = variable.state
         self.unit_symbol = variable.unit_symbol
         self.constant = variable.constant
-        self.protocol = new_protocol
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
+
+        # copy protocols
+        for p in variable.protocols.all():
+            new_protocol = p.copy(new_project, self)
+            new_protocol.save()
+
         self.save()

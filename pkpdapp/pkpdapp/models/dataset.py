@@ -16,6 +16,7 @@ from pkpdapp.models import (
     Unit,
     CategoricalBiomarker,
     SubjectGroup,
+    CombinedModel,
 )
 from pkpdapp.utils import DataParser
 
@@ -60,8 +61,15 @@ class Dataset(models.Model):
         Subject.objects.filter(dataset=self).delete()
         Protocol.objects.filter(dataset=self).delete()
         SubjectGroup.objects.filter(dataset=self).delete()
+        project = self.get_project()
+        has_combined_model = False
+        if project is not None:
+            model = CombinedModel.objects.filter(project=project).first()
+            if model is not None:
+                variables = model.variables.all()
+                has_combined_model = True
 
-        data_without_dose = data.query('OBSERVATION != "."')
+        data_without_dose = data.query('OBSERVATION != "." and OBSERVATION != ""')
 
         time_unit = Unit.objects.get(symbol=data["TIME_UNIT"].iloc[0])
 
@@ -79,7 +87,12 @@ class Dataset(models.Model):
         for i, row in bts_unique.iterrows():
             unit = Unit.objects.get(symbol=row["OBSERVATION_UNIT"])
             observation_name = row["OBSERVATION_NAME"]
-            observation_variable = row["OBSERVATION_VARIABLE"]
+            observation_qname = row["OBSERVATION_VARIABLE"]
+            if not has_combined_model:
+                observation_variable = None
+            else:
+                observation_variable = variables.get(qname=observation_qname)
+
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
                 description="",
@@ -89,7 +102,7 @@ class Dataset(models.Model):
                 display_time_unit=time_unit,
                 dataset=self,
                 color=i,
-                mapped_qname=observation_variable,
+                variable=observation_variable,
             )
 
         # create subjects
@@ -107,9 +120,12 @@ class Dataset(models.Model):
         groups = {}
         for i, row in data[["GROUP_ID"]].drop_duplicates().iterrows():
             group_id = row["GROUP_ID"]
-            group_name = f"Group {group_id}"
+            group_name = f"Data-Group {group_id}"
             group = SubjectGroup.objects.create(
-                name=group_name, id_in_dataset=group_id, dataset=self
+                name=group_name,
+                id_in_dataset=group_id,
+                dataset=self,
+                project=self.project,
             )
             groups[group_id] = group
             for i, row in (
@@ -122,15 +138,18 @@ class Dataset(models.Model):
                 subject.group = group
                 subject.save()
         # create group protocol
+        qname_to_protocol = {}
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
-            dosing_rows[[
-                "GROUP_ID",
-                "ADMINISTRATION_NAME",
-                "AMOUNT_UNIT",
-                "AMOUNT_VARIABLE",
-                "PER_BODY_WEIGHT_KG",
-            ]]
+            dosing_rows[
+                [
+                    "GROUP_ID",
+                    "ADMINISTRATION_NAME",
+                    "AMOUNT_UNIT",
+                    "AMOUNT_VARIABLE",
+                    "PER_BODY_WEIGHT_KG",
+                ]
+            ]
             .drop_duplicates()
             .iterrows()
         ):
@@ -144,16 +163,22 @@ class Dataset(models.Model):
                 route = Protocol.DoseType.DIRECT
             else:
                 route = Protocol.DoseType.INDIRECT
+            if not has_combined_model:
+                mapped_variable = None
+            else:
+                mapped_variable = variables.get(qname=mapped_qname)
             protocol = Protocol.objects.create(
                 name="{}-{}".format(self.name, group.name),
                 time_unit=time_unit,
                 amount_unit=amount_unit,
                 dose_type=route,
-                mapped_qname=mapped_qname,
+                variable=mapped_variable,
                 group=group,
                 dataset=self,
                 amount_per_body_weight=amount_per_body_weight,
+                project=self.project,
             )
+            qname_to_protocol[mapped_qname] = protocol
             group.protocols.add(protocol)
             group.save()
 
@@ -180,18 +205,20 @@ class Dataset(models.Model):
         # parse dosing rows
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
-            dosing_rows[[
-                "GROUP_ID",
-                "TIME",
-                "AMOUNT",
-                "AMOUNT_UNIT",
-                "AMOUNT_VARIABLE",
-                "INFUSION_TIME",
-                "EVENT_ID",
-                "ADMINISTRATION_NAME",
-                "ADDITIONAL_DOSES",
-                "INTERDOSE_INTERVAL",
-            ]]
+            dosing_rows[
+                [
+                    "GROUP_ID",
+                    "TIME",
+                    "AMOUNT",
+                    "AMOUNT_UNIT",
+                    "AMOUNT_VARIABLE",
+                    "INFUSION_TIME",
+                    "EVENT_ID",
+                    "ADMINISTRATION_NAME",
+                    "ADDITIONAL_DOSES",
+                    "INTERDOSE_INTERVAL",
+                ]
+            ]
             .drop_duplicates()
             .iterrows()
         ):
@@ -204,7 +231,7 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = group.protocols.get(mapped_qname=mapped_qname)
+            protocol = qname_to_protocol.get(mapped_qname)
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1

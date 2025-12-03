@@ -7,8 +7,10 @@ import {
   VariableRead,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
+  useProtocolListQuery,
   useProtocolUpdateMutation,
 } from "../../../app/backendApi";
+import { variables } from "../../../stories/project.v3.mock";
 
 interface EditProtocolProps {
   compound: CompoundRead;
@@ -16,7 +18,6 @@ interface EditProtocolProps {
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
   variable: VariableRead;
-  watchProtocolId: number | null | undefined;
 }
 
 type DefaultDose = Omit<Dose, "id" | "protocol">;
@@ -27,9 +28,8 @@ export default function useEditProtocol({
   units,
   timeVariable,
   variable,
-  watchProtocolId,
 }: EditProtocolProps) {
-  const hasProtocol = watchProtocolId !== null && watchProtocolId !== undefined;
+  const hasProtocol = variable.protocols.length > 0;
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
@@ -37,6 +37,9 @@ export default function useEditProtocol({
   const [createProtocol] = useProtocolCreateMutation();
   const [destroyProtocol] = useProtocolDestroyMutation();
   const [updateProtocol] = useProtocolUpdateMutation();
+  const { data: protocols } = useProtocolListQuery({
+    projectId: project.id,
+  });
 
   const addProtocol = () => {
     const isPerKg = variableUnit?.g !== 0;
@@ -59,15 +62,17 @@ export default function useEditProtocol({
         time_unit: defaultTimeUnit?.id || undefined,
         name: variable.name,
         project: project.id,
-        mapped_qname: variable.qname,
+        variable: variable.id,
       },
     });
   };
 
 
-  const removeProtocol = () => {
-    if (watchProtocolId !== null && watchProtocolId !== undefined) {
-      return destroyProtocol({ id: watchProtocolId });
+  async function removeProtocol() {
+    for (const protocol of protocols || []) {
+      if (protocol.variable === variable.id) {
+        await destroyProtocol({ id: protocol.id });
+      }
     }
   };
   return { addProtocol, removeProtocol, hasProtocol, updateProtocol };

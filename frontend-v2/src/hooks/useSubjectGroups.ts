@@ -15,33 +15,14 @@ export default function useSubjectGroups() {
     { id: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: datasetGroups, refetch: refetchDatasetGroups } =
-    useSubjectGroupListQuery(
-      { datasetId: project?.datasets[0] || 0 },
-      { skip: !project },
-    );
-  const { data: projectGroups, refetch: refetchProjectGroups } =
+  const { data: groups, refetch: refetchGroups } =
     useSubjectGroupListQuery(
       { projectId: selectedProjectOrZero },
       { skip: !selectedProject },
     );
-  const groups = useMemo(
-    () =>
-      datasetGroups?.concat(projectGroups || []).sort((a, b) => a.id - b.id),
-    [datasetGroups, projectGroups],
-  );
-
-  function refetchGroups() {
-    refetchDatasetGroups();
-    refetchProjectGroups();
-  }
 
   return {
     groups,
-    datasetGroups,
-    projectGroups,
     refetchGroups,
-    refetchDatasetGroups,
-    refetchProjectGroups,
   };
 }

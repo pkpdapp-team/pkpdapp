@@ -45,13 +45,12 @@ class TestProject(TestCase):
             project=self.project,
             number_of_effect_compartments=1,
         )
-        protocol = Protocol.objects.create(name="my protocol")
+        a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
+        protocol = Protocol.objects.create(name="my protocol", variable=a1)
         dose = protocol.doses.create(
             amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
         )
         protocol.doses.set([dose])
-        a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
-        a1.protocol = protocol
         a1.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
@@ -124,7 +123,7 @@ class TestProject(TestCase):
         # check that the protocol is there and has the right name
         new_a1 = new_model.variables.get(qname="PKCompartment.A1")
         self.assertNotEqual(new_a1.pk, a1.pk)
-        new_protocol = new_a1.protocol
+        new_protocol = new_a1.protocols.first()
         self.assertEqual(new_protocol.name, "my protocol")
         self.assertNotEqual(new_protocol.pk, protocol.pk)
         self.assertEqual(new_protocol.doses.count(), 1)

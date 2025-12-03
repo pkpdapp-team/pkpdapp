@@ -10,6 +10,8 @@ import {
   useUnitListQuery,
   useBiomarkerTypeListQuery,
   UnitRead,
+  useVariableListQuery,
+  useProtocolListQuery,
 } from "../app/backendApi";
 import useSubjectGroups from "./useSubjectGroups";
 
@@ -47,8 +49,10 @@ export default function useDataset(selectedProject: number | null) {
     { datasetId: datasetIdOrZero },
     { skip: !datasetIdOrZero },
   );
-  const { datasetGroups: datasetGroupData, refetchDatasetGroups } =
-    useSubjectGroups();
+  const { groups, refetchGroups } = useSubjectGroups();
+  const datasetGroupData = groups?.filter(
+    (group) => group.dataset === datasetIdOrZero,
+  );
   const subjectGroups = datasetGroupData || DEFAULT_GROUPS;
   const { data: biomarkerTypeData, refetch: refetchBiomarkerTypes } =
     useBiomarkerTypeListQuery(
@@ -56,6 +60,16 @@ export default function useDataset(selectedProject: number | null) {
       { skip: !datasetIdOrZero },
     );
   const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
+
+  const { data: variables } = useVariableListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
+
+  const { refetch: refetchProtocols } = useProtocolListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
 
   const [createDataset] = useDatasetCreateMutation();
 
@@ -75,10 +89,11 @@ export default function useDataset(selectedProject: number | null) {
       console.log("updating dataset", newDataset);
       refetch();
       refetchSubjects();
-      refetchDatasetGroups();
+      refetchProtocols();
+      refetchGroups();
       refetchBiomarkerTypes();
     },
-    [refetch, refetchSubjects, refetchDatasetGroups, refetchBiomarkerTypes],
+    [refetch, refetchSubjects, refetchGroups, refetchBiomarkerTypes],
   );
 
   const subjectBiomarkers: SubjectBiomarker[][] = biomarkerTypes
@@ -86,7 +101,7 @@ export default function useDataset(selectedProject: number | null) {
     .map((b) => {
       const timeUnit = units?.find((u) => u.id === b.display_time_unit);
       const unit = units?.find((u) => u.id === b.display_unit);
-      const qname = b.mapped_qname;
+      const qname = variables?.find((v) => v.id === b.variable)?.qname;
       const label = b.name;
       return (
         b.data?.subjects

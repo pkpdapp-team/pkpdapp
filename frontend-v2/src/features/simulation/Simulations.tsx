@@ -117,6 +117,7 @@ const Simulations: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups } = useSubjectGroups();
+  console.log("Subject groups in Simulations:", groups);
   const [groupVisibility, setGroupVisibility] = useState<{
     [key: string]: boolean;
   }>({ Project: true });
@@ -224,8 +225,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {

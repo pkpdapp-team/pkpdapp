@@ -224,7 +224,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2181,
@@ -253,7 +253,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2182,
@@ -281,7 +281,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2183,
@@ -310,7 +310,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2184,
@@ -338,7 +338,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2185,
@@ -366,7 +366,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2186,
@@ -394,7 +394,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2187,
@@ -422,7 +422,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2188,
@@ -450,7 +450,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2189,
@@ -478,7 +478,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2190,
@@ -506,7 +506,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: 4067,
+    protocols: [4067],
   },
   {
     id: 2191,
@@ -534,7 +534,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2192,
@@ -562,7 +562,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2193,
@@ -590,7 +590,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2194,
@@ -618,7 +618,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2195,
@@ -646,7 +646,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2196,
@@ -674,7 +674,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2197,
@@ -702,7 +702,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2198,
@@ -731,7 +731,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2199,
@@ -759,7 +759,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2200,
@@ -787,7 +787,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2411,
@@ -815,7 +815,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2412,
@@ -843,7 +843,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
   {
     id: 2417,
@@ -872,7 +872,7 @@ export const variables: VariableRead[] = [
     pd_model: null,
     pk_model: null,
     dosed_pk_model: 57,
-    protocol: null,
+    protocols: [],
   },
 ];
 export const protocols: ProtocolRead[] = [
@@ -891,13 +891,12 @@ export const protocols: ProtocolRead[] = [
         protocol: 4067,
       },
     ],
-    variables: [2190],
+    variable: 2190,
     subjects: [],
     read_only: false,
     datetime: null,
     name: "Aa",
     dose_type: "D",
-    mapped_qname: "PKCompartment.Aa",
     dataset: null,
     project: 57,
     compound: null,
@@ -920,13 +919,12 @@ export const protocols: ProtocolRead[] = [
         protocol: 4085,
       },
     ],
-    variables: [],
+    variable: 2190,
     subjects: [],
     read_only: false,
     datetime: null,
     name: "Aa - Group 1",
     dose_type: "D",
-    mapped_qname: "PKCompartment.Aa",
     dataset: null,
     project: 57,
     compound: null,
@@ -6177,8 +6175,9 @@ export const projectHandlers = [
   http.get("/api/variable", async ({ request }) => {
     await delay();
     const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
     const pkModel = url.searchParams.get("dosed_pk_model_id");
-    if (pkModel) {
+    if (pkModel || projectId) {
       return HttpResponse.json(variables, {
         status: 200,
       });

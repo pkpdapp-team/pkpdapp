@@ -2054,8 +2054,6 @@ export type BiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2066,6 +2064,8 @@ export type BiomarkerType = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type BiomarkerTypeRead = {
   id: number;
@@ -2084,8 +2084,6 @@ export type BiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2096,6 +2094,8 @@ export type BiomarkerTypeRead = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerType = {
   /** name of the biomarker type */
@@ -2108,8 +2108,6 @@ export type PatchedBiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2120,6 +2118,8 @@ export type PatchedBiomarkerType = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerTypeRead = {
   id?: number;
@@ -2138,8 +2138,6 @@ export type PatchedBiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2150,6 +2148,8 @@ export type PatchedBiomarkerTypeRead = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */
@@ -2193,7 +2193,7 @@ export type DerivedVariable = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
     * `TLG` - dosing lag time
     * `MM` - Michaelis-Menten
@@ -2222,7 +2222,7 @@ export type DerivedVariableRead = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
     * `TLG` - dosing lag time
     * `MM` - Michaelis-Menten
@@ -2741,8 +2741,6 @@ export type Protocol = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2753,13 +2751,14 @@ export type Protocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type ProtocolRead = {
   id: number;
   doses: DoseRead[];
-  variables: number[];
   subjects: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -2770,8 +2769,6 @@ export type ProtocolRead = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2782,6 +2779,8 @@ export type ProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -3531,8 +3530,6 @@ export type PatchedProtocol = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3543,13 +3540,14 @@ export type PatchedProtocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type PatchedProtocolRead = {
   id?: number;
   doses?: DoseRead[];
-  variables?: number[];
   subjects?: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -3560,8 +3558,6 @@ export type PatchedProtocolRead = {
   dose_type?: DoseTypeEnum;
   /** whether the amount is per body weight */
   amount_per_body_weight?: boolean;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3572,6 +3568,8 @@ export type PatchedProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -4155,11 +4153,10 @@ export type Variable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type VariableRead = {
   id: number;
+  protocols: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4209,8 +4206,6 @@ export type VariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariable = {
   /** true if object has been stored */
@@ -4262,11 +4257,10 @@ export type PatchedVariable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariableRead = {
   id?: number;
+  protocols?: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4316,8 +4310,6 @@ export type PatchedVariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export const {
   useAlgorithmListQuery,

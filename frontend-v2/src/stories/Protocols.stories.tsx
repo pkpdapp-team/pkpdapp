@@ -10,8 +10,8 @@ import {
 } from "storybook/test";
 
 import Protocols from "../features/trial/Protocols";
-import { projectProtocols, groups } from "./protocols.mock";
-import { DoseRead, ProtocolRead, SubjectGroupRead } from "../app/backendApi";
+import { projectProtocols, groups, variables } from "./protocols.mock";
+import { DoseRead, ProtocolRead, SubjectGroupRead, VariableRead } from "../app/backendApi";
 import { useDispatch } from "react-redux";
 import { setProject } from "../features/main/mainSlice";
 import { project, projectHandlers } from "./project.mock";
@@ -66,8 +66,8 @@ const meta: Meta<typeof Protocols> = {
           http.get("/api/subject_group", async ({ request }) => {
             await delay();
             const searchParams = new URL(request.url).searchParams;
-            const datasetId = searchParams.get("dataset_id");
-            if (datasetId) {
+            const projectId = searchParams.get("project_id");
+            if (projectId) {
               return HttpResponse.json(groupMocks, {
                 status: 200,
               });

@@ -235,8 +235,8 @@ export const WithGroups: Story = {
           http.get("/api/subject_group", async ({ request }) => {
             await delay();
             const url = new URL(request.url);
-            const datasetId = url.searchParams.get("dataset_id");
-            if (datasetId) {
+            const projectId = url.searchParams.get("project_id");
+            if (projectId) {
               return HttpResponse.json(dataset.groups, { status: 200 });
             }
             return HttpResponse.json([], { status: 200 });

@@ -18,7 +18,7 @@ export const getConstVariables = (
     // if Aa or Atr1-10 is not dosed, then we will filter out F and ka (for library models)
     const aaIsNotDosed =
       variables.filter(
-        (variable) => variable.protocol && (variable.name == "Avh" || variable.name.startsWith("Aa") || variable.name.startsWith("Atr")),
+        (variable) => variable.protocols && (variable.name == "Avh" || variable.name.startsWith("Aa") || variable.name.startsWith("Atr")),
       ).length === 0;
     if (aaIsNotDosed) {
       constVariables = constVariables.filter(
