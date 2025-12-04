@@ -93,7 +93,13 @@ export default function useDataset(selectedProject: number | null) {
       refetchGroups();
       refetchBiomarkerTypes();
     },
-    [refetch, refetchSubjects, refetchGroups, refetchBiomarkerTypes],
+    [
+      refetch,
+      refetchSubjects,
+      refetchProtocols,
+      refetchGroups,
+      refetchBiomarkerTypes,
+    ],
   );
 
   const subjectBiomarkers: SubjectBiomarker[][] = biomarkerTypes

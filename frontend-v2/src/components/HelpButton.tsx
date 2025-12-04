@@ -9,24 +9,29 @@ interface HelpButtonProps {
   title: string;
   children: ReactNode;
   maxWidth?: string;
-  placement?: 'auto-end'
-  | 'auto-start'
-  | 'auto'
-  | 'bottom-end'
-  | 'bottom-start'
-  | 'bottom'
-  | 'left-end'
-  | 'left-start'
-  | 'left'
-  | 'right-end'
-  | 'right-start'
-  | 'right'
-  | 'top-end'
-  | 'top-start'
-  | 'top';
+  placement?:
+    | "auto-end"
+    | "auto-start"
+    | "auto"
+    | "bottom-end"
+    | "bottom-start"
+    | "bottom"
+    | "left-end"
+    | "left-start"
+    | "left"
+    | "right-end"
+    | "right-start"
+    | "right"
+    | "top-end"
+    | "top-start"
+    | "top";
 }
 
-const HelpButton: FC<HelpButtonProps> = ({ children, placement = 'bottom-end', maxWidth }) => {
+const HelpButton: FC<HelpButtonProps> = ({
+  children,
+  placement = "bottom-end",
+  maxWidth,
+}) => {
   const [open, setOpen] = useState(false);
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,

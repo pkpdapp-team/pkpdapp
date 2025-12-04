@@ -1,9 +1,5 @@
-import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import {
-  useProjectRetrieveQuery,
-  useSubjectGroupListQuery,
-} from "../app/backendApi";
+import { useSubjectGroupListQuery } from "../app/backendApi";
 import { RootState } from "../app/store";
 
 export default function useSubjectGroups() {
@@ -11,15 +7,10 @@ export default function useSubjectGroups() {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: selectedProjectOrZero },
+  const { data: groups, refetch: refetchGroups } = useSubjectGroupListQuery(
+    { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: groups, refetch: refetchGroups } =
-    useSubjectGroupListQuery(
-      { projectId: selectedProjectOrZero },
-      { skip: !selectedProject },
-    );
 
   return {
     groups,

@@ -53,11 +53,12 @@ export function useVariableFormState({
   units: UnitRead[];
   variable_from_list: VariableRead;
 }) {
-  const { data: variable_read, refetch: refetchVariable } = useVariableRetrieveQuery({ id: variable_from_list.id });
+  const { data: variable_read, refetch: refetchVariable } =
+    useVariableRetrieveQuery({ id: variable_from_list.id });
   const variable = variable_read || variable_from_list;
   const {
     handleSubmit,
-    formState: { isDirty: isDirtyVariable, submitCount },
+    formState: { isDirty: isDirtyVariable },
     setValue,
     reset,
   } = useForm<Variable>({
@@ -67,25 +68,30 @@ export function useVariableFormState({
   const isDirty = isDirtyVariable;
   useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
-  const { addProtocol: addProtocolOriginal, removeProtocol: removeProtocolOriginal, hasProtocol, updateProtocol } = useEditProtocol({
+  const {
+    addProtocol: addProtocolOriginal,
+    removeProtocol: removeProtocolOriginal,
+    hasProtocol,
+    updateProtocol,
+  } = useEditProtocol({
     compound,
     project,
     units,
     timeVariable,
-    "variable": variable || { id: 0, qname: "", name: "" },
+    variable: variable || { id: 0, qname: "", name: "" },
   });
 
   const addProtocol = () => {
     addProtocolOriginal().then(() => {
       refetchVariable();
     });
-  }
+  };
 
   const removeProtocol = () => {
     removeProtocolOriginal().then(() => {
       refetchVariable();
     });
-  }
+  };
 
   useEffect(() => {
     reset(variable_read);

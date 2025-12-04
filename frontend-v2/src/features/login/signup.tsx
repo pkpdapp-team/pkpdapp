@@ -37,7 +37,12 @@ interface SignupProps {
 
 const { VITE_APP_HELP_URL, VITE_APP_ACK_TXT } = import.meta.env;
 
-const Signup: FC<SignupProps> = ({ onSignup, onBack, isLoading, errorMessage }) => {
+const Signup: FC<SignupProps> = ({
+  onSignup,
+  onBack,
+  isLoading,
+  errorMessage,
+}) => {
   const { handleSubmit, control, watch } = useForm<SignupFormInputs>();
   const watchPassword = watch("password");
 

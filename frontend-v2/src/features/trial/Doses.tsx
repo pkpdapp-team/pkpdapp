@@ -64,8 +64,6 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
     }
   }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
 
-
-
   const [createDose] = useDoseCreateMutation();
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),

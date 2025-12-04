@@ -31,7 +31,9 @@ const sliderPriority = (param: Variable) => {
     priority = qnameLibraryOrder.length + 2;
   } else if (param.qname.startsWith("PKNonlinearities")) {
     priority = qnameLibraryOrder.length;
-    const index = qnameLibraryOrder.indexOf(param.qname.replace("PKNonlinearities", "PKCompartment"));
+    const index = qnameLibraryOrder.indexOf(
+      param.qname.replace("PKNonlinearities", "PKCompartment"),
+    );
     if (index > -1) {
       priority = index;
     }

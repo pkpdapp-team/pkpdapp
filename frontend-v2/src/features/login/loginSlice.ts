@@ -117,7 +117,10 @@ export const signup = createAsyncThunk<
   { rejectValue: LoginErrorResponse }
 >(
   "login/signup",
-  async ({ username, password, firstName, lastName, email }, { getState, dispatch, rejectWithValue }) => {
+  async (
+    { username, password, firstName, lastName, email },
+    { getState, dispatch, rejectWithValue },
+  ) => {
     const csrf = (getState() as RootState).login.csrf;
 
     // Use the register endpoint
