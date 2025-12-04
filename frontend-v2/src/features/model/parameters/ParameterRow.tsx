@@ -12,7 +12,6 @@ import {
   Stack,
 } from "@mui/material";
 import {
-  Variable,
   useVariableUpdateMutation,
   ProjectRead,
   UnitRead,
@@ -47,7 +46,9 @@ const ParameterRow: FC<Props> = ({
   units,
   modelControl,
 }) => {
-  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_from_list.id });
+  const { data: variable_read } = useVariableRetrieveQuery({
+    id: variable_from_list.id,
+  });
   const variable = variable_read || variable_from_list;
   const {
     control,
@@ -77,7 +78,10 @@ const ParameterRow: FC<Props> = ({
   const submit = useMemo(
     () =>
       handleSubmit((data) => {
-        if (variable_read && JSON.stringify(data) !== JSON.stringify(variable_read)) {
+        if (
+          variable_read &&
+          JSON.stringify(data) !== JSON.stringify(variable_read)
+        ) {
           updateVariable({ id: variable_read.id, variable: data });
         }
       }),
@@ -95,7 +99,8 @@ const ParameterRow: FC<Props> = ({
   }
 
   const isPD = variable.qname.startsWith("PD");
-  const isPK = variable.qname.startsWith("PK") || variable.qname.startsWith("Extra");
+  const isPK =
+    variable.qname.startsWith("PK") || variable.qname.startsWith("Extra");
   const isNonlin = variable.qname.startsWith("PKNonlin");
   const isUD = variable.qname.endsWith("_ud");
   const type = isUD ? "UD" : isPD ? "PD" : "PK";
@@ -107,9 +112,9 @@ const ParameterRow: FC<Props> = ({
   const isPreclinicalPerKg =
     project?.species !== "H" && unit?.symbol.endsWith("/kg");
 
-
   const isPKandVol = isPK && unit?.m === 3;
-  const is_Ref_D_or_D50 = variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
+  const is_Ref_D_or_D50 =
+    variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -119,14 +124,14 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-      { value: "EMX", label: "Dose Emax" },
-      { value: "IMX", label: "Dose Imax" },
-      { value: "POW", label: "Dose Power Increase" },
-      { value: "NPW", label: "Dose Power Decrease" },
-      { value: "TDI", label: "Time Decrease" },
-      { value: "IND", label: "Time Increase" },
-      { value: "", label: "None" },
-    ];
+    { value: "EMX", label: "Dose Emax" },
+    { value: "IMX", label: "Dose Imax" },
+    { value: "POW", label: "Dose Power Increase" },
+    { value: "NPW", label: "Dose Power Decrease" },
+    { value: "TDI", label: "Time Decrease" },
+    { value: "IND", label: "Time Increase" },
+    { value: "", label: "None" },
+  ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
@@ -174,10 +179,7 @@ const ParameterRow: FC<Props> = ({
     }
   }
   const timeVaryingVariables = variables.filter(
-    (v) =>
-      !v.constant &&
-      v.qname.startsWith("PK") &&
-      !v.qname.endsWith("_MM")
+    (v) => !v.constant && v.qname.startsWith("PK") && !v.qname.endsWith("_MM"),
   );
   const concentrationOptions = timeVaryingVariables.map((variable) => ({
     value: variable.id,
@@ -347,14 +349,22 @@ const ParameterRow: FC<Props> = ({
               </Select>
             )}
             {nonlinearityDocImage && (
-              <HelpButton title={nonlinearityDocImage} placement="left" maxWidth="550px">
-                <img src={`nonlinearities/${nonlinearityDocImage}`} alt="doc" style={{ maxWidth: "500px" }} />
+              <HelpButton
+                title={nonlinearityDocImage}
+                placement="left"
+                maxWidth="550px"
+              >
+                <img
+                  src={`nonlinearities/${nonlinearityDocImage}`}
+                  alt="doc"
+                  style={{ maxWidth: "500px" }}
+                />
               </HelpButton>
             )}
           </Stack>
         )}
       </TableCell>
-    </TableRow >
+    </TableRow>
   );
 };
 

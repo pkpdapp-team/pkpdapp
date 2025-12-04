@@ -102,8 +102,7 @@ const MapDosing: FC<IMapDosing> = ({
 
   const dosingCompartments = projectProtocols?.map((protocol) => {
     return (
-      variables?.find((variable) => variable.id === protocol.variable)
-        ?.qname ||
+      variables?.find((variable) => variable.id === protocol.variable)?.qname ||
       ""
     );
   });

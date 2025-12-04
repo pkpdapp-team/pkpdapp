@@ -10,8 +10,8 @@ import {
 } from "storybook/test";
 
 import Protocols from "../features/trial/Protocols";
-import { projectProtocols, groups, variables } from "./protocols.mock";
-import { DoseRead, ProtocolRead, SubjectGroupRead, VariableRead } from "../app/backendApi";
+import { projectProtocols, groups } from "./protocols.mock";
+import { DoseRead, ProtocolRead, SubjectGroupRead } from "../app/backendApi";
 import { useDispatch } from "react-redux";
 import { setProject } from "../features/main/mainSlice";
 import { project, projectHandlers } from "./project.mock";

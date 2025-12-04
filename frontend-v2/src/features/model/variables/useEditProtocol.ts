@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   CompoundRead,
   Dose,
@@ -10,7 +9,6 @@ import {
   useProtocolListQuery,
   useProtocolUpdateMutation,
 } from "../../../app/backendApi";
-import { variables } from "../../../stories/project.v3.mock";
 
 interface EditProtocolProps {
   compound: CompoundRead;
@@ -67,13 +65,12 @@ export default function useEditProtocol({
     });
   };
 
-
   async function removeProtocol() {
     for (const protocol of protocols || []) {
       if (protocol.variable === variable.id) {
         await destroyProtocol({ id: protocol.id });
       }
     }
-  };
+  }
   return { addProtocol, removeProtocol, hasProtocol, updateProtocol };
 }

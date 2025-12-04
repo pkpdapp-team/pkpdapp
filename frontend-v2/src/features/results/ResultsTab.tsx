@@ -70,9 +70,8 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const { updateResults } = useResults();
 
   const loaded =
-    (intervals.length &&
-      concentrationVariables.length &&
-      parameters.length) > 0;
+    (intervals.length && concentrationVariables.length && parameters.length) >
+    0;
   if (!loaded) {
     return <div>Loading...</div>;
   }

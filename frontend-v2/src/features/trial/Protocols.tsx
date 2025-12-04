@@ -13,7 +13,6 @@ import {
   Tabs,
   Tab,
   IconButton,
-  Tooltip,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
 import {
@@ -144,7 +143,6 @@ export const Protocols: FC<ProtocolsProps> = ({
   project,
   projectProtocols,
   refetchProtocols,
-  variables,
   units,
   groups,
   refetchGroups,
@@ -165,7 +163,7 @@ export const Protocols: FC<ProtocolsProps> = ({
     setTab(newValue);
   };
 
-  const filteredProtocols = projectProtocols.filter((p => p.group === null));
+  const filteredProtocols = projectProtocols.filter((p) => p.group === null);
 
   const handleAddTab = async () => {
     const newValue = groups?.length || 1;
@@ -232,9 +230,7 @@ export const Protocols: FC<ProtocolsProps> = ({
 
   const subjectGroup = tab === 0 ? null : groups?.[tab - 1];
   const selectedProtocols = projectProtocols.filter((protocol) =>
-    subjectGroup
-      ? protocol.group === subjectGroup.id
-      : protocol.group === null,
+    subjectGroup ? protocol.group === subjectGroup.id : protocol.group === null,
   );
 
   // sort protocols alphabetically by name
@@ -267,11 +263,11 @@ export const Protocols: FC<ProtocolsProps> = ({
         >
           <Tab label={"Project"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
-            const selectedProtocols = projectProtocols.filter((protocol) =>
-              protocol.group === group.id,
+            const selectedProtocols = projectProtocols.filter(
+              (protocol) => protocol.group === group.id,
             );
-            const selectedDoses = selectedProtocols.flatMap((protocol) =>
-              protocol.doses || []
+            const selectedDoses = selectedProtocols.flatMap(
+              (protocol) => protocol.doses || [],
             );
             return (
               <Tab
@@ -331,10 +327,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                   <div style={{ ...defaultHeaderSx }}>Dose</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  <div style={{ ...defaultHeaderSx }}>
-                    {" "}
-                    Dose Unit
-                  </div>
+                  <div style={{ ...defaultHeaderSx }}> Dose Unit</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>

@@ -80,7 +80,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-    undefined;
+      undefined;
 
   const onClickDerived = (type: DerivedVariableType) => () => {
     const index = derivedIndex(type, derivedVariables, variable);

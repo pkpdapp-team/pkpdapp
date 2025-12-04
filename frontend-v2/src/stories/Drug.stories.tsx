@@ -125,8 +125,11 @@ export const Default: Story = {
 export const EditMolecularWeightUnit: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const molecularWeightUnit = await canvas.findByTestId("select-molecular_mass_unit");
-    const molecularWeightUnitCombobox = await within(molecularWeightUnit).findByRole("combobox");
+    const molecularWeightUnit = await canvas.findByTestId(
+      "select-molecular_mass_unit",
+    );
+    const molecularWeightUnitCombobox =
+      await within(molecularWeightUnit).findByRole("combobox");
 
     expect(molecularWeightUnit).toBeInTheDocument();
     expect(molecularWeightUnitCombobox).toHaveTextContent("g/mol (Da)");

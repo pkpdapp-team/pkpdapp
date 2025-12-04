@@ -9,7 +9,6 @@ import {
   Protocol,
   UnitRead,
   useDoseDestroyMutation,
-  useDoseRetrieveQuery,
   useDoseUpdateMutation,
 } from "../../app/backendApi";
 import { Control, useForm, useFormState } from "react-hook-form";
@@ -122,7 +121,10 @@ const DoseRow: FC<Props> = ({
           label=""
           name={`amount_per_body_weight`}
           control={control}
-          checkboxFieldProps={{ ...defaultProps, disabled: index !== 0 || disabled }}
+          checkboxFieldProps={{
+            ...defaultProps,
+            disabled: index !== 0 || disabled,
+          }}
         />
       </TableCell>
       <TableCell>

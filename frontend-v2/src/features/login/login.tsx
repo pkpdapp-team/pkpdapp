@@ -25,9 +25,15 @@ interface LoginProps {
   errorMessage?: string;
 }
 
-const { VITE_APP_HELP_URL, VITE_ENABLE_SIGNUP, VITE_APP_ACK_TXT } = import.meta.env;
+const { VITE_APP_HELP_URL, VITE_ENABLE_SIGNUP, VITE_APP_ACK_TXT } = import.meta
+  .env;
 
-const Login: FC<LoginProps> = ({ onLogin, onSignup, isLoading, errorMessage }) => {
+const Login: FC<LoginProps> = ({
+  onLogin,
+  onSignup,
+  isLoading,
+  errorMessage,
+}) => {
   const { handleSubmit, control } = useForm<LoginFormInputs>();
 
   const onSubmit = (data: LoginFormInputs) => {
