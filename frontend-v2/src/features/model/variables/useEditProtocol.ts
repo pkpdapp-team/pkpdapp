@@ -2,12 +2,14 @@ import {
   CompoundRead,
   Dose,
   ProjectRead,
+  Protocol,
   UnitRead,
   VariableRead,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
   useProtocolListQuery,
   useProtocolUpdateMutation,
+  useSubjectGroupListQuery,
 } from "../../../app/backendApi";
 
 interface EditProtocolProps {
@@ -27,7 +29,6 @@ export default function useEditProtocol({
   timeVariable,
   variable,
 }: EditProtocolProps) {
-  const hasProtocol = variable.protocols.length > 0;
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
@@ -38,8 +39,14 @@ export default function useEditProtocol({
   const { data: protocols } = useProtocolListQuery({
     projectId: project.id,
   });
+  const { data: groups } = useSubjectGroupListQuery({
+    projectId: project.id,
+  });
 
-  const addProtocol = () => {
+
+  const hasProtocol = protocols?.some((protocol) => protocol.variable === variable.id && !protocol.dataset);
+
+  async function addProtocol() {
     const isPerKg = variableUnit?.g !== 0;
     const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
     const doseAmountUnit = units.find(
@@ -53,23 +60,38 @@ export default function useEditProtocol({
       repeats: 1,
       duration: 0.0833,
     };
-    return createProtocol({
-      protocol: {
-        doses: [defaultDose],
-        amount_unit: doseAmountUnit?.id || variable.unit,
-        time_unit: defaultTimeUnit?.id || undefined,
-        name: variable.name,
-        project: project.id,
-        variable: variable.id,
-      },
+    const defaultProtocol: Protocol = {
+      doses: [defaultDose],
+      amount_unit: doseAmountUnit?.id || variable.unit,
+      time_unit: defaultTimeUnit?.id || undefined,
+      name: variable.name,
+      project: project.id,
+      variable: variable.id,
+    }
+    await createProtocol({
+      protocol: defaultProtocol,
     });
+    // also add protocol to each group that isn't linked to a dataset
+    for (const group of groups || []) {
+      if (!group.dataset) {
+        await createProtocol({
+          protocol: {
+            ...defaultProtocol,
+            name: `${variable.name} - ${group.name}`,
+            group: group.id,
+          },
+        });
+      }
+    }
   };
 
   async function removeProtocol() {
+    // remove all protocols associated with this variable except
+    // for those linked to datasets
     for (const protocol of protocols || []) {
-      if (protocol.variable === variable.id) {
-        await destroyProtocol({ id: protocol.id });
-      }
+      if (protocol.variable !== variable.id) continue;
+      if (protocol.dataset) continue;
+      await destroyProtocol({ id: protocol.id });
     }
   }
   return { addProtocol, removeProtocol, hasProtocol, updateProtocol };
