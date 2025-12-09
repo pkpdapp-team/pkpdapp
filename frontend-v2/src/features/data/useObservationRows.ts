@@ -5,6 +5,10 @@ import { Row } from "./LoadData";
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";
 const DEFAULT_UNIT_FIELD = "Observation Unit";
 
+type ObservationRow = Row & {
+  id: number;
+};
+
 function mergeObservationColumns(
   state: StepperState,
   observationFields: string[],
@@ -86,12 +90,13 @@ export default function useObservationRows(state: StepperState, tab: string) {
   const observationVariables = observationRows.map(
     (row) => row[observationVariableField],
   );
+  const observationRowsWithIds = observationRows.map((row, index) => ({
+    ...row,
+    id: index,
+  })) as ObservationRow[];
 
   return {
-    observationRows: observationRows.map((row, index) => ({
-      ...row,
-      id: index,
-    })),
+    observationRows: observationRowsWithIds,
     observationField,
     observationIdField,
     observationUnitField,
