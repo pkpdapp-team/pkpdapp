@@ -202,7 +202,7 @@ export const MapObservations: Story = {
     });
     expect(mapObservationsHeading).toBeInTheDocument();
 
-    const variableSelect = canvas.getByRole("combobox", {
+    let variableSelect = canvas.getByRole("combobox", {
       name: "Variable",
     });
     expect(variableSelect).toBeInTheDocument();
@@ -212,12 +212,21 @@ export const MapObservations: Story = {
       name: "C1",
     });
     await userEvent.selectOptions(listbox, observationOption);
+    variableSelect = canvas.getByRole("combobox", {
+      name: "Variable",
+    });
     expect(variableSelect).toHaveTextContent("C1");
     const unitSelect = canvas.getByRole("combobox", {
       name: "Units",
     });
     expect(unitSelect).toBeInTheDocument();
     expect(unitSelect).toHaveTextContent("mg/L");
+    const perKgCheckbox = canvas.getByRole("checkbox", {
+      name: "Per Body Weight(kg) for C1",
+    });
+    expect(perKgCheckbox).toBeInTheDocument();
+    expect(perKgCheckbox).not.toBeChecked();
+    expect(perKgCheckbox).toBeDisabled();
   },
 };
 

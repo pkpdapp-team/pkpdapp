@@ -1,4 +1,4 @@
-import { FC, SyntheticEvent, useEffect, useState } from "react";
+import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
@@ -17,16 +17,21 @@ import {
   SelectChangeEvent,
   Stack,
   TableContainer,
+  Checkbox,
 } from "@mui/material";
 import { StepperState } from "./LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
   UnitListApiResponse,
+  UnitRead,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
+  useVariableRetrieveQuery,
+  useVariableUpdateMutation,
+  VariableRead,
 } from "../../app/backendApi";
 import useObservationRows from "./useObservationRows";
 import { validateState } from "./dataValidation";
@@ -38,6 +43,7 @@ import {
 } from "../../shared/calculateTableHeights";
 import { TableHeader } from "../../components/TableHeader";
 import { groupDataRows } from "./Stratification";
+import { hasPerWeightOption } from "../../shared/hasPerWeightOption";
 
 interface IMapObservations {
   state: StepperState;
@@ -104,6 +110,172 @@ function useApiQueries() {
   return { model, variables, units };
 }
 
+function findFieldByType(name: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
+    name
+  );
+}
+
+type ObservationIDRowProps = {
+  obsId: string;
+  obsVariable?: VariableRead;
+  obsUnit?: UnitRead;
+  handleObservationChange: (event: SelectChangeEvent) => void;
+  handleUnitChange: (symbol: string) => void;
+  modelOutputs?: VariableRead[];
+};
+
+/**
+ * An editable table row for a single observation ID (from the uploaded CSV.)
+ */
+const ObservationIDRow: FC<ObservationIDRowProps> = ({
+  obsId,
+  obsVariable,
+  obsUnit,
+  handleObservationChange,
+  handleUnitChange,
+  modelOutputs,
+}) => {
+  const { variables, units } = useApiQueries();
+  const [updateVariable] = useVariableUpdateMutation();
+  const [variable, setVariable] = useState(obsVariable);
+  // refetch single variables, not the whole list.
+  const { data: variableRead } = useVariableRetrieveQuery(
+    {
+      id: variable?.id || -1,
+    },
+    { skip: !variable?.id },
+  );
+  const selectedVariable = variableRead || variable;
+
+  let selectedUnitSymbol = obsUnit?.symbol;
+  const compatibleUnits = selectedVariable
+    ? units?.find((unit) => unit.id === selectedVariable?.unit)
+        ?.compatible_units
+    : units;
+  ["%", "fraction", "ratio"].forEach((token) => {
+    if (selectedUnitSymbol?.toLowerCase().includes(token)) {
+      selectedUnitSymbol = "";
+    }
+  });
+  const hasPerKgUnits = hasPerWeightOption(obsUnit, obsVariable);
+  const selectedPerBodyWeight =
+    hasPerKgUnits && selectedVariable?.unit_per_body_weight;
+
+  function onVariableChange(event: SelectChangeEvent) {
+    const { value } = event.target;
+    const nextVariable = variables?.find(
+      (variable) => variable.qname === value,
+    );
+    if (!nextVariable) {
+      handleObservationChange(event);
+      setVariable(undefined);
+      return;
+    }
+    let unit_per_body_weight = nextVariable.unit_per_body_weight || false;
+    if (obsUnit?.symbol.endsWith("/kg")) {
+      const baseUnitSymbol = obsUnit.symbol.replace("/kg", "");
+      handleUnitChange(baseUnitSymbol);
+      unit_per_body_weight = true;
+    }
+    setVariable({
+      ...nextVariable,
+      unit_per_body_weight,
+    });
+    handleObservationChange(event);
+  }
+
+  function onUnitChange(event: SelectChangeEvent) {
+    const { value } = event.target;
+    handleUnitChange(value);
+  }
+
+  function handlePerWeightChange(event: ChangeEvent<HTMLInputElement>) {
+    if (!selectedVariable) {
+      return;
+    }
+    const { checked } = event.target;
+    updateVariable({
+      id: selectedVariable.id,
+      variable: {
+        ...selectedVariable,
+        unit_per_body_weight: checked,
+      },
+    });
+    setVariable({
+      ...selectedVariable,
+      unit_per_body_weight: checked,
+    });
+  }
+
+  return (
+    <TableRow key={obsId}>
+      <TableCell>{obsId}</TableCell>
+      <TableCell>
+        <FormControl fullWidth>
+          <InputLabel size="small" id={`select-var-${obsId}-label`}>
+            Variable
+          </InputLabel>
+          <Select
+            labelId={`select-var-${obsId}-label`}
+            id={`select-var-${obsId}`}
+            label="Variable"
+            value={selectedVariable?.qname || ""}
+            onChange={onVariableChange}
+            size="small"
+            margin="dense"
+          >
+            <MenuItem value="">None</MenuItem>
+            {modelOutputs?.map((variable) => (
+              <MenuItem key={variable.name} value={variable.qname}>
+                {variable.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </TableCell>
+      <TableCell>
+        <FormControl sx={{ width: "15rem" }}>
+          <InputLabel size="small" id={`select-unit-${obsId}-label`}>
+            Units
+          </InputLabel>
+          <Select
+            labelId={`select-unit-${obsId}-label`}
+            id={`select-unit-${obsId}`}
+            label="Units"
+            value={displayUnitSymbol(selectedUnitSymbol)}
+            onChange={onUnitChange}
+            size="small"
+            margin="dense"
+          >
+            <MenuItem value="">None</MenuItem>
+            {compatibleUnits?.map((unit) => (
+              <MenuItem key={unit.id} value={displayUnitSymbol(unit.symbol)}>
+                {displayUnitSymbol(unit.symbol)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </TableCell>
+      <TableCell>
+        <FormControl>
+          <Checkbox
+            checked={selectedPerBodyWeight}
+            disabled={!hasPerKgUnits || !selectedVariable}
+            onChange={handlePerWeightChange}
+            slotProps={{
+              input: {
+                "aria-label": `Per Body Weight(kg) for ${selectedVariable?.name}`,
+              },
+            }}
+          />
+        </FormControl>
+      </TableCell>
+    </TableRow>
+  );
+};
+
 const MapObservations: FC<IMapObservations> = ({
   state,
   notificationsInfo,
@@ -111,6 +283,7 @@ const MapObservations: FC<IMapObservations> = ({
   const [tab, setTab] = useState(0);
   const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
   const selectedGroup = groupIDs[tab];
+  const perKgField = findFieldByType("Per Body Weight(kg)", state);
 
   const { model, variables, units } = useApiQueries();
 
@@ -187,6 +360,7 @@ const MapObservations: FC<IMapObservations> = ({
         ...state.normalisedFields.entries(),
         [observationVariableField, "Observation Variable"],
         [observationUnitField, "Observation Unit"],
+        [perKgField, "Per Body Weight(kg)"],
       ]);
       state.data = nextData;
       state.normalisedFields = newNormalisedFields;
@@ -201,15 +375,14 @@ const MapObservations: FC<IMapObservations> = ({
       state.errors = errors;
       state.warnings = warnings;
     };
-  const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
+  const handleUnitChange = (id: string) => (symbol: string) => {
     const nextData = [...state.data];
-    const { value } = event.target;
     nextData
       .filter((row) =>
         observationIdField ? row[observationIdField] === id : true,
       )
       .forEach((row) => {
-        row[observationUnitField] = value;
+        row[observationUnitField] = symbol;
       });
     state.data = nextData;
     const { errors, warnings } = validateState({
@@ -306,6 +479,9 @@ const MapObservations: FC<IMapObservations> = ({
                 <TableCell>
                   <Typography>Unit</Typography>
                 </TableCell>
+                <TableCell>
+                  <Typography>Per Body Weight(kg)</Typography>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -313,85 +489,23 @@ const MapObservations: FC<IMapObservations> = ({
                 .sort((a, b) => (a > b ? 1 : -1))
                 .map((obsId) => {
                   const currentRow = observationIds.indexOf(obsId);
-                  const obsVariable = observationVariables[currentRow];
-                  const obsUnit = observationUnits[currentRow];
-                  const selectedVariable = variables?.find(
-                    (variable) => variable.qname === obsVariable,
+                  const obsVariable = variables?.find(
+                    (variable) =>
+                      variable.qname === observationVariables[currentRow],
                   );
-                  let selectedUnitSymbol = units?.find(
-                    (unit) => unit.symbol === obsUnit,
-                  )?.symbol;
-                  const compatibleUnits = selectedVariable
-                    ? units?.find((unit) => unit.id === selectedVariable?.unit)
-                        ?.compatible_units
-                    : units;
-                  ["%", "fraction", "ratio"].forEach((token) => {
-                    if (selectedUnitSymbol?.toLowerCase().includes(token)) {
-                      selectedUnitSymbol = "";
-                    }
-                  });
+                  const obsUnit = units.find(
+                    (unit) => unit.symbol === observationUnits[currentRow],
+                  );
                   return (
-                    <TableRow key={obsId}>
-                      <TableCell>{obsId}</TableCell>
-                      <TableCell>
-                        <FormControl fullWidth>
-                          <InputLabel
-                            size="small"
-                            id={`select-var-${obsId}-label`}
-                          >
-                            Variable
-                          </InputLabel>
-                          <Select
-                            labelId={`select-var-${obsId}-label`}
-                            id={`select-var-${obsId}`}
-                            label="Variable"
-                            value={selectedVariable?.qname || ""}
-                            onChange={handleObservationChange(obsId)}
-                            size="small"
-                            margin="dense"
-                          >
-                            <MenuItem value="">None</MenuItem>
-                            {modelOutputs?.map((variable) => (
-                              <MenuItem
-                                key={variable.name}
-                                value={variable.qname}
-                              >
-                                {variable.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                      <TableCell>
-                        <FormControl sx={{ width: "15rem" }}>
-                          <InputLabel
-                            size="small"
-                            id={`select-unit-${obsId}-label`}
-                          >
-                            Units
-                          </InputLabel>
-                          <Select
-                            labelId={`select-unit-${obsId}-label`}
-                            id={`select-unit-${obsId}`}
-                            label="Units"
-                            value={displayUnitSymbol(selectedUnitSymbol)}
-                            onChange={handleUnitChange(obsId)}
-                            size="small"
-                            margin="dense"
-                          >
-                            <MenuItem value="">None</MenuItem>
-                            {compatibleUnits?.map((unit) => (
-                              <MenuItem
-                                key={unit.id}
-                                value={displayUnitSymbol(unit.symbol)}
-                              >
-                                {displayUnitSymbol(unit.symbol)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                    </TableRow>
+                    <ObservationIDRow
+                      key={obsVariable?.qname}
+                      obsId={obsId}
+                      obsVariable={obsVariable}
+                      obsUnit={obsUnit}
+                      handleObservationChange={handleObservationChange(obsId)}
+                      handleUnitChange={handleUnitChange(obsId)}
+                      modelOutputs={modelOutputs}
+                    />
                   );
                 })}
             </TableBody>

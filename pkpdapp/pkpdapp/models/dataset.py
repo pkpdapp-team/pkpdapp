@@ -81,6 +81,7 @@ class Dataset(models.Model):
                 "OBSERVATION_UNIT",
                 "OBSERVATION_VARIABLE",
                 "TIME_UNIT",
+                "PER_BODY_WEIGHT_KG",
             ]
         ].drop_duplicates()
         biomarker_types = {}

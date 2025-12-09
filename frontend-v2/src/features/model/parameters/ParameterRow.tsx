@@ -28,7 +28,7 @@ import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { DerivedVariableType } from "../derivedVariable";
-
+import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -111,10 +111,6 @@ const ParameterRow: FC<Props> = ({
       : units.find((u) => u.id === variable.unit);
   const isPreclinicalPerKg =
     project?.species !== "H" && unit?.symbol.endsWith("/kg");
-
-  const isPKandVol = isPK && unit?.m === 3;
-  const is_Ref_D_or_D50 =
-    variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -309,7 +305,7 @@ const ParameterRow: FC<Props> = ({
         />
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
-        {(isPKandVol || is_Ref_D_or_D50) && (
+        {hasPerWeightOption(unit, variable) && (
           <Checkbox
             label=""
             name="unit_per_body_weight"
