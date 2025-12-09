@@ -16,6 +16,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import {
+  CombinedModelRead,
   UnitRead,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
@@ -26,6 +27,7 @@ import {
   VariableRead,
 } from "../../../app/backendApi";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
+import { renameVariable } from "../../simulation/Simulations";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -97,9 +99,11 @@ function useVariables() {
 
 function VariableRow({
   variable_id,
+  variableName,
   unit,
 }: {
   variable_id: number;
+  variableName: string;
   unit: UnitRead | undefined;
 }) {
   const units = useUnits();
@@ -153,8 +157,8 @@ function VariableRow({
   return (
     <TableRow>
       <TableCell sx={{ width: "5rem" }}>
-        <Tooltip title={`${variable.name}: ${variable.description}`}>
-          <span>{variable.name}</span>
+        <Tooltip title={`${variableName}: ${variable.description}`}>
+          <span>{variableName}</span>
         </Tooltip>
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
@@ -225,16 +229,20 @@ const ThresholdsTable: FC<TableProps> = (props) => {
           <TableCell>Unit</TableCell>
         </TableHead>
         <TableBody>
-          {concentrationVariables?.map((variable) => (
-            <VariableRow
-              key={variable.id}
-              variable_id={variable.id}
-              unit={units?.find(
-                (unit) =>
-                  unit.id === (variable.threshold_unit || variable.unit),
-              )}
-            />
-          ))}
+          {concentrationVariables
+            ?.map((v) => renameVariable(v, model as CombinedModelRead))
+            .sort((a, b) => (a.name > b.name ? 1 : -1))
+            .map((variable) => (
+              <VariableRow
+                key={variable.id}
+                variable_id={variable.id}
+                variableName={variable.name}
+                unit={units?.find(
+                  (unit) =>
+                    unit.id === (variable.threshold_unit || variable.unit),
+                )}
+              />
+            ))}
         </TableBody>
       </Table>
     </TableContainer>
