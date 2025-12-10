@@ -43,7 +43,7 @@ import useSimulationInputs from "./useSimulationInputs";
 import useDirty from "../../hooks/useDirty";
 import paramPriority from "../model/parameters/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getConstVariables } from "../model/parameters/getConstVariables";
+import { useConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
@@ -173,6 +173,8 @@ const Simulations: FC = () => {
       { skip: !project?.compound },
     );
   const [updateVariable] = useVariableUpdateMutation();
+
+  const constVariables = useConstVariables();
 
   const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
     undefined,
@@ -409,8 +411,6 @@ const Simulations: FC = () => {
       [groupName]: !prevState[groupName],
     }));
   };
-
-  const constVariables = model ? getConstVariables(variables || [], model) : [];
 
   const sliderVarIds = sliders.map((v) => v.variable);
   const addSliderOptions = constVariables
