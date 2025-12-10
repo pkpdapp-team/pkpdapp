@@ -1,11 +1,7 @@
-import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
-  Select,
-  FormControl,
-  MenuItem,
-  InputLabel,
   Tab,
   Tabs,
   Table,
@@ -17,33 +13,28 @@ import {
   SelectChangeEvent,
   Stack,
   TableContainer,
-  Checkbox,
 } from "@mui/material";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { RootState } from "../../../app/store";
 import {
   UnitListApiResponse,
-  UnitRead,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
-  useVariableRetrieveQuery,
-  useVariableUpdateMutation,
-  VariableRead,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 import useObservationRows from "./useObservationRows";
-import { validateState } from "./dataValidation";
+import { validateState } from "../dataValidation";
 import {
   calculateTableHeights,
   DOUBLE_TABLE_FIRST_BREAKPOINTS,
   DOUBLE_TABLE_SECOND_BREAKPOINTS,
   getTableHeight,
-} from "../../shared/calculateTableHeights";
-import { TableHeader } from "../../components/TableHeader";
-import { groupDataRows } from "./Stratification";
-import { hasPerWeightOption } from "../../shared/hasPerWeightOption";
+} from "../../../shared/calculateTableHeights";
+import { TableHeader } from "../../../components/TableHeader";
+import { groupDataRows } from "../Stratification";
+import { ObservationIDRow } from "./ObservationIDRow";
 
 interface IMapObservations {
   state: StepperState;
@@ -52,10 +43,6 @@ interface IMapObservations {
     isOpen: boolean;
     count: number;
   };
-}
-
-function displayUnitSymbol(symbol: string | undefined) {
-  return symbol === "" ? "dimensionless" : symbol;
 }
 
 /**
@@ -84,7 +71,7 @@ function validateUnitSymbol(
   return validUnit;
 }
 
-function useApiQueries() {
+export function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -117,165 +104,6 @@ function findFieldByType(name: string, state: StepperState) {
   );
 }
 
-type ObservationIDRowProps = {
-  obsId: string;
-  obsVariable?: VariableRead;
-  obsUnit?: UnitRead;
-  handleObservationChange: (event: SelectChangeEvent) => void;
-  handleUnitChange: (symbol: string) => void;
-  modelOutputs?: VariableRead[];
-};
-
-/**
- * An editable table row for a single observation ID (from the uploaded CSV.)
- */
-const ObservationIDRow: FC<ObservationIDRowProps> = ({
-  obsId,
-  obsVariable,
-  obsUnit,
-  handleObservationChange,
-  handleUnitChange,
-  modelOutputs,
-}) => {
-  const { variables, units } = useApiQueries();
-  const [updateVariable] = useVariableUpdateMutation();
-  const [variable, setVariable] = useState(obsVariable);
-  // refetch single variables, not the whole list.
-  const { data: variableRead } = useVariableRetrieveQuery(
-    {
-      id: variable?.id || -1,
-    },
-    { skip: !variable?.id },
-  );
-  const selectedVariable = variableRead || variable;
-
-  let selectedUnitSymbol = obsUnit?.symbol;
-  const compatibleUnits = selectedVariable
-    ? units?.find((unit) => unit.id === selectedVariable?.unit)
-        ?.compatible_units
-    : units;
-  ["%", "fraction", "ratio"].forEach((token) => {
-    if (selectedUnitSymbol?.toLowerCase().includes(token)) {
-      selectedUnitSymbol = "";
-    }
-  });
-  const hasPerKgUnits = hasPerWeightOption(obsUnit, obsVariable);
-  const selectedPerBodyWeight =
-    hasPerKgUnits && selectedVariable?.unit_per_body_weight;
-
-  function onVariableChange(event: SelectChangeEvent) {
-    const { value } = event.target;
-    const nextVariable = variables?.find(
-      (variable) => variable.qname === value,
-    );
-    if (!nextVariable) {
-      handleObservationChange(event);
-      setVariable(undefined);
-      return;
-    }
-    let unit_per_body_weight = nextVariable.unit_per_body_weight || false;
-    if (obsUnit?.symbol.endsWith("/kg")) {
-      const baseUnitSymbol = obsUnit.symbol.replace("/kg", "");
-      handleUnitChange(baseUnitSymbol);
-      unit_per_body_weight = true;
-    }
-    setVariable({
-      ...nextVariable,
-      unit_per_body_weight,
-    });
-    handleObservationChange(event);
-  }
-
-  function onUnitChange(event: SelectChangeEvent) {
-    const { value } = event.target;
-    handleUnitChange(value);
-  }
-
-  function handlePerWeightChange(event: ChangeEvent<HTMLInputElement>) {
-    if (!selectedVariable) {
-      return;
-    }
-    const { checked } = event.target;
-    updateVariable({
-      id: selectedVariable.id,
-      variable: {
-        ...selectedVariable,
-        unit_per_body_weight: checked,
-      },
-    });
-    setVariable({
-      ...selectedVariable,
-      unit_per_body_weight: checked,
-    });
-  }
-
-  return (
-    <TableRow key={obsId}>
-      <TableCell>{obsId}</TableCell>
-      <TableCell>
-        <FormControl fullWidth>
-          <InputLabel size="small" id={`select-var-${obsId}-label`}>
-            Variable
-          </InputLabel>
-          <Select
-            labelId={`select-var-${obsId}-label`}
-            id={`select-var-${obsId}`}
-            label="Variable"
-            value={selectedVariable?.qname || ""}
-            onChange={onVariableChange}
-            size="small"
-            margin="dense"
-          >
-            <MenuItem value="">None</MenuItem>
-            {modelOutputs?.map((variable) => (
-              <MenuItem key={variable.name} value={variable.qname}>
-                {variable.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </TableCell>
-      <TableCell>
-        <FormControl sx={{ width: "15rem" }}>
-          <InputLabel size="small" id={`select-unit-${obsId}-label`}>
-            Units
-          </InputLabel>
-          <Select
-            labelId={`select-unit-${obsId}-label`}
-            id={`select-unit-${obsId}`}
-            label="Units"
-            value={displayUnitSymbol(selectedUnitSymbol)}
-            onChange={onUnitChange}
-            size="small"
-            margin="dense"
-          >
-            <MenuItem value="">None</MenuItem>
-            {compatibleUnits?.map((unit) => (
-              <MenuItem key={unit.id} value={displayUnitSymbol(unit.symbol)}>
-                {displayUnitSymbol(unit.symbol)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </TableCell>
-      <TableCell>
-        <FormControl>
-          <Checkbox
-            checked={selectedPerBodyWeight}
-            disabled={!hasPerKgUnits || !selectedVariable}
-            onChange={handlePerWeightChange}
-            slotProps={{
-              input: {
-                "aria-label": `Per Body Weight(kg) for ${selectedVariable?.name}`,
-              },
-            }}
-          />
-        </FormControl>
-      </TableCell>
-    </TableRow>
-  );
-};
-
 const MapObservations: FC<IMapObservations> = ({
   state,
   notificationsInfo,
@@ -285,7 +113,7 @@ const MapObservations: FC<IMapObservations> = ({
   const selectedGroup = groupIDs[tab];
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
 
-  const { model, variables, units } = useApiQueries();
+  const { variables, units } = useApiQueries();
 
   const {
     observationRows,
@@ -314,15 +142,6 @@ const MapObservations: FC<IMapObservations> = ({
   if (!variables || !units) {
     return <Typography>Loading...</Typography>;
   }
-
-  const filterOutputs = model?.is_library_model
-    ? ["environment.t", "PDCompartment.C_Drug"]
-    : [];
-  const modelOutputs =
-    variables?.filter(
-      (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname),
-    ) || [];
 
   const handleObservationChange =
     (id: string) => (event: SelectChangeEvent) => {
@@ -504,7 +323,6 @@ const MapObservations: FC<IMapObservations> = ({
                       obsUnit={obsUnit}
                       handleObservationChange={handleObservationChange(obsId)}
                       handleUnitChange={handleUnitChange(obsId)}
-                      modelOutputs={modelOutputs}
                     />
                   );
                 })}

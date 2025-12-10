@@ -15,17 +15,17 @@ import {
   TableContainer,
   Checkbox,
 } from "@mui/material";
-import { StepperState } from "./LoadDataStepper";
-import { UnitRead, VariableRead } from "../../app/backendApi";
-import { validateState } from "./dataValidation";
-import { Row } from "./LoadData";
-import { TableHeader } from "../../components/TableHeader";
+import { StepperState } from "../LoadDataStepper";
+import { UnitRead, VariableRead } from "../../../app/backendApi";
+import { validateState } from "../dataValidation";
+import { Row } from "../LoadData";
+import { TableHeader } from "../../../components/TableHeader";
 import { generateAdministrationIds } from "./CreateDosingProtocols";
 import {
   calculateTableHeights,
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
-} from "../../shared/calculateTableHeights";
+} from "../../../shared/calculateTableHeights";
 
 interface IDosingProtocols {
   administrationIdField: string;
