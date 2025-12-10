@@ -13,21 +13,21 @@ import {
   Typography,
   TableContainer,
 } from "@mui/material";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 import ProtocolDataGrid from "./ProtocolDataGrid";
 import { getProtocols, getSubjectDoses, IProtocol } from "./protocolUtils";
 import {
   Group,
   groupsFromCatCovariate,
   validateGroupMembers,
-} from "./dataValidation";
-import { TableHeader } from "../../components/TableHeader";
+} from "../dataValidation";
+import { TableHeader } from "../../../components/TableHeader";
 import {
   calculateTableHeights,
   DOUBLE_TABLE_FIRST_BREAKPOINTS,
   DOUBLE_TABLE_SECOND_BREAKPOINTS,
   getTableHeight,
-} from "../../shared/calculateTableHeights";
+} from "../../../shared/calculateTableHeights";
 
 function validateGroupProtocols(groups: Group[], protocols: IProtocol[]) {
   const groupedProtocols: string[][] = [];

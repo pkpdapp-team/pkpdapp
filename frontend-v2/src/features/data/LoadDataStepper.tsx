@@ -14,7 +14,7 @@ import MapDosing from "./dosing/MapDosing";
 import PreviewData from "./PreviewData";
 import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
-import Stratification from "./Stratification";
+import Stratification from "./stratification/Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
   normaliseHeader,
@@ -23,7 +23,11 @@ import {
   validateDataRow,
 } from "./dataValidation";
 import { Tooltip } from "@mui/material";
-import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
+import {
+  IProtocol,
+  getSubjectDoses,
+  getProtocols,
+} from "./stratification/protocolUtils";
 import { Notifications } from "./Notifications";
 import {
   CHANGE_STYLING_INNER_HEIGHT_LIMIT,

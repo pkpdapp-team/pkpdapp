@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 import SubjectGroupForm from "./SubjectGroupForm";
 
 type SubjectGroup = {
