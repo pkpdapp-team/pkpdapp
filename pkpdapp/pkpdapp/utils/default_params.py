@@ -56,6 +56,8 @@ for sheet_name, model_name in zip(sheet_names, model_names):
             parameters = [f"kint{i}" for i in range(1, 4)] + ["kint"]
         elif row_parameter == "kdeg":
             parameters = [f"kdegT{i}" for i in range(1, 3)] + ["kdegT"]
+        elif row_parameter == "CLdif":
+            parameters = ["CLdif", "CLdifT1", "CLdifT2"]
         else:
             parameters = [row_parameter]
 

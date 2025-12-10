@@ -37,9 +37,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Project" as const, id })),
-              { type: "Project", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Project" as const, id })),
+            { type: "Project", id: "LIST" },
+          ]
           : [{ type: "Project", id: "LIST" }],
     },
     projectRetrieve: {
@@ -73,9 +73,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Compound" as const, id })),
-              { type: "Compound", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Compound" as const, id })),
+            { type: "Compound", id: "LIST" },
+          ]
           : [{ type: "Compound", id: "LIST" }],
     },
     compoundRetrieve: {
@@ -101,9 +101,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Dataset" as const, id })),
-              { type: "Dataset", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Dataset" as const, id })),
+            { type: "Dataset", id: "LIST" },
+          ]
           : [{ type: "Dataset", id: "LIST" }],
     },
     datasetRetrieve: {
@@ -116,9 +116,9 @@ export const api = backendApi.enhanceEndpoints({
       invalidatesTags: (result, error, { dataset }) =>
         dataset.project
           ? [
-              { type: "Dataset", id: "LIST" },
-              { type: "Project", id: dataset.project },
-            ]
+            { type: "Dataset", id: "LIST" },
+            { type: "Project", id: dataset.project },
+          ]
           : [{ type: "Dataset", id: "LIST" }],
     },
     datasetDestroy: {
@@ -130,19 +130,19 @@ export const api = backendApi.enhanceEndpoints({
     // CombinedModel
     combinedModelSetParamsToDefaultsUpdate: {
       invalidatesTags: (result, error, { id }) => [
-        { type: "Variable", id: "LIST" },
+        { type: "Variable" },
       ],
     },
     combinedModelList: {
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({
-                type: "CombinedModel" as const,
-                id,
-              })),
-              { type: "CombinedModel", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({
+              type: "CombinedModel" as const,
+              id,
+            })),
+            { type: "CombinedModel", id: "LIST" },
+          ]
           : [{ type: "CombinedModel", id: "LIST" }],
     },
     combinedModelRetrieve: {
@@ -191,9 +191,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Simulation" as const, id })),
-              { type: "Simulation", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Simulation" as const, id })),
+            { type: "Simulation", id: "LIST" },
+          ]
           : [{ type: "Simulation", id: "LIST" }],
     },
     simulationRetrieve: {
@@ -215,9 +215,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Protocol" as const, id })),
-              { type: "Protocol", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Protocol" as const, id })),
+            { type: "Protocol", id: "LIST" },
+          ]
           : [{ type: "Protocol", id: "LIST" }],
     },
     protocolRetrieve: {
@@ -238,9 +238,9 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: "Unit" as const, id })),
-              { type: "Unit", id: "LIST" },
-            ]
+            ...result.map(({ id }) => ({ type: "Unit" as const, id })),
+            { type: "Unit", id: "LIST" },
+          ]
           : [{ type: "Unit", id: "LIST" }],
     },
     unitRetrieve: {
