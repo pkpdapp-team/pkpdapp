@@ -5,7 +5,6 @@
 #
 from rest_framework import filters
 from django.db.models import Q
-import time
 
 from pkpdapp.models import (
     Dataset,
