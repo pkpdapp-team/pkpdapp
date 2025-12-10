@@ -7,7 +7,11 @@ export default function useSubjectGroups() {
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { data: groups, refetch: refetchGroups } = useSubjectGroupListQuery(
+  const {
+    data: groups,
+    refetch: refetchGroups,
+    isLoading,
+  } = useSubjectGroupListQuery(
     { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
@@ -15,5 +19,6 @@ export default function useSubjectGroups() {
   return {
     groups,
     refetchGroups,
+    isLoading,
   };
 }

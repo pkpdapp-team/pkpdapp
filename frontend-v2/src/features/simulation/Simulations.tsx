@@ -191,8 +191,10 @@ interface SimulationsTabProps {
   units: UnitRead[];
 }
 
+const GROUP_VISIBILITY = { Project: true };
+
 const SimulationsTab: FC<SimulationsTabProps> = ({
-  groups,
+  groups = [],
   project,
   compound,
   model,
@@ -200,18 +202,23 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   simulation,
   units,
 }) => {
+  const groupNames = useMemo(
+    () => ["Project", ...groups.map((group) => group.name)],
+    [groups],
+  );
+  const initialGroupVisibility: { [key: string]: boolean } = {};
+  groupNames.forEach((groupName) => {
+    initialGroupVisibility[groupName] = true;
+  });
   const [groupVisibility, setGroupVisibility] = useState<{
     [key: string]: boolean;
-  }>({ Project: true });
+  }>(initialGroupVisibility);
   const visibleGroups = Object.keys(groupVisibility).filter(
     (key: string) => groupVisibility[key],
   );
   const [showReference, setShowReference] = useState<boolean>(false);
   useEffect(() => {
-    const groupData = groups || [];
     setGroupVisibility((prevState) => {
-      // 'Project' plus the names of all available subject groups
-      const groupNames = ["Project", ...groupData.map((group) => group.name)];
       const newState: Record<string, boolean> = {};
       groupNames.forEach((groupName) => {
         // Visibility is previous visibility state or true if not set yet.
@@ -220,7 +227,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       });
       return newState;
     });
-  }, [groups]);
+  }, [groupNames]);
   const [updateSimulation] = useSimulationUpdateMutation();
   const [updateVariable] = useVariableUpdateMutation();
   const constVariables = useConstVariables();
@@ -633,7 +640,7 @@ const Simulations: FC = () => {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
-  const { groups } = useSubjectGroups();
+  const { groups, isLoading: isGroupsLoading } = useSubjectGroups();
   console.log("Subject groups in Simulations:", groups);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
@@ -669,6 +676,7 @@ const Simulations: FC = () => {
     );
 
   const loading = [
+    isGroupsLoading,
     isProjectLoading,
     isSimulationsLoading,
     isModelsLoading,
