@@ -1,16 +1,16 @@
 import { FC, useEffect } from "react";
 import DosingProtocols from "./DosingProtocols";
 import CreateDosingProtocols from "./CreateDosingProtocols";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { RootState } from "../../../app/store";
 import {
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
   useUnitListQuery,
   useVariableListQuery,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 
 interface IMapDosing {
   state: StepperState;

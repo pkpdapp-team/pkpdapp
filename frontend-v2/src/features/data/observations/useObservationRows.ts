@@ -1,6 +1,6 @@
-import { StepperState } from "./LoadDataStepper";
-import { normalisedFieldsFromData } from "./dataValidation";
-import { Row } from "./LoadData";
+import { StepperState } from "../LoadDataStepper";
+import { normalisedFieldsFromData } from "../dataValidation";
+import { Row } from "../LoadData";
 
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";
 const DEFAULT_UNIT_FIELD = "Observation Unit";
