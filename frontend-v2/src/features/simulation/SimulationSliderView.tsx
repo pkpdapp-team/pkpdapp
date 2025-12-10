@@ -3,7 +3,6 @@ import {
   CombinedModelRead,
   SimulationSlider,
   UnitRead,
-  useCombinedModelRetrieveQuery,
   useProjectRetrieveQuery,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
