@@ -33,7 +33,7 @@ import {
   getTableHeight,
 } from "../../../shared/calculateTableHeights";
 import { TableHeader } from "../../../components/TableHeader";
-import { groupDataRows } from "../Stratification";
+import { groupDataRows } from "../stratification/Stratification";
 import { ObservationIDRow } from "./ObservationIDRow";
 
 interface IMapObservations {

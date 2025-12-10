@@ -1,4 +1,4 @@
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 
 export interface IDose {
   subject: string;
