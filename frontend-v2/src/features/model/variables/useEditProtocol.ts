@@ -43,12 +43,11 @@ export default function useEditProtocol({
     projectId: project.id,
   });
 
-
-  const hasProtocol = protocols?.some((protocol) => protocol.variable === variable.id && !protocol.dataset);
-
   async function addProtocol() {
-    const isPerKg = variableUnit?.g !== 0;
-    const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
+    const isHuman = project.species === "H";
+    const isAvhOrAah = variable.name == "Avh" || variable.name == "Aah";
+    const isPerKg = !isHuman && !isAvhOrAah;
+    const doseAmountUnitSymbol = "mg";
     const doseAmountUnit = units.find(
       (unit) => unit.symbol === doseAmountUnitSymbol,
     );
@@ -63,6 +62,7 @@ export default function useEditProtocol({
     const defaultProtocol: Protocol = {
       doses: [defaultDose],
       amount_unit: doseAmountUnit?.id || variable.unit,
+      amount_per_body_weight: isPerKg,
       time_unit: defaultTimeUnit?.id || undefined,
       name: variable.name,
       project: project.id,
