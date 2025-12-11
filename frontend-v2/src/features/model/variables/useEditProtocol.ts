@@ -29,7 +29,6 @@ export default function useEditProtocol({
   timeVariable,
   variable,
 }: EditProtocolProps) {
-  const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
     : units?.find((unit) => unit.symbol === "h");
@@ -42,6 +41,9 @@ export default function useEditProtocol({
   const { data: groups } = useSubjectGroupListQuery({
     projectId: project.id,
   });
+  const hasProtocol = protocols
+    ? protocols.some((protocol) => protocol.variable === variable.id && !protocol.dataset)
+    : false;
 
   async function addProtocol() {
     const isHuman = project.species === "H";
