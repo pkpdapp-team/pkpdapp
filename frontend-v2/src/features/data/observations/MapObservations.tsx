@@ -2,10 +2,6 @@ import { FC, SyntheticEvent, useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
-  Select,
-  FormControl,
-  MenuItem,
-  InputLabel,
   Tab,
   Tabs,
   Table,
@@ -18,26 +14,27 @@ import {
   Stack,
   TableContainer,
 } from "@mui/material";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { RootState } from "../../../app/store";
 import {
   UnitListApiResponse,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 import useObservationRows from "./useObservationRows";
-import { validateState } from "./dataValidation";
+import { validateState } from "../dataValidation";
 import {
   calculateTableHeights,
   DOUBLE_TABLE_FIRST_BREAKPOINTS,
   DOUBLE_TABLE_SECOND_BREAKPOINTS,
   getTableHeight,
-} from "../../shared/calculateTableHeights";
-import { TableHeader } from "../../components/TableHeader";
-import { groupDataRows } from "./Stratification";
+} from "../../../shared/calculateTableHeights";
+import { TableHeader } from "../../../components/TableHeader";
+import { groupDataRows } from "../stratification/Stratification";
+import { ObservationIDRow } from "./ObservationIDRow";
 
 interface IMapObservations {
   state: StepperState;
@@ -46,10 +43,6 @@ interface IMapObservations {
     isOpen: boolean;
     count: number;
   };
-}
-
-function displayUnitSymbol(symbol: string | undefined) {
-  return symbol === "" ? "dimensionless" : symbol;
 }
 
 /**
@@ -78,7 +71,7 @@ function validateUnitSymbol(
   return validUnit;
 }
 
-function useApiQueries() {
+export function useApiQueries() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -104,6 +97,13 @@ function useApiQueries() {
   return { model, variables, units };
 }
 
+function findFieldByType(name: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
+    name
+  );
+}
+
 const MapObservations: FC<IMapObservations> = ({
   state,
   notificationsInfo,
@@ -111,8 +111,9 @@ const MapObservations: FC<IMapObservations> = ({
   const [tab, setTab] = useState(0);
   const groupIDs = [...new Set(state.data.map((row) => row["Group ID"]))];
   const selectedGroup = groupIDs[tab];
+  const perKgField = findFieldByType("Per Body Weight(kg)", state);
 
-  const { model, variables, units } = useApiQueries();
+  const { variables, units } = useApiQueries();
 
   const {
     observationRows,
@@ -141,15 +142,6 @@ const MapObservations: FC<IMapObservations> = ({
   if (!variables || !units) {
     return <Typography>Loading...</Typography>;
   }
-
-  const filterOutputs = model?.is_library_model
-    ? ["environment.t", "PDCompartment.C_Drug"]
-    : [];
-  const modelOutputs =
-    variables?.filter(
-      (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname),
-    ) || [];
 
   const handleObservationChange =
     (id: string) => (event: SelectChangeEvent) => {
@@ -187,6 +179,7 @@ const MapObservations: FC<IMapObservations> = ({
         ...state.normalisedFields.entries(),
         [observationVariableField, "Observation Variable"],
         [observationUnitField, "Observation Unit"],
+        [perKgField, "Per Body Weight(kg)"],
       ]);
       state.data = nextData;
       state.normalisedFields = newNormalisedFields;
@@ -201,15 +194,14 @@ const MapObservations: FC<IMapObservations> = ({
       state.errors = errors;
       state.warnings = warnings;
     };
-  const handleUnitChange = (id: string) => (event: SelectChangeEvent) => {
+  const handleUnitChange = (id: string) => (symbol: string) => {
     const nextData = [...state.data];
-    const { value } = event.target;
     nextData
       .filter((row) =>
         observationIdField ? row[observationIdField] === id : true,
       )
       .forEach((row) => {
-        row[observationUnitField] = value;
+        row[observationUnitField] = symbol;
       });
     state.data = nextData;
     const { errors, warnings } = validateState({
@@ -306,6 +298,9 @@ const MapObservations: FC<IMapObservations> = ({
                 <TableCell>
                   <Typography>Unit</Typography>
                 </TableCell>
+                <TableCell>
+                  <Typography>Per Body Weight(kg)</Typography>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -313,85 +308,22 @@ const MapObservations: FC<IMapObservations> = ({
                 .sort((a, b) => (a > b ? 1 : -1))
                 .map((obsId) => {
                   const currentRow = observationIds.indexOf(obsId);
-                  const obsVariable = observationVariables[currentRow];
-                  const obsUnit = observationUnits[currentRow];
-                  const selectedVariable = variables?.find(
-                    (variable) => variable.qname === obsVariable,
+                  const obsVariable = variables?.find(
+                    (variable) =>
+                      variable.qname === observationVariables[currentRow],
                   );
-                  let selectedUnitSymbol = units?.find(
-                    (unit) => unit.symbol === obsUnit,
-                  )?.symbol;
-                  const compatibleUnits = selectedVariable
-                    ? units?.find((unit) => unit.id === selectedVariable?.unit)
-                        ?.compatible_units
-                    : units;
-                  ["%", "fraction", "ratio"].forEach((token) => {
-                    if (selectedUnitSymbol?.toLowerCase().includes(token)) {
-                      selectedUnitSymbol = "";
-                    }
-                  });
+                  const obsUnit = units.find(
+                    (unit) => unit.symbol === observationUnits[currentRow],
+                  );
                   return (
-                    <TableRow key={obsId}>
-                      <TableCell>{obsId}</TableCell>
-                      <TableCell>
-                        <FormControl fullWidth>
-                          <InputLabel
-                            size="small"
-                            id={`select-var-${obsId}-label`}
-                          >
-                            Variable
-                          </InputLabel>
-                          <Select
-                            labelId={`select-var-${obsId}-label`}
-                            id={`select-var-${obsId}`}
-                            label="Variable"
-                            value={selectedVariable?.qname || ""}
-                            onChange={handleObservationChange(obsId)}
-                            size="small"
-                            margin="dense"
-                          >
-                            <MenuItem value="">None</MenuItem>
-                            {modelOutputs?.map((variable) => (
-                              <MenuItem
-                                key={variable.name}
-                                value={variable.qname}
-                              >
-                                {variable.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                      <TableCell>
-                        <FormControl sx={{ width: "15rem" }}>
-                          <InputLabel
-                            size="small"
-                            id={`select-unit-${obsId}-label`}
-                          >
-                            Units
-                          </InputLabel>
-                          <Select
-                            labelId={`select-unit-${obsId}-label`}
-                            id={`select-unit-${obsId}`}
-                            label="Units"
-                            value={displayUnitSymbol(selectedUnitSymbol)}
-                            onChange={handleUnitChange(obsId)}
-                            size="small"
-                            margin="dense"
-                          >
-                            <MenuItem value="">None</MenuItem>
-                            {compatibleUnits?.map((unit) => (
-                              <MenuItem
-                                key={unit.id}
-                                value={displayUnitSymbol(unit.symbol)}
-                              >
-                                {displayUnitSymbol(unit.symbol)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                    </TableRow>
+                    <ObservationIDRow
+                      key={obsVariable?.qname}
+                      obsId={obsId}
+                      obsVariable={obsVariable}
+                      obsUnit={obsUnit}
+                      handleObservationChange={handleObservationChange(obsId)}
+                      handleUnitChange={handleUnitChange(obsId)}
+                    />
                   );
                 })}
             </TableBody>

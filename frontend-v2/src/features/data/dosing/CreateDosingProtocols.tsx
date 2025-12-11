@@ -16,15 +16,15 @@ import {
   TableContainer,
   TextField,
 } from "@mui/material";
-import { StepperState } from "./LoadDataStepper";
-import { UnitRead, VariableRead } from "../../app/backendApi";
-import { Row } from "./LoadData";
-import { TableHeader } from "../../components/TableHeader";
+import { StepperState } from "../LoadDataStepper";
+import { UnitRead, VariableRead } from "../../../app/backendApi";
+import { Row } from "../LoadData";
+import { TableHeader } from "../../../components/TableHeader";
 import {
   calculateTableHeights,
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
-} from "../../shared/calculateTableHeights";
+} from "../../../shared/calculateTableHeights";
 
 function findFieldByType(type: string, state: StepperState) {
   return (

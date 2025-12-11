@@ -1,7 +1,7 @@
 import { Box, Button, InputLabel, TextField, Typography } from "@mui/material";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { FC, FormEvent, useRef } from "react";
-import { StepperState } from "./LoadDataStepper";
+import { StepperState } from "../LoadDataStepper";
 
 type SubjectGroup = {
   id: string;

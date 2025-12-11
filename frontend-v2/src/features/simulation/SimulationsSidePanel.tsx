@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { PageName } from "../main/mainSlice";
 import {
+  CombinedModelRead,
   Simulation,
   SimulationPlot,
   SimulationRead,
@@ -50,6 +51,7 @@ type SimulationsSidePanelType = {
   control: Control<Simulation, unknown>;
   units: UnitRead[];
   simulation: SimulationRead;
+  model: CombinedModelRead;
   groups?: SubjectGroupRead[];
   visibleGroups: string[];
   handleVisibleGroups: (group: ChangeEvent<HTMLInputElement>) => void;
@@ -165,6 +167,7 @@ export const SimulationsSidePanel = ({
   groups,
   visibleGroups,
   handleVisibleGroups,
+  model,
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
@@ -483,6 +486,7 @@ export const SimulationsSidePanel = ({
                           key={index}
                           index={index}
                           slider={slider}
+                          model={model}
                           onChange={handleChangeSlider}
                           onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
                           onSave={handleSaveSlider(slider)}

@@ -28,7 +28,8 @@ import { selectIsProjectShared } from "../../login/loginSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { DerivedVariableType } from "../derivedVariable";
-
+import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
+import parameterDisplayName from "./parameterDisplayName";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -112,10 +113,6 @@ const ParameterRow: FC<Props> = ({
   const isPreclinicalPerKg =
     project?.species !== "H" && unit?.symbol.endsWith("/kg");
 
-  const isPKandVol = isPK && unit?.m === 3;
-  const is_Ref_D_or_D50 =
-    variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
-
   const defaultProps = {
     disabled: isSharedWithMe,
   };
@@ -124,14 +121,14 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-    { value: "EMX", label: "Dose Emax" },
-    { value: "IMX", label: "Dose Imax" },
-    { value: "POW", label: "Dose Power Increase" },
-    { value: "NPW", label: "Dose Power Decrease" },
-    { value: "TDI", label: "Time Decrease" },
-    { value: "IND", label: "Time Increase" },
-    { value: "", label: "None" },
-  ];
+      { value: "EMX", label: "Dose Emax" },
+      { value: "IMX", label: "Dose Imax" },
+      { value: "POW", label: "Dose Power Increase" },
+      { value: "NPW", label: "Dose Power Decrease" },
+      { value: "TDI", label: "Time Decrease" },
+      { value: "IND", label: "Time Increase" },
+      { value: "", label: "None" },
+    ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
@@ -240,19 +237,7 @@ const ParameterRow: FC<Props> = ({
     }
   };
 
-  let variable_name = variable.name;
-  if (
-    model.number_of_effect_compartments &&
-    model.number_of_effect_compartments > 1 &&
-    variable.qname.startsWith("Effect")
-  ) {
-    const compartment_name = variable.qname.split(".")[0];
-    const compartment_number = compartment_name.slice(
-      17,
-      compartment_name.length,
-    );
-    variable_name = `${variable.name}_Ce${compartment_number}`;
-  }
+  const variable_name = parameterDisplayName(variable, model);
 
   return (
     <TableRow>
@@ -309,7 +294,7 @@ const ParameterRow: FC<Props> = ({
         />
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
-        {(isPKandVol || is_Ref_D_or_D50) && (
+        {hasPerWeightOption(unit, variable) && (
           <Checkbox
             label=""
             name="unit_per_body_weight"

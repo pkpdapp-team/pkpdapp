@@ -10,11 +10,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
   CombinedModelRead,
+  CompoundRead,
+  ProjectRead,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
   SimulationSlider,
   SimulationSliderRead,
+  SubjectGroupRead,
   UnitRead,
   VariableRead,
   useCombinedModelListQuery,
@@ -43,10 +46,13 @@ import useSimulationInputs from "./useSimulationInputs";
 import useDirty from "../../hooks/useDirty";
 import paramPriority from "../model/parameters/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getConstVariables } from "../model/parameters/getConstVariables";
+import { useConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
+import parameterDisplayName from "../model/parameters/parameterDisplayName";
+
+const EMPTY_OBJECT: SliderValues = {};
 
 type SliderValues = { [key: number]: number };
 
@@ -112,95 +118,23 @@ const getSliderInitialValues = (
   return initialValues;
 };
 
-const Simulations: FC = () => {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const { groups } = useSubjectGroups();
-  console.log("Subject groups in Simulations:", groups);
-  const [groupVisibility, setGroupVisibility] = useState<{
-    [key: string]: boolean;
-  }>({ Project: true });
-  const visibleGroups = Object.keys(groupVisibility).filter(
-    (key: string) => groupVisibility[key],
-  );
-  const [showReference, setShowReference] = useState<boolean>(false);
-  useEffect(() => {
-    const groupData = groups || [];
-    setGroupVisibility((prevState) => {
-      // 'Project' plus the names of all available subject groups
-      const groupNames = ["Project", ...groupData.map((group) => group.name)];
-      const newState: Record<string, boolean> = {};
-      groupNames.forEach((groupName) => {
-        // Visibility is previous visibility state or true if not set yet.
-        newState[groupName] =
-          prevState[groupName] === undefined ? true : prevState[groupName];
-      });
-      return newState;
-    });
-  }, [groups]);
-  const projectIdOrZero = projectId || 0;
-  const { data: project, isLoading: isProjectLoading } =
-    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
-  const { data: models, isLoading: isModelsLoading } =
-    useCombinedModelListQuery(
-      { projectId: projectIdOrZero },
-      { skip: !projectId },
-    );
-  const model = useMemo(() => {
-    return models?.[0] || undefined;
-  }, [models]);
-  const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
-  );
-  const { data: simulations, isLoading: isSimulationsLoading } =
-    useSimulationListQuery(
-      { projectId: projectIdOrZero },
-      { skip: !projectId },
-    );
-  const simulation = useMemo(() => {
-    return simulations?.[0] || undefined;
-  }, [simulations]);
-  const [updateSimulation] = useSimulationUpdateMutation();
-  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
-  );
-  const { data: compound, isLoading: isLoadingCompound } =
-    useCompoundRetrieveQuery(
-      { id: project?.compound || 0 },
-      { skip: !project?.compound },
-    );
-  const [updateVariable] = useVariableUpdateMutation();
+interface UseSimulationDataProps {
+  model?: CombinedModelRead;
+  simulation?: SimulationRead;
+  sliderValues?: SliderValues;
+  variables?: VariableRead[];
+  units?: UnitRead[];
+  showReference?: boolean;
+}
 
-  const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
-    undefined,
-  );
-  const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues((prevSliderValues) => ({
-      ...prevSliderValues,
-      [variable]: value,
-    }));
-  }, []);
-  const [shouldShowLegend, setShouldShowLegend] = useState(true);
-  const isSharedWithMe = useSelector((state: RootState) =>
-    selectIsProjectShared(state, project),
-  );
-
-  const EMPTY_OBJECT: SliderValues = {};
-
-  const defaultSimulation: SimulationRead = {
-    id: 0,
-    name: "default",
-    sliders: [],
-    plots: [],
-    nrows: 0,
-    ncols: 0,
-    project: projectIdOrZero,
-    time_max_unit: model?.time_unit || 0,
-  };
-
+function useSimulationData({
+  model,
+  simulation,
+  sliderValues,
+  variables,
+  units,
+  showReference = false,
+}: UseSimulationDataProps) {
   // generate a simulation if slider values change
   const getTimeMax = (sim: SimulationRead): number => {
     const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
@@ -214,7 +148,6 @@ const Simulations: FC = () => {
     return timeMax;
   };
   const timeMax = simulation?.id && getTimeMax(simulation);
-
   const simInputs = useSimulationInputs(
     model,
     simulation,
@@ -225,8 +158,8 @@ const Simulations: FC = () => {
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -246,6 +179,92 @@ const Simulations: FC = () => {
     refSimInputs,
     showReference ? model : undefined,
   );
+  return { loadingSimulate, simInputs, data, simulateError, dataReference };
+}
+
+interface SimulationsTabProps {
+  groups?: SubjectGroupRead[];
+  project: ProjectRead;
+  compound: CompoundRead;
+  model: CombinedModelRead;
+  variables: VariableRead[];
+  simulation: SimulationRead;
+  units: UnitRead[];
+}
+
+const SimulationsTab: FC<SimulationsTabProps> = ({
+  groups = [],
+  project,
+  compound,
+  model,
+  variables,
+  simulation,
+  units,
+}) => {
+  const groupNames = useMemo(
+    () => ["Project", ...groups.map((group) => group.name)],
+    [groups],
+  );
+  const initialGroupVisibility: { [key: string]: boolean } = {};
+  groupNames.forEach((groupName) => {
+    initialGroupVisibility[groupName] = true;
+  });
+  const [groupVisibility, setGroupVisibility] = useState<{
+    [key: string]: boolean;
+  }>(initialGroupVisibility);
+  const visibleGroups = Object.keys(groupVisibility).filter(
+    (key: string) => groupVisibility[key],
+  );
+  const [showReference, setShowReference] = useState<boolean>(false);
+  useEffect(() => {
+    setGroupVisibility((prevState) => {
+      const newState: Record<string, boolean> = {};
+      groupNames.forEach((groupName) => {
+        // Visibility is previous visibility state or true if not set yet.
+        newState[groupName] =
+          prevState[groupName] === undefined ? true : prevState[groupName];
+      });
+      return newState;
+    });
+  }, [groupNames]);
+  const [updateSimulation] = useSimulationUpdateMutation();
+  const [updateVariable] = useVariableUpdateMutation();
+  const constVariables = useConstVariables();
+
+  const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
+    undefined,
+  );
+  const handleChangeSlider = useCallback((variable: number, value: number) => {
+    setSliderValues((prevSliderValues) => ({
+      ...prevSliderValues,
+      [variable]: value,
+    }));
+  }, []);
+  const [shouldShowLegend, setShouldShowLegend] = useState(true);
+  const isSharedWithMe = useSelector((state: RootState) =>
+    selectIsProjectShared(state, project),
+  );
+
+  const defaultSimulation: SimulationRead = {
+    id: 0,
+    name: "default",
+    sliders: [],
+    plots: [],
+    nrows: 0,
+    ncols: 0,
+    project: project.id,
+    time_max_unit: model?.time_unit || 0,
+  };
+
+  const { loadingSimulate, simInputs, data, simulateError, dataReference } =
+    useSimulationData({
+      model,
+      simulation,
+      sliderValues,
+      variables,
+      units,
+      showReference,
+    });
 
   const {
     reset,
@@ -410,14 +429,12 @@ const Simulations: FC = () => {
     }));
   };
 
-  const constVariables = model ? getConstVariables(variables || [], model) : [];
-
   const sliderVarIds = sliders.map((v) => v.variable);
   const addSliderOptions = constVariables
     .filter((v) => !sliderVarIds.includes(v.id))
     .map((variable) => ({
       value: variable.id,
-      label: `${variable.name} (${variable.description})`,
+      label: `${parameterDisplayName(variable, model)} (${variable.description})`,
     }));
 
   const handleAddSlider = (variableId: number) => {
@@ -509,21 +526,6 @@ const Simulations: FC = () => {
 
   const tableLayout = getXlLayout();
 
-  const loading = [
-    isProjectLoading,
-    isSimulationsLoading,
-    isModelsLoading,
-    isLoadingCompound,
-    isUnitsLoading,
-  ].some((v) => v);
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!simulation || !project || !models || !variables || !units || !compound) {
-    return <div>Not found</div>;
-  }
-
   return (
     <Box
       sx={{ display: "flex", minHeight: "60vh", height: "calc(80vh - 24px)" }}
@@ -533,6 +535,7 @@ const Simulations: FC = () => {
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
         handleAddPlot={handleAddPlot}
+        model={model}
         isSharedWithMe={isSharedWithMe}
         layoutOptions={layoutOptions}
         layout={layout}
@@ -630,6 +633,73 @@ const Simulations: FC = () => {
         </Grid>
       </Box>
     </Box>
+  );
+};
+
+const Simulations: FC = () => {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { groups, isLoading: isGroupsLoading } = useSubjectGroups();
+  console.log("Subject groups in Simulations:", groups);
+  const projectIdOrZero = projectId || 0;
+  const { data: project, isLoading: isProjectLoading } =
+    useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });
+  const { data: models, isLoading: isModelsLoading } =
+    useCombinedModelListQuery(
+      { projectId: projectIdOrZero },
+      { skip: !projectId },
+    );
+  const model = useMemo(() => {
+    return models?.[0] || undefined;
+  }, [models]);
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
+  const { data: simulations, isLoading: isSimulationsLoading } =
+    useSimulationListQuery(
+      { projectId: projectIdOrZero },
+      { skip: !projectId },
+    );
+  const simulation = useMemo(() => {
+    return simulations?.[0] || undefined;
+  }, [simulations]);
+  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
+    { compoundId: project?.compound || 0 },
+    { skip: !project?.compound },
+  );
+  const { data: compound, isLoading: isLoadingCompound } =
+    useCompoundRetrieveQuery(
+      { id: project?.compound || 0 },
+      { skip: !project?.compound },
+    );
+
+  const loading = [
+    isGroupsLoading,
+    isProjectLoading,
+    isSimulationsLoading,
+    isModelsLoading,
+    isUnitsLoading,
+    isLoadingCompound,
+  ].some((v) => v);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!project || !model || !variables || !simulation || !units || !compound) {
+    return <div>Not found</div>;
+  }
+  return (
+    <SimulationsTab
+      groups={groups}
+      project={project}
+      compound={compound}
+      model={model}
+      variables={variables}
+      simulation={simulation}
+      units={units}
+    />
   );
 };
 

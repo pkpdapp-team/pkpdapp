@@ -1,8 +1,13 @@
+import { useSelector } from "react-redux";
 import {
   CombinedModelRead,
   ProjectRead,
+  useCombinedModelListQuery,
+  useProjectRetrieveQuery,
+  useVariableListQuery,
   VariableRead,
 } from "../../../app/backendApi";
+import { RootState } from "../../../app/store";
 import paramPriority from "./paramPriority";
 
 // filter out parameters from all variables, and sort them by priority
@@ -43,5 +48,40 @@ export const getConstVariables = (
   return constVariables;
 };
 
+export function useConstVariables() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const model = models?.[0];
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
+  if (!model || !variables) {
+    return [];
+  }
+  return getConstVariables(variables, model);
+}
+
 export const getNoReset = (project: ProjectRead) =>
   !project.species || project.species === "O";
+
+export function useNoReset() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  if (!project) {
+    return true;
+  }
+  return getNoReset(project);
+}
