@@ -5790,6 +5790,19 @@ export const projectHandlers = [
     }
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/variable/:id", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split("/");
+    const variableId = parseInt(pathSegments[pathSegments.length - 1], 10);
+    const variable = variables.find((v) => v.id === variableId);
+    if (variable) {
+      return HttpResponse.json(variable, {
+        status: 200,
+      });
+    }
+    return HttpResponse.json({ error: "Variable not found" }, { status: 404 });
+  }),
   http.get("/api/variable", async ({ request }) => {
     await delay();
     const url = new URL(request.url);
