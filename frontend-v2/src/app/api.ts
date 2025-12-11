@@ -185,6 +185,7 @@ export const api = backendApi.enhanceEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: "Variable", id },
         { type: "Variable", id: "LIST" },
+        { type: "Protocol", id: "LIST" },
       ],
     },
     simulationList: {

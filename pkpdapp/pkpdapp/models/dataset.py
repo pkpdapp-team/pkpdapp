@@ -17,6 +17,7 @@ from pkpdapp.models import (
     CategoricalBiomarker,
     SubjectGroup,
     CombinedModel,
+    Variable,
 )
 from pkpdapp.utils import DataParser
 
@@ -91,7 +92,10 @@ class Dataset(models.Model):
             if not has_combined_model:
                 observation_variable = None
             else:
-                observation_variable = variables.get(qname=observation_qname)
+                try:
+                    observation_variable = variables.get(qname=observation_qname)
+                except Variable.DoesNotExist:
+                    observation_variable = None
 
             biomarker_types[observation_name] = BiomarkerType.objects.create(
                 name=observation_name,
@@ -166,7 +170,10 @@ class Dataset(models.Model):
             if not has_combined_model:
                 mapped_variable = None
             else:
-                mapped_variable = variables.get(qname=mapped_qname)
+                try:
+                    mapped_variable = variables.get(qname=mapped_qname)
+                except Variable.DoesNotExist:
+                    mapped_variable = None
             protocol = Protocol.objects.create(
                 name="{}-{}".format(self.name, group.name),
                 time_unit=time_unit,

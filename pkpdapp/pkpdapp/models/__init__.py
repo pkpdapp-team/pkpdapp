@@ -28,8 +28,8 @@ from .pharmacokinetic_model import (
 )
 from .derived_variable import DerivedVariable
 from .combined_model import CombinedModel, PkpdMapping, TimeInterval
-from .dataset import Dataset
 from .variable import Variable
+from .dataset import Dataset
 from .profile import Profile
 from .myokit_forward_model import MyokitForwardModel
 from .likelihoods import (
