@@ -191,8 +191,6 @@ interface SimulationsTabProps {
   units: UnitRead[];
 }
 
-const GROUP_VISIBILITY = { Project: true };
-
 const SimulationsTab: FC<SimulationsTabProps> = ({
   groups = [],
   project,
