@@ -2,6 +2,7 @@ import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import {
   SimulationSlider,
   UnitRead,
+  useCombinedModelRetrieveQuery,
   useProjectRetrieveQuery,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
@@ -22,10 +23,12 @@ import Save from "@mui/icons-material/Save";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import parameterDisplayName from "../model/parameters/parameterDisplayName";
 
 interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
+  model: CombinedModelRead;
   onChange: (variable: number, value: number) => void;
   onSave: (value: number) => void;
   onRemove: () => void;
@@ -35,6 +38,7 @@ interface SimulationSliderProps {
 const SimulationSliderView: FC<SimulationSliderProps> = ({
   slider,
   onChange,
+  model,
   onRemove,
   onSave,
   units,
@@ -165,6 +169,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     return <div>Variable not found</div>;
   }
 
+  const variable_name = parameterDisplayName(variable, model);
+
   return (
     <div
       data-cy={`parameter-slider-${variable.name}`}
@@ -185,8 +191,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             sx={{ flexGrow: 1, fontWeight: "bold" }}
           >
             {unit?.symbol
-              ? `${variable.name} [${unit?.symbol}]`
-              : variable.name}
+              ? `${variable_name} [${unit?.symbol}]`
+              : variable_name}
           </Typography>
         </Tooltip>
       </Stack>

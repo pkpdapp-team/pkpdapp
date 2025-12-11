@@ -50,6 +50,7 @@ import { useConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
+import parameterDisplayName from "../model/parameters/parameterDisplayName";
 
 const EMPTY_OBJECT: SliderValues = {};
 
@@ -157,8 +158,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -435,7 +436,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     .filter((v) => !sliderVarIds.includes(v.id))
     .map((variable) => ({
       value: variable.id,
-      label: `${variable.name} (${variable.description})`,
+      label: `${parameterDisplayName(variable, model)} (${variable.description})`,
     }));
 
   const handleAddSlider = (variableId: number) => {
@@ -536,6 +537,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         portalId="simulations-portal"
         addPlotOptions={addPlotOptions}
         handleAddPlot={handleAddPlot}
+        model={model}
         isSharedWithMe={isSharedWithMe}
         layoutOptions={layoutOptions}
         layout={layout}
