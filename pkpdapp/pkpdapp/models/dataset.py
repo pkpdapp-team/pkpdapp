@@ -17,6 +17,7 @@ from pkpdapp.models import (
     CategoricalBiomarker,
     SubjectGroup,
     CombinedModel,
+    Variable,
 )
 from pkpdapp.utils import DataParser
 
