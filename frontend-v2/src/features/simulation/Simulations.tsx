@@ -15,7 +15,6 @@ import {
   Simulation,
   SimulationPlotRead,
   SimulationRead,
-  SimulationSlider,
   SimulationSliderRead,
   SubjectGroupRead,
   UnitRead,
@@ -52,9 +51,9 @@ import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
 
-const EMPTY_OBJECT: SliderValues = {};
+const EMPTY_MAP: SliderValues = new Map();
 
-type SliderValues = { [key: number]: number };
+type SliderValues = Map<number, number>;
 
 interface ErrorObject {
   error: string;
@@ -104,14 +103,17 @@ const getSliderInitialValues = (
   existingSliderValues?: SliderValues,
   variables?: VariableRead[],
 ): SliderValues => {
-  const initialValues: SliderValues = {};
+  const initialValues: SliderValues = new Map();
   for (const slider of simulation?.sliders || []) {
-    if (existingSliderValues && existingSliderValues[slider.variable]) {
-      initialValues[slider.variable] = existingSliderValues[slider.variable];
+    if (existingSliderValues && existingSliderValues.has(slider.variable)) {
+      initialValues.set(
+        slider.variable,
+        existingSliderValues.get(slider.variable)!,
+      );
     } else {
       const variable = variables?.find((v) => v.id === slider.variable);
       if (variable?.default_value) {
-        initialValues[slider.variable] = variable.default_value;
+        initialValues.set(slider.variable, variable.default_value);
       }
     }
   }
@@ -158,8 +160,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -171,7 +173,7 @@ function useSimulationData({
   const refSimInputs = useSimulationInputs(
     model,
     simulation,
-    EMPTY_OBJECT,
+    EMPTY_MAP,
     variables,
     timeMax,
   );
@@ -231,14 +233,13 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const [updateVariable] = useVariableUpdateMutation();
   const constVariables = useConstVariables();
 
-  const [sliderValues, setSliderValues] = useState<SliderValues | undefined>(
-    undefined,
-  );
+  const [sliderValues, setSliderValues] = useState<SliderValues>(EMPTY_MAP);
   const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues((prevSliderValues) => ({
-      ...prevSliderValues,
-      [variable]: value,
-    }));
+    setSliderValues((prevSliderValues) => {
+      const newSliderValues = new Map(prevSliderValues);
+      newSliderValues.set(variable, value);
+      return newSliderValues;
+    });
   }, []);
   const [shouldShowLegend, setShouldShowLegend] = useState(true);
   const isSharedWithMe = useSelector((state: RootState) =>
@@ -449,24 +450,13 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     removeSlider(index);
   };
 
-  const handleSaveSlider = (slider: SimulationSlider) => (value: number) => {
-    const variable = variables?.find((v) => v.id === slider.variable);
-    if (!variable) {
-      return;
-    }
-    updateVariable({
-      id: slider.variable,
-      variable: { ...variable, default_value: value },
-    });
-  };
-
   const handleSaveAllSlider = () => {
     for (const slider of sliders) {
       const variable = variables?.find((v) => v.id === slider.variable);
       if (!variable) {
         return;
       }
-      const value = sliderValues?.[slider.variable];
+      const value = sliderValues?.get(slider.variable);
       if (value === undefined) {
         return;
       }
@@ -552,7 +542,6 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         orderedSliders={orderedSliders}
         handleChangeSlider={handleChangeSlider}
         handleRemoveSlider={handleRemoveSlider}
-        handleSaveSlider={handleSaveSlider}
         handleSaveAllSlider={handleSaveAllSlider}
         exportSimulation={exportSimulation}
         showReference={showReference}

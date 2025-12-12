@@ -6,7 +6,7 @@ import {
   VariableRead,
 } from "../../app/backendApi";
 
-type SliderValues = { [key: number]: number };
+type SliderValues = Map<number, number>;
 
 const DEFAULT_INPUTS = {
   variables: {},
@@ -34,8 +34,8 @@ const getSimulateInput = (
   const simulateVariables: { [key: string]: number } = {};
   constantVariables.forEach((v: VariableRead) => {
     const result = { qname: v.qname, value: v.default_value || 0 };
-    if (sliderValues && sliderValues[v.id]) {
-      result.value = sliderValues[v.id];
+    if (sliderValues.has(v.id)) {
+      result.value = sliderValues.get(v.id)!;
     }
     simulateVariables[result.qname] = result.value;
   });
