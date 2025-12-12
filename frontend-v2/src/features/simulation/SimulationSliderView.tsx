@@ -1,4 +1,11 @@
-import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FC,
+  SyntheticEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   CombinedModelRead,
   SimulationSlider,
@@ -9,6 +16,7 @@ import {
 } from "../../app/backendApi";
 import {
   Box,
+  debounce,
   IconButton,
   Input,
   Slider,
@@ -61,6 +69,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const unit = units.find((u) => u.id === variable?.unit);
 
   const [range, setRange] = useState<number>(10.0);
+
+  const debouncedOnChange = useMemo(() => debounce(onChange, 300), [onChange]);
 
   // update the slider value if the variable default value changes
   //
@@ -153,7 +163,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       truncatedValue = maxValue;
     }
     setValue(truncatedValue);
-    onChange(slider.variable, truncatedValue);
+    debouncedOnChange(slider.variable, truncatedValue);
   };
 
   const formatNumber = (value: number) => {
