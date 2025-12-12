@@ -168,7 +168,7 @@ export const Reference: Story = {
     await userEvent.click(showReferenceCheckbox);
     expect(showReferenceCheckbox).toBeChecked();
     await waitFor(() => {
-      expect(simulationSpy).toHaveBeenCalledTimes(2);
+      expect(simulationSpy).toHaveBeenCalledTimes(0);
     });
   },
 };

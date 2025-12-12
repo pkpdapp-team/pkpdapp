@@ -31,6 +31,8 @@ function useFetchSimulations() {
   return { fetchSimulation, simulateErrorBase };
 }
 
+const simulationCache = new Map<string, SimulateResponse[]>();
+
 export default function useSimulation(
   simInputs: Simulate,
   model: CombinedModelRead | undefined,
@@ -52,18 +54,23 @@ export default function useSimulation(
   useEffect(() => {
     let ignore = false;
 
-    async function simulateModel(modelId: number, simInputs: Simulate) {
+    const simulateModel = async (
+      model: CombinedModelRead,
+      simInputs: Simulate,
+      cacheKey: string,
+    ) => {
       setLoadingSimulate(true);
-      const response = await fetchSimulation(model!, simInputs);
+      const response = await fetchSimulation(model, simInputs);
       if (!ignore) {
-        setLoadingSimulate(false);
         if ("data" in response) {
           const responseData = response.data as SimulateResponse[];
           setData(responseData);
           setSimulations(responseData);
+          simulationCache.set(cacheKey, responseData);
         }
       }
-    }
+      setLoadingSimulate(false);
+    };
 
     const simInputs = JSON.parse(serialisedInputs);
     if (
@@ -72,11 +79,27 @@ export default function useSimulation(
       simInputs.time_max &&
       model &&
       protocols &&
-      compound &&
-      SIMULATION_PAGES.includes(page)
+      compound
     ) {
-      console.log("Simulating with params", simInputs.variables);
-      simulateModel(model.id, simInputs);
+      const cacheKey = `${model.id}-${serialisedInputs}`;
+      /**
+       * Clear the cache on any tab except Simulation or Results.
+       * This prevents stale data being used after changes to the model or protocols.
+       */
+      if (SIMULATION_PAGES.includes(page)) {
+        console.log("Simulating with inputs", simInputs.variables);
+        if (simulationCache.has(cacheKey)) {
+          const cachedData = simulationCache.get(cacheKey);
+          console.log("Using cached simulation data");
+          setData(cachedData || []);
+          setSimulations(cachedData || []);
+        } else {
+          simulateModel(model, simInputs, cacheKey);
+        }
+      } else {
+        console.log("Clearing simulation cache");
+        simulationCache.clear();
+      }
     }
     return () => {
       ignore = true;
