@@ -5,6 +5,7 @@ import {
   UnitRead,
   useProjectRetrieveQuery,
   useVariableRetrieveQuery,
+  useVariableUpdateMutation,
 } from "../../app/backendApi";
 import {
   Box,
@@ -30,7 +31,6 @@ interface SimulationSliderProps {
   slider: SimulationSlider;
   model: CombinedModelRead;
   onChange: (variable: number, value: number) => void;
-  onSave: (value: number) => void;
   onRemove: () => void;
   units: UnitRead[];
 }
@@ -40,7 +40,6 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   onChange,
   model,
   onRemove,
-  onSave,
   units,
 }) => {
   const projectId = useSelector(
@@ -57,6 +56,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const { data: variable, isLoading } = useVariableRetrieveQuery({
     id: slider.variable,
   });
+  const [updateVariable] = useVariableUpdateMutation();
 
   const unit = units.find((u) => u.id === variable?.unit);
 
@@ -93,8 +93,17 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleSave = () => {
+    if (!variable) {
+      return;
+    }
     setValue(value);
-    onSave(value);
+    updateVariable({
+      id: slider.variable,
+      variable: {
+        ...variable,
+        default_value: value,
+      },
+    });
   };
 
   const handleDelete = () => {

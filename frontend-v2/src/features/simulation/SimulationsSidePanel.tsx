@@ -63,7 +63,6 @@ type SimulationsSidePanelType = {
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
   handleChangeSlider: (variable: number, value: number) => void;
   handleRemoveSlider: (index: number) => () => void;
-  handleSaveSlider: (slider: SimulationSlider) => (value: number) => void;
   handleSaveAllSlider: () => void;
   exportSimulation: () => void;
   showReference: boolean;
@@ -173,7 +172,6 @@ export const SimulationsSidePanel = ({
   orderedSliders,
   handleChangeSlider,
   handleRemoveSlider,
-  handleSaveSlider,
   handleSaveAllSlider,
   exportSimulation,
   showReference,
@@ -489,7 +487,6 @@ export const SimulationsSidePanel = ({
                           model={model}
                           onChange={handleChangeSlider}
                           onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
-                          onSave={handleSaveSlider(slider)}
                           units={units}
                         />
                       ))}
