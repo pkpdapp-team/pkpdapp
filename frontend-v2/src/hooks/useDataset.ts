@@ -1,8 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   DatasetRead,
   BiomarkerTypeListApiResponse,
   SubjectGroupListApiResponse,
+  useCombinedModelListQuery,
   useDatasetRetrieveQuery,
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
@@ -35,6 +36,13 @@ export default function useDataset(selectedProject: number | null) {
     { id: selectedProjectOrZero },
     { skip: !selectedProject },
   );
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
+  );
+  const model = useMemo(() => {
+    return models?.[0] || undefined;
+  }, [models]);
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
@@ -62,8 +70,8 @@ export default function useDataset(selectedProject: number | null) {
   const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
 
   const { data: variables } = useVariableListQuery(
-    { projectId: selectedProjectOrZero },
-    { skip: !selectedProject },
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
   );
 
   const { refetch: refetchProtocols } = useProtocolListQuery(

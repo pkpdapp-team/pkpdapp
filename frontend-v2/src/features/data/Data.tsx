@@ -1,6 +1,7 @@
-import { FC, SyntheticEvent, useState } from "react";
+import { FC, SyntheticEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
+  useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
@@ -72,13 +73,20 @@ const Data: FC = () => {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const model = useMemo(() => {
+    return models?.[0] || undefined;
+  }, [models]);
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
   const { data: variables } = useVariableListQuery(
-    { projectId: projectIdOrZero },
-    { skip: !projectId },
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
   const csv = generateCSV(
