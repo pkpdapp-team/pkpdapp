@@ -180,21 +180,42 @@ export const api = backendApi.enhanceEndpoints({
         { dispatch, queryFulfilled },
       ) => {
         const dosedPkModelId = variable.dosed_pk_model || 0;
-        const response = await queryFulfilled;
-        // Optimistically update the variable list cache.
-        dispatch(
+        // Optimistically update the variable list cache with the updated variable.
+        const patchInfo = dispatch(
           api.util.updateQueryData(
             "variableList",
             { dosedPkModelId },
             (draftVariables) => {
               const index = draftVariables.findIndex((v) => v.id === id);
               if (index !== -1) {
-                draftVariables[index] = response.data;
+                draftVariables[index] = {
+                  ...draftVariables[index],
+                  ...variable,
+                };
               }
             },
             true,
           ),
         );
+        try {
+          const response = await queryFulfilled;
+          // Apply the updated variable from the backend.
+          dispatch(
+            api.util.updateQueryData(
+              "variableList",
+              { dosedPkModelId },
+              (draftVariables) => {
+                const index = draftVariables.findIndex((v) => v.id === id);
+                if (index !== -1) {
+                  draftVariables[index] = response.data;
+                }
+              },
+              true,
+            ),
+          );
+        } catch {
+          patchInfo.undo(); // Revert the optimistic update if the query fails.
+        }
       },
     },
     variableCreate: {
