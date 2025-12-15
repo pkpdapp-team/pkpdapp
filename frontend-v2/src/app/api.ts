@@ -180,8 +180,18 @@ export const api = backendApi.enhanceEndpoints({
         { dispatch, queryFulfilled },
       ) => {
         const dosedPkModelId = variable.dosed_pk_model || 0;
+        // Optimistically update the variable retrieve cache with the updated variable.
+        const patchVariableRetrieve = dispatch(
+          api.util.updateQueryData(
+            "variableRetrieve",
+            { id },
+            (draftVariable) => {
+              Object.assign(draftVariable, variable);
+            },
+          ),
+        );
         // Optimistically update the variable list cache with the updated variable.
-        const patchInfo = dispatch(
+        const patchVariableList = dispatch(
           api.util.updateQueryData(
             "variableList",
             { dosedPkModelId },
@@ -213,8 +223,20 @@ export const api = backendApi.enhanceEndpoints({
               true,
             ),
           );
+          dispatch(
+            api.util.updateQueryData(
+              "variableRetrieve",
+              { id },
+              (draftVariable) => {
+                Object.assign(draftVariable, response.data);
+              },
+            ),
+          );
         } catch {
-          patchInfo.undo(); // Revert the optimistic update if the query fails.
+          // If the update fails, roll back the variable list.
+          patchVariableList.undo();
+          // Mark the retrieved variable as stale.
+          api.util.invalidateTags([{ type: "Variable", id }]);
         }
       },
     },
