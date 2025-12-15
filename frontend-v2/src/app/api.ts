@@ -174,10 +174,28 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Variable", id }],
     },
     variableUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Variable", id },
-        { type: "Variable", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Variable", id }],
+      onQueryStarted: async (
+        { id, variable },
+        { dispatch, queryFulfilled },
+      ) => {
+        const dosedPkModelId = variable.dosed_pk_model || 0;
+        const response = await queryFulfilled;
+        // Optimistically update the variable list cache.
+        dispatch(
+          api.util.updateQueryData(
+            "variableList",
+            { dosedPkModelId },
+            (draftVariables) => {
+              const index = draftVariables.findIndex((v) => v.id === id);
+              if (index !== -1) {
+                draftVariables[index] = response.data;
+              }
+            },
+            true,
+          ),
+        );
+      },
     },
     variableCreate: {
       invalidatesTags: [{ type: "Variable", id: "LIST" }],
