@@ -5790,11 +5790,10 @@ export const projectHandlers = [
     }
     return HttpResponse.json([], { status: 200 });
   }),
-  http.get("/api/variable/:id", async ({ request }) => {
+  http.get("/api/variable/:id", async ({ params }) => {
     await delay();
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split("/");
-    const variableId = parseInt(pathSegments[pathSegments.length - 1], 10);
+    //@ts-expect-error params.id is a string
+    const variableId = parseInt(params.id, 10);
     const variable = variables.find((v) => v.id === variableId);
     if (variable) {
       return HttpResponse.json(variable, {
