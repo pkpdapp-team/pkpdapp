@@ -30,12 +30,13 @@ import SelectField from "../../components/SelectField";
 import Checkbox from "../../components/Checkbox";
 import { FormData } from "./Model";
 import { speciesOptions } from "../projects/Project";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import React from "react";
+import { setPkTags, setPdTags } from "../main/mainSlice";
 
 interface Props {
   model: CombinedModelRead;
@@ -95,14 +96,22 @@ const PKPDModelTab: FC<Props> = ({
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const [tags, setTags] = useState<number[]>([]);
-  const [pdTags, setPdTags] = useState<number[]>([]);
+  const pkTags = useSelector((state: RootState) => state.main.pkTags);
+  const pdTags = useSelector((state: RootState) => state.main.pdTags);
 
-  const handleTagChange = (event: SelectChangeEvent<number[]>) => {
-    setTags(event.target.value as number[]);
+  const dispatch = useDispatch();
+  const handlePkTags = (newTags: number[]) => {
+    dispatch(setPkTags(newTags));
+  };
+  const handlePdTags = (newTags: number[]) => {
+    dispatch(setPdTags(newTags));
+  };
+
+  const handlePkTagChange = (event: SelectChangeEvent<number[]>) => {
+    handlePkTags(event.target.value as number[]);
   };
   const handlePdTagChange = (event: SelectChangeEvent<number[]>) => {
-    setPdTags(event.target.value as number[]);
+    handlePdTags(event.target.value as number[]);
   };
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -132,7 +141,7 @@ const PKPDModelTab: FC<Props> = ({
       return false;
     }
     if (m.tags) {
-      for (const tag of tags) {
+      for (const tag of pkTags) {
         if (!m.tags.includes(tag)) {
           return false;
         }
@@ -327,8 +336,8 @@ const PKPDModelTab: FC<Props> = ({
                   labelId="tags-label"
                   id="tags"
                   multiple
-                  value={tags}
-                  onChange={handleTagChange}
+                  value={pkTags}
+                  onChange={handlePkTagChange}
                   input={
                     <OutlinedInput
                       id="select-multiple-tags"
