@@ -191,10 +191,14 @@ function useModelFormDataCallback({
       return updateModel({ id: model.id, combinedModel: modelData })
         .then((response) => {
           if (response?.data) {
-            // if the pk model has changed, need to reset the parameters
+            /* 
+              If the pk model has changed, or the species has changed,
+              need to reset the parameters.
+            */
             if (
               modelData.pk_model !== model?.pk_model ||
-              modelData.pk_model2 !== model?.pk_model2
+              modelData.pk_model2 !== model?.pk_model2 ||
+              species !== project.species
             ) {
               setParamsToDefault({ id: model.id, combinedModel: modelData });
             }
