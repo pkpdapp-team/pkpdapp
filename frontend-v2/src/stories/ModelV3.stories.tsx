@@ -9,7 +9,11 @@ import {
   waitFor,
 } from "storybook/test";
 import { useDispatch } from "react-redux";
-import { setProject as setReduxProject } from "../features/main/mainSlice";
+import {
+  setPdTags,
+  setPkTags,
+  setProject as setReduxProject,
+} from "../features/main/mainSlice";
 
 import Model from "../features/model/Model";
 import { model, project, projectHandlers } from "./project.v3.mock";
@@ -195,6 +199,8 @@ const meta: Meta<typeof Model> = {
     (Story) => {
       const dispatch = useDispatch();
       dispatch(setReduxProject(project.id));
+      dispatch(setPkTags([]));
+      dispatch(setPdTags([]));
 
       return <Story />;
     },
@@ -311,11 +317,11 @@ export const PkFiltering: Story = {
     expect(pdFilterTags).toBeInTheDocument();
 
     // filter by 2-compartment
-    await selectMenuOption(pkFilterTags, "2-compartment", userEvent);
+    await selectMenuOption(pkFilterTags, "1-compartment", userEvent);
     assertMenuOptions(
       pkModelCombo,
-      ["2-compartmental model"],
-      ["1-compartmental model", "3-compartmental model"],
+      ["1-compartmental model"],
+      ["2-compartmental model", "3-compartmental model"],
       userEvent,
     );
   },
@@ -339,11 +345,14 @@ export const PdFiltering: Story = {
     const pdModelCombo = await canvas.findByLabelText("PD Model");
     expect(pdModelCombo).toHaveTextContent("Direct effect model (inhibitory)");
     await selectMenuOption(pdModelCombo, "None", userEvent);
-    await selectMenuOption(pdFilterTags, "indirect", userEvent);
+    await selectMenuOption(pdFilterTags, "direct", userEvent);
     assertMenuOptions(
       pdModelCombo,
-      ["Indirect effect model (inhibition of elimination)"],
-      ["Direct effect model (inhibitory)", "Tumor growth model (linear)"],
+      ["Direct effect model (inhibitory)", "Direct effect model (stimulatory)"],
+      [
+        "Indirect effect model (inhibition of elimination)",
+        "Tumor growth model (linear)",
+      ],
       userEvent,
     );
   },
@@ -384,7 +393,11 @@ export const PKModel: Story = {
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("1-compartmental model");
 
-    await selectMenuOption(pkModelList, "3-compartmental model", userEvent);
+    await selectMenuOption(
+      pkModelList,
+      "1-compartmental bispecific TMDD model",
+      userEvent,
+    );
   },
 };
 
