@@ -1,7 +1,7 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import storageSession from "redux-persist/lib/storage/session";
 
 import loginReducer from "../features/login/loginSlice";
 import mainReducer from "../features/main/mainSlice";
@@ -9,7 +9,7 @@ import { api } from "../app/api";
 
 const persistConfig = {
   key: "main",
-  storage,
+  storage: storageSession,
 };
 
 const persistedMainReducer = persistReducer(persistConfig, mainReducer);
