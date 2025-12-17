@@ -74,7 +74,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apidevtools/swagger-parser@npm:^12.0.0":
+"@apidevtools/swagger-parser@npm:^12.1.0":
   version: 12.1.0
   resolution: "@apidevtools/swagger-parser@npm:12.1.0"
   dependencies:
@@ -7554,9 +7554,9 @@ __metadata:
   linkType: hard
 
 "fast-uri@npm:^3.0.1":
-  version: 3.0.6
-  resolution: "fast-uri@npm:3.0.6"
-  checksum: 10c0/74a513c2af0584448aee71ce56005185f81239eab7a2343110e5bad50c39ad4fb19c5a6f99783ead1cac7ccaf3461a6034fda89fffa2b30b6d99b9f21c2f9d29
+  version: 3.1.0
+  resolution: "fast-uri@npm:3.1.0"
+  checksum: 10c0/44364adca566f70f40d1e9b772c923138d47efeac2ae9732a872baafd77061f26b097ba2f68f0892885ad177becd065520412b8ffeec34b16c99433c5b9e2de7
   languageName: node
   linkType: hard
 
@@ -10513,20 +10513,20 @@ __metadata:
   linkType: hard
 
 "oazapfts@npm:^6.3.0":
-  version: 6.3.1
-  resolution: "oazapfts@npm:6.3.1"
+  version: 6.4.0
+  resolution: "oazapfts@npm:6.4.0"
   dependencies:
-    "@apidevtools/swagger-parser": "npm:^12.0.0"
+    "@apidevtools/swagger-parser": "npm:^12.1.0"
     lodash: "npm:^4.17.21"
     minimist: "npm:^1.2.8"
     swagger2openapi: "npm:^7.0.8"
-    tapable: "npm:^2.2.2"
-    typescript: "npm:^5.8.3"
+    tapable: "npm:^2.3.0"
+    typescript: "npm:^5.9.3"
   peerDependencies:
     "@oazapfts/runtime": "*"
   bin:
     oazapfts: cli.js
-  checksum: 10c0/baafff7577f6f1ff11ca880515b606a69e60fec0aea802e237d0c58fe7c11936118ef857ae8d096b5a2557ad859b9fb1bab52271d6afa551c5e98d486d37919c
+  checksum: 10c0/a9559db56b6504582aeba26384b4bdf1566e04cb1e2099b2f30e91643572a4cf7dcbcc4c3d7461020bc58b2c6c9283d814b01eeea482db5c4fd24712e95874b2
   languageName: node
   linkType: hard
 
@@ -11017,16 +11017,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.2.5":
-  version: 3.5.3
-  resolution: "prettier@npm:3.5.3"
-  bin:
-    prettier: bin/prettier.cjs
-  checksum: 10c0/3880cb90b9dc0635819ab52ff571518c35bd7f15a6e80a2054c05dbc8a3aa6e74f135519e91197de63705bcb38388ded7e7230e2178432a1468005406238b877
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^3.7.4":
+"prettier@npm:^3.2.5, prettier@npm:^3.7.4":
   version: 3.7.4
   resolution: "prettier@npm:3.7.4"
   bin:
@@ -12765,7 +12756,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tapable@npm:^2.2.2":
+"tapable@npm:^2.3.0":
   version: 2.3.0
   resolution: "tapable@npm:2.3.0"
   checksum: 10c0/cb9d67cc2c6a74dedc812ef3085d9d681edd2c1fa18e4aef57a3c0605fdbe44e6b8ea00bd9ef21bc74dd45314e39d31227aa031ebf2f5e38164df514136f2681
@@ -13178,17 +13169,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.8.2":
-  version: 5.8.3
-  resolution: "typescript@npm:5.8.3"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/5f8bb01196e542e64d44db3d16ee0e4063ce4f3e3966df6005f2588e86d91c03e1fb131c2581baf0fb65ee79669eea6e161cd448178986587e9f6844446dbb48
-  languageName: node
-  linkType: hard
-
-"typescript@npm:^5.8.3, typescript@npm:^5.9.3":
+"typescript@npm:^5.8.2, typescript@npm:^5.9.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -13198,17 +13179,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.8.2#optional!builtin<compat/typescript>":
-  version: 5.8.3
-  resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=b45daf"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/92ea03509e06598948559ddcdd8a4ae5a7ab475766d5589f1b796f5731b3d631a4c7ddfb86a3bd44d58d10102b132cd4b4994dda9b63e6273c66d77d6a271dbd
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.9.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.8.2#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.9.3#optional!builtin<compat/typescript>":
   version: 5.9.3
   resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=b45daf"
   bin:
