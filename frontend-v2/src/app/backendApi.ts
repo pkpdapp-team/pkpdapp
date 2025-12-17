@@ -3417,6 +3417,10 @@ export type Project = {
   version?: number;
   compound: number;
   species_weight_unit?: number;
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type ProjectRead = {
   id: number;
@@ -3445,6 +3449,10 @@ export type ProjectRead = {
   species_weight_unit?: number;
   /** users with access to this project */
   users: number[];
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type PatchedProject = {
   user_access?: ProjectAccess[];
@@ -3467,6 +3475,10 @@ export type PatchedProject = {
   version?: number;
   compound?: number;
   species_weight_unit?: number;
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type PatchedProjectRead = {
   id?: number;
@@ -3495,6 +3507,10 @@ export type PatchedProjectRead = {
   species_weight_unit?: number;
   /** users with access to this project */
   users?: number[];
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type Monolix = {};
 export type MonolixRead = {

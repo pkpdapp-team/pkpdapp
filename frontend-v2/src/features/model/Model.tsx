@@ -39,6 +39,8 @@ export type FormData = Omit<CombinedModel, "species"> & {
   species: ProjectSpeciesEnum | undefined;
   species_weight: number | undefined;
   species_weight_unit: number | undefined;
+  pk_tags: number[];
+  pd_tags: number[];
 };
 
 const defaultSpeciesWeights = new Map([
@@ -141,7 +143,7 @@ function useModelFormDataCallback({
       if (!model || !project) {
         return;
       }
-      const { species, ...modelData } = data;
+      const { species, pk_tags, pd_tags, ...modelData } = data;
       let species_weight = data.species_weight;
       let species_weight_unit = data.species_weight_unit;
 
@@ -186,7 +188,14 @@ function useModelFormDataCallback({
       });
       updateProject({
         id: project.id,
-        project: { ...project, species, species_weight, species_weight_unit },
+        project: {
+          ...project,
+          species,
+          species_weight,
+          species_weight_unit,
+          pk_tags,
+          pd_tags,
+        },
       });
       return updateModel({ id: model.id, combinedModel: modelData })
         .then((response) => {
@@ -212,6 +221,8 @@ function useModelFormDataCallback({
             species: project.species,
             species_weight: project.species_weight,
             species_weight_unit: project.species_weight_unit,
+            pk_tags: project.pk_tags || [],
+            pd_tags: project.pd_tags || [],
           });
         });
     },
@@ -238,12 +249,16 @@ function useModelFormState({
   const species = project.species;
   const species_weight = project.species_weight;
   const species_weight_unit = project.species_weight_unit;
+  const pk_tags = project.pk_tags || [];
+  const pd_tags = project.pd_tags || [];
   const defaultValues: FormData = {
     ...model,
     project: project.id,
     species,
     species_weight,
     species_weight_unit,
+    pk_tags,
+    pd_tags,
   };
   const { reset, handleSubmit, control } = useForm<FormData>({
     defaultValues,

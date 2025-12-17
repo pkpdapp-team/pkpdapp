@@ -52,6 +52,24 @@ export const api = backendApi.enhanceEndpoints({
     },
     projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: "Project", id }],
+      onQueryStarted: async ({ id, project }, { dispatch, queryFulfilled }) => {
+        // Optimistically update the project retrieve cache with the updated project.
+        const patchProjectRetrieve = dispatch(
+          api.util.updateQueryData(
+            "projectRetrieve",
+            { id },
+            (draftProject) => {
+              Object.assign(draftProject, project);
+            },
+          ),
+        );
+        try {
+          const response = await queryFulfilled;
+        } catch {
+          // If the update fails, roll back the project retrieve.
+          patchProjectRetrieve.undo();
+        }
+      },
     },
     projectCreate: {
       invalidatesTags: [{ type: "Project", id: "LIST" }],
