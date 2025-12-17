@@ -9,11 +9,7 @@ import {
   waitFor,
 } from "storybook/test";
 import { useDispatch } from "react-redux";
-import {
-  setPdTags,
-  setPkTags,
-  setProject as setReduxProject,
-} from "../features/main/mainSlice";
+import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Model from "../features/model/Model";
 import { model, project, projectHandlers } from "./project.v3.mock";
@@ -199,8 +195,6 @@ const meta: Meta<typeof Model> = {
     (Story) => {
       const dispatch = useDispatch();
       dispatch(setReduxProject(project.id));
-      dispatch(setPkTags([]));
-      dispatch(setPdTags([]));
 
       return <Story />;
     },
@@ -226,7 +220,7 @@ async function selectMenuOption(
   await userEvent.click(comboBox);
   const listbox: HTMLElement = await screen.findByRole("listbox");
   await userEvent.selectOptions(listbox, option);
-  expect(comboBox).toHaveTextContent(option);
+  return waitFor(() => expect(comboBox).toHaveTextContent(option));
 }
 
 async function assertMenuOptions(

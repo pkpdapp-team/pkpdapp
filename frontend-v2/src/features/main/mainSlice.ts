@@ -30,8 +30,6 @@ interface MainState {
   selectedPage: PageName;
   selectedSubPage: SubPageName | null;
   selectedProject: number | null;
-  pkTags: number[];
-  pdTags: number[];
   dirtyCount: number;
 }
 
@@ -39,8 +37,6 @@ const initialState: MainState = {
   selectedPage: PageName.PROJECTS,
   selectedSubPage: null,
   selectedProject: null,
-  pkTags: [],
-  pdTags: [],
   dirtyCount: 0,
 };
 
@@ -57,12 +53,6 @@ const mainSlice = createSlice({
     setProject: (state, action: PayloadAction<number | null>) => {
       state.selectedProject = action.payload;
     },
-    setPkTags: (state, action: PayloadAction<number[]>) => {
-      state.pkTags = action.payload;
-    },
-    setPdTags: (state, action: PayloadAction<number[]>) => {
-      state.pdTags = action.payload;
-    },
     incrementDirtyCount: (state) => {
       state.dirtyCount += 1;
     },
@@ -76,8 +66,6 @@ export const {
   setPage,
   setSubPage,
   setProject,
-  setPkTags,
-  setPdTags,
   incrementDirtyCount,
   decrementDirtyCount,
 } = mainSlice.actions;

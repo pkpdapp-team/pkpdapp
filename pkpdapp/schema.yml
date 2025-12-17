@@ -5156,6 +5156,16 @@ components:
             type: integer
           readOnly: true
           description: users with access to this project
+        pk_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PK model tags for this project
+        pd_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PD model tags for this project
     PatchedProjectAccess:
       type: object
       properties:
@@ -5814,6 +5824,16 @@ components:
             type: integer
           readOnly: true
           description: users with access to this project
+        pk_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PK model tags for this project
+        pd_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PD model tags for this project
       required:
       - compound
       - created
