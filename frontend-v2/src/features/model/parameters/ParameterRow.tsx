@@ -90,10 +90,10 @@ const ParameterRow: FC<Props> = ({
   );
 
   useEffect(() => {
-    if (isDirty && submitCount === 0) {
+    if (isDirty) {
       submit();
     }
-  }, [isDirty, submitCount, submit]);
+  }, [isDirty, submit]);
 
   if (variable.constant !== true) {
     return null;
@@ -121,14 +121,14 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-    { value: "EMX", label: "Dose Emax" },
-    { value: "IMX", label: "Dose Imax" },
-    { value: "POW", label: "Dose Power Increase" },
-    { value: "NPW", label: "Dose Power Decrease" },
-    { value: "TDI", label: "Time Decrease" },
-    { value: "IND", label: "Time Increase" },
-    { value: "", label: "None" },
-  ];
+      { value: "EMX", label: "Dose Emax" },
+      { value: "IMX", label: "Dose Imax" },
+      { value: "POW", label: "Dose Power Increase" },
+      { value: "NPW", label: "Dose Power Decrease" },
+      { value: "TDI", label: "Time Decrease" },
+      { value: "IND", label: "Time Increase" },
+      { value: "", label: "None" },
+    ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
