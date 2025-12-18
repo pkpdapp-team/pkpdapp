@@ -110,10 +110,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         old_derived_vars = list((instance.derived_variables).all())
         old_time_intervals = list((instance.time_intervals).all())
 
-        pk_model_changed = False
-        if "pk_model" in validated_data:
-            pk_model_changed = instance.pk_model != validated_data.get("pk_model")
-
         # if pk_model2 is None, then ensure that lag time and bioavailability is off
         if validated_data.get("pk_model2") is None:
             validated_data["has_lag"] = False
@@ -196,20 +192,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         new_pkpd_model.refresh_from_db()
         new_pkpd_model.read_only = is_read_only
         new_pkpd_model.save()
-
-        if pk_model_changed:
-            # go through all protocols of the project and delete
-            # any that are not associated with a variable
-            project = new_pkpd_model.project
-            if project is not None:
-                for protocol in project.protocols.all():
-                    if not protocol.variables.exists():
-                        mapped_var_name = protocol.mapped_qname
-                        mapped_var = instance.variables.filter(
-                            qname=mapped_var_name
-                        ).first()
-                        if mapped_var is None:
-                            protocol.delete()
 
         return new_pkpd_model
 
