@@ -6,6 +6,7 @@ import {
   within,
   fn,
   waitForElementToBeRemoved,
+  waitFor,
 } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
@@ -19,6 +20,7 @@ let mockModel = { ...model };
 let mockProject = { ...project };
 const modelSpy = fn();
 const projectSpy = fn();
+const setParamsToDefaultSpy = fn();
 
 const meta: Meta<typeof Model> = {
   title: "Edit Model (version 3)",
@@ -26,6 +28,7 @@ const meta: Meta<typeof Model> = {
   args: {
     updateModel: modelSpy,
     updateProject: projectSpy,
+    setParamsToDefault: setParamsToDefaultSpy,
   },
   parameters: {
     layout: "fullscreen",
@@ -58,6 +61,21 @@ const meta: Meta<typeof Model> = {
               { status: 404 },
             );
           }),
+          http.put(
+            "/api/combined_model/:id/set_params_to_defaults",
+            async ({ params, request }) => {
+              await delay();
+              //@ts-expect-error params.id is a string
+              const modelId = parseInt(params.id, 10);
+              const modelData = await request.json();
+              //@ts-expect-error modelData is DefaultBodyType
+              mockModel = { ...modelData, id: modelId };
+              setParamsToDefaultSpy({ id: modelId, combinedModel: mockModel });
+              return HttpResponse.json(mockModel, {
+                status: 200,
+              });
+            },
+          ),
           http.put("/api/combined_model/:id", async ({ params, request }) => {
             //@ts-expect-error params.id is a string
             const modelId = parseInt(params.id, 10);
@@ -202,7 +220,7 @@ async function selectMenuOption(
   await userEvent.click(comboBox);
   const listbox: HTMLElement = await screen.findByRole("listbox");
   await userEvent.selectOptions(listbox, option);
-  expect(comboBox).toHaveTextContent(option);
+  return waitFor(() => expect(comboBox).toHaveTextContent(option));
 }
 
 async function assertMenuOptions(
@@ -293,11 +311,11 @@ export const PkFiltering: Story = {
     expect(pdFilterTags).toBeInTheDocument();
 
     // filter by 2-compartment
-    await selectMenuOption(pkFilterTags, "2-compartment", userEvent);
+    await selectMenuOption(pkFilterTags, "1-compartment", userEvent);
     assertMenuOptions(
       pkModelCombo,
-      ["2-compartmental model"],
-      ["1-compartmental model", "3-compartmental model"],
+      ["1-compartmental model"],
+      ["2-compartmental model", "3-compartmental model"],
       userEvent,
     );
   },
@@ -321,11 +339,14 @@ export const PdFiltering: Story = {
     const pdModelCombo = await canvas.findByLabelText("PD Model");
     expect(pdModelCombo).toHaveTextContent("Direct effect model (inhibitory)");
     await selectMenuOption(pdModelCombo, "None", userEvent);
-    await selectMenuOption(pdFilterTags, "indirect", userEvent);
+    await selectMenuOption(pdFilterTags, "direct", userEvent);
     assertMenuOptions(
       pdModelCombo,
-      ["Indirect effect model (inhibition of elimination)"],
-      ["Direct effect model (inhibitory)", "Tumor growth model (linear)"],
+      ["Direct effect model (inhibitory)", "Direct effect model (stimulatory)"],
+      [
+        "Indirect effect model (inhibition of elimination)",
+        "Tumor growth model (linear)",
+      ],
       userEvent,
     );
   },
@@ -354,6 +375,8 @@ export const Species: Story = {
       name: /Unit/i,
     });
     expect(unitList).toHaveTextContent("kg");
+
+    await waitFor(() => expect(setParamsToDefaultSpy).toHaveBeenCalledOnce());
   },
 };
 
@@ -364,7 +387,11 @@ export const PKModel: Story = {
     const pkModelList = await canvas.findByLabelText("PK Model");
     expect(pkModelList).toHaveTextContent("1-compartmental model");
 
-    await selectMenuOption(pkModelList, "3-compartmental model", userEvent);
+    await selectMenuOption(
+      pkModelList,
+      "1-compartmental bispecific TMDD model",
+      userEvent,
+    );
   },
 };
 

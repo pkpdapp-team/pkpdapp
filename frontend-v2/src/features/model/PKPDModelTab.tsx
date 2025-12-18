@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, Fragment, useState } from "react";
 import {
   CombinedModelRead,
   PharmacodynamicRead,
@@ -9,7 +9,7 @@ import {
   UnitRead,
   TagRead,
 } from "../../app/backendApi";
-import { Control } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 import {
   Stack,
   Grid,
@@ -22,7 +22,6 @@ import {
   OutlinedInput,
   MenuItem,
   Chip,
-  SelectChangeEvent,
 } from "@mui/material";
 import FloatField from "../../components/FloatField";
 import UnitField from "../../components/UnitField";
@@ -35,7 +34,6 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import React from "react";
 
 interface Props {
   model: CombinedModelRead;
@@ -95,15 +93,9 @@ const PKPDModelTab: FC<Props> = ({
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const [tags, setTags] = useState<number[]>([]);
-  const [pdTags, setPdTags] = useState<number[]>([]);
+  const pkTags = project?.pk_tags || [];
+  const pdTags = project?.pd_tags || [];
 
-  const handleTagChange = (event: SelectChangeEvent<number[]>) => {
-    setTags(event.target.value as number[]);
-  };
-  const handlePdTagChange = (event: SelectChangeEvent<number[]>) => {
-    setPdTags(event.target.value as number[]);
-  };
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
@@ -132,7 +124,7 @@ const PKPDModelTab: FC<Props> = ({
       return false;
     }
     if (m.tags) {
-      for (const tag of tags) {
+      for (const tag of pkTags) {
         if (!m.tags.includes(tag)) {
           return false;
         }
@@ -278,7 +270,7 @@ const PKPDModelTab: FC<Props> = ({
               selectProps={defaultProps}
             />
             {version_greater_than_2 && (
-              <React.Fragment>
+              <Fragment>
                 <FloatField
                   size="small"
                   sx={{ flex: "1" }}
@@ -305,7 +297,7 @@ const PKPDModelTab: FC<Props> = ({
                   }}
                   version_greater_than_2={version_greater_than_2}
                 />
-              </React.Fragment>
+              </Fragment>
             )}
           </Stack>
         </Grid>
@@ -320,39 +312,47 @@ const PKPDModelTab: FC<Props> = ({
         >
           {version_greater_than_2 && (
             <Stack direction="row" alignItems="center" spacing={1}>
-              <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
-                <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
-                <Select
-                  size="small"
-                  labelId="tags-label"
-                  id="tags"
-                  multiple
-                  value={tags}
-                  onChange={handleTagChange}
-                  input={
-                    <OutlinedInput
-                      id="select-multiple-tags"
-                      label={modelTypesLabel}
-                    />
-                  }
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((value) => {
-                        const label = tagOptions.find(
-                          (tag) => tag.value === value,
-                        )?.label;
-                        return <Chip key={value} label={label} />;
-                      })}
-                    </Box>
-                  )}
-                >
-                  {tagOptions.map((tag) => (
-                    <MenuItem key={tag.value} value={tag.value}>
-                      {tag.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Controller
+                name="pk_tags"
+                control={control}
+                render={({ field: { onChange } }) => (
+                  <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
+                    <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
+                    <Select
+                      size="small"
+                      labelId="tags-label"
+                      id="tags"
+                      multiple
+                      value={pkTags}
+                      onChange={onChange}
+                      input={
+                        <OutlinedInput
+                          id="select-multiple-tags"
+                          label={modelTypesLabel}
+                        />
+                      }
+                      renderValue={(selected) => (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {selected.map((value) => {
+                            const label = tagOptions.find(
+                              (tag) => tag.value === value,
+                            )?.label;
+                            return <Chip key={value} label={label} />;
+                          })}
+                        </Box>
+                      )}
+                    >
+                      {tagOptions.map((tag) => (
+                        <MenuItem key={tag.value} value={tag.value}>
+                          {tag.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              />
             </Stack>
           )}
           <Stack
@@ -519,39 +519,45 @@ const PKPDModelTab: FC<Props> = ({
           }}
         >
           {version_greater_than_2 && (
-            <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
-              <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
-              <Select
-                size="small"
-                labelId="tags-label"
-                id="tags"
-                multiple
-                value={pdTags}
-                onChange={handlePdTagChange}
-                input={
-                  <OutlinedInput
-                    id="select-multiple-tags"
-                    label={modelTypesLabel}
-                  />
-                }
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value) => {
-                      const label = pdTagOptions.find(
-                        (tag) => tag.value === value,
-                      )?.label;
-                      return <Chip key={value} label={label} />;
-                    })}
-                  </Box>
-                )}
-              >
-                {pdTagOptions.map((tag) => (
-                  <MenuItem key={tag.value} value={tag.value}>
-                    {tag.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Controller
+              name="pd_tags"
+              control={control}
+              render={({ field: { onChange } }) => (
+                <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
+                  <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
+                  <Select
+                    size="small"
+                    labelId="tags-label"
+                    id="tags"
+                    multiple
+                    value={pdTags}
+                    onChange={onChange}
+                    input={
+                      <OutlinedInput
+                        id="select-multiple-tags"
+                        label={modelTypesLabel}
+                      />
+                    }
+                    renderValue={(selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.map((value) => {
+                          const label = pdTagOptions.find(
+                            (tag) => tag.value === value,
+                          )?.label;
+                          return <Chip key={value} label={label} />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {pdTagOptions.map((tag) => (
+                      <MenuItem key={tag.value} value={tag.value}>
+                        {tag.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            />
           )}
           <Stack
             sx={{

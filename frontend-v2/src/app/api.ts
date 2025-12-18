@@ -52,6 +52,24 @@ export const api = backendApi.enhanceEndpoints({
     },
     projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: "Project", id }],
+      onQueryStarted: async ({ id, project }, { dispatch, queryFulfilled }) => {
+        // Optimistically update the project retrieve cache with the updated project.
+        const patchProjectRetrieve = dispatch(
+          api.util.updateQueryData(
+            "projectRetrieve",
+            { id },
+            (draftProject) => {
+              Object.assign(draftProject, project);
+            },
+          ),
+        );
+        try {
+          const response = await queryFulfilled;
+        } catch {
+          // If the update fails, roll back the project retrieve.
+          patchProjectRetrieve.undo();
+        }
+      },
     },
     projectCreate: {
       invalidatesTags: [{ type: "Project", id: "LIST" }],
@@ -174,10 +192,71 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Variable", id }],
     },
     variableUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Variable", id },
-        { type: "Variable", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Variable", id }],
+      onQueryStarted: async (
+        { id, variable },
+        { dispatch, queryFulfilled },
+      ) => {
+        const dosedPkModelId = variable.dosed_pk_model || 0;
+        // Optimistically update the variable retrieve cache with the updated variable.
+        const patchVariableRetrieve = dispatch(
+          api.util.updateQueryData(
+            "variableRetrieve",
+            { id },
+            (draftVariable) => {
+              Object.assign(draftVariable, variable);
+            },
+          ),
+        );
+        // Optimistically update the variable list cache with the updated variable.
+        const patchVariableList = dispatch(
+          api.util.updateQueryData(
+            "variableList",
+            { dosedPkModelId },
+            (draftVariables) => {
+              const index = draftVariables.findIndex((v) => v.id === id);
+              if (index !== -1) {
+                draftVariables[index] = {
+                  ...draftVariables[index],
+                  ...variable,
+                };
+              }
+            },
+            true,
+          ),
+        );
+        try {
+          const response = await queryFulfilled;
+          // Apply the updated variable from the backend.
+          dispatch(
+            api.util.updateQueryData(
+              "variableList",
+              { dosedPkModelId },
+              (draftVariables) => {
+                const index = draftVariables.findIndex((v) => v.id === id);
+                if (index !== -1) {
+                  draftVariables[index] = response.data;
+                }
+              },
+              true,
+            ),
+          );
+          dispatch(
+            api.util.updateQueryData(
+              "variableRetrieve",
+              { id },
+              (draftVariable) => {
+                Object.assign(draftVariable, response.data);
+              },
+            ),
+          );
+        } catch {
+          // If the update fails, roll back the variable list.
+          patchVariableList.undo();
+          // Mark the retrieved variable as stale.
+          api.util.invalidateTags([{ type: "Variable", id }]);
+        }
+      },
     },
     variableCreate: {
       invalidatesTags: [{ type: "Variable", id: "LIST" }],

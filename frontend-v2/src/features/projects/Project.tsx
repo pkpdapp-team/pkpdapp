@@ -31,6 +31,7 @@ import {
   ProjectRead,
   useProjectCopyUpdateMutation,
   useProjectAccessDestroyMutation,
+  useDatasetCreateMutation,
 } from "../../app/backendApi";
 import UserAccess from "./UserAccess";
 import {
@@ -108,6 +109,8 @@ const ProjectEditorRow: FC<Props> = ({
     { value: "SM", label: "Small Molecule" },
     { value: "LM", label: "Large Molecule" },
   ];
+
+  const [createDataset] = useDatasetCreateMutation();
 
   const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
 
@@ -204,6 +207,9 @@ const ProjectEditorRow: FC<Props> = ({
   };
 
   const handleSelectProject = () => {
+    if (project.datasets.length === 0) {
+      createDataset({ dataset: { name: "New Dataset", project: project.id } });
+    }
     dispatch(setProject(project.id));
   };
 

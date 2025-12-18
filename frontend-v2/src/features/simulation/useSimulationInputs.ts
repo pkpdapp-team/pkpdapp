@@ -8,37 +8,35 @@ import {
 
 type SliderValues = Map<number, number>;
 
-const DEFAULT_INPUTS = {
-  variables: {},
-  outputs: [],
-  time_max: 0,
-};
-
 enum simulationInputMode {
   REQUESTED_OUTPUTS = "REQUESTED",
   ALL_OUTPUTS = "ALL",
   ALL_OUTPUTS_NO_AMOUNTS = "ALL_NO_AMOUNTS",
 }
 
-const getSimulateInput = (
-  model: CombinedModelRead,
-  simulation: SimulationRead,
-  sliderValues: SliderValues,
+const getSimulationInputs = (
   variables?: VariableRead[],
-  timeMax?: number,
-  mode: simulationInputMode = simulationInputMode.REQUESTED_OUTPUTS,
-): Simulate => {
-  const outputs: string[] = [];
-
+  sliderValues?: SliderValues,
+) => {
   const constantVariables = variables?.filter((v) => v.constant) || [];
   const simulateVariables: { [key: string]: number } = {};
   constantVariables.forEach((v: VariableRead) => {
     const result = { qname: v.qname, value: v.default_value || 0 };
-    if (sliderValues.has(v.id)) {
+    if (sliderValues?.has(v.id)) {
       result.value = sliderValues.get(v.id)!;
     }
     simulateVariables[result.qname] = result.value;
   });
+  return simulateVariables;
+};
+
+const getSimulateOutputs = (
+  model: CombinedModelRead,
+  simulation: SimulationRead,
+  variables?: VariableRead[],
+  mode: simulationInputMode = simulationInputMode.REQUESTED_OUTPUTS,
+): string[] => {
+  const outputs: string[] = [];
 
   if (mode == simulationInputMode.ALL_OUTPUTS) {
     for (const v of variables || []) {
@@ -99,11 +97,7 @@ const getSimulateInput = (
     outputs.push(`${compartmentName}.calc_${name}_${derivedType}`);
   });
 
-  return {
-    variables: simulateVariables,
-    outputs,
-    time_max: timeMax || undefined,
-  };
+  return outputs;
 };
 
 export default function useSimulationInputs(
@@ -113,18 +107,29 @@ export default function useSimulationInputs(
   variables: VariableRead[] | undefined,
   timeMax: number | undefined,
 ) {
-  return useMemo(
+  const simulateVariables = useMemo(
+    () => getSimulationInputs(variables, sliderValues),
+    [variables, sliderValues],
+  );
+  const outputs = useMemo(
     () =>
-      model && simulation && sliderValues
-        ? getSimulateInput(
+      model && simulation
+        ? getSimulateOutputs(
             model,
             simulation,
-            sliderValues,
             variables,
-            timeMax,
             simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
           )
-        : DEFAULT_INPUTS,
-    [model, simulation, sliderValues, variables, timeMax],
+        : [],
+    [model, simulation, variables],
   );
+  const simInputs = useMemo(
+    () => ({
+      variables: simulateVariables,
+      outputs,
+      time_max: timeMax || undefined,
+    }),
+    [simulateVariables, outputs, timeMax],
+  );
+  return simInputs as Simulate;
 }

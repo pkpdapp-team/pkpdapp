@@ -46,6 +46,20 @@ class Project(models.Model):
         blank=True,
     )
 
+    pk_tags = models.ManyToManyField(
+        "Tag",
+        related_name="pk_projects",
+        blank=True,
+        help_text="saved PK model tags for this project",
+    )
+
+    pd_tags = models.ManyToManyField(
+        "Tag",
+        related_name="pd_projects",
+        blank=True,
+        help_text="saved PD model tags for this project",
+    )
+
     # species is a enum field
     class Species(models.TextChoices):
         MOUSE = "M", "Mouse"
