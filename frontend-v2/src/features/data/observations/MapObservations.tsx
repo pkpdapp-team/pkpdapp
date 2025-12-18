@@ -86,8 +86,8 @@ export function useApiQueries() {
   );
   const [model] = models;
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound },

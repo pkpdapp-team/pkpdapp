@@ -45,8 +45,8 @@ function useApiQueries() {
   const amountUnit = units?.find((unit) => unit.symbol === "pmol");
   const [model] = models;
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
 
   const loading = [projectProtocols, units, variables];

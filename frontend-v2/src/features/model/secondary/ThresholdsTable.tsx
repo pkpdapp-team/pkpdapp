@@ -89,10 +89,13 @@ function useUnits() {
 }
 
 function useVariables() {
-  const model = useModel();
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
   return variables;
 }

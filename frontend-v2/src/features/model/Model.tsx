@@ -75,8 +75,8 @@ function useApiQueries() {
   );
   const { data: variables, isLoading: isVariablesLoading } =
     useVariableListQuery(
-      { dosedPkModelId: model?.id || 0 },
-      { skip: !model?.id },
+      { projectId: projectIdOrZero },
+      { skip: !projectId },
     );
   const { data: simulations, isLoading: isSimulationsLoading } =
     useSimulationListQuery(

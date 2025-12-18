@@ -160,8 +160,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -643,8 +643,8 @@ const Simulations: FC = () => {
     return models?.[0] || undefined;
   }, [models]);
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
   const { data: simulations, isLoading: isSimulationsLoading } =
     useSimulationListQuery(

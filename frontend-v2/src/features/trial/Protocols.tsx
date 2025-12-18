@@ -100,8 +100,8 @@ function useApiQueries() {
     return models?.[0] || undefined;
   }, [models]);
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: selectedProjectOrZero },
+    { skip: !selectedProject },
   );
   const { data: units, isLoading: unitsLoading } = useUnitListQuery(
     { compoundId: project?.compound || 0 },

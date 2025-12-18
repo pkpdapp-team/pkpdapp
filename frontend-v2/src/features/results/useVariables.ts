@@ -17,8 +17,8 @@ export function useVariables() {
   );
   const model = models?.[0] || null;
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
   return variables || [];
 }

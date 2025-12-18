@@ -59,8 +59,8 @@ export function useConstVariables() {
   );
   const model = models?.[0];
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
   );
   if (!model || !variables) {
     return [];

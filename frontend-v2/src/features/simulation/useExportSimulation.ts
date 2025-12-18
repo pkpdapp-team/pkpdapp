@@ -50,14 +50,14 @@ export default function useExportSimulation({
   model,
   project,
 }: iExportSimulation): [
-  () => void,
-  { error: FetchBaseQueryError | SerializedError | undefined },
-] {
+    () => void,
+    { error: FetchBaseQueryError | SerializedError | undefined },
+  ] {
   const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
-    { dosedPkModelId: model?.id || 0 },
-    { skip: !model?.id },
+    { projectId: project?.id || 0 },
+    { skip: !project },
   );
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
