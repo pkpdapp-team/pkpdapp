@@ -110,10 +110,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         old_derived_vars = list((instance.derived_variables).all())
         old_time_intervals = list((instance.time_intervals).all())
 
-        pk_model_changed = False
-        if "pk_model" in validated_data:
-            pk_model_changed = instance.pk_model != validated_data.get("pk_model")
-
         # if pk_model2 is None, then ensure that lag time and bioavailability is off
         if validated_data.get("pk_model2") is None:
             validated_data["has_lag"] = False
