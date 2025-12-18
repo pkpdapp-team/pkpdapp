@@ -197,20 +197,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         new_pkpd_model.read_only = is_read_only
         new_pkpd_model.save()
 
-        if pk_model_changed:
-            # go through all protocols of the project and delete
-            # any that are not associated with a variable
-            project = new_pkpd_model.project
-            if project is not None:
-                for protocol in project.protocols.all():
-                    if not protocol.variables.exists():
-                        mapped_var_name = protocol.mapped_qname
-                        mapped_var = instance.variables.filter(
-                            qname=mapped_var_name
-                        ).first()
-                        if mapped_var is None:
-                            protocol.delete()
-
         return new_pkpd_model
 
 
