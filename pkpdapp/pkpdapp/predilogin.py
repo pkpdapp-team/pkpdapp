@@ -21,7 +21,7 @@ BASE_URL = settings.AUTH_PREDILOGIN_BASE_URL
 
 
 def authenticate(password: str, username: str) -> bool:
-    logger.debug(f"Authenticating user: {username}")
+    logger.info(f"Authenticating user: {username}")
     endpoint = BASE_URL + "/v2.0/users/authenticate"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {"password": password, "userName": username}
@@ -30,7 +30,7 @@ def authenticate(password: str, username: str) -> bool:
 
 
 def check_groupmembership(userid: str, group: str) -> bool:
-    logger.debug(f"Checking group membership for user: {userid} in group: {group}")
+    logger.info(f"Checking group membership for user: {userid} in group: {group}")
     endpoint = BASE_URL + "/v2.0/groups/checkUserMembership"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
     body = {
@@ -42,6 +42,7 @@ def check_groupmembership(userid: str, group: str) -> bool:
     }
     response = requests.post(endpoint, headers=headers, json=body, verify=False)
     json_response = response.json()
+    logger.info(f"Group membership response: {json_response}")
     if "groups" not in json_response or not json_response["groups"]:
         return False
     members = json_response["groups"][0]["members"]
@@ -68,9 +69,9 @@ class PrediBackend(BaseBackend):
             )
             try:
                 user = User.objects.get(username=username)
-                logger.debug(f"User found: {user.username}")
+                logger.info(f"User found: {user.username}")
             except User.DoesNotExist:
-                logger.debug(f"User not found, creating new user: {username}")
+                logger.info(f"User not found, creating new user: {username}")
                 user = User(username=username)
 
             user.set_password(password)
