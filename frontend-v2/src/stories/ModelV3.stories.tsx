@@ -438,6 +438,27 @@ export const TumourGrowthModel: Story = {
       "TGI cell distribution model (Emax kill)",
       userEvent,
     );
+
+    // change to another tumour growth model and check secondary model is the same
+    await selectMenuOption(
+      pdModelList,
+      "Tumor growth model (Gompertz)",
+      userEvent,
+    );
+    expect(secondaryPDModelSelect).toBeInTheDocument();
+    expect(secondaryPDModelSelect).toHaveTextContent(
+      "TGI cell distribution model (Emax kill)",
+    );
+
+    // change to non-tumour model and check secondary model is removed
+    await selectMenuOption(
+      pdModelList,
+      "Indirect effect model (inhibition of elimination)",
+      userEvent,
+    );
+    await waitForElementToBeRemoved(secondaryPDModelSelect, {
+      timeout: 2000,
+    });
   },
 };
 
