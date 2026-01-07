@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_pk_variable(
-    derived_variable: DerivedVariable,
-    pk_model: myokit.Model,
-    project
+    derived_variable: DerivedVariable, pk_model: myokit.Model, project
 ) -> None:
     """
     Add a derived variable to the PK model.
@@ -54,9 +52,7 @@ def add_pk_variable(
             project=project,
         )
     else:
-        raise ValueError(
-            f"Unknown derived variable type {var_type}"
-        )
+        raise ValueError(f"Unknown derived variable type {var_type}")
 
 
 def add_pd_variable(
@@ -104,6 +100,16 @@ def add_pd_variable(
         if second_var is None:
             return
 
+    myokit_second_var = None
+    if second_var is not None:
+        try:
+            myokit_second_var = pk_model.get(second_var.qname)
+        except KeyError:
+            logger.warning(
+                f"Derived variable handler (PKPD): Secondary Variable {second_var.qname} not found in model"  # noqa: E501
+            )
+            return
+
     time_var = pkpd_model.binding("time")
     myokit_compartment = None
 
@@ -118,15 +124,13 @@ def add_pd_variable(
         var = add_var(
             myokit_var=myokit_var,
             myokit_compartment=myokit_compartment,
-            second_var=second_var,
+            myokit_second_var=myokit_second_var,
             pk_model=pk_model,
             project=project,
             time_var=time_var,
         )
     else:
-        raise ValueError(
-            f"Unknown derived variable type {var_type}"
-        )
+        raise ValueError(f"Unknown derived variable type {var_type}")
     if var is not None:
         replace_nonlinearities(myokit_var, var)
 
@@ -231,10 +235,8 @@ def add_receptor_occupancy(
     kd_var.set_rhs(compound.dissociation_constant * kd_unit_conversion_factor)
     kd_var.set_unit(kd_unit)
     target_conc_unit = myokit_var.unit()
-    target_conc_unit_conversion_factor = (
-        compound.target_concentration_unit.convert_to(
-            target_conc_unit, compound=compound, target=1
-        )
+    target_conc_unit_conversion_factor = compound.target_concentration_unit.convert_to(
+        target_conc_unit, compound=compound, target=1
     )
     target_conc.set_rhs(
         compound.target_concentration * target_conc_unit_conversion_factor
@@ -252,7 +254,7 @@ def add_receptor_occupancy(
     c.set_rhs(
         myokit.Multiply(
             myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)),
-            myokit.Name(myokit_var)
+            myokit.Name(myokit_var),
         )
     )
 
@@ -265,7 +267,7 @@ def add_receptor_occupancy(
                     myokit.Sqrt(
                         myokit.Minus(
                             myokit.Power(myokit.Name(b), myokit.Number(2)),
-                            myokit.Name(c)
+                            myokit.Name(c),
                         )
                     ),
                 ),
@@ -410,7 +412,7 @@ def add_tlag(
 def add_michaelis_menten(
     myokit_var: myokit.Variable,
     myokit_compartment: myokit.Component,
-    second_var: myokit.Variable,
+    myokit_second_var: myokit.Variable,
     pk_model: myokit.Model,
     **kwargs,
 ) -> myokit.Variable:
@@ -438,9 +440,8 @@ def add_michaelis_menten(
         The created Michaelis Menten variable.
     """
     var_name = myokit_var.name()
+    second_var_name = myokit_second_var.name()
     #  base_variable_secondary_variable_MM = [base_variable * 1/(1+[secondary_variable/Km_X])]  # noqa: E501
-    second_var_name = second_var.name
-    myokit_second_var = pk_model.get(second_var.qname)
     mm_var_name = f"{var_name}_{second_var_name}_MM"
     km_var_name = f"Km_{var_name}"
 
@@ -455,9 +456,7 @@ def add_michaelis_menten(
     km_var.set_rhs(myokit.Number(1))
 
     mm_var = myokit_compartment.add_variable(mm_var_name)
-    mm_var.meta["desc"] = (
-        f"Michaelis Menten for {var_name} and {second_var_name}"
-    )
+    mm_var.meta["desc"] = f"Michaelis Menten for {var_name} and {second_var_name}"
     mm_var.set_unit(myokit_var.unit())
 
     mm_var.set_rhs(
@@ -529,23 +528,17 @@ def add_extended_michaelis_menten(
     km_var.set_rhs(myokit.Number(1))
 
     hll_var = myokit_compartment.add_variable(hll_var_name)
-    hll_var.meta["desc"] = (
-        f"Hill coefficient for {var_name} and {second_var_name}"
-    )
+    hll_var.meta["desc"] = f"Hill coefficient for {var_name} and {second_var_name}"
     hll_var.set_unit(myokit.units.dimensionless)
     hll_var.set_rhs(myokit.Number(1))
 
     lin_var = myokit_compartment.add_variable(lin_var_name)
-    lin_var.meta["desc"] = (
-        f"Linear term for {var_name} and {second_var_name}"
-    )
+    lin_var.meta["desc"] = f"Linear term for {var_name} and {second_var_name}"
     lin_var.set_unit(myokit_var.unit())
     lin_var.set_rhs(myokit.Number(0))
 
     emm_var = myokit_compartment.add_variable(emm_var_name)
-    emm_var.meta["desc"] = (
-        f"Michaelis Menten for {var_name} and {second_var_name}"
-    )
+    emm_var.meta["desc"] = f"Michaelis Menten for {var_name} and {second_var_name}"
     emm_var.set_unit(myokit_var.unit())
     emm_var.set_rhs(
         myokit.Plus(
@@ -963,9 +956,7 @@ def add_exp_decay(
                 ),
                 myokit.Exp(
                     myokit.PrefixMinus(
-                        myokit.Multiply(
-                            myokit.Name(k_var), myokit.Name(time_var)
-                        )
+                        myokit.Multiply(myokit.Name(k_var), myokit.Name(time_var))
                     )
                 ),
             ),
@@ -1034,9 +1025,7 @@ def add_exp_increase(
                     myokit.Number(1),
                     myokit.Exp(
                         myokit.PrefixMinus(
-                            myokit.Multiply(
-                                myokit.Name(k_var), myokit.Name(time_var)
-                            )
+                            myokit.Multiply(myokit.Name(k_var), myokit.Name(time_var))
                         ),
                     ),
                 ),
@@ -1055,9 +1044,7 @@ def replace_nonlinearities(
     for comp_var in myokit_var.parent().variables():
         if var is None or comp_var == var:
             continue
-        new_expr = comp_var.rhs().clone(
-            {myokit.Name(myokit_var): myokit.Name(var)}
-        )
+        new_expr = comp_var.rhs().clone({myokit.Name(myokit_var): myokit.Name(var)})
         comp_var.set_rhs(new_expr)
 
 
