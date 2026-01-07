@@ -479,7 +479,7 @@ def add_michaelis_menten(
 
 def add_extended_michaelis_menten(
     myokit_var: myokit.Variable,
-    second_var: myokit.Variable,
+    myokit_second_var: myokit.Variable,
     pk_model: myokit.Model,
     myokit_compartment: myokit.Component,
     **kwargs,
@@ -496,7 +496,7 @@ def add_extended_michaelis_menten(
     ----------
     myokit_var
         Variable to create Extended Michaelis Menten for.
-    second_var
+    myokit_second_var
         Secondary variable for Extended Michaelis Menten calculation.
     pk_model
         PK model containing the secondary variable.
@@ -510,8 +510,7 @@ def add_extended_michaelis_menten(
     """
     var_name = myokit_var.name()
     # base_variable_secondary_variable_eMM = [base_variable * 1/(1+[secondary_variable/Km_X]**h_X) + Xlin]  # noqa: E501
-    second_var_name = second_var.name
-    myokit_second_var = pk_model.get(second_var.qname)
+    second_var_name = myokit_second_var.name()
     emm_var_name = f"{var_name}_{second_var_name}_eMM"
     km_var_name = f"Km_{var_name}"
     hll_var_name = f"hll_{var_name}"
