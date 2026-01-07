@@ -99,8 +99,7 @@ export default function Sidebar() {
     mdl: CombinedModelRead | null,
     prtcls: ProtocolListApiResponse | undefined,
   ) => {
-    const isTumourModel =
-      pd_model?.is_library_model && pd_model?.name.startsWith("tumour_growth");
+    const isTumourModel = pd_model?.is_library_model && pd_model?.model_type === "TG";
     const noKillModel = !mdl?.pd_model2;
     return (
       (mdl && mdl.pk_model === null) ||
@@ -120,8 +119,8 @@ export default function Sidebar() {
   const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc && dv.type !== "AUC";
-      }, true)
+      return acc && dv.type !== "AUC";
+    }, true)
     : false;
   const noIntervals = intervals.length === 0;
 

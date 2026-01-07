@@ -14,6 +14,7 @@ import {
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
+  usePharmacodynamicListQuery,
   usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
   useProjectUpdateMutation,
@@ -71,10 +72,8 @@ function useApiQueries() {
   const { data: protocols, isLoading: isProtocolsLoading } =
     useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
-  const { data: pd_model } = usePharmacodynamicRetrieveQuery(
-    { id: model?.pd_model || 0 },
-    { skip: !model?.pd_model },
-  );
+  const { data: pd_models } = usePharmacodynamicListQuery();
+  const pd_model = pd_models?.find((pm) => pm.id === model?.pd_model) || undefined;
   const { data: variables, isLoading: isVariablesLoading } =
     useVariableListQuery(
       { dosedPkModelId: model?.id || 0 },
@@ -111,6 +110,7 @@ function useApiQueries() {
     compound,
     model,
     pd_model,
+    pd_models,
     project,
     protocols,
     simulation,
@@ -127,6 +127,7 @@ function useModelFormDataCallback({
   updateModel,
   updateProject,
   units,
+  pd_models,
 }: {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -134,6 +135,7 @@ function useModelFormDataCallback({
   updateModel: CombinedModelUpdate;
   updateProject: ProjectUpdate;
   units: UnitListApiResponse;
+  pd_models?: PharmacodynamicRead[];
 }) {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
@@ -153,9 +155,14 @@ function useModelFormDataCallback({
           (dv) => dv.type !== "TLG",
         );
       }
-      // if only pd_model has changed, need to clear pd_model2
-      if (modelData.pd_model !== model?.pd_model) {
-        modelData.pd_model2 = null;
+
+      // if pd_model is not a tumour growth model, then clear pd_model2
+      const pdModel = pd_models?.find((pm) => pm.id === modelData.pd_model);
+      if (pdModel && pdModel.is_library_model) {
+        const isTumourModel = pdModel.model_type === "TG";
+        if (!isTumourModel) {
+          modelData.pd_model2 = null;
+        }
       }
 
       if (species !== project.species) {
@@ -293,11 +300,13 @@ interface TabbedModelFormProps {
   updateProject: ProjectUpdate;
   tagsData?: TagRead[];
   pd_model?: PharmacodynamicRead;
+  pd_models?: PharmacodynamicRead[];
 }
 
 export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   model,
   pd_model,
+  pd_models,
   project,
   variables,
   protocols,
@@ -318,6 +327,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
     updateModel,
     updateProject,
     units,
+    pd_models,
   });
 
   /* 
@@ -349,7 +359,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   const isTumourModel =
     hasPdModel &&
     pd_model?.is_library_model &&
-    pd_model?.name.startsWith("tumour_growth");
+    pd_model?.model_type === "TG";
   const noKillModel = !model.pd_model2;
   if (model.pd_model && model.mappings.length === 0) {
     // put exception for tumour growth models with no kill
@@ -424,6 +434,7 @@ const Model: FC = () => {
     compound,
     model,
     pd_model,
+    pd_models,
     project,
     protocols,
     tagsData,
@@ -446,6 +457,7 @@ const Model: FC = () => {
     <TabbedModelForm
       model={model}
       pd_model={pd_model}
+      pd_models={pd_models}
       project={project}
       variables={variables}
       protocols={protocols}
