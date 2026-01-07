@@ -165,6 +165,11 @@ function useModelFormDataCallback({
         }
       }
 
+      // if pd_model is null, then clear pd_model2
+      if (!modelData.pd_model) {
+        modelData.pd_model2 = null;
+      }
+
       if (species !== project.species) {
         const version_greater_than_2 = project.version
           ? project.version >= 3
