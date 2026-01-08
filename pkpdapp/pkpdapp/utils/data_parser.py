@@ -12,72 +12,107 @@ from io import StringIO
 class DataParser:
     alternate_col_names = {
         "ADMINISTRATION_ID": [
-            "administration id", "cmt", "adm", "adm_id", "administration_id"
+            "administration id",
+            "cmt",
+            "adm",
+            "adm_id",
+            "administration_id",
         ],
-        "SUBJECT_ID": [
-            "id", "subject_id", "subject", "subjid", "animal number"
-        ],
+        "SUBJECT_ID": ["id", "subject_id", "subject", "subjid", "animal number"],
         "TIME": [
-            "time", "timepoint", "t", "hour_actual", "ivar",
+            "time",
+            "timepoint",
+            "t",
+            "hour_actual",
+            "ivar",
         ],
         "TIME_UNIT": [
-            "time unit", "time_unit", "time_units", "timeunit", "units_time",
-            "unit_time", "unit time",
+            "time unit",
+            "time_unit",
+            "time_units",
+            "timeunit",
+            "units_time",
+            "unit_time",
+            "unit time",
         ],
-        "AMOUNT": [
-            "amt", "amount"
-        ],
+        "AMOUNT": ["amt", "amount"],
         "AMOUNT_UNIT": [
-            "amount unit", "amt_unit", "amt_units", "amtunit", "unit",
-            "amount_unit", "units_amt", "unit_amount", "unit amount",
-            "dose unit", "dose_unit", "unit dose", "unit_dose"
+            "amount unit",
+            "amt_unit",
+            "amt_units",
+            "amtunit",
+            "unit",
+            "amount_unit",
+            "units_amt",
+            "unit_amount",
+            "unit amount",
+            "dose unit",
+            "dose_unit",
+            "unit dose",
+            "unit_dose",
         ],
         "PER_BODY_WEIGHT_KG": [
-            "per body weight(kg)", "per body weight", "per_body_weight",
-            "per kg", "per_kg",
+            "per body weight(kg)",
+            "per body weight",
+            "per_body_weight",
+            "per kg",
+            "per_kg",
         ],
         "AMOUNT_VARIABLE": [
-            "amount variable", "amount_variable", "amount_var",
-            "amt_var", "amtvar", "amt_variable"
+            "amount variable",
+            "amount_variable",
+            "amount_var",
+            "amt_var",
+            "amtvar",
+            "amt_variable",
         ],
         "OBSERVATION": [
-            "dv", "observation", "y", "yval", "conc",
-            "observation_value", "observationvalue"
+            "dv",
+            "observation",
+            "y",
+            "yval",
+            "conc",
+            "observation_value",
+            "observationvalue",
         ],
         "OBSERVATION_NAME": [
-            "observation id", "observation_id", "ydesc", "yname", "ytype",
-            "observation_name", "observationid", "observationname"
+            "observation id",
+            "observation_id",
+            "ydesc",
+            "yname",
+            "ytype",
+            "observation_name",
+            "observationid",
+            "observationname",
         ],
         "OBSERVATION_UNIT": [
-            "observation unit", "dv_units", "observation_unit", "yunit", "unit",
-            "units_conc", "observationunit", "unit_observation", "unit observation",
-            "observation_unit", "concentration unit", "concentration_unit",
-            "unit concentration", "unit_concentration",
+            "observation unit",
+            "dv_units",
+            "observation_unit",
+            "yunit",
+            "unit",
+            "units_conc",
+            "observationunit",
+            "unit_observation",
+            "unit observation",
+            "observation_unit",
+            "concentration unit",
+            "concentration_unit",
+            "unit concentration",
+            "unit_concentration",
         ],
         "OBSERVATION_VARIABLE": [
-            "observation variable", "observation_variable", "observation_var"
+            "observation variable",
+            "observation_variable",
+            "observation_var",
         ],
-        "COMPOUND": [
-            "compound"
-        ],
-        "ADMINISTRATION_NAME": [
-            "administration name", "route"
-        ],
-        "INFUSION_TIME": [
-            "infusion duration", "tinf", "infusion_time", "infusiontime"
-        ],
-        "GROUP_ID": [
-            "group id", "group_id", "group", "cohort"
-        ],
-        "ADDITIONAL_DOSES": [
-            "additional doses", "addl", "additional_doses"
-        ],
-        "INTERDOSE_INTERVAL": [
-            "interdose interval", "ii", "infusion_interval"
-        ],
-        "EVENT_ID": [
-            "event id", "event_id", "eventid", "evid"
-        ]
+        "COMPOUND": ["compound"],
+        "ADMINISTRATION_NAME": ["administration name", "route"],
+        "INFUSION_TIME": ["infusion duration", "tinf", "infusion_time", "infusiontime"],
+        "GROUP_ID": ["group id", "group_id", "group", "cohort"],
+        "ADDITIONAL_DOSES": ["additional doses", "addl", "additional_doses"],
+        "INTERDOSE_INTERVAL": ["interdose interval", "ii", "infusion_interval"],
+        "EVENT_ID": ["event id", "event_id", "eventid", "evid"],
     }
 
     required_cols = [
@@ -102,7 +137,7 @@ class DataParser:
         "GROUP_ID",
         "ADDITIONAL_DOSES",
         "INTERDOSE_INTERVAL",
-        "EVENT_ID"
+        "EVENT_ID",
     ]
 
     alternate_unit_names = {
@@ -135,8 +170,7 @@ class DataParser:
         if len(error_cols) > 0:
             raise RuntimeError(
                 (
-                    'Error parsing file, '
-                    'does not have the following columns: {}'
+                    "Error parsing file, " "does not have the following columns: {}"
                 ).format(error_cols)
             )
 
@@ -157,9 +191,9 @@ class DataParser:
         # we support the amount unit and observation unit being the same column
         inv_found_cols = {v: k for k, v in found_cols.items()}
         if (
-            "AMOUNT_UNIT" in found_cols and
-            "OBSERVATION_UNIT" in found_cols and
-            found_cols["AMOUNT_UNIT"] == found_cols["OBSERVATION_UNIT"]
+            "AMOUNT_UNIT" in found_cols
+            and "OBSERVATION_UNIT" in found_cols
+            and found_cols["AMOUNT_UNIT"] == found_cols["OBSERVATION_UNIT"]
         ):
             amt_obs_unit_same_col = True
             amt_obs_unit_col = found_cols["AMOUNT_UNIT"]
@@ -183,6 +217,7 @@ class DataParser:
                 return inv_altername_unit_names[x]
             else:
                 return x
+
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:
             if unit_col in found_cols:
                 data[unit_col] = data[unit_col].map(map_unit_names)
@@ -229,19 +264,21 @@ class DataParser:
             if unit_col not in found_cols:
                 data[unit_col] = ""
             else:
+
                 def convert_percent_to_dim(x):
                     xl = str(x).lower()
                     if (
-                        "nan" in xl or
-                        "percent" in xl or
-                        "fraction" in xl or
-                        "ratio" in xl or
-                        "%" in xl or
-                        "dimensionless" in xl
+                        "nan" in xl
+                        or "percent" in xl
+                        or "fraction" in xl
+                        or "ratio" in xl
+                        or "%" in xl
+                        or "dimensionless" in xl
                     ):
                         return ""
                     else:
                         return x
+
                 data[unit_col] = data[unit_col].map(convert_percent_to_dim)
 
         # put in default per body weight flag if not present
@@ -250,21 +287,16 @@ class DataParser:
 
         # convert per body weight to boolean
         data["PER_BODY_WEIGHT_KG"] = data["PER_BODY_WEIGHT_KG"].apply(
-            lambda x: x in [1, '1', True, 'True', 'true']
+            lambda x: x in [1, "1", True, "True", "true"]
         )
 
         # check that time is set for all rows
-        if pd.to_numeric(data["TIME"], errors='coerce').isna().any():
-            raise RuntimeError(
-                (
-                    'Error parsing file, '
-                    'contains missing time values'
-                )
-            )
+        if pd.to_numeric(data["TIME"], errors="coerce").isna().any():
+            raise RuntimeError(("Error parsing file, " "contains missing time values"))
 
         # convert subject id to integer
         try:
-            data["SUBJECT_ID"] = pd.to_numeric(data["SUBJECT_ID"], errors='raise')
+            data["SUBJECT_ID"] = pd.to_numeric(data["SUBJECT_ID"], errors="raise")
         except (ValueError, TypeError):
             subject_ids = data["SUBJECT_ID"].unique().tolist()
             subject_ids.sort()
@@ -276,50 +308,41 @@ class DataParser:
             data["INFUSION_TIME"] = 0.0833
 
         # check that infusion time is not zero or negative
-        if (
-            data["INFUSION_TIME"].apply(pd.to_numeric, errors='coerce') <= 0
-        ).any():
-            raise RuntimeError(
-                (
-                    'Error parsing file, '
-                    'contains zero infusion time'
-                )
-            )
+        if (data["INFUSION_TIME"].apply(pd.to_numeric, errors="coerce") <= 0).any():
+            raise RuntimeError(("Error parsing file, " "contains zero infusion time"))
 
         # check that units are in database
         for unit_col in ["TIME_UNIT", "AMOUNT_UNIT", "OBSERVATION_UNIT"]:
             if unit_col in found_cols:
                 units = data[unit_col].unique().tolist()
                 pkpdapp_units = Unit.objects.all()
-                pkpdapp_units_symbols = \
-                    pkpdapp_units.values_list('symbol', flat=True)
-                error_units = set([
-                    u for u in units
-                    if u not in pkpdapp_units_symbols
-                ])
+                pkpdapp_units_symbols = pkpdapp_units.values_list("symbol", flat=True)
+                error_units = set([u for u in units if u not in pkpdapp_units_symbols])
                 if len(error_units) > 0:
                     raise RuntimeError(
                         (
-                            'Error parsing file, '
-                            'contains the following unknown units: {}'
+                            "Error parsing file, "
+                            "contains the following unknown units: {}"
                         ).format(error_units)
                     )
 
         # check that time unit is constant
         if "TIME_UNIT" in found_cols:
             time_units = data["TIME_UNIT"].unique()
+            # remove empty time unit ''
+            time_units = [u for u in time_units if u != ""]
             if len(time_units) > 1:
                 raise RuntimeError(
-                    (
-                        'Error parsing file, '
-                        'contains multiple time units: {}'
-                    ).format(time_units)
+                    ("Error parsing file, " "contains multiple time units: {}").format(
+                        time_units
+                    )
                 )
 
         # check that units are same for each observation type
         if "OBSERVATION_UNIT" in found_cols:
-            obs_units = data.groupby("OBSERVATION_NAME")[
-                "OBSERVATION_UNIT"].unique()
+            obs_units = data.groupby("OBSERVATION_VARIABLE")[
+                "OBSERVATION_UNIT"
+            ].unique()
             if amt_obs_unit_same_col:
                 max_num_units = 2
             else:
@@ -327,15 +350,14 @@ class DataParser:
             if obs_units.apply(lambda x: len(x) > max_num_units).any():
                 raise RuntimeError(
                     (
-                        'Error parsing file, '
-                        'contains multiple observation units: {}'
+                        "Error parsing file, " "contains multiple observation units: {}"
                     ).format(obs_units)
                 )
 
         # check for missing data and drop any rows where data are missing
         num_missing = data.isna().sum().sum()
         if num_missing > 0:
-            data = data.fillna('')
+            data = data.fillna("")
         return data
 
     def parse_from_str(self, data_str, delimiter=None):
