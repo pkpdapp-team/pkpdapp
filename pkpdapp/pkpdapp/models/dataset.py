@@ -142,7 +142,7 @@ class Dataset(models.Model):
                 subject.group = group
                 subject.save()
         # create group protocol
-        qname_to_protocol = {}
+        group_id_to_protocol = {}
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
             dosing_rows[
@@ -185,7 +185,7 @@ class Dataset(models.Model):
                 amount_per_body_weight=amount_per_body_weight,
                 project=self.project,
             )
-            qname_to_protocol[mapped_qname] = protocol
+            group_id_to_protocol[group_id] = protocol
             group.protocols.add(protocol)
             group.save()
 
@@ -238,7 +238,7 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = qname_to_protocol.get(mapped_qname)
+            protocol = group_id_to_protocol[group_id]
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1

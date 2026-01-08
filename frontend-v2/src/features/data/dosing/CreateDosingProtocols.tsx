@@ -125,8 +125,8 @@ function createDosingRows(
   state.normalisedFields = new Map([
     ...state.normalisedFields.entries(),
     ["Amount Variable", "Amount Variable"],
-    ["Amount Unit", "Amount Unit"],
-    ["Per Body Weight(kg)", "Per Body Weight(kg)"],
+    ["Amount Unit", amountUnitField],
+    ["Per Body Weight(kg)", perKgField],
     ["Infusion Duration", "Infusion Duration"],
     ["Additional Doses", "Additional Doses"],
     ["Interdose Interval", "Interdose Interval"],
