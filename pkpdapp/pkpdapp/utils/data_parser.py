@@ -340,7 +340,7 @@ class DataParser:
 
         # check that units are same for each observation type
         if "OBSERVATION_UNIT" in found_cols:
-            obs_units = data.groupby("OBSERVATION_VARIABLE")[
+            obs_units = data.groupby(["OBSERVATION_NAME", "OBSERVATION_VARIABLE"])[
                 "OBSERVATION_UNIT"
             ].unique()
             if amt_obs_unit_same_col:
