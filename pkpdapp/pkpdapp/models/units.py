@@ -57,7 +57,7 @@ class Unit(models.Model):
     def get_myokit_unit(self):
         return myokit.Unit(
             exponents=[self.g, self.m, self.s, self.A, self.K, self.cd, self.mol],
-            multiplier=self.multiplier,
+            multiplier=int(self.multiplier),
         )
 
     def get_project(self):

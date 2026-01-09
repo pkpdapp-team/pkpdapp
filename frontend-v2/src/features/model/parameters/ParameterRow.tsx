@@ -289,7 +289,6 @@ const ParameterRow: FC<Props> = ({
           name={"unit"}
           control={control}
           baseUnit={unit}
-          isPreclinicalPerKg={isPreclinicalPerKg}
           selectProps={defaultProps}
         />
       </TableCell>

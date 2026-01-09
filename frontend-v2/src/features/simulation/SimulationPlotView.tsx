@@ -141,11 +141,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const maxX = Math.max(...convertedTime);
   const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot });
 
-  const yAxisVariables = plotData
+  const yAxisVariableNames = plotData
     .filter((d) => !d.yaxis)
     .map((d) => d.variable)
     .filter(Boolean);
-  const y2AxisVariables = plotData
+  const y2AxisVariableNames = plotData
     .filter((d) => d.yaxis)
     .map((d) => d.variable)
     .filter(Boolean);
@@ -153,8 +153,8 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const defaultAxisTitles = getDefaultAxisTitles({
     plot,
     units,
-    yAxisVariables,
-    y2AxisVariables,
+    yAxisVariableNames,
+    y2AxisVariableNames,
   });
 
   const plotDimensions = getPlotDimensions({

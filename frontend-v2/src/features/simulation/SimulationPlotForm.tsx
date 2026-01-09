@@ -98,6 +98,22 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
+  const isComplexAmount = (variable: VariableRead | undefined) => {
+    if (!variable) {
+      return false;
+    }
+    if (!variable.name.startsWith("A")) {
+      return false;
+    }
+    const hasT1 = variable.name.includes("T1");
+    const hasT2 = variable.name.includes("T2");
+    const hasD = variable.name.includes("D");
+    // complex if have 2 or more of T1, T2, D
+    const count =
+      (hasT1 ? 1 : 0) + (hasT2 ? 1 : 0) + (hasD ? 1 : 0);
+    return count >= 2;
+  }
+
   type SimulationYAxisWithIndex = FieldArrayWithId<
     Simulation,
     `plots.${number}.y_axes`,
@@ -126,16 +142,22 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   }
 
   const yAxisVariables = lhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable)?.name,
+    (y) => variables.find((v) => v.id === y.variable),
   );
+  const yAxisVariableNames = yAxisVariables.map((v) => v?.name || "");
+  const yAxisIsComplexAmount = yAxisVariables.some((v) => isComplexAmount(v));
+
   const y2AxisVariables = rhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable)?.name,
+    (y) => variables.find((v) => v.id === y.variable),
   );
+  const y2AxisVariableNames = y2AxisVariables.map((v) => v?.name || "");
+  const y2AxisIsComplexAmount = y2AxisVariables.some((v) => isComplexAmount(v));
+
   const { xAxisTitle, yAxisTitle, y2AxisTitle } = getDefaultAxisTitles({
     plot,
     units,
-    yAxisVariables,
-    y2AxisVariables,
+    yAxisVariableNames,
+    y2AxisVariableNames,
   });
 
   const commonAddYAxis = (
@@ -286,6 +308,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseYUnitId)}
           selectProps={{ disabled: lhs_y_axes.length === 0 || isSharedWithMe }}
+          mustHaveMol={yAxisIsComplexAmount}
         />
         <TextField
           label="Y Axis Label"
@@ -410,6 +433,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseY2UnitId)}
           selectProps={{ disabled: rhs_y_axes.length === 0 || isSharedWithMe }}
+          mustHaveMol={y2AxisIsComplexAmount}
         />
         <TextField
           label="Y2 Axis Label"

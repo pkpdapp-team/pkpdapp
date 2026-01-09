@@ -14,9 +14,8 @@ type Props<T extends FieldValues> = {
   selectProps?: SelectProps;
   compound?: Compound;
   size?: "small" | "medium";
-  isPreclinicalPerKg?: boolean;
   sx?: SxProps;
-  version_greater_than_2?: boolean;
+  mustHaveMol?: boolean;
 };
 
 function UnitField<T extends FieldValues>({
@@ -27,30 +26,24 @@ function UnitField<T extends FieldValues>({
   control,
   rules,
   selectProps,
-  isPreclinicalPerKg,
   size = "medium",
   sx,
-  version_greater_than_2 = false,
+  mustHaveMol = false,
 }: Props<T>): ReactElement {
-  if (!isPreclinicalPerKg) {
-    isPreclinicalPerKg = false;
-  }
-
   const isDimensionless = baseUnit?.symbol === "" || false;
   if (!baseUnit || isDimensionless) {
     selectProps = { ...selectProps, disabled: true };
   }
 
-  const compatibleUnits = version_greater_than_2
-    ? baseUnit?.compatible_units.concat(baseUnit2?.compatible_units || [])
-    : isPreclinicalPerKg
-      ? baseUnit?.compatible_units.filter((unit) => unit.symbol.endsWith("/kg"))
-      : baseUnit?.compatible_units;
+  const allCompatibleUnits = baseUnit?.compatible_units.concat(baseUnit2?.compatible_units || [])
+  const compatibleUnits = mustHaveMol
+    ? allCompatibleUnits?.filter((unit) => unit.symbol.includes("mol"))
+    : allCompatibleUnits;
 
   const options = compatibleUnits
     ? compatibleUnits.map((unit: { [key: string]: string }) => {
-        return { value: unit.id, label: unit.symbol };
-      })
+      return { value: unit.id, label: unit.symbol };
+    })
     : [];
 
   return (

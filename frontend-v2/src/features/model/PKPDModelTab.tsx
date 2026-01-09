@@ -177,8 +177,8 @@ const PKPDModelTab: FC<Props> = ({
   pk_model_options.push({ value: "", label: "None" });
   const pk_model2_options = model.pk_model
     ? pkModel2Filtered.map((m) => {
-        return { value: m.id.toString(), label: m.name };
-      })
+      return { value: m.id.toString(), label: m.name };
+    })
     : [];
   pk_model2_options.push({ value: "", label: "None" });
   pk_model_options.sort((a, b) => {
@@ -199,7 +199,7 @@ const PKPDModelTab: FC<Props> = ({
     (version_greater_than_2
       ? pd_model?.model_type === "TG"
       : pd_model?.name.includes("tumour_growth") &&
-        !pd_model?.name.includes("inhibition"));
+      !pd_model?.name.includes("inhibition"));
   const pd_model2_options: { value: number | string; label: string }[] =
     pdModels2Filtered.map((m) => {
       return { value: m.id, label: m.name };
@@ -208,10 +208,10 @@ const PKPDModelTab: FC<Props> = ({
 
   const pdModelHasHillCoefficient = version_greater_than_2
     ? pd_model?.mmt?.includes("desc: Hill coefficient") ||
-      pd_model2?.mmt?.includes("desc: Hill coefficient")
+    pd_model2?.mmt?.includes("desc: Hill coefficient")
     : pd_model?.name.includes("indirect") ||
-      pd_model?.name.includes("direct") ||
-      pd_model2?.name.includes("emax_kill");
+    pd_model?.name.includes("direct") ||
+    pd_model2?.name.includes("emax_kill");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -295,7 +295,6 @@ const PKPDModelTab: FC<Props> = ({
                     ...defaultProps,
                     disabled: true,
                   }}
-                  version_greater_than_2={version_greater_than_2}
                 />
               </Fragment>
             )}

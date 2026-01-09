@@ -102,7 +102,7 @@ const VariableRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
+    undefined;
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
@@ -145,10 +145,16 @@ const VariableRow: FC<Props> = ({
     amountUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
+  const isT1Amount = isAmount && variable.name.includes("T1");
+  const isT2Amount = isAmount && variable.name.includes("T2");
+  const isDrugAmount = isAmount && variable.name.includes("D");
+  // is a complex amount if two or more of T1, T2, D are in the name
+  const isComplexAmount =
+    (isT1Amount ? 1 : 0) + (isT2Amount ? 1 : 0) + (isDrugAmount ? 1 : 0) >= 2;
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
-  const noDosing = !isAmount;
+  const noDosing = !isAmount || isComplexAmount;
 
   if (noMapToPD && noDerivedVariables && noDosing) {
     return null;
