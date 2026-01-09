@@ -108,9 +108,7 @@ const DoseRow: FC<Props> = ({
             name={`amount_unit`}
             control={control}
             baseUnit={baseUnit}
-            isPreclinicalPerKg={isPreclinical}
             selectProps={defaultProps}
-            version_greater_than_2={version_greater_than_2}
           />
         ) : (
           <Typography>{selectedAmountLabel}</Typography>
