@@ -187,14 +187,12 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           disabled={isSharedWithMe}
           dose={dose}
           control={control}
-          isPreclinical={isPreclinical}
           minStartTime={
             sortedDoses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
           }
           onChange={onChange}
           selectedAmountLabel={selectedAmountLabel}
           timeUnit={units.find((u) => u.id === protocol.time_unit)}
-          version_greater_than_2={version_greater_than_2}
         />
       ))}
     </>

@@ -11,7 +11,6 @@ import {
 } from "../../app/backendApi";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
-import { start } from "repl";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
 
@@ -181,12 +180,12 @@ export function generatePlotData(
 
   const yConversionFactor = yCompatibleUnit
     ? parseFloat(
-      is_target
-        ? yCompatibleUnit.target_conversion_factor
-        : is_target2
-          ? yCompatibleUnit.target2_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-    )
+        is_target
+          ? yCompatibleUnit.target_conversion_factor
+          : is_target2
+            ? yCompatibleUnit.target2_conversion_factor
+            : yCompatibleUnit.conversion_factor,
+      )
     : 1.0;
 
   const name = variableValues
@@ -269,27 +268,27 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-    (data: SimulateResponse, index: number) => {
-      const colourIndex = index + colourOffset;
-      const colour = plotColours[colourIndex % plotColours.length];
-      const group = groups?.[index - 1];
-      const style = isReference ? "dot" : "solid";
-      return generatePlotData(
-        data,
-        visibleGroups,
-        colour,
-        style,
-        index,
-        group,
-        y_axis,
-        plot,
-        units,
-        model,
-        variables,
-        xConversionFactor,
-        isReference,
-      );
-    };
+  (data: SimulateResponse, index: number) => {
+    const colourIndex = index + colourOffset;
+    const colour = plotColours[colourIndex % plotColours.length];
+    const group = groups?.[index - 1];
+    const style = isReference ? "dot" : "solid";
+    return generatePlotData(
+      data,
+      visibleGroups,
+      colour,
+      style,
+      index,
+      group,
+      y_axis,
+      plot,
+      units,
+      model,
+      variables,
+      xConversionFactor,
+      isReference,
+    );
+  };
 
 type PlotsProps = {
   data: SimulateResponse[];
@@ -421,25 +420,25 @@ export const getPlotDimensions = ({
   if (isVertical && !isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height / 2 - buffer,
-        width: dimensions.width - buffer,
-      }
+          height: dimensions.height / 2 - buffer,
+          width: dimensions.width - buffer,
+        }
       : {
-        height: dimensions.height / 1.5 - buffer,
-        width: dimensions.width - buffer,
-      };
+          height: dimensions.height / 1.5 - buffer,
+          width: dimensions.width - buffer,
+        };
   }
 
   if (!isVertical && isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height - buffer,
-        width: dimensions.width / columnCount - buffer,
-      }
+          height: dimensions.height - buffer,
+          width: dimensions.width / columnCount - buffer,
+        }
       : {
-        height: dimensions.height - buffer,
-        width: dimensions.width / 1.5 - buffer,
-      };
+          height: dimensions.height - buffer,
+          width: dimensions.width / 1.5 - buffer,
+        };
   }
 
   return {
@@ -671,44 +670,44 @@ export const generateScatterPlots: (
   visibleGroups,
   y_axis,
 }) => {
-    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
-    const yAxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
+  const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+  const yAxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
 
-    const colourOffset = data.length * i;
-    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
-    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
-    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
-    const yCompatibleUnit = unit?.compatible_units.find(
-      (u) => parseInt(u.id) === yAxisUnit?.id,
-    );
-    const timeCompatibleUnit = timeUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === xAxisUnit?.id,
-    );
-    const timeConversionFactor = timeCompatibleUnit
-      ? parseFloat(timeCompatibleUnit.conversion_factor)
-      : 1.0;
-    const is_target = model.is_library_model
-      ? qname?.includes("CT1") || qname?.includes("AT1")
-      : false;
-    const yConversionFactor = yCompatibleUnit
-      ? parseFloat(
+  const colourOffset = data.length * i;
+  const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+  const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+  const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
+  const yCompatibleUnit = unit?.compatible_units.find(
+    (u) => parseInt(u.id) === yAxisUnit?.id,
+  );
+  const timeCompatibleUnit = timeUnit?.compatible_units.find(
+    (u) => parseInt(u.id) === xAxisUnit?.id,
+  );
+  const timeConversionFactor = timeCompatibleUnit
+    ? parseFloat(timeCompatibleUnit.conversion_factor)
+    : 1.0;
+  const is_target = model.is_library_model
+    ? qname?.includes("CT1") || qname?.includes("AT1")
+    : false;
+  const yConversionFactor = yCompatibleUnit
+    ? parseFloat(
         is_target
           ? yCompatibleUnit.target_conversion_factor
           : yCompatibleUnit.conversion_factor,
       )
-      : 1.0;
-    return groups?.map((group, index) =>
-      generateScatterPlot({
-        biomarkerData,
-        colourOffset,
-        group,
-        index,
-        timeConversionFactor,
-        visibleGroups,
-        y_axis,
-        yConversionFactor,
-      }),
-    );
-  };
+    : 1.0;
+  return groups?.map((group, index) =>
+    generateScatterPlot({
+      biomarkerData,
+      colourOffset,
+      group,
+      index,
+      timeConversionFactor,
+      visibleGroups,
+      y_axis,
+      yConversionFactor,
+    }),
+  );
+};

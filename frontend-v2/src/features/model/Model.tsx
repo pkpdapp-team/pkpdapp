@@ -15,7 +15,6 @@ import {
   useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
   usePharmacodynamicListQuery,
-  usePharmacodynamicRetrieveQuery,
   useProjectRetrieveQuery,
   useProjectUpdateMutation,
   useProtocolListQuery,
@@ -73,7 +72,8 @@ function useApiQueries() {
     useProtocolListQuery({ projectId: projectIdOrZero }, { skip: !projectId });
   const model = models?.[0] || null;
   const { data: pd_models } = usePharmacodynamicListQuery();
-  const pd_model = pd_models?.find((pm) => pm.id === model?.pd_model) || undefined;
+  const pd_model =
+    pd_models?.find((pm) => pm.id === model?.pd_model) || undefined;
   const { data: variables, isLoading: isVariablesLoading } =
     useVariableListQuery(
       { dosedPkModelId: model?.id || 0 },
@@ -246,6 +246,7 @@ function useModelFormDataCallback({
       setParamsToDefault,
       reset,
       units,
+      pd_models,
     ],
   );
   return handleFormData;
@@ -362,9 +363,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   }
   const hasPdModel = model.pd_model !== null;
   const isTumourModel =
-    hasPdModel &&
-    pd_model?.is_library_model &&
-    pd_model?.model_type === "TG";
+    hasPdModel && pd_model?.is_library_model && pd_model?.model_type === "TG";
   const noKillModel = !model.pd_model2;
   if (model.pd_model && model.mappings.length === 0) {
     // put exception for tumour growth models with no kill
