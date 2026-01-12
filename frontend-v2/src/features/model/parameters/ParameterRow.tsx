@@ -54,7 +54,7 @@ const ParameterRow: FC<Props> = ({
   const {
     control,
     handleSubmit,
-    formState: { isDirty, submitCount },
+    formState: { isDirty },
   } = useForm<VariableRead>({
     defaultValues: variable || { name: "" },
     values: variable,
@@ -110,8 +110,6 @@ const ParameterRow: FC<Props> = ({
     variable.unit === null
       ? undefined
       : units.find((u) => u.id === variable.unit);
-  const isPreclinicalPerKg =
-    project?.species !== "H" && unit?.symbol.endsWith("/kg");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -121,14 +119,14 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-      { value: "EMX", label: "Dose Emax" },
-      { value: "IMX", label: "Dose Imax" },
-      { value: "POW", label: "Dose Power Increase" },
-      { value: "NPW", label: "Dose Power Decrease" },
-      { value: "TDI", label: "Time Decrease" },
-      { value: "IND", label: "Time Increase" },
-      { value: "", label: "None" },
-    ];
+    { value: "EMX", label: "Dose Emax" },
+    { value: "IMX", label: "Dose Imax" },
+    { value: "POW", label: "Dose Power Increase" },
+    { value: "NPW", label: "Dose Power Decrease" },
+    { value: "TDI", label: "Time Decrease" },
+    { value: "IND", label: "Time Increase" },
+    { value: "", label: "None" },
+  ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {

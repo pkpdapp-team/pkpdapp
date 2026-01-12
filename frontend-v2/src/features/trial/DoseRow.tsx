@@ -21,12 +21,10 @@ type Props = {
   disabled: boolean;
   dose: DoseRead;
   index: number;
-  isPreclinical: boolean;
   minStartTime: number;
   onChange: () => void;
   selectedAmountLabel: string;
   timeUnit?: UnitRead;
-  version_greater_than_2?: boolean;
 };
 
 const DoseRow: FC<Props> = ({
@@ -35,12 +33,10 @@ const DoseRow: FC<Props> = ({
   disabled,
   dose,
   index,
-  isPreclinical,
   minStartTime,
   onChange,
   selectedAmountLabel,
   timeUnit,
-  version_greater_than_2 = false,
 }) => {
   const {
     control: doseControl,
