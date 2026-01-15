@@ -104,7 +104,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
         ? concentrationVariables
         : rows === "intervals"
           ? intervals
-          : [{ name: "Project" }, ...groups];
+          : [{ name: "Sim-Group 1" }, ...groups];
   const rowColumn =
     rows === "parameters"
       ? "Parameter"
@@ -199,7 +199,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const groupSelect = {
     filter: handleGroupChange,
     value: group,
-    items: [{ name: "Project" }, ...groups],
+    items: [{ name: "Sim-Group 1" }, ...groups],
     label: "Group",
   };
   const intervalSelect = {

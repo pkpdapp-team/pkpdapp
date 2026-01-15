@@ -160,8 +160,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -204,7 +204,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   units,
 }) => {
   const groupNames = useMemo(
-    () => ["Project", ...groups.map((group) => group.name)],
+    () => ["Sim-Group 1", ...groups.map((group) => group.name)],
     [groups],
   );
   const initialGroupVisibility: { [key: string]: boolean } = {};

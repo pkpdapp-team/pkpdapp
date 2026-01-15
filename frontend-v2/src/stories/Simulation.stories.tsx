@@ -278,7 +278,7 @@ export const WithGroups: Story = {
     expect(groupsButton).toHaveAttribute("aria-expanded", "true");
 
     const projectGroupCheckbox = await screen.findByRole("checkbox", {
-      name: "Project",
+      name: "Sim-Group 1",
       checked: true,
     });
     expect(projectGroupCheckbox).toBeInTheDocument();

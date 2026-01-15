@@ -365,12 +365,12 @@ export const SimulationsSidePanel = ({
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  checked={visibleGroups.includes("Project")}
-                                  value="Project"
+                                  checked={visibleGroups.includes("Sim-Group 1")}
+                                  value="Sim-Group 1"
                                   onChange={handleVisibleGroups}
                                 />
                               }
-                              label="Project"
+                              label="Sim-Group 1"
                             />
                             {groups?.map((group) => (
                               <FormControlLabel
