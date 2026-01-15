@@ -266,7 +266,7 @@ type Story = StoryObj<typeof Protocols>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const projectTab = await canvas.findByRole("tab", { name: /Project/i });
+    const projectTab = await canvas.findByRole("tab", { name: /Sim-Group 1/i });
     const addGroupButton = canvas.getByRole("button", { name: /Add Group/i });
     const addRowButton = await canvas.findByRole("button", {
       name: /Add New Row/i,
@@ -280,7 +280,7 @@ export const Default: Story = {
 export const AddRow: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    await canvas.findByRole("tab", { name: /Project/i });
+    await canvas.findByRole("tab", { name: /Sim-Group 1/i });
     const addRowButton = await canvas.findByRole("button", {
       name: /Add New Row/i,
     });
@@ -314,7 +314,7 @@ export const AddGroup: Story = {
     expect(canvas.getAllByRole("tab")).toHaveLength(1);
     await userEvent.click(addGroupButton);
     await waitFor(() => expect(canvas.getAllByRole("tab")).toHaveLength(2));
-    const newGroupTab = canvas.getByRole("tab", { name: /Group 1/i });
+    const newGroupTab = canvas.getByRole("tab", { name: /Sim-Group 1/i });
     expect(newGroupTab).toBeInTheDocument();
     await userEvent.click(newGroupTab);
   },
@@ -325,7 +325,7 @@ export const DeleteGroup: Story = {
     const confirmSpy = spyOn(window, "confirm").mockImplementation(() => true); // Mock confirm dialog to always return true
     const canvas = within(canvasElement);
     await AddGroup.play?.(context);
-    const groupTab = await canvas.findByRole("tab", { name: /Group 1/i });
+    const groupTab = await canvas.findByRole("tab", { name: /Sim-Group 2/i });
     expect(groupTab).toBeInTheDocument();
     // TODO: buttons within buttons are invalid HTML, and an accessibility error.
     const deleteButton = await within(groupTab).findByRole("button");

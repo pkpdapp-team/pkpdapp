@@ -166,7 +166,7 @@ export const Protocols: FC<ProtocolsProps> = ({
   const filteredProtocols = projectProtocols.filter((p) => p.group === null);
 
   const handleAddTab = async () => {
-    const newValue = groups?.length || 1;
+    const newValue = (groups?.length || 1) + 1;
     const existingNames = groups?.map((g) => g.name);
     let newGroupId = newValue;
     let newGroupName = `Sim-Group ${newValue}`;
@@ -261,7 +261,7 @@ export const Protocols: FC<ProtocolsProps> = ({
           value={tab}
           onChange={handleTabChange}
         >
-          <Tab label={"Project"} {...a11yProps(0)} />
+          <Tab label={"Sim-Group 1"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
             const selectedProtocols = projectProtocols.filter(
               (protocol) => protocol.group === group.id,
