@@ -44,9 +44,7 @@ function normaliseDataColumn(state: StepperState, type: string) {
       delete newRow[field];
       return newRow;
     });
-    state.data = newData;
-    state.normalisedFields = newNormalisedFields;
-    return newData;
+    return { data: newData, normalisedFields: newNormalisedFields };
   }
   return state.data;
 }
@@ -67,8 +65,19 @@ const PreviewData: FC<IPreviewData> = ({
     );
 
   useEffect(() => {
+    let nextData = [...state.data];
+    let normalisedFields = new Map(state.normalisedFields);
     normalisedHeaders.forEach((header) => {
-      normaliseDataColumn(state, header);
+      const result = normaliseDataColumn(
+        { ...state, data: nextData, normalisedFields },
+        header,
+      );
+      if (result && "data" in result && "normalisedFields" in result) {
+        nextData = result.data;
+        normalisedFields = result.normalisedFields;
+        state.data = nextData;
+        state.normalisedFields = normalisedFields;
+      }
     });
   }, [normalisedHeaders, state]);
 
