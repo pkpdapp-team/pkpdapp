@@ -282,8 +282,9 @@ export const WithGroups: Story = {
       checked: true,
     });
     expect(projectGroupCheckbox).toBeInTheDocument();
+    // only find checkboxes with names that start with "Group ", i.e. disallow "Sim-Group 1"
     const groupCheckboxes = await screen.findAllByRole("checkbox", {
-      name: /Group \w+/,
+      name: /^Group \w+/,
       checked: true,
     });
     expect(groupCheckboxes).toHaveLength(2);
