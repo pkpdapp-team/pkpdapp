@@ -1,0 +1,27 @@
+[[model]]
+name: Effect compartment model 
+author: Michael Gertz 
+
+
+# Initial values:
+PKCompartment.Ce = 0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+kin = 1 in [1/h]
+	desc: First order input rate constant to effect compartment
+	
+kout = 1 in [1/h]
+	desc: First order elimination rate constant from the effect compartment
+	
+C_Drug = 1 in [pmol/L]
+  desc: Concentration of variable linking to the effect compartment
+  
+ 
+dot(Ce) = kin*C_Drug - kout*Ce in [pmol/L]
+	desc: Concentration in the effect compartment
