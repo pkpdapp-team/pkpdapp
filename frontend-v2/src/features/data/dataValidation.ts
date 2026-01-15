@@ -139,6 +139,9 @@ export const manditoryHeaders = ["Time", "Observation"];
 
 export const normalisedHeaders = Object.keys(normalisation);
 
+const validTime = (time: number) => !isNaN(time) && time >= 0;
+const invalidTime = (time: number) => isNaN(time) || time < 0;
+
 export const validateDataRow = (
   row: Record<string, string>,
   normalisedFields: Map<string, string>,
@@ -181,7 +184,7 @@ export const validateDataRow = (
     return false;
   }
   const time = parseFloat(row[timeField]);
-  if (isNaN(time)) {
+  if (invalidTime(time)) {
     return false;
   }
   return true;
@@ -294,11 +297,11 @@ export const validateState = (state: StepperState) => {
   const timeValues = timeField
     ? state.data.map((row) => parseFloat(row[timeField]))
     : [];
-  const timeIsValid = timeValues.every((time) => !isNaN(time));
-  const invalidTimes = timeValues.filter((time) => isNaN(time));
+  const timeIsValid = timeValues.every(validTime);
+  const invalidTimes = timeValues.filter(invalidTime);
   if (!timeIsValid) {
     warnings.push(
-      `CSV contains empty or invalid time values. ${invalidTimes.length} rows will be ignored`,
+      `CSV contains empty or negative time values. ${invalidTimes.length} rows will be ignored`,
     );
   }
 
