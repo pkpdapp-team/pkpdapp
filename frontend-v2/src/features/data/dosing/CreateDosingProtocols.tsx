@@ -205,20 +205,23 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   let dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
   );
+  let _data = state.data;
+  let _normalisedFields = state.normalisedFields;
+  if (!amountField) {
+    const newNormalisedFields = new Map([
+      ..._normalisedFields.entries(),
+      ["Amount", "Amount"],
+    ]);
+    const newData = _data.map((row) => ({ ...row, Amount: "." }));
+    _normalisedFields = newNormalisedFields;
+    _data = newData;
+  }
   if (!dosingRows.length) {
     const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
       createDosingRows(state, administrationIdField, dosingCompartments);
-    state.data = [...state.data, ...newDosingRows];
-    state.normalisedFields = newNormalisedFields;
-  }
-  if (!amountField) {
-    const newNormalisedFields = new Map([
-      ...state.normalisedFields.entries(),
-      ["Amount", "Amount"],
-    ]);
-    const newData = state.data.map((row) => ({ ...row, Amount: "." }));
-    state.normalisedFields = newNormalisedFields;
-    state.data = newData;
+    _data = [..._data, ...newDosingRows];
+    _normalisedFields = newNormalisedFields;
+    dosingRows = newDosingRows;
   }
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -229,6 +232,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       administrationIdField,
       groupIdField,
     );
+  }
+  if (state.data !== _data) {
+    state.data = _data;
+  }
+  if (state.normalisedFields !== _normalisedFields) {
+    state.normalisedFields = _normalisedFields;
   }
 
   type InputChangeEvent =
@@ -322,7 +331,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
           </TableHead>
           <TableBody>
             {dosingCompartments.map((compartment) => {
-              const dosingRows = state.data.filter(
+              const dosingRows = _data.filter(
                 (row) =>
                   row["Amount Variable"] === compartment &&
                   row["Amount"] !== ".",
