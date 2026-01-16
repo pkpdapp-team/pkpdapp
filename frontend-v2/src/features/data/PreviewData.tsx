@@ -28,7 +28,7 @@ function normaliseDataColumn(state: StepperState, type: string) {
     normalisedHeaders.filter(([_key, value]) => value === type) || [];
   if (matchingFields.length !== 1) {
     // only normalise a column if there is exactly one column of that type.
-    return state.data;
+    return state;
   }
   const [field] = matchingFields[0];
   if (field && field.toLowerCase() !== type.toLowerCase()) {
@@ -46,7 +46,7 @@ function normaliseDataColumn(state: StepperState, type: string) {
     });
     return { data: newData, normalisedFields: newNormalisedFields };
   }
-  return state.data;
+  return state;
 }
 
 const PreviewData: FC<IPreviewData> = ({
@@ -65,18 +65,18 @@ const PreviewData: FC<IPreviewData> = ({
     );
 
   useEffect(() => {
-    let nextData = [...state.data];
-    let normalisedFields = new Map(state.normalisedFields);
+    let _data = [...state.data];
+    let _normalisedFields = new Map(state.normalisedFields);
+    const nextState = { ...state };
     normalisedHeaders.forEach((header) => {
-      const result = normaliseDataColumn(
-        { ...state, data: nextData, normalisedFields },
-        header,
-      );
-      if (result && "data" in result && "normalisedFields" in result) {
-        nextData = result.data;
-        normalisedFields = result.normalisedFields;
-        state.data = nextData;
-        state.normalisedFields = normalisedFields;
+      nextState.data = _data;
+      nextState.normalisedFields = _normalisedFields;
+      const result = normaliseDataColumn(nextState, header);
+      if (result !== nextState) {
+        _data = result.data;
+        _normalisedFields = result.normalisedFields;
+        state.data = _data;
+        state.normalisedFields = _normalisedFields;
       }
     });
   }, [normalisedHeaders, state]);
