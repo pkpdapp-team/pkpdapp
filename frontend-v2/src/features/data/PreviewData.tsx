@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC } from "react";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { StepperState } from "./LoadDataStepper";
@@ -49,6 +49,27 @@ function normaliseDataColumn(state: StepperState, type: string) {
   return state;
 }
 
+function normaliseDataHeaders(
+  state: StepperState,
+  normalisedHeaders: string[],
+) {
+  let _data = [...state.data];
+  let _normalisedFields = new Map(state.normalisedFields);
+  const nextState = { ...state };
+  normalisedHeaders.forEach((header) => {
+    nextState.data = _data;
+    nextState.normalisedFields = _normalisedFields;
+    const result = normaliseDataColumn(nextState, header);
+    if (result !== nextState) {
+      _data = result.data;
+      _normalisedFields = result.normalisedFields;
+      state.data = _data;
+      state.normalisedFields = _normalisedFields;
+    }
+  });
+  return state;
+}
+
 const PreviewData: FC<IPreviewData> = ({
   state,
   notificationsInfo,
@@ -64,24 +85,7 @@ const PreviewData: FC<IPreviewData> = ({
         !["Cat Covariate", "Cont Covariate", "Ignore"].includes(header),
     );
 
-  useEffect(() => {
-    let _data = [...state.data];
-    let _normalisedFields = new Map(state.normalisedFields);
-    const nextState = { ...state };
-    normalisedHeaders.forEach((header) => {
-      nextState.data = _data;
-      nextState.normalisedFields = _normalisedFields;
-      const result = normaliseDataColumn(nextState, header);
-      if (result !== nextState) {
-        _data = result.data;
-        _normalisedFields = result.normalisedFields;
-        state.data = _data;
-        state.normalisedFields = _normalisedFields;
-      }
-    });
-  }, [normalisedHeaders, state]);
-
-  const { data, fields } = state;
+  const { data, fields } = normaliseDataHeaders(state, normalisedHeaders);
   const visibleFields = fields.filter(
     (field) =>
       !IGNORED_COLUMNS.includes(state.normalisedFields.get(field) || ""),
