@@ -135,6 +135,9 @@ const PKPDModelTab: FC<Props> = ({
   const pkModel2Filtered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEX";
   });
+  const pkEffectModelFiltered = pkModels.filter((m) => {
+    return version_greater_than_2 && m.model_type === "PKEF";
+  });
   const pdModelsFiltered = pdModels.filter((m) => {
     let is_pd_model = false;
     if (version_greater_than_2) {
@@ -181,6 +184,11 @@ const PKPDModelTab: FC<Props> = ({
     })
     : [];
   pk_model2_options.push({ value: "", label: "None" });
+  const pk_effect_model_options = pkEffectModelFiltered.map((m) => {
+    return { value: m.id.toString(), label: m.name };
+  });
+
+
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
     const bName = b.label.replace("_preclinical", "").replace("_clinical", "");
@@ -460,17 +468,36 @@ const PKPDModelTab: FC<Props> = ({
           }}
         >
           {version_greater_than_2 && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                size="small"
-                label="Extravascular PK Model"
-                name="pk_model2"
-                control={control}
-                options={pk_model2_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-            </Stack>
+            <div>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <SelectField
+                  size="small"
+                  label="Effect Compartment PK Model"
+                  name="pk_effect_model"
+                  control={control}
+                  options={pk_effect_model_options}
+                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                  selectProps={defaultProps}
+                />
+              </Stack>
+              <Stack
+                sx={{
+                  marginTop: 2,
+                  display: "flex",
+                  "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+                }}
+                direction="row" alignItems="center" spacing={1}>
+                <SelectField
+                  size="small"
+                  label="Extravascular PK Model"
+                  name="pk_model2"
+                  control={control}
+                  options={pk_model2_options}
+                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                  selectProps={defaultProps}
+                />
+              </Stack>
+            </div>
           )}
           {(model.pk_model2 || !version_greater_than_2) && (
             <Stack
