@@ -72,7 +72,7 @@ C_Drug = 0 in [pmol/L]
 INH = 1+C_Drug/Ki in [dimensionless]
 	desc: Extent of systemic inhibition
 	
-FG = if(C_Drug == 0, 
+FG = if(C_Drug < 1e-4, 
 	FG_victim, 
 	1) in [dimensionless]	
 	
