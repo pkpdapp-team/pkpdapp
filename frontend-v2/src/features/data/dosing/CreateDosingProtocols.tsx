@@ -121,16 +121,20 @@ function createDosingRows(
     });
   });
   newRows.sort((a, b) => parseInt(a[idField]) - parseInt(b[idField]));
-  state.data = [...nextData, ...newRows];
-  state.normalisedFields = new Map([
-    ...state.normalisedFields.entries(),
-    ["Amount Variable", "Amount Variable"],
-    ["Amount Unit", amountUnitField],
-    ["Per Body Weight(kg)", perKgField],
-    ["Infusion Duration", "Infusion Duration"],
-    ["Additional Doses", "Additional Doses"],
-    ["Interdose Interval", "Interdose Interval"],
-  ]);
+  return {
+    dosingRows: newRows,
+    normalisedFields: new Map([
+      ...state.normalisedFields.entries(),
+      ["Administration ID", administrationIdField],
+      ["Amount", amountField],
+      ["Amount Variable", "Amount Variable"],
+      ["Amount Unit", amountUnitField],
+      ["Per Body Weight(kg)", perKgField],
+      ["Infusion Duration", "Infusion Duration"],
+      ["Additional Doses", "Additional Doses"],
+      ["Interdose Interval", "Interdose Interval"],
+    ]),
+  };
 }
 
 type NumericTableCellProps = {
@@ -201,17 +205,23 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   let dosingRows: Row[] = state.data.filter((row) =>
     parseInt(row[administrationIdField]),
   );
-  if (!dosingRows.length) {
-    createDosingRows(state, administrationIdField, dosingCompartments);
-  }
+  let _data = state.data;
+  let _normalisedFields = state.normalisedFields;
   if (!amountField) {
     const newNormalisedFields = new Map([
-      ...state.normalisedFields.entries(),
+      ..._normalisedFields.entries(),
       ["Amount", "Amount"],
     ]);
-    const newData = state.data.map((row) => ({ ...row, Amount: "." }));
-    state.normalisedFields = newNormalisedFields;
-    state.data = newData;
+    const newData = _data.map((row) => ({ ...row, Amount: "." }));
+    _normalisedFields = newNormalisedFields;
+    _data = newData;
+  }
+  if (!dosingRows.length) {
+    const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
+      createDosingRows(state, administrationIdField, dosingCompartments);
+    _data = [..._data, ...newDosingRows];
+    _normalisedFields = newNormalisedFields;
+    dosingRows = newDosingRows;
   }
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -222,6 +232,12 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
       administrationIdField,
       groupIdField,
     );
+  }
+  if (state.data !== _data) {
+    state.data = _data;
+  }
+  if (state.normalisedFields !== _normalisedFields) {
+    state.normalisedFields = _normalisedFields;
   }
 
   type InputChangeEvent =
@@ -315,7 +331,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
           </TableHead>
           <TableBody>
             {dosingCompartments.map((compartment) => {
-              const dosingRows = state.data.filter(
+              const dosingRows = _data.filter(
                 (row) =>
                   row["Amount Variable"] === compartment &&
                   row["Amount"] !== ".",
