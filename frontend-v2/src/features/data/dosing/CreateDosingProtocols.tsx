@@ -137,6 +137,53 @@ function createDosingRows(
   };
 }
 
+function normaliseCSVData(
+  state: StepperState,
+  administrationIdField: string,
+  dosingCompartments: string[],
+) {
+  const amountField = state.fields.find(
+    (field) =>
+      field === "Amount" || state.normalisedFields.get(field) === "Amount",
+  );
+  const groupIdField = findFieldByType("Group ID", state);
+
+  let _data = state.data;
+  let _normalisedFields = state.normalisedFields;
+  // ignore rows with no amount and administration ID set to 0.
+  const dosingRows = (data: Row[]) =>
+    data.filter((row) => parseInt(row[administrationIdField]));
+
+  if (!amountField) {
+    const newNormalisedFields = new Map([
+      ..._normalisedFields.entries(),
+      ["Amount", "Amount"],
+    ]);
+    const newData = _data.map((row) => ({ ...row, Amount: "." }));
+    _normalisedFields = newNormalisedFields;
+    _data = newData;
+  }
+
+  if (!dosingRows(_data).length) {
+    const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
+      createDosingRows(state, administrationIdField, dosingCompartments);
+    _data = [..._data, ...newDosingRows];
+    _normalisedFields = newNormalisedFields;
+  }
+
+  const missingAdministrationIds = dosingRows(_data).some(
+    (row) => !(administrationIdField in row),
+  );
+  if (missingAdministrationIds) {
+    generateAdministrationIds(
+      dosingRows(_data),
+      administrationIdField,
+      groupIdField,
+    );
+  }
+  return { data: _data, normalisedFields: _normalisedFields };
+}
+
 type NumericTableCellProps = {
   id: string;
   disabled: boolean;
@@ -193,46 +240,16 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   variables,
   notificationsInfo,
 }: IDosingProtocols) => {
-  const amountField = state.fields.find(
-    (field) =>
-      field === "Amount" || state.normalisedFields.get(field) === "Amount",
-  );
   const amountUnitField = findFieldByType("Amount Unit", state);
   const timeField = findFieldByType("Time", state);
   const groupIdField = findFieldByType("Group ID", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
-  // ignore rows with no amount and administration ID set to 0.
-  let dosingRows: Row[] = state.data.filter((row) =>
-    parseInt(row[administrationIdField]),
+
+  const { data: _data, normalisedFields: _normalisedFields } = normaliseCSVData(
+    state,
+    administrationIdField,
+    dosingCompartments,
   );
-  let _data = state.data;
-  let _normalisedFields = state.normalisedFields;
-  if (!amountField) {
-    const newNormalisedFields = new Map([
-      ..._normalisedFields.entries(),
-      ["Amount", "Amount"],
-    ]);
-    const newData = _data.map((row) => ({ ...row, Amount: "." }));
-    _normalisedFields = newNormalisedFields;
-    _data = newData;
-  }
-  if (!dosingRows.length) {
-    const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
-      createDosingRows(state, administrationIdField, dosingCompartments);
-    _data = [..._data, ...newDosingRows];
-    _normalisedFields = newNormalisedFields;
-    dosingRows = newDosingRows;
-  }
-  const missingAdministrationIds = dosingRows.some(
-    (row) => !(administrationIdField in row),
-  );
-  if (missingAdministrationIds) {
-    dosingRows = generateAdministrationIds(
-      dosingRows,
-      administrationIdField,
-      groupIdField,
-    );
-  }
   if (state.data !== _data) {
     state.data = _data;
   }
