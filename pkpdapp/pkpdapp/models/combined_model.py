@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 
 def get_default_effect_model():
     try:
-        return PharmacokineticModel.objects.get(name="Effect compartment model")
+        return PharmacokineticModel.objects.get(
+            name="Effect compartment model (ke0 & Kp)"
+        )
     except PharmacokineticModel.DoesNotExist:
         return None
 
