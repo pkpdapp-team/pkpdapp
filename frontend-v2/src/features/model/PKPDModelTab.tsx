@@ -185,7 +185,8 @@ const PKPDModelTab: FC<Props> = ({
     : [];
   pk_model2_options.push({ value: "", label: "None" });
   const pk_effect_model_options = pkEffectModelFiltered.map((m) => {
-    return { value: m.id.toString(), label: m.name };
+    const label = m.name.replace("Effect compartment model ", "").replace("(", "").replace(")", "");
+    return { value: m.id.toString(), label: label };
   });
 
 
@@ -422,38 +423,47 @@ const PKPDModelTab: FC<Props> = ({
                 </Tooltip>
               )}
               {version_greater_than_2 && (
-                <Tooltip title={effectCompartmentTooltip} placement="top">
-                  <div style={{ fontSize: "12px !important" }}>
-                    <SelectField
-                      size="small"
-                      label="Effect Compartments"
-                      name="number_of_effect_compartments"
-                      control={control}
-                      options={Array.from(Array(6).keys()).map((i) => {
-                        return { value: i, label: i.toString() };
-                      })}
-                      formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                      selectProps={defaultProps}
-                    />
-                  </div>
-                </Tooltip>
-              )}
-              {version_greater_than_2 && (
-                <Tooltip title="Includes Anti-Drug Antibodies">
-                  <div>
-                    <Checkbox
-                      label="ADA"
-                      name="has_anti_drug_antibodies"
-                      control={control}
-                      checkboxFieldProps={{
-                        disabled:
-                          !model.pk_model ||
-                          isSharedWithMe ||
-                          compound.compound_type !== "LM",
-                      }}
-                    />
-                  </div>
-                </Tooltip>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Tooltip title={effectCompartmentTooltip} placement="top">
+                    <div style={{ fontSize: "12px !important" }}>
+                      <SelectField
+                        size="small"
+                        label="Effect Compartments"
+                        name="number_of_effect_compartments"
+                        control={control}
+                        options={Array.from(Array(6).keys()).map((i) => {
+                          return { value: i, label: i.toString() };
+                        })}
+                        formControlProps={{ sx: { width: "4rem" } }}
+                        selectProps={defaultProps}
+                      />
+                    </div>
+                  </Tooltip>
+                  <SelectField
+                    size="small"
+                    label="Effect Model"
+                    name="pk_effect_model"
+                    control={control}
+                    options={pk_effect_model_options}
+                    formControlProps={{ sx: { width: "10rem" } }}
+                    selectProps={defaultProps}
+                  />
+                  <Tooltip title="Includes Anti-Drug Antibodies">
+                    <div>
+                      <Checkbox
+                        label="ADA"
+                        name="has_anti_drug_antibodies"
+                        control={control}
+                        checkboxFieldProps={{
+                          disabled:
+                            !model.pk_model ||
+                            isSharedWithMe ||
+                            compound.compound_type !== "LM",
+                        }}
+                      />
+                    </div>
+                  </Tooltip>
+                </Stack>
               )}
             </Stack>
           )}
@@ -468,36 +478,23 @@ const PKPDModelTab: FC<Props> = ({
           }}
         >
           {version_greater_than_2 && (
-            <div>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <SelectField
-                  size="small"
-                  label="Effect Compartment PK Model"
-                  name="pk_effect_model"
-                  control={control}
-                  options={pk_effect_model_options}
-                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                  selectProps={defaultProps}
-                />
-              </Stack>
-              <Stack
-                sx={{
-                  marginTop: 2,
-                  display: "flex",
-                  "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-                }}
-                direction="row" alignItems="center" spacing={1}>
-                <SelectField
-                  size="small"
-                  label="Extravascular PK Model"
-                  name="pk_model2"
-                  control={control}
-                  options={pk_model2_options}
-                  formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                  selectProps={defaultProps}
-                />
-              </Stack>
-            </div>
+            <Stack
+              sx={{
+                marginTop: 2,
+                display: "flex",
+                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
+              }}
+              direction="row" alignItems="center" spacing={1}>
+              <SelectField
+                size="small"
+                label="Extravascular PK Model"
+                name="pk_model2"
+                control={control}
+                options={pk_model2_options}
+                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
+                selectProps={defaultProps}
+              />
+            </Stack>
           )}
           {(model.pk_model2 || !version_greater_than_2) && (
             <Stack
