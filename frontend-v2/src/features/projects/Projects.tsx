@@ -89,8 +89,8 @@ enum SortOptions {
   COMPOUND = "compound",
 }
 
-const SM_SIM_TIME = 24;
-const LM_SIM_TIME = 168;
+const SM_SIM_TIME = 48;
+const LM_SIM_TIME = 672;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
   const [filterBy, setFilterBy] = useState<string[]>([]);
