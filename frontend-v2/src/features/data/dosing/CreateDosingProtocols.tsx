@@ -121,16 +121,67 @@ function createDosingRows(
     });
   });
   newRows.sort((a, b) => parseInt(a[idField]) - parseInt(b[idField]));
-  state.data = [...nextData, ...newRows];
-  state.normalisedFields = new Map([
-    ...state.normalisedFields.entries(),
-    ["Amount Variable", "Amount Variable"],
-    ["Amount Unit", amountUnitField],
-    ["Per Body Weight(kg)", perKgField],
-    ["Infusion Duration", "Infusion Duration"],
-    ["Additional Doses", "Additional Doses"],
-    ["Interdose Interval", "Interdose Interval"],
-  ]);
+  return {
+    dosingRows: newRows,
+    normalisedFields: new Map([
+      ...state.normalisedFields.entries(),
+      ["Administration ID", administrationIdField],
+      ["Amount", amountField],
+      ["Amount Variable", "Amount Variable"],
+      ["Amount Unit", amountUnitField],
+      ["Per Body Weight(kg)", perKgField],
+      ["Infusion Duration", "Infusion Duration"],
+      ["Additional Doses", "Additional Doses"],
+      ["Interdose Interval", "Interdose Interval"],
+    ]),
+  };
+}
+
+function normaliseCSVData(
+  state: StepperState,
+  administrationIdField: string,
+  dosingCompartments: string[],
+) {
+  const amountField = state.fields.find(
+    (field) =>
+      field === "Amount" || state.normalisedFields.get(field) === "Amount",
+  );
+  const groupIdField = findFieldByType("Group ID", state);
+
+  let _data = state.data;
+  let _normalisedFields = state.normalisedFields;
+  // ignore rows with no amount and administration ID set to 0.
+  const dosingRows = (data: Row[]) =>
+    data.filter((row) => parseInt(row[administrationIdField]));
+
+  if (!amountField) {
+    const newNormalisedFields = new Map([
+      ..._normalisedFields.entries(),
+      ["Amount", "Amount"],
+    ]);
+    const newData = _data.map((row) => ({ ...row, Amount: "." }));
+    _normalisedFields = newNormalisedFields;
+    _data = newData;
+  }
+
+  if (!dosingRows(_data).length) {
+    const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
+      createDosingRows(state, administrationIdField, dosingCompartments);
+    _data = [..._data, ...newDosingRows];
+    _normalisedFields = newNormalisedFields;
+  }
+
+  const missingAdministrationIds = dosingRows(_data).some(
+    (row) => !(administrationIdField in row),
+  );
+  if (missingAdministrationIds) {
+    generateAdministrationIds(
+      dosingRows(_data),
+      administrationIdField,
+      groupIdField,
+    );
+  }
+  return { data: _data, normalisedFields: _normalisedFields };
 }
 
 type NumericTableCellProps = {
@@ -189,39 +240,21 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   variables,
   notificationsInfo,
 }: IDosingProtocols) => {
-  const amountField = state.fields.find(
-    (field) =>
-      field === "Amount" || state.normalisedFields.get(field) === "Amount",
-  );
   const amountUnitField = findFieldByType("Amount Unit", state);
   const timeField = findFieldByType("Time", state);
   const groupIdField = findFieldByType("Group ID", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
-  // ignore rows with no amount and administration ID set to 0.
-  let dosingRows: Row[] = state.data.filter((row) =>
-    parseInt(row[administrationIdField]),
+
+  const { data: _data, normalisedFields: _normalisedFields } = normaliseCSVData(
+    state,
+    administrationIdField,
+    dosingCompartments,
   );
-  if (!dosingRows.length) {
-    createDosingRows(state, administrationIdField, dosingCompartments);
+  if (state.data !== _data) {
+    state.data = _data;
   }
-  if (!amountField) {
-    const newNormalisedFields = new Map([
-      ...state.normalisedFields.entries(),
-      ["Amount", "Amount"],
-    ]);
-    const newData = state.data.map((row) => ({ ...row, Amount: "." }));
-    state.normalisedFields = newNormalisedFields;
-    state.data = newData;
-  }
-  const missingAdministrationIds = dosingRows.some(
-    (row) => !(administrationIdField in row),
-  );
-  if (missingAdministrationIds) {
-    dosingRows = generateAdministrationIds(
-      dosingRows,
-      administrationIdField,
-      groupIdField,
-    );
+  if (state.normalisedFields !== _normalisedFields) {
+    state.normalisedFields = _normalisedFields;
   }
 
   type InputChangeEvent =
@@ -315,7 +348,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
           </TableHead>
           <TableBody>
             {dosingCompartments.map((compartment) => {
-              const dosingRows = state.data.filter(
+              const dosingRows = _data.filter(
                 (row) =>
                   row["Amount Variable"] === compartment &&
                   row["Amount"] !== ".",

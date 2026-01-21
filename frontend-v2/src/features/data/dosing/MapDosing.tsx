@@ -106,6 +106,7 @@ const MapDosing: FC<IMapDosing> = ({
       ""
     );
   });
+  const uniqueDosingCompartments = [...new Set(dosingCompartments)];
 
   return state.hasDosingRows ? (
     <DosingProtocols
@@ -121,7 +122,7 @@ const MapDosing: FC<IMapDosing> = ({
     <CreateDosingProtocols
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField || ""}
-      dosingCompartments={dosingCompartments}
+      dosingCompartments={uniqueDosingCompartments}
       state={state}
       units={units || []}
       variables={variables || []}
