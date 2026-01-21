@@ -8,13 +8,19 @@ import pkpdapp.models.combined_model
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0047_combinedmodel_pk_effect_model'),
+        ("pkpdapp", "0047_combinedmodel_pk_effect_model"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='combinedmodel',
-            name='pk_effect_model',
-            field=models.ForeignKey(default=pkpdapp.models.combined_model.get_default_effect_model, help_text='effect compartment model', on_delete=django.db.models.deletion.PROTECT, related_name='pkpd_effect_models', to='pkpdapp.pharmacokineticmodel'),
+            model_name="combinedmodel",
+            name="pk_effect_model",
+            field=models.ForeignKey(
+                default=pkpdapp.models.combined_model.get_default_effect_model,
+                help_text="effect compartment model",
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="pkpd_effect_models",
+                to="pkpdapp.pharmacokineticmodel",
+            ),
         ),
     ]
