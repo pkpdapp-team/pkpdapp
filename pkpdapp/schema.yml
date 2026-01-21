@@ -3907,6 +3907,9 @@ components:
           type: integer
           nullable: true
           description: extravascular model
+        pk_effect_model:
+          type: integer
+          description: effect compartment model
         pd_model:
           type: integer
           nullable: true
@@ -4700,6 +4703,9 @@ components:
           type: integer
           nullable: true
           description: extravascular model
+        pk_effect_model:
+          type: integer
+          description: effect compartment model
         pd_model:
           type: integer
           nullable: true

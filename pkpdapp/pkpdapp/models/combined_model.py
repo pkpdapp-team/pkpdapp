@@ -26,6 +26,15 @@ from pkpdapp.utils.derived_variables import (
 logger = logging.getLogger(__name__)
 
 
+def get_default_effect_model():
+    try:
+        return PharmacokineticModel.objects.get(
+            name="Effect compartment model (ke0 & Kp)"
+        )
+    except PharmacokineticModel.DoesNotExist:
+        return None
+
+
 class CombinedModel(MyokitModelMixin, StoredModel):
     """
     PK model plus dosing and protocol information
@@ -69,6 +78,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         blank=True,
         null=True,
         help_text="extravascular model",
+    )
+
+    pk_effect_model = models.ForeignKey(
+        PharmacokineticModel,
+        related_name="pkpd_effect_models",
+        on_delete=models.PROTECT,
+        help_text="effect compartment model",
+        default=get_default_effect_model,
     )
 
     has_saturation = models.BooleanField(
@@ -126,6 +143,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     )
     __original_pk_model = None
     __original_pk_model2 = None
+    __original_pk_effect_model = None
     __original_pd_model = None
     __original_pd_model2 = None
     __original_has_saturation = None
@@ -146,6 +164,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             instance.__original_pk_model = instance.pk_model
         if "pk_model2_id" in field_names:
             instance.__original_pk_model2 = instance.pk_model2
+        if "pk_effect_model_id" in field_names:
+            instance.__original_pk_effect_model = instance.pk_effect_model
         if "pd_model_id" in field_names:
             instance.__original_pd_model = instance.pd_model
         if "pd_model2_id" in field_names:
@@ -278,10 +298,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # add effect compartments
         if self.number_of_effect_compartments > 0:
-            effect_compartment = PharmacokineticModel.objects.get(
-                name="Effect compartment model"
-            )
-            ec_myokit = effect_compartment.create_myokit_model()
+            ec_myokit = self.pk_effect_model.create_myokit_model()
             for i in range(self.number_of_effect_compartments):
                 pk_model.import_component(
                     ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
@@ -487,6 +504,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             created
             or self.pk_model != self.__original_pk_model
             or self.pk_model2 != self.__original_pk_model2
+            or self.pk_effect_model != self.__original_pk_effect_model
             or self.pd_model != self.__original_pd_model
             or self.pd_model2 != self.__original_pd_model2
             or self.has_saturation != self.__original_has_saturation
@@ -503,6 +521,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_pd_model2 = self.pd_model2
         self.__original_pk_model = self.pk_model
         self.__original_pk_model2 = self.pk_model2
+        self.__original_pk_effect_model = self.pk_effect_model
         self.__original_has_saturation = self.has_saturation
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag

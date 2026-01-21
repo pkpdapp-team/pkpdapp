@@ -1,5 +1,5 @@
 [[model]]
-name: Effect compartment model (ke0 & Kp) 
+name: Effect compartment model (kin & kout) 
 author: Michael Gertz 
 
 
@@ -13,15 +13,15 @@ t = 0 in [h] bind time
 
 [PKCompartment]
 
-ke0 = 1 in [1/h]
-	desc: Equilibration rate constant effect compartment
+kin = 1 in [1/h]
+	desc: First order input rate constant to effect compartment
 	
-Kp = 1 in [dimensionless]
-	desc: Effect compartment partitioning coefficient
+kout = 1 in [1/h]
+	desc: First order elimination rate constant from the effect compartment
 	
 C_Drug = 1 in [pmol/L]
   desc: Concentration of variable linking to the effect compartment
   
  
-dot(Ce) = ke0*(C_Drug - Ce/Kp) in [pmol/L]
+dot(Ce) = kin*C_Drug - kout*Ce in [pmol/L]
 	desc: Concentration in the effect compartment

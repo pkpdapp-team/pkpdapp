@@ -2312,6 +2312,8 @@ export type CombinedModel = {
   pk_model?: number | null;
   /** extravascular model */
   pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2365,6 +2367,8 @@ export type CombinedModelRead = {
   pk_model?: number | null;
   /** extravascular model */
   pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2411,6 +2415,8 @@ export type PatchedCombinedModel = {
   pk_model?: number | null;
   /** extravascular model */
   pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2464,6 +2470,8 @@ export type PatchedCombinedModelRead = {
   pk_model?: number | null;
   /** extravascular model */
   pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
