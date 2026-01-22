@@ -121,6 +121,7 @@ const helpImages: {
 
 const pk_model2_order = [
   "First order absorption model",
+  "First order absorption model (two absorption sites)",
   "Transit compartments absorption model",
   "Ocular PK model",
   "Ocular PKPD VEGF (dimeric target) model",
