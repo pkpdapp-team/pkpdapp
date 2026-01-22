@@ -8,7 +8,7 @@ import {
   CompoundRead,
   UnitRead,
   TagRead,
-} from "../../app/backendApi";
+} from "../../../app/backendApi";
 import { Control, Controller } from "react-hook-form";
 import {
   Stack,
@@ -23,18 +23,22 @@ import {
   MenuItem,
   Chip,
 } from "@mui/material";
-import FloatField from "../../components/FloatField";
-import UnitField from "../../components/UnitField";
-import SelectField from "../../components/SelectField";
-import Checkbox from "../../components/Checkbox";
-import { FormData } from "./Model";
-import { speciesOptions } from "../projects/Project";
+import FloatField from "../../../components/FloatField";
+import UnitField from "../../../components/UnitField";
+import SelectField from "../../../components/SelectField";
+import Checkbox from "../../../components/Checkbox";
+import { FormData } from "../Model";
+import { speciesOptions } from "../../projects/Project";
 import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { selectIsProjectShared } from "../login/loginSlice";
-import { CodeModal } from "./CodeModal";
+import { RootState } from "../../../app/store";
+import { selectIsProjectShared } from "../../login/loginSlice";
+import { CodeModal } from "../CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import HelpButton from "../../components/HelpButton";
+import HelpButton from "../../../components/HelpButton";
+import { PKModelSelect } from "./PKModelSelect";
+import { PDModelSelect } from "./PDModelSelect";
+import { PKModel2Select } from "./PKModel2Select";
+import { PDModel2Select } from "./PDModel2Select";
 
 interface Props {
   model: CombinedModelRead;
@@ -44,54 +48,6 @@ interface Props {
   units: UnitRead[];
   tagsData: TagRead[];
 }
-//TMDD order:
-//  first all full TMDD models with one binding site,
-//  TMDD models 2 binding sites,
-//  TMDD bispecific,
-//  QSS models one binding site and
-//  finally extended MM
-const pk_model_order = [
-  "1-compartmental model",
-  "2-compartmental model",
-  "3-compartmental model",
-  "3-compartment catenary model",
-
-  "1-compartmental full TMDD model (1 binding site)",
-  "1-compartmental full TMDD model (1 binding site) - constant target",
-  "1-compartmental full TMDD model (1 binding site) - constant target concentration",
-  "1-compartmental full TMDD model (1 binding site) - soluble target",
-  "1-compartmental full TMDD model (1 binding site) - soluble target (catch and release)",
-  "2-compartmental full TMDD model (1 binding site)",
-  "2-compartmental full TMDD model (1 binding site) - constant target",
-  "2-compartmental full TMDD model (1 binding site) - soluble target",
-  "2-compartmental full TMDD model (1 binding site) - soluble target (catch and release)",
-
-  "1-compartmental full TMDD model (2 binding sites)",
-  "1-compartmental full TMDD model (2 binding sites) - constant target",
-  "1-compartmental full TMDD model (2 binding sites) - soluble target",
-  "2-compartmental full TMDD model (2 binding sites)",
-  "2-compartmental full TMDD model (2 binding sites) - constant target",
-  "2-compartmental full TMDD model (2 binding sites) - soluble target",
-
-  "1-compartmental bispecific TMDD model",
-  "1-compartmental bispecific TMDD model - soluble targets",
-  "2-compartmental bispecific TMDD model",
-  "2-compartmental bispecific TMDD model - soluble targets",
-
-  "1-compartmental QSS TMDD model (1 binding site)",
-  "1-compartmental QSS TMDD model (1 binding site) - constant target",
-  "1-compartmental QSS TMDD model (1 binding site) - soluble target",
-  "1-compartmental QSS TMDD model (1 binding site) - soluble target (catch and release)",
-  "2-compartmental QSS TMDD model (1 binding site)",
-  "2-compartmental QSS TMDD model (1 binding site) - constant target",
-  "2-compartmental QSS TMDD model (1 binding site) - soluble target",
-  "2-compartmental QSS TMDD model (1 binding site) - soluble target (catch and release)",
-
-  "1-compartmental extended Michaelis-Menten TMDD model",
-  "1-compartmental extended Michaelis-Menten TMDD model - constant target",
-  "2-compartmental extended Michaelis-Menten TMDD model",
-  "2-compartmental extended Michaelis-Menten TMDD model - constant target",
-];
 
 // Maps of model name to documentation image filename (to be filled later)
 const helpImages: {
@@ -122,37 +78,6 @@ const helpImages: {
   pd: {},
   pd2: {},
 };
-
-const pk_model2_order = [
-  "First order absorption model",
-  "First order absorption model (two absorption sites)",
-  "Transit compartments absorption model",
-  "Ocular PK model",
-  "Ocular PKPD VEGF (dimeric target) model",
-  "Ocular PKPD bispecific (two different targets) model",
-];
-
-const pd_model_order = [
-  "direct_effects_emax",
-  "direct_effects_imax",
-  "indirect_effects_stimulation_elimination",
-  "indirect_effects_inhibition_elimination",
-  "indirect_effects_stimulation_production",
-  "indirect_effects_inhibition_production",
-  "indirect_effects_precursor_stimulation_production",
-  "indirect_effects_precursor_inhibition_production",
-  "tumour_growth_linear",
-  "tumour_growth_exponential",
-  "tumour_growth_gompertz",
-  "tumour_growth_simeoni",
-  "tumour_growth_simeoni_logistic",
-  "tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill",
-  "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
-  "tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_emax_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
-];
 
 const PKPDModelTab: FC<Props> = ({
   model,
@@ -186,85 +111,10 @@ const PKPDModelTab: FC<Props> = ({
 
   const version_greater_than_2 = project.version ? project.version >= 3 : false;
 
-  const clinical = project.species === "H";
-  const pkModelsFiltered = pkModels.filter((m) => {
-    let is_pk_model = false;
-    if (version_greater_than_2) {
-      is_pk_model = m.model_type ? m.model_type === "PK" : false;
-    } else {
-      is_pk_model = m.name.includes(clinical ? "_clinical" : "_preclinical");
-    }
-    if (!is_pk_model) {
-      return false;
-    }
-    if (m.tags) {
-      for (const tag of pkTags) {
-        if (!m.tags.includes(tag)) {
-          return false;
-        }
-      }
-    }
-    return is_pk_model;
-  });
-  const pkModel2Filtered = pkModels.filter((m) => {
-    return version_greater_than_2 && m.model_type === "PKEX";
-  });
-  pkModel2Filtered.sort((a, b) => {
-    const aName = a.name;
-    const bName = b.name;
-    const aIndex = pk_model2_order.indexOf(aName);
-    const bIndex = pk_model2_order.indexOf(bName);
-    return aIndex - bIndex;
-  });
   const pkEffectModelFiltered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEF";
   });
-  const pdModelsFiltered = pdModels.filter((m) => {
-    let is_pd_model = false;
-    if (version_greater_than_2) {
-      is_pd_model = m.model_type === "PD" || m.model_type === "TG";
-    } else {
-      is_pd_model = !m.name.includes("tumour_growth_inhibition");
-    }
-    if (m.tags) {
-      for (const tag of pdTags) {
-        if (!m.tags.includes(tag)) {
-          return false;
-        }
-      }
-    }
-    return is_pd_model;
-  });
-  const pdModels2Filtered = pdModels.filter((m) => {
-    if (version_greater_than_2) {
-      return m.model_type === "TGI";
-    } else {
-      return m.name.includes("tumour_growth_inhibition");
-    }
-  });
 
-  const pd_model_options: { value: number | string; label: string }[] =
-    pdModelsFiltered.map((m) => {
-      return { value: m.id, label: m.name };
-    });
-  pd_model_options.sort((a, b) => {
-    const aName = a.label;
-    const bName = b.label;
-    const aIndex = pd_model_order.indexOf(aName);
-    const bIndex = pd_model_order.indexOf(bName);
-    return aIndex - bIndex;
-  });
-  pd_model_options.push({ value: "", label: "None" });
-  const pk_model_options = pkModelsFiltered.map((m) => {
-    return { value: m.id.toString(), label: m.name };
-  });
-  pk_model_options.push({ value: "", label: "None" });
-  const pk_model2_options = model.pk_model
-    ? pkModel2Filtered.map((m) => {
-        return { value: m.id.toString(), label: m.name };
-      })
-    : [];
-  pk_model2_options.push({ value: "", label: "None" });
   const pk_effect_model_options = pkEffectModelFiltered.map((m) => {
     const label = m.name
       .replace("Effect compartment model ", "")
@@ -273,13 +123,6 @@ const PKPDModelTab: FC<Props> = ({
     return { value: m.id.toString(), label: label };
   });
 
-  pk_model_options.sort((a, b) => {
-    const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
-    const bName = b.label.replace("_preclinical", "").replace("_clinical", "");
-    const aIndex = pk_model_order.indexOf(aName);
-    const bIndex = pk_model_order.indexOf(bName);
-    return aIndex - bIndex;
-  });
   const pd_model_map = new Map<number, PharmacodynamicRead>(
     pdModels.map((m) => [m.id, m]),
   );
@@ -292,11 +135,6 @@ const PKPDModelTab: FC<Props> = ({
       ? pd_model?.model_type === "TG"
       : pd_model?.name.includes("tumour_growth") &&
         !pd_model?.name.includes("inhibition"));
-  const pd_model2_options: { value: number | string; label: string }[] =
-    pdModels2Filtered.map((m) => {
-      return { value: m.id, label: m.name };
-    });
-  pd_model2_options.push({ value: "", label: "None" });
 
   const pdModelHasHillCoefficient = version_greater_than_2
     ? pd_model?.mmt?.includes("desc: Hill coefficient") ||
@@ -360,7 +198,6 @@ const PKPDModelTab: FC<Props> = ({
     (pd2Selected?.name && helpImages.pd2[pd2Selected.name]) ||
     "placeholder.jpg";
 
-  console.log(pk_model_options);
   return (
     <Stack direction="column" spacing={2} marginTop={5}>
       <Grid container spacing={2}>
@@ -466,37 +303,13 @@ const PKPDModelTab: FC<Props> = ({
               />
             </Stack>
           )}
-          <Stack
-            sx={{
-              marginTop: 2,
-              display: "flex",
-              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-            }}
-            direction="row"
-            alignItems="center"
-            spacing={1}
-          >
-            <SelectField
-              size="small"
-              label="PK Model"
-              name="pk_model"
-              control={control}
-              options={pk_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-            <HelpButton
-              title="PK Model help"
-              placement="right"
-              maxWidth="850px"
-            >
-              <img
-                src={`pk_model/${helpImagePk}`}
-                alt="PK model help"
-                style={{ maxWidth: "800px" }}
-              />
-            </HelpButton>
-          </Stack>
+          <PKModelSelect
+            control={control}
+            defaultProps={defaultProps}
+            helpImagePk={helpImagePk}
+            pkModels={pkModels}
+            pkTags={pkTags}
+          />
 
           {model.pk_model && (
             <Stack
@@ -603,37 +416,12 @@ const PKPDModelTab: FC<Props> = ({
           }}
         >
           {version_greater_than_2 && (
-            <Stack
-              sx={{
-                marginTop: 2,
-                display: "flex",
-                "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-              }}
-              direction="row"
-              alignItems="center"
-              spacing={1}
-            >
-              <SelectField
-                size="small"
-                label="Extravascular PK Model"
-                name="pk_model2"
-                control={control}
-                options={pk_model2_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-              <HelpButton
-                title="Extravascular PK Model help"
-                placement="right"
-                maxWidth="850px"
-              >
-                <img
-                  src={`pk_extravascular/${helpImagePk2}`}
-                  alt="Extravascular PK model help"
-                  style={{ maxWidth: "800px" }}
-                />
-              </HelpButton>
-            </Stack>
+            <PKModel2Select
+              control={control}
+              defaultProps={defaultProps}
+              helpImagePk2={helpImagePk2}
+              pkModels={pkModels}
+            />
           )}
           {(model.pk_model2 || !version_greater_than_2) && (
             <Stack
@@ -721,37 +509,13 @@ const PKPDModelTab: FC<Props> = ({
               )}
             />
           )}
-          <Stack
-            sx={{
-              marginTop: 2,
-              display: "flex",
-              "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-            }}
-            direction="row"
-            alignItems="center"
-            spacing={1}
-          >
-            <SelectField
-              size="small"
-              label="PD Model"
-              name="pd_model"
-              control={control}
-              options={pd_model_options}
-              formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-              selectProps={defaultProps}
-            />
-            <HelpButton
-              title="PD Model help"
-              placement="right"
-              maxWidth="850px"
-            >
-              <img
-                src={`pd_model/${helpImagePd}`}
-                alt="PD model help"
-                style={{ maxWidth: "800px" }}
-              />
-            </HelpButton>
-          </Stack>
+          <PDModelSelect
+            control={control}
+            defaultProps={defaultProps}
+            helpImagePd={helpImagePd}
+            pdModels={pdModels}
+            pdTags={pdTags}
+          />
         </Grid>
         <Box width="100%" />
         {pdIsTumourGrowth && (
@@ -762,28 +526,12 @@ const PKPDModelTab: FC<Props> = ({
               xs: 10,
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <SelectField
-                size="small"
-                label="Secondary PD Model"
-                name="pd_model2"
-                control={control}
-                options={pd_model2_options}
-                formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
-                selectProps={defaultProps}
-              />
-              <HelpButton
-                title="Secondary PD Model help"
-                placement="right"
-                maxWidth="850px"
-              >
-                <img
-                  src={`pd_model/${helpImagePd2}`}
-                  alt="Secondary PD model help"
-                  style={{ maxWidth: "800px" }}
-                />
-              </HelpButton>
-            </Stack>
+            <PDModel2Select
+              control={control}
+              defaultProps={defaultProps}
+              helpImagePd2={helpImagePd2}
+              pdModels={pdModels}
+            />
           </Grid>
         )}
       </Grid>
