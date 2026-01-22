@@ -95,7 +95,7 @@ RateAbs = 0 in [pmol/h]
   desc: Absorption rate   
   
 
-dot(A1_t) = RateAbs*F - CL*C1_f  - Q1*(C1_f - C2_f) - kint1*Frcy*C1_b*V1 - CLimm*C1_t in [pmol]
+dot(A1_t) = RateAbs*F - CL*C1_f  - Q1*(C1_f - C2_f) - kint1*(1-Frcy)*C1_b*V1 - CLimm*C1_t in [pmol]
   desc: Amount of TOTAL drug in the central compartment 
   
 dot(A2_f) = Q1*(C1_f - C2_f) - CLimm*C2_f*V2/V1 in [pmol]
