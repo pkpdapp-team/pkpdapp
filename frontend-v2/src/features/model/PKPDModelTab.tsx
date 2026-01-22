@@ -9,7 +9,7 @@ import {
   UnitRead,
   TagRead,
 } from "../../app/backendApi";
-import { Control, Controller } from "react-hook-form";
+import { Control, Controller, useWatch } from "react-hook-form";
 import {
   Stack,
   Grid,
@@ -34,6 +34,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { CodeModal } from "./CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import HelpButton from "../../components/HelpButton";
 
 interface Props {
   model: CombinedModelRead;
@@ -90,6 +91,32 @@ const pk_model_order = [
   "2-compartmental extended Michaelis-Menten TMDD model",
   "2-compartmental extended Michaelis-Menten TMDD model - constant target",
 ];
+
+// Maps of model name to documentation image filename (to be filled later)
+const helpImages: {
+  pk: Record<string, string>;
+  pk2: Record<string, string>;
+  effect: Record<string, string>;
+  pd: Record<string, string>;
+  pd2: Record<string, string>;
+} = {
+  pk: {
+    "1-compartmental model": "One compartmenal PK model.jpg",
+    "3-compartmental model": "Three compartmenal PK model (mammillary).jpg",
+    "3-compartment catenary model": "Three compartmenal PK model (catenary).jpg",
+  },
+  pk2: {
+    "First order absorption model": "First order absorption model.jpg",
+    "Ocular PK model": "Ocular PK model.jpg",
+    "Transit compartments absorption model": "Transit compartments absorption model.jpg",
+  },
+  effect: {
+    "Effect compartment model (ke0 & Kp)": "Effect compartment model (version 1).jpg",
+    "Effect compartment model (kin & kout)": "Effect compartment model (version 2).jpg",
+  },
+  pd: {},
+  pd2: {},
+};
 
 
 const pk_model2_order = [
@@ -307,6 +334,20 @@ const PKPDModelTab: FC<Props> = ({
     "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
   const modelTypesLabel = "Filter by Model Type";
 
+
+
+
+  const pkSelected = pkModels.find((m) => m.id === model.pk_model);
+  const pk2Selected = pkModels.find((m) => m.id === model.pk_model2);
+  const effectSelected = pkModels.find((m) => m.id === model.pk_effect_model);
+  const pdSelected = pdModels.find((m) => m.id === model.pd_model);
+  const pd2Selected = pdModels.find((m) => m.id === model.pd_model2);
+  const helpImagePk = (pkSelected?.name && helpImages.pk[pkSelected.name]) || "placeholder.jpg";
+  const helpImagePk2 = (pk2Selected?.name && helpImages.pk2[pk2Selected.name]) || "placeholder.jpg";
+  const helpImageEffect = (effectSelected?.name && helpImages.effect[effectSelected.name]) || "placeholder.jpg";
+  const helpImagePd = (pdSelected?.name && helpImages.pd[pdSelected.name]) || "placeholder.jpg";
+  const helpImagePd2 = (pd2Selected?.name && helpImages.pd2[pd2Selected.name]) || "placeholder.jpg";
+
   return (
     <Stack direction="column" spacing={2} marginTop={5}>
       <Grid container spacing={2}>
@@ -431,6 +472,9 @@ const PKPDModelTab: FC<Props> = ({
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
               selectProps={defaultProps}
             />
+            <HelpButton title="PK Model help" placement="right" maxWidth="850px">
+              <img src={`pk_model/${helpImagePk}`} alt="PK model help" style={{ maxWidth: "800px" }} />
+            </HelpButton>
           </Stack>
 
           {model.pk_model && (
@@ -497,6 +541,9 @@ const PKPDModelTab: FC<Props> = ({
                     formControlProps={{ sx: { width: "10rem" } }}
                     selectProps={defaultProps}
                   />
+                  <HelpButton title="Effect PK Model help" placement="right" maxWidth="850px">
+                    <img src={`pk_effect/${helpImageEffect}`} alt="Effect PK model help" style={{ maxWidth: "800px" }} />
+                  </HelpButton>
                   <Tooltip title="Includes Anti-Drug Antibodies">
                     <div>
                       <Checkbox
@@ -543,6 +590,9 @@ const PKPDModelTab: FC<Props> = ({
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
+              <HelpButton title="Extravascular PK Model help" placement="right" maxWidth="850px">
+                <img src={`pk_extravascular/${helpImagePk2}`} alt="Extravascular PK model help" style={{ maxWidth: "800px" }} />
+              </HelpButton>
             </Stack>
           )}
           {(model.pk_model2 || !version_greater_than_2) && (
@@ -650,6 +700,9 @@ const PKPDModelTab: FC<Props> = ({
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
               selectProps={defaultProps}
             />
+            <HelpButton title="PD Model help" placement="right" maxWidth="850px">
+              <img src={`pd_model/${helpImagePd}`} alt="PD model help" style={{ maxWidth: "800px" }} />
+            </HelpButton>
           </Stack>
         </Grid>
         <Box width="100%" />
@@ -671,6 +724,9 @@ const PKPDModelTab: FC<Props> = ({
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
+              <HelpButton title="Secondary PD Model help" placement="right" maxWidth="850px">
+                <img src={`pd_model/${helpImagePd2}`} alt="Secondary PD model help" style={{ maxWidth: "800px" }} />
+              </HelpButton>
             </Stack>
           </Grid>
         )}
