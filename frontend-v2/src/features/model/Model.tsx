@@ -28,7 +28,7 @@ import { useForm, useFormState } from "react-hook-form";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./variables/MapVariablesTab";
-import PKPDModelTab from "./PKPDModelTab";
+import PKPDModelTab from "./model/PKPDModelTab";
 import SecondaryParametersTab from "./secondary/SecondaryParameters";
 import ParametersTab from "./parameters/ParametersTab";
 import useDirty from "../../hooks/useDirty";
