@@ -9,7 +9,7 @@ import {
   UnitRead,
   TagRead,
 } from "../../app/backendApi";
-import { Control, Controller, useWatch } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 import {
   Stack,
   Grid,
@@ -44,11 +44,11 @@ interface Props {
   units: UnitRead[];
   tagsData: TagRead[];
 }
-//TMDD order: 
-//  first all full TMDD models with one binding site, 
-//  TMDD models 2 binding sites, 
-//  TMDD bispecific, 
-//  QSS models one binding site and 
+//TMDD order:
+//  first all full TMDD models with one binding site,
+//  TMDD models 2 binding sites,
+//  TMDD bispecific,
+//  QSS models one binding site and
 //  finally extended MM
 const pk_model_order = [
   "1-compartmental model",
@@ -57,6 +57,7 @@ const pk_model_order = [
   "3-compartment catenary model",
 
   "1-compartmental full TMDD model (1 binding site)",
+  "1-compartmental full TMDD model (1 binding site) - constant target",
   "1-compartmental full TMDD model (1 binding site) - constant target concentration",
   "1-compartmental full TMDD model (1 binding site) - soluble target",
   "1-compartmental full TMDD model (1 binding site) - soluble target (catch and release)",
@@ -103,21 +104,24 @@ const helpImages: {
   pk: {
     "1-compartmental model": "One compartmenal PK model.jpg",
     "3-compartmental model": "Three compartmenal PK model (mammillary).jpg",
-    "3-compartment catenary model": "Three compartmenal PK model (catenary).jpg",
+    "3-compartment catenary model":
+      "Three compartmenal PK model (catenary).jpg",
   },
   pk2: {
     "First order absorption model": "First order absorption model.jpg",
     "Ocular PK model": "Ocular PK model.jpg",
-    "Transit compartments absorption model": "Transit compartments absorption model.jpg",
+    "Transit compartments absorption model":
+      "Transit compartments absorption model.jpg",
   },
   effect: {
-    "Effect compartment model (ke0 & Kp)": "Effect compartment model (version 1).jpg",
-    "Effect compartment model (kin & kout)": "Effect compartment model (version 2).jpg",
+    "Effect compartment model (ke0 & Kp)":
+      "Effect compartment model (version 1).jpg",
+    "Effect compartment model (kin & kout)":
+      "Effect compartment model (version 2).jpg",
   },
   pd: {},
   pd2: {},
 };
-
 
 const pk_model2_order = [
   "First order absorption model",
@@ -256,15 +260,17 @@ const PKPDModelTab: FC<Props> = ({
   pk_model_options.push({ value: "", label: "None" });
   const pk_model2_options = model.pk_model
     ? pkModel2Filtered.map((m) => {
-      return { value: m.id.toString(), label: m.name };
-    })
+        return { value: m.id.toString(), label: m.name };
+      })
     : [];
   pk_model2_options.push({ value: "", label: "None" });
   const pk_effect_model_options = pkEffectModelFiltered.map((m) => {
-    const label = m.name.replace("Effect compartment model ", "").replace("(", "").replace(")", "");
+    const label = m.name
+      .replace("Effect compartment model ", "")
+      .replace("(", "")
+      .replace(")", "");
     return { value: m.id.toString(), label: label };
   });
-
 
   pk_model_options.sort((a, b) => {
     const aName = a.label.replace("_preclinical", "").replace("_clinical", "");
@@ -284,7 +290,7 @@ const PKPDModelTab: FC<Props> = ({
     (version_greater_than_2
       ? pd_model?.model_type === "TG"
       : pd_model?.name.includes("tumour_growth") &&
-      !pd_model?.name.includes("inhibition"));
+        !pd_model?.name.includes("inhibition"));
   const pd_model2_options: { value: number | string; label: string }[] =
     pdModels2Filtered.map((m) => {
       return { value: m.id, label: m.name };
@@ -293,10 +299,10 @@ const PKPDModelTab: FC<Props> = ({
 
   const pdModelHasHillCoefficient = version_greater_than_2
     ? pd_model?.mmt?.includes("desc: Hill coefficient") ||
-    pd_model2?.mmt?.includes("desc: Hill coefficient")
+      pd_model2?.mmt?.includes("desc: Hill coefficient")
     : pd_model?.name.includes("indirect") ||
-    pd_model?.name.includes("direct") ||
-    pd_model2?.name.includes("emax_kill");
+      pd_model?.name.includes("direct") ||
+      pd_model2?.name.includes("emax_kill");
 
   const defaultProps = {
     disabled: isSharedWithMe,
@@ -334,20 +340,26 @@ const PKPDModelTab: FC<Props> = ({
     "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
   const modelTypesLabel = "Filter by Model Type";
 
-
-
-
   const pkSelected = pkModels.find((m) => m.id === model.pk_model);
   const pk2Selected = pkModels.find((m) => m.id === model.pk_model2);
   const effectSelected = pkModels.find((m) => m.id === model.pk_effect_model);
   const pdSelected = pdModels.find((m) => m.id === model.pd_model);
   const pd2Selected = pdModels.find((m) => m.id === model.pd_model2);
-  const helpImagePk = (pkSelected?.name && helpImages.pk[pkSelected.name]) || "placeholder.jpg";
-  const helpImagePk2 = (pk2Selected?.name && helpImages.pk2[pk2Selected.name]) || "placeholder.jpg";
-  const helpImageEffect = (effectSelected?.name && helpImages.effect[effectSelected.name]) || "placeholder.jpg";
-  const helpImagePd = (pdSelected?.name && helpImages.pd[pdSelected.name]) || "placeholder.jpg";
-  const helpImagePd2 = (pd2Selected?.name && helpImages.pd2[pd2Selected.name]) || "placeholder.jpg";
+  const helpImagePk =
+    (pkSelected?.name && helpImages.pk[pkSelected.name]) || "placeholder.jpg";
+  const helpImagePk2 =
+    (pk2Selected?.name && helpImages.pk2[pk2Selected.name]) ||
+    "placeholder.jpg";
+  const helpImageEffect =
+    (effectSelected?.name && helpImages.effect[effectSelected.name]) ||
+    "placeholder.jpg";
+  const helpImagePd =
+    (pdSelected?.name && helpImages.pd[pdSelected.name]) || "placeholder.jpg";
+  const helpImagePd2 =
+    (pd2Selected?.name && helpImages.pd2[pd2Selected.name]) ||
+    "placeholder.jpg";
 
+  console.log(pk_model_options);
   return (
     <Stack direction="column" spacing={2} marginTop={5}>
       <Grid container spacing={2}>
@@ -472,8 +484,16 @@ const PKPDModelTab: FC<Props> = ({
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
               selectProps={defaultProps}
             />
-            <HelpButton title="PK Model help" placement="right" maxWidth="850px">
-              <img src={`pk_model/${helpImagePk}`} alt="PK model help" style={{ maxWidth: "800px" }} />
+            <HelpButton
+              title="PK Model help"
+              placement="right"
+              maxWidth="850px"
+            >
+              <img
+                src={`pk_model/${helpImagePk}`}
+                alt="PK model help"
+                style={{ maxWidth: "800px" }}
+              />
             </HelpButton>
           </Stack>
 
@@ -541,8 +561,16 @@ const PKPDModelTab: FC<Props> = ({
                     formControlProps={{ sx: { width: "10rem" } }}
                     selectProps={defaultProps}
                   />
-                  <HelpButton title="Effect PK Model help" placement="right" maxWidth="850px">
-                    <img src={`pk_effect/${helpImageEffect}`} alt="Effect PK model help" style={{ maxWidth: "800px" }} />
+                  <HelpButton
+                    title="Effect PK Model help"
+                    placement="right"
+                    maxWidth="850px"
+                  >
+                    <img
+                      src={`pk_effect/${helpImageEffect}`}
+                      alt="Effect PK model help"
+                      style={{ maxWidth: "800px" }}
+                    />
                   </HelpButton>
                   <Tooltip title="Includes Anti-Drug Antibodies">
                     <div>
@@ -580,7 +608,10 @@ const PKPDModelTab: FC<Props> = ({
                 display: "flex",
                 "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
               }}
-              direction="row" alignItems="center" spacing={1}>
+              direction="row"
+              alignItems="center"
+              spacing={1}
+            >
               <SelectField
                 size="small"
                 label="Extravascular PK Model"
@@ -590,8 +621,16 @@ const PKPDModelTab: FC<Props> = ({
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
-              <HelpButton title="Extravascular PK Model help" placement="right" maxWidth="850px">
-                <img src={`pk_extravascular/${helpImagePk2}`} alt="Extravascular PK model help" style={{ maxWidth: "800px" }} />
+              <HelpButton
+                title="Extravascular PK Model help"
+                placement="right"
+                maxWidth="850px"
+              >
+                <img
+                  src={`pk_extravascular/${helpImagePk2}`}
+                  alt="Extravascular PK model help"
+                  style={{ maxWidth: "800px" }}
+                />
               </HelpButton>
             </Stack>
           )}
@@ -700,8 +739,16 @@ const PKPDModelTab: FC<Props> = ({
               formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
               selectProps={defaultProps}
             />
-            <HelpButton title="PD Model help" placement="right" maxWidth="850px">
-              <img src={`pd_model/${helpImagePd}`} alt="PD model help" style={{ maxWidth: "800px" }} />
+            <HelpButton
+              title="PD Model help"
+              placement="right"
+              maxWidth="850px"
+            >
+              <img
+                src={`pd_model/${helpImagePd}`}
+                alt="PD model help"
+                style={{ maxWidth: "800px" }}
+              />
             </HelpButton>
           </Stack>
         </Grid>
@@ -724,8 +771,16 @@ const PKPDModelTab: FC<Props> = ({
                 formControlProps={{ sx: { width: "calc(100% - 3rem)" } }}
                 selectProps={defaultProps}
               />
-              <HelpButton title="Secondary PD Model help" placement="right" maxWidth="850px">
-                <img src={`pd_model/${helpImagePd2}`} alt="Secondary PD model help" style={{ maxWidth: "800px" }} />
+              <HelpButton
+                title="Secondary PD Model help"
+                placement="right"
+                maxWidth="850px"
+              >
+                <img
+                  src={`pd_model/${helpImagePd2}`}
+                  alt="Secondary PD model help"
+                  style={{ maxWidth: "800px" }}
+                />
               </HelpButton>
             </Stack>
           </Grid>
