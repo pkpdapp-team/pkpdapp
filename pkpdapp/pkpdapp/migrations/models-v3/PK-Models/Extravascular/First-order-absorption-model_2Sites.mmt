@@ -1,0 +1,33 @@
+[[model]]
+name: First order absorption model (two absorption sites)
+author: Michael Gertz
+
+# tags: no tags
+
+# Initial values:
+PKCompartment.Aa = 0
+PKCompartment.Aa2 = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+ka = 1 in [1/h]
+    desc: First order absorption rate constant first absorption site
+
+ka2 = 1 in [1/h]
+    desc: First order absorption rate constant second absorption site
+	
+Fa2 = 0.2 in [dimensionless]
+	desc: fraction of the total amount absorbed, absorbed from the second absorption site 	
+	
+RateAbs = ka*Aa*(1-Fa2) + ka2*Aa2*Fa2 in [pmol/h]
+	desc: Absorption rate
+
+dot(Aa) = -ka*Aa in [pmol]
+    desc: Amount of drug in absorption compartment
+	
+dot(Aa2) = -ka2*Aa2 in [pmol]
+    desc: Amount of drug in absorption compartment	
