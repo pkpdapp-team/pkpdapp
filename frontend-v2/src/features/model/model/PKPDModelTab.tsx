@@ -34,11 +34,11 @@ import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { CodeModal } from "../CodeModal";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import HelpButton from "../../../components/HelpButton";
 import { PKModelSelect } from "./PKModelSelect";
 import { PDModelSelect } from "./PDModelSelect";
 import { PKModel2Select } from "./PKModel2Select";
 import { PDModel2Select } from "./PDModel2Select";
+import { PKEffectModelSelect } from "./PKEffectModelSelect";
 
 interface Props {
   model: CombinedModelRead;
@@ -110,18 +110,6 @@ const PKPDModelTab: FC<Props> = ({
   }
 
   const version_greater_than_2 = project.version ? project.version >= 3 : false;
-
-  const pkEffectModelFiltered = pkModels.filter((m) => {
-    return version_greater_than_2 && m.model_type === "PKEF";
-  });
-
-  const pk_effect_model_options = pkEffectModelFiltered.map((m) => {
-    const label = m.name
-      .replace("Effect compartment model ", "")
-      .replace("(", "")
-      .replace(")", "");
-    return { value: m.id.toString(), label: label };
-  });
 
   const pd_model_map = new Map<number, PharmacodynamicRead>(
     pdModels.map((m) => [m.id, m]),
@@ -366,26 +354,12 @@ const PKPDModelTab: FC<Props> = ({
                       />
                     </div>
                   </Tooltip>
-                  <SelectField
-                    size="small"
-                    label="Effect Model"
-                    name="pk_effect_model"
+                  <PKEffectModelSelect
                     control={control}
-                    options={pk_effect_model_options}
-                    formControlProps={{ sx: { width: "10rem" } }}
-                    selectProps={defaultProps}
+                    defaultProps={defaultProps}
+                    helpImageEffect={helpImageEffect}
+                    pkModels={pkModels}
                   />
-                  <HelpButton
-                    title="Effect PK Model help"
-                    placement="right"
-                    maxWidth="850px"
-                  >
-                    <img
-                      src={`pk_effect/${helpImageEffect}`}
-                      alt="Effect PK model help"
-                      style={{ maxWidth: "800px" }}
-                    />
-                  </HelpButton>
                   <Tooltip title="Includes Anti-Drug Antibodies">
                     <div>
                       <Checkbox
