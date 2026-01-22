@@ -249,7 +249,7 @@ export const SimulationsSidePanel = ({
               />
               <Box
                 sx={{
-                  overflowX: "auto",
+                  overflowX: "hidden",
                   maxHeight: getTableHeight({ steps: SidePanelSteps }),
                 }}
               >
@@ -365,7 +365,9 @@ export const SimulationsSidePanel = ({
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  checked={visibleGroups.includes("Sim-Group 1")}
+                                  checked={visibleGroups.includes(
+                                    "Sim-Group 1",
+                                  )}
                                   value="Sim-Group 1"
                                   onChange={handleVisibleGroups}
                                 />
