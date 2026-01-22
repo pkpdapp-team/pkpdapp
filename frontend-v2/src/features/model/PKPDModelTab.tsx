@@ -43,20 +43,54 @@ interface Props {
   units: UnitRead[];
   tagsData: TagRead[];
 }
-
+//TMDD order: 
+//  first all full TMDD models with one binding site, 
+//  TMDD models 2 binding sites, 
+//  TMDD bispecific, 
+//  QSS models one binding site and 
+//  finally extended MM
 const pk_model_order = [
-  "one_compartment",
-  "two_compartment",
-  "three_compartment",
-  "one_compartment_tmdd_full",
-  "one_compartment_tmdd_QSS",
-  "one_compartment_tmdd_full_constant_target",
-  "one_compartment_tmdd_qss_constant_target",
-  "two_compartment_tmdd_full",
-  "two_compartment_tmdd_QSS",
-  "two_compartment_tmdd_full_constant_target",
-  "two_compartment_tmdd_qss_constant_target",
+  "1-compartmental model",
+  "2-compartmental model",
+  "3-compartmental model",
+  "3-compartment catenary model",
+
+  "1-compartmental full TMDD model (1 binding site)",
+  "1-compartmental full TMDD model (1 binding site) - constant target concentration",
+  "1-compartmental full TMDD model (1 binding site) - soluble target",
+  "1-compartmental full TMDD model (1 binding site) - soluble target (catch and release)",
+  "2-compartmental full TMDD model (1 binding site)",
+  "2-compartmental full TMDD model (1 binding site) - constant target",
+  "2-compartmental full TMDD model (1 binding site) - soluble target",
+  "2-compartmental full TMDD model (1 binding site) - soluble target (catch and release)",
+
+  "1-compartmental full TMDD model (2 binding sites)",
+  "1-compartmental full TMDD model (2 binding sites) - constant target",
+  "1-compartmental full TMDD model (2 binding sites) - soluble target",
+  "2-compartmental full TMDD model (2 binding sites)",
+  "2-compartmental full TMDD model (2 binding sites) - constant target",
+  "2-compartmental full TMDD model (2 binding sites) - soluble target",
+
+  "1-compartmental bispecific TMDD model",
+  "1-compartmental bispecific TMDD model - soluble targets",
+  "2-compartmental bispecific TMDD model",
+  "2-compartmental bispecific TMDD model - soluble targets",
+
+  "1-compartmental QSS TMDD model (1 binding site)",
+  "1-compartmental QSS TMDD model (1 binding site) - constant target",
+  "1-compartmental QSS TMDD model (1 binding site) - soluble target",
+  "1-compartmental QSS TMDD model (1 binding site) - soluble target (catch and release)",
+  "2-compartmental QSS TMDD model (1 binding site)",
+  "2-compartmental QSS TMDD model (1 binding site) - constant target",
+  "2-compartmental QSS TMDD model (1 binding site) - soluble target",
+  "2-compartmental QSS TMDD model (1 binding site) - soluble target (catch and release)",
+
+  "1-compartmental extended Michaelis-Menten TMDD model",
+  "1-compartmental extended Michaelis-Menten TMDD model - constant target",
+  "2-compartmental extended Michaelis-Menten TMDD model",
+  "2-compartmental extended Michaelis-Menten TMDD model - constant target",
 ];
+
 
 const pk_model2_order = [
   "First order absorption model",
