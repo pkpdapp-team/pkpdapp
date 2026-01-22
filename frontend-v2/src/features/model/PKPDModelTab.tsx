@@ -58,6 +58,14 @@ const pk_model_order = [
   "two_compartment_tmdd_qss_constant_target",
 ];
 
+const pk_model2_order = [
+  "First order absorption model",
+  "Transit compartments absorption model",
+  "Ocular PK model",
+  "Ocular PKPD VEGF (dimeric target) model",
+  "Ocular PKPD bispecific (two different targets) model",
+];
+
 const pd_model_order = [
   "direct_effects_emax",
   "direct_effects_imax",
@@ -134,6 +142,13 @@ const PKPDModelTab: FC<Props> = ({
   });
   const pkModel2Filtered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEX";
+  });
+  pkModel2Filtered.sort((a, b) => {
+    const aName = a.name;
+    const bName = b.name;
+    const aIndex = pk_model2_order.indexOf(aName);
+    const bIndex = pk_model2_order.indexOf(bName);
+    return aIndex - bIndex;
   });
   const pkEffectModelFiltered = pkModels.filter((m) => {
     return version_greater_than_2 && m.model_type === "PKEF";
