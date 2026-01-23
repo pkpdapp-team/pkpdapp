@@ -109,10 +109,9 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     const hasT2 = variable.name.includes("T2");
     const hasD = variable.name.includes("D");
     // complex if have 2 or more of T1, T2, D
-    const count =
-      (hasT1 ? 1 : 0) + (hasT2 ? 1 : 0) + (hasD ? 1 : 0);
+    const count = (hasT1 ? 1 : 0) + (hasT2 ? 1 : 0) + (hasD ? 1 : 0);
     return count >= 2;
-  }
+  };
 
   type SimulationYAxisWithIndex = FieldArrayWithId<
     Simulation,
@@ -141,14 +140,14 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     baseY2UnitId = undefined;
   }
 
-  const yAxisVariables = lhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable),
+  const yAxisVariables = lhs_y_axes.map((y) =>
+    variables.find((v) => v.id === y.variable),
   );
   const yAxisVariableNames = yAxisVariables.map((v) => v?.name || "");
   const yAxisIsComplexAmount = yAxisVariables.some((v) => isComplexAmount(v));
 
-  const y2AxisVariables = rhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable),
+  const y2AxisVariables = rhs_y_axes.map((y) =>
+    variables.find((v) => v.id === y.variable),
   );
   const y2AxisVariableNames = y2AxisVariables.map((v) => v?.name || "");
   const y2AxisIsComplexAmount = y2AxisVariables.some((v) => isComplexAmount(v));
@@ -183,11 +182,19 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   };
 
   const handleAddYAxis = (variableId: number) => {
+    const variable = variables.find((v) => v.id === variableId);
     commonAddYAxis(variableId, lhs_y_axes.length === 0, false);
+    if (lhs_y_axes.length === 0 && variable?.name.startsWith("C")) {
+      setValue(`plots.${index}.y_scale`, "lg10");
+    }
   };
 
   const handleAddY2Axis = (variableId: number) => {
+    const variable = variables.find((v) => v.id === variableId);
     commonAddYAxis(variableId, rhs_y_axes.length === 0, true);
+    if (rhs_y_axes.length === 0 && variable?.name.startsWith("C")) {
+      setValue(`plots.${index}.y2_scale`, "lg10");
+    }
   };
 
   const handleRemoveYAxis = (yAxis: SimulationYAxisWithIndex) => {
