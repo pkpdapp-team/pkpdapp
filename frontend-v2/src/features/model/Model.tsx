@@ -8,7 +8,6 @@ import {
   ProjectRead,
   ProjectSpeciesEnum,
   ProtocolListApiResponse,
-  TagRead,
   UnitListApiResponse,
   useCombinedModelListQuery,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
@@ -19,7 +18,6 @@ import {
   useProjectUpdateMutation,
   useProtocolListQuery,
   useSimulationListQuery,
-  useTagListQuery,
   useUnitListQuery,
   useVariableListQuery,
   VariableListApiResponse,
@@ -88,7 +86,6 @@ function useApiQueries() {
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
 
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
@@ -102,7 +99,6 @@ function useApiQueries() {
     isSimulationsLoading,
     isLoadingCompound,
     isLoadingUnits,
-    tagsLoading,
   ];
 
   return {
@@ -114,7 +110,6 @@ function useApiQueries() {
     project,
     protocols,
     simulation,
-    tagsData,
     units,
     variables,
   };
@@ -304,7 +299,6 @@ interface TabbedModelFormProps {
   units: UnitListApiResponse;
   updateModel: CombinedModelUpdate;
   updateProject: ProjectUpdate;
-  tagsData?: TagRead[];
   pd_model?: PharmacodynamicRead;
   pd_models?: PharmacodynamicRead[];
 }
@@ -318,7 +312,6 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   protocols,
   compound,
   units,
-  tagsData = [],
   updateModel,
   updateProject,
 }) => {
@@ -401,7 +394,6 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
             control={control}
             compound={compound}
             units={units}
-            tagsData={tagsData}
           />
         </TabPanel>
         <TabPanel>
@@ -441,7 +433,6 @@ const Model: FC = () => {
     pd_models,
     project,
     protocols,
-    tagsData,
     units,
     variables,
   } = useApiQueries();
@@ -453,7 +444,7 @@ const Model: FC = () => {
   }
 
   const loaded =
-    model && project && variables && protocols && compound && units && tagsData;
+    model && project && variables && protocols && compound && units;
   if (!loaded) {
     return <div>Not found</div>;
   }
@@ -467,7 +458,6 @@ const Model: FC = () => {
       protocols={protocols}
       compound={compound}
       units={units}
-      tagsData={tagsData}
       updateModel={updateModel}
       updateProject={updateProject}
     />
