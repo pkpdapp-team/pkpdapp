@@ -8,12 +8,12 @@ import {
   Variable,
   VariableRead,
 } from "../../../app/backendApi";
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import { useEffect } from "react";
 import useDirty from "../../../hooks/useDirty";
 import useEditProtocol from "./useEditProtocol";
 
-export function useFormData({ control }: { control: Control<FormData> }) {
+export function useFormData({ control }: { control: Control<ModelFormData> }) {
   const {
     fields: mappings,
     append: mappingsAppend,

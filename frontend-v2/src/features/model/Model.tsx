@@ -10,7 +10,6 @@ import {
   ProtocolListApiResponse,
   UnitListApiResponse,
   useCombinedModelListQuery,
-  useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
   usePharmacodynamicListQuery,
@@ -22,32 +21,30 @@ import {
   useVariableListQuery,
   VariableListApiResponse,
 } from "../../app/backendApi";
-import { useForm, useFormState } from "react-hook-form";
-import { FC, useCallback, useEffect, useMemo } from "react";
+import { useFormState } from "react-hook-form";
+import { FC, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
 import MapVariablesTab from "./variables/MapVariablesTab";
 import PKPDModelTab from "./model/PKPDModelTab";
 import SecondaryParametersTab from "./secondary/SecondaryParameters";
 import ParametersTab from "./parameters/ParametersTab";
-import useDirty from "../../hooks/useDirty";
 import { SubPageName } from "../main/mainSlice";
 import { TableHeader } from "../../components/TableHeader";
+import { useModelFormState, useModelFormDataCallback } from "./model/modelForm";
+import {
+  useProjectFormState,
+  useProjectFormDataCallback,
+} from "./model/projectForm";
 
-export type FormData = Omit<CombinedModel, "species"> & {
+export type ModelFormData = Omit<CombinedModel, "species">;
+
+export type ProjectFormData = {
   species: ProjectSpeciesEnum | undefined;
   species_weight: number | undefined;
   species_weight_unit: number | undefined;
   pk_tags: number[];
   pd_tags: number[];
 };
-
-const defaultSpeciesWeights = new Map([
-  ["H", 75.0],
-  ["R", 0.25],
-  ["K", 3.5],
-  ["M", 0.025],
-  ["O", 10.0],
-]);
 
 function useApiQueries() {
   const projectId = useSelector(
@@ -115,172 +112,6 @@ function useApiQueries() {
   };
 }
 
-function useModelFormDataCallback({
-  model,
-  project,
-  reset,
-  updateModel,
-  updateProject,
-  units,
-  pd_models,
-}: {
-  model: CombinedModelRead;
-  project: ProjectRead;
-  reset: (values?: Partial<FormData>) => void;
-  updateModel: CombinedModelUpdate;
-  updateProject: ProjectUpdate;
-  units: UnitListApiResponse;
-  pd_models?: PharmacodynamicRead[];
-}) {
-  const [setParamsToDefault] =
-    useCombinedModelSetParamsToDefaultsUpdateMutation();
-
-  const handleFormData = useCallback(
-    (data: FormData) => {
-      if (!model || !project) {
-        return;
-      }
-      const { species, pk_tags, pd_tags, ...modelData } = data;
-      let species_weight = data.species_weight;
-      let species_weight_unit = data.species_weight_unit;
-
-      // if tlag checkbox is unchecked, then remove tlag derived variables
-      if (modelData.has_lag !== model.has_lag && !modelData.has_lag) {
-        modelData.derived_variables = modelData.derived_variables.filter(
-          (dv) => dv.type !== "TLG",
-        );
-      }
-
-      // if pd_model is not a tumour growth model, then clear pd_model2
-      const pdModel = pd_models?.find((pm) => pm.id === modelData.pd_model);
-      if (pdModel && pdModel.is_library_model) {
-        const isTumourModel = pdModel.model_type === "TG";
-        if (!isTumourModel) {
-          modelData.pd_model2 = null;
-        }
-      }
-
-      // if pd_model is null, then clear pd_model2
-      if (!modelData.pd_model) {
-        modelData.pd_model2 = null;
-      }
-
-      if (species !== project.species) {
-        const version_greater_than_2 = project.version
-          ? project.version >= 3
-          : false;
-        // if species has changed, then clear the models (only for old model)
-        if (!version_greater_than_2) {
-          modelData.pk_model = null;
-          modelData.pd_model = null;
-          modelData.pd_model2 = null;
-          modelData.mappings = [];
-          modelData.derived_variables = [];
-        }
-
-        // if species has changed, then set default values for body weight and unit
-        const kg = units.find((u) => u.symbol === "kg");
-        if (kg && species) {
-          species_weight_unit = kg.id;
-          species_weight = defaultSpeciesWeights.get(species);
-        }
-      }
-
-      // Reset form isDirty and isSubmitting state from previous submissions.
-      reset({
-        ...data,
-        ...modelData,
-        species_weight,
-        species_weight_unit,
-      });
-      updateProject({
-        id: project.id,
-        project: {
-          ...project,
-          species,
-          species_weight,
-          species_weight_unit,
-          pk_tags,
-          pd_tags,
-        },
-      });
-      return updateModel({ id: model.id, combinedModel: modelData })
-        .then((response) => {
-          if (response?.data) {
-            /* 
-              If the pk model has changed, or the species has changed,
-              need to reset the parameters.
-            */
-            if (
-              modelData.pk_model !== model?.pk_model ||
-              modelData.pk_model2 !== model?.pk_model2 ||
-              species !== project.species
-            ) {
-              setParamsToDefault({ id: model.id, combinedModel: modelData });
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-          reset({
-            ...model,
-            project: project.id,
-            species: project.species,
-            species_weight: project.species_weight,
-            species_weight_unit: project.species_weight_unit,
-            pk_tags: project.pk_tags || [],
-            pd_tags: project.pd_tags || [],
-          });
-        });
-    },
-    [
-      model,
-      project,
-      updateModel,
-      updateProject,
-      setParamsToDefault,
-      reset,
-      units,
-      pd_models,
-    ],
-  );
-  return handleFormData;
-}
-
-function useModelFormState({
-  model,
-  project,
-}: {
-  model: CombinedModel;
-  project: ProjectRead;
-}) {
-  const species = project.species;
-  const species_weight = project.species_weight;
-  const species_weight_unit = project.species_weight_unit;
-  const pk_tags = project.pk_tags || [];
-  const pd_tags = project.pd_tags || [];
-  const defaultValues: FormData = {
-    ...model,
-    project: project.id,
-    species,
-    species_weight,
-    species_weight_unit,
-    pk_tags,
-    pd_tags,
-  };
-  const { reset, handleSubmit, control } = useForm<FormData>({
-    defaultValues,
-    values: defaultValues,
-  });
-  const { isDirty } = useFormState({
-    control,
-  });
-
-  useDirty(isDirty);
-
-  return { control, reset, handleSubmit };
-}
-
 export type CombinedModelUpdate = (arg: {
   id: number;
   combinedModel: CombinedModel;
@@ -315,34 +146,66 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   updateModel,
   updateProject,
 }) => {
-  const { control, reset, handleSubmit } = useModelFormState({
-    model,
+  const {
+    control: projectControl,
+    reset: projectReset,
+    handleSubmit: handleProjectSubmit,
+  } = useProjectFormState({
     project,
   });
-  const handleFormData = useModelFormDataCallback({
+  const {
+    control: modelControl,
+    reset: resetModel,
+    handleSubmit: handleModelSubmit,
+  } = useModelFormState({
+    model,
+  });
+  const handleModelFormData = useModelFormDataCallback({
+    model,
+    reset: resetModel,
+    updateModel,
+    pd_models,
+  });
+  const handleProjectFormData = useProjectFormDataCallback({
     model,
     project,
-    reset,
-    updateModel,
+    reset: projectReset,
     updateProject,
     units,
-    pd_models,
   });
 
   /* 
   Submit whenever the form is dirty
   and previous updates have finished (or reset).
   */
-  const { isDirty, isSubmitting } = useFormState({
-    control,
-  });
+  const { isDirty: isModelDirty, isSubmitting: isModelSubmitting } =
+    useFormState({
+      control: modelControl,
+    });
 
   useEffect(() => {
-    if (isDirty && !isSubmitting) {
-      const submit = handleSubmit(handleFormData);
+    if (isModelDirty && !isModelSubmitting) {
+      const submit = handleModelSubmit(handleModelFormData);
       submit();
     }
-  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
+  }, [handleModelSubmit, handleModelFormData, isModelDirty, isModelSubmitting]);
+
+  const { isDirty: isProjectDirty, isSubmitting: isProjectSubmitting } =
+    useFormState({
+      control: projectControl,
+    });
+
+  useEffect(() => {
+    if (isProjectDirty && !isProjectSubmitting) {
+      const submit = handleProjectSubmit(handleProjectFormData);
+      submit();
+    }
+  }, [
+    handleProjectSubmit,
+    handleProjectFormData,
+    isProjectDirty,
+    isProjectSubmitting,
+  ]);
 
   const tabErrors: { [key: string]: string } = {};
   const tabKeys = [
@@ -391,7 +254,8 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
           <PKPDModelTab
             model={model}
             project={project}
-            control={control}
+            modelControl={modelControl}
+            projectControl={projectControl}
             compound={compound}
             units={units}
           />
@@ -400,11 +264,11 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
           <MapVariablesTab
             model={model}
             project={project}
-            control={control}
+            control={modelControl}
             variables={variables}
             units={units}
             compound={compound}
-            onChange={handleSubmit(handleFormData)}
+            onChange={handleModelSubmit(handleModelFormData)}
           />
         </TabPanel>
         <TabPanel>
@@ -412,7 +276,7 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
             model={model}
             project={project}
             variables={variables}
-            control={control}
+            control={modelControl}
             units={units}
           />
         </TabPanel>

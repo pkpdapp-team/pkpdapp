@@ -14,7 +14,7 @@ import FloatField from "../../../components/FloatField";
 import UnitField from "../../../components/UnitField";
 import SelectField from "../../../components/SelectField";
 import Checkbox from "../../../components/Checkbox";
-import { FormData } from "../Model";
+import { ModelFormData, ProjectFormData } from "../Model";
 import { speciesOptions } from "../../projects/Project";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
@@ -32,7 +32,8 @@ import { PDTagSelect } from "./PDTagSelect";
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
-  control: Control<FormData>;
+  modelControl: Control<ModelFormData>;
+  projectControl: Control<ProjectFormData>;
   compound: CompoundRead;
   units: UnitRead[];
 }
@@ -70,7 +71,8 @@ const helpImages: {
 const PKPDModelTab: FC<Props> = ({
   model,
   project,
-  control,
+  modelControl,
+  projectControl,
   compound,
   units,
 }: Props) => {
@@ -158,7 +160,7 @@ const PKPDModelTab: FC<Props> = ({
               size="small"
               label="Species"
               name="species"
-              control={control}
+              control={projectControl}
               options={speciesOptions}
               formControlProps={{ sx: { width: "calc(50% - 3rem)" } }}
               selectProps={defaultProps}
@@ -170,7 +172,7 @@ const PKPDModelTab: FC<Props> = ({
                   sx={{ flex: "1" }}
                   label="Weight"
                   name={`species_weight`}
-                  control={control}
+                  control={projectControl}
                   textFieldProps={{
                     sx: { width: "calc(50% - 7rem)" },
                     ...defaultProps,
@@ -180,7 +182,7 @@ const PKPDModelTab: FC<Props> = ({
                   size="small"
                   label={"Unit"}
                   name={`species_weight_unit`}
-                  control={control}
+                  control={projectControl}
                   baseUnit={units.find(
                     (u) => u.id === project.species_weight_unit,
                   )}
@@ -204,10 +206,10 @@ const PKPDModelTab: FC<Props> = ({
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            <PKTagSelect control={control} project={project} />
+            <PKTagSelect control={projectControl} project={project} />
           </Stack>
           <PKModelSelect
-            control={control}
+            control={modelControl}
             defaultProps={defaultProps}
             helpImagePk={helpImagePk}
             pkModels={pkModels}
@@ -230,7 +232,7 @@ const PKPDModelTab: FC<Props> = ({
                     <Checkbox
                       label="Saturation"
                       name="has_saturation"
-                      control={control}
+                      control={modelControl}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
                       }}
@@ -244,7 +246,7 @@ const PKPDModelTab: FC<Props> = ({
                     <Checkbox
                       label="Effect Compartment"
                       name="has_effect"
-                      control={control}
+                      control={modelControl}
                       checkboxFieldProps={{
                         disabled: !model.pk_model || isSharedWithMe,
                       }}
@@ -260,7 +262,7 @@ const PKPDModelTab: FC<Props> = ({
                         size="small"
                         label="Effect Compartments"
                         name="number_of_effect_compartments"
-                        control={control}
+                        control={modelControl}
                         options={Array.from(Array(6).keys()).map((i) => {
                           return { value: i, label: i.toString() };
                         })}
@@ -270,7 +272,7 @@ const PKPDModelTab: FC<Props> = ({
                     </div>
                   </Tooltip>
                   <PKEffectModelSelect
-                    control={control}
+                    control={modelControl}
                     defaultProps={defaultProps}
                     helpImageEffect={helpImageEffect}
                     pkModels={pkModels}
@@ -280,7 +282,7 @@ const PKPDModelTab: FC<Props> = ({
                       <Checkbox
                         label="ADA"
                         name="has_anti_drug_antibodies"
-                        control={control}
+                        control={modelControl}
                         checkboxFieldProps={{
                           disabled:
                             !model.pk_model ||
@@ -306,7 +308,7 @@ const PKPDModelTab: FC<Props> = ({
         >
           {version_greater_than_2 && (
             <PKModel2Select
-              control={control}
+              control={modelControl}
               defaultProps={defaultProps}
               helpImagePk2={helpImagePk2}
               pkModels={pkModels}
@@ -326,7 +328,7 @@ const PKPDModelTab: FC<Props> = ({
                   <Checkbox
                     label="Lag Time"
                     name="has_lag"
-                    control={control}
+                    control={modelControl}
                     checkboxFieldProps={{
                       disabled: !model.pk_model || isSharedWithMe,
                     }}
@@ -338,7 +340,7 @@ const PKPDModelTab: FC<Props> = ({
                   <Checkbox
                     label="Bioavailability"
                     name="has_bioavailability"
-                    control={control}
+                    control={modelControl}
                     checkboxFieldProps={{
                       disabled: !model.pk_model || isSharedWithMe,
                     }}
@@ -357,9 +359,9 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          <PDTagSelect control={control} project={project} />
+          <PDTagSelect control={projectControl} project={project} />
           <PDModelSelect
-            control={control}
+            control={modelControl}
             defaultProps={defaultProps}
             helpImagePd={helpImagePd}
             pdModels={pdModels}
@@ -376,7 +378,7 @@ const PKPDModelTab: FC<Props> = ({
             }}
           >
             <PDModel2Select
-              control={control}
+              control={modelControl}
               defaultProps={defaultProps}
               helpImagePd2={helpImagePd2}
               pdModels={pdModels}
@@ -406,7 +408,7 @@ const PKPDModelTab: FC<Props> = ({
                   <Checkbox
                     label="Hill Coefficient"
                     name="has_hill_coefficient"
-                    control={control}
+                    control={modelControl}
                     checkboxFieldProps={{
                       disabled: !model.pd_model || isSharedWithMe,
                     }}

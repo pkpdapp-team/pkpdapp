@@ -2,13 +2,13 @@ import { Stack } from "@mui/material";
 import { Control } from "react-hook-form";
 import { FC } from "react";
 
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import { PharmacodynamicListApiResponse } from "../../../app/backendApi";
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
 
 type PDModel2SelectProps = {
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   defaultProps: Record<string, unknown>;
   helpImagePd2: string;
   pdModels: PharmacodynamicListApiResponse;

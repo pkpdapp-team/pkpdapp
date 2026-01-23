@@ -16,7 +16,7 @@ import {
   UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
@@ -28,7 +28,7 @@ interface Props {
   compound: CompoundRead;
   model: CombinedModelRead;
   variable: VariableRead;
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   effectVariable: VariableRead | undefined;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
@@ -102,7 +102,7 @@ const VariableRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-    undefined;
+      undefined;
 
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
