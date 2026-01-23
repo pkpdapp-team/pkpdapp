@@ -7,8 +7,10 @@ import {
   PharmacodynamicRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
 } from "../../../app/backendApi";
-import { ModelFormData, CombinedModelUpdate } from "../Model";
+import { CombinedModelUpdate } from "../Model";
 import useDirty from "../../../hooks/useDirty";
+
+export type ModelFormData = Omit<CombinedModel, "species">;
 
 export function useModelFormDataCallback({
   model,

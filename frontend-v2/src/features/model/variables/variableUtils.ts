@@ -8,7 +8,7 @@ import {
   Variable,
   VariableRead,
 } from "../../../app/backendApi";
-import { ModelFormData } from "../Model";
+import { ModelFormData } from "../model/modelForm";
 import { useEffect } from "react";
 import useDirty from "../../../hooks/useDirty";
 import useEditProtocol from "./useEditProtocol";

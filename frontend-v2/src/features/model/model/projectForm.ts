@@ -4,11 +4,12 @@ import { useForm, useFormState } from "react-hook-form";
 import {
   CombinedModelRead,
   ProjectRead,
+  ProjectSpeciesEnum,
   UnitListApiResponse,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
 } from "../../../app/backendApi";
 import useDirty from "../../../hooks/useDirty";
-import { ProjectFormData, ProjectUpdate } from "../Model";
+import { ProjectUpdate } from "../Model";
 
 const defaultSpeciesWeights = new Map([
   ["H", 75.0],
@@ -117,3 +118,10 @@ export function useProjectFormState({ project }: { project: ProjectRead }) {
 
   return { control, reset, handleSubmit };
 }
+export type ProjectFormData = {
+  species: ProjectSpeciesEnum | undefined;
+  species_weight: number | undefined;
+  species_weight_unit: number | undefined;
+  pk_tags: number[];
+  pd_tags: number[];
+};

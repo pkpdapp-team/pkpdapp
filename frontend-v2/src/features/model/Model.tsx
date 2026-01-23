@@ -6,7 +6,6 @@ import {
   CompoundRead,
   PharmacodynamicRead,
   ProjectRead,
-  ProjectSpeciesEnum,
   ProtocolListApiResponse,
   UnitListApiResponse,
   useCombinedModelListQuery,
@@ -35,16 +34,6 @@ import {
   useProjectFormState,
   useProjectFormDataCallback,
 } from "./model/projectForm";
-
-export type ModelFormData = Omit<CombinedModel, "species">;
-
-export type ProjectFormData = {
-  species: ProjectSpeciesEnum | undefined;
-  species_weight: number | undefined;
-  species_weight_unit: number | undefined;
-  pk_tags: number[];
-  pd_tags: number[];
-};
 
 function useApiQueries() {
   const projectId = useSelector(

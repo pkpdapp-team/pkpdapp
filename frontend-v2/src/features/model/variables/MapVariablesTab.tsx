@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import VariableRow from "./VariableRow";
 import HelpButton from "../../../components/HelpButton";
-import { ModelFormData } from "../Model";
+import { ModelFormData } from "../model/modelForm";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { TableHeader } from "../../../components/TableHeader";
 import AdditionalParametersRow from "./AdditionalParametersRow";

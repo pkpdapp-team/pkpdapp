@@ -16,7 +16,7 @@ import {
   UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
-import { ModelFormData } from "../Model";
+import { ModelFormData } from "../model/modelForm";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
