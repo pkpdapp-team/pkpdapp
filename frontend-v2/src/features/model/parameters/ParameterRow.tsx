@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo } from "react";
-import { ModelFormData } from "../model/modelForm";
+import { ModelFormData } from "../modelFormState";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,

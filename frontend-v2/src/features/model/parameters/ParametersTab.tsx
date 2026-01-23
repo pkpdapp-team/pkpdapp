@@ -24,7 +24,7 @@ import HelpButton from "../../../components/HelpButton";
 import { useConstVariables, useNoReset } from "./getConstVariables";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
-import { ModelFormData } from "../model/modelForm";
+import { ModelFormData } from "../modelFormState";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import {

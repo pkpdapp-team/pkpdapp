@@ -26,11 +26,11 @@ import SecondaryParametersTab from "./secondary/SecondaryParameters";
 import ParametersTab from "./parameters/ParametersTab";
 import { SubPageName } from "../main/mainSlice";
 import { TableHeader } from "../../components/TableHeader";
-import { useModelFormState, useModelFormDataCallback } from "./model/modelForm";
+import { useModelFormState, useModelFormDataCallback } from "./modelFormState";
 import {
   useProjectFormState,
   useProjectFormDataCallback,
-} from "./model/projectForm";
+} from "./projectFormState";
 
 function useApiQueries() {
   const projectId = useSelector(

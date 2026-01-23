@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { Control } from "react-hook-form";
 
-import { ModelFormData } from "../model/modelForm";
+import { ModelFormData } from "../modelFormState";
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
 import { PharmacokineticListApiResponse } from "../../../app/backendApi";
