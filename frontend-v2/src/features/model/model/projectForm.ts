@@ -7,9 +7,9 @@ import {
   ProjectSpeciesEnum,
   UnitListApiResponse,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
+  useProjectUpdateMutation,
 } from "../../../app/backendApi";
 import useDirty from "../../../hooks/useDirty";
-import { ProjectUpdate } from "../Model";
 
 const defaultSpeciesWeights = new Map([
   ["H", 75.0],
@@ -23,15 +23,14 @@ export function useProjectFormDataCallback({
   model,
   project,
   reset,
-  updateProject,
   units,
 }: {
   model: CombinedModelRead;
   project: ProjectRead;
   reset: (values?: Partial<ProjectFormData>) => void;
-  updateProject: ProjectUpdate;
   units: UnitListApiResponse;
 }) {
+  const [updateProject] = useProjectUpdateMutation();
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
   const handleFormData = useCallback(

@@ -1,7 +1,6 @@
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  CombinedModel,
   CombinedModelRead,
   CompoundRead,
   PharmacodynamicRead,
@@ -9,11 +8,9 @@ import {
   ProtocolListApiResponse,
   UnitListApiResponse,
   useCombinedModelListQuery,
-  useCombinedModelUpdateMutation,
   useCompoundRetrieveQuery,
   usePharmacodynamicListQuery,
   useProjectRetrieveQuery,
-  useProjectUpdateMutation,
   useProtocolListQuery,
   useSimulationListQuery,
   useUnitListQuery,
@@ -101,15 +98,6 @@ function useApiQueries() {
   };
 }
 
-export type CombinedModelUpdate = (arg: {
-  id: number;
-  combinedModel: CombinedModel;
-}) => Promise<{ data?: CombinedModelRead }>;
-export type ProjectUpdate = (arg: {
-  id: number;
-  project: ProjectRead;
-}) => Promise<{ data?: ProjectRead }>;
-
 interface TabbedModelFormProps {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -117,8 +105,6 @@ interface TabbedModelFormProps {
   protocols: ProtocolListApiResponse;
   compound: CompoundRead;
   units: UnitListApiResponse;
-  updateModel: CombinedModelUpdate;
-  updateProject: ProjectUpdate;
   pd_model?: PharmacodynamicRead;
   pd_models?: PharmacodynamicRead[];
 }
@@ -132,8 +118,6 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   protocols,
   compound,
   units,
-  updateModel,
-  updateProject,
 }) => {
   const {
     control: projectControl,
@@ -152,14 +136,12 @@ export const TabbedModelForm: FC<TabbedModelFormProps> = ({
   const handleModelFormData = useModelFormDataCallback({
     model,
     reset: resetModel,
-    updateModel,
     pd_models,
   });
   const handleProjectFormData = useProjectFormDataCallback({
     model,
     project,
     reset: projectReset,
-    updateProject,
     units,
   });
 
@@ -289,8 +271,6 @@ const Model: FC = () => {
     units,
     variables,
   } = useApiQueries();
-  const [updateModel] = useCombinedModelUpdateMutation();
-  const [updateProject] = useProjectUpdateMutation();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -311,8 +291,6 @@ const Model: FC = () => {
       protocols={protocols}
       compound={compound}
       units={units}
-      updateModel={updateModel}
-      updateProject={updateProject}
     />
   );
 };

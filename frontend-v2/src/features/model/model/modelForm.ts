@@ -6,8 +6,8 @@ import {
   CombinedModelRead,
   PharmacodynamicRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
+  useCombinedModelUpdateMutation,
 } from "../../../app/backendApi";
-import { CombinedModelUpdate } from "../Model";
 import useDirty from "../../../hooks/useDirty";
 
 export type ModelFormData = Omit<CombinedModel, "species">;
@@ -15,14 +15,13 @@ export type ModelFormData = Omit<CombinedModel, "species">;
 export function useModelFormDataCallback({
   model,
   reset,
-  updateModel,
   pd_models,
 }: {
   model: CombinedModelRead;
   reset: (values?: Partial<ModelFormData>) => void;
-  updateModel: CombinedModelUpdate;
   pd_models?: PharmacodynamicRead[];
 }) {
+  const [updateModel] = useCombinedModelUpdateMutation();
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
