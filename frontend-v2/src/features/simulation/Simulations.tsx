@@ -160,8 +160,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
@@ -395,6 +395,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     }
     const defaultXUnit =
       units?.find((unit: UnitRead) => unit.symbol === "h")?.id || 0;
+    const defaultYScale = variable.name.startsWith("C") ? "lg10" : "lin";
     const defaultPlot: SimulationPlotRead = {
       id: 0,
       y_axes: [
@@ -408,6 +409,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       x_unit: defaultXUnit,
       y_unit: variable.unit,
       y_unit2: null,
+      y_scale: defaultYScale,
     };
     addSimulationPlot(defaultPlot);
   };
