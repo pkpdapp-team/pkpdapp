@@ -10,7 +10,7 @@ import {
 import { FC } from "react";
 import { Control, Controller } from "react-hook-form";
 
-import { ProjectFormData } from "./projectForm";
+import { ProjectFormData } from "../projectFormState";
 import { ProjectRead, useTagListQuery } from "../../../app/backendApi";
 
 type PDTagSelectProps = {

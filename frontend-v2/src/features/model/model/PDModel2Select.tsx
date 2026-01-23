@@ -2,7 +2,7 @@ import { Stack } from "@mui/material";
 import { Control } from "react-hook-form";
 import { FC } from "react";
 
-import { ModelFormData } from "./modelForm";
+import { ModelFormData } from "../modelFormState";
 import { PharmacodynamicListApiResponse } from "../../../app/backendApi";
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";

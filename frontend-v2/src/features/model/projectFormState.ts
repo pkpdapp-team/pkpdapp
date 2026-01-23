@@ -8,8 +8,8 @@ import {
   UnitListApiResponse,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useProjectUpdateMutation,
-} from "../../../app/backendApi";
-import useDirty from "../../../hooks/useDirty";
+} from "../../app/backendApi";
+import useDirty from "../../hooks/useDirty";
 
 const defaultSpeciesWeights = new Map([
   ["H", 75.0],
