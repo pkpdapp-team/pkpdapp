@@ -7,22 +7,9 @@ import {
   usePharmacokineticListQuery,
   CompoundRead,
   UnitRead,
-  TagRead,
 } from "../../../app/backendApi";
-import { Control, Controller } from "react-hook-form";
-import {
-  Stack,
-  Grid,
-  Tooltip,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  OutlinedInput,
-  MenuItem,
-  Chip,
-} from "@mui/material";
+import { Control } from "react-hook-form";
+import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
 import FloatField from "../../../components/FloatField";
 import UnitField from "../../../components/UnitField";
 import SelectField from "../../../components/SelectField";
@@ -39,6 +26,8 @@ import { PDModelSelect } from "./PDModelSelect";
 import { PKModel2Select } from "./PKModel2Select";
 import { PDModel2Select } from "./PDModel2Select";
 import { PKEffectModelSelect } from "./PKEffectModelSelect";
+import { PKTagSelect } from "./PKTagSelect";
+import { PDTagSelect } from "./PDTagSelect";
 
 interface Props {
   model: CombinedModelRead;
@@ -46,7 +35,6 @@ interface Props {
   control: Control<FormData>;
   compound: CompoundRead;
   units: UnitRead[];
-  tagsData: TagRead[];
 }
 
 // Maps of model name to documentation image filename (to be filled later)
@@ -85,15 +73,12 @@ const PKPDModelTab: FC<Props> = ({
   control,
   compound,
   units,
-  tagsData,
 }: Props) => {
   // get list of pd models
   const { data: pdModels, isLoading: pdModelLoading } =
     usePharmacodynamicListQuery();
   const { data: pkModels, isLoading: pkModelLoading } =
     usePharmacokineticListQuery();
-  const pkTags = project?.pk_tags || [];
-  const pdTags = project?.pd_tags || [];
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -105,7 +90,7 @@ const PKPDModelTab: FC<Props> = ({
   if (loading.some((l) => l)) {
     return <div>Loading...</div>;
   }
-  if (!pdModels || !pkModels || !tagsData) {
+  if (!pdModels || !pkModels) {
     return <div>Error loading models.</div>;
   }
 
@@ -136,36 +121,8 @@ const PKPDModelTab: FC<Props> = ({
     displayEmpty: true,
   };
 
-  const pkTagList = [
-    "1-compartment",
-    "2-compartment",
-    "3-compartment",
-    "PK",
-    "TMDD",
-    "QSS",
-    "MM",
-    "bispecific",
-    "constant",
-  ];
-  const pdTagList = ["direct", "indirect", "TGI", "DDI"];
-  const tagOptions = tagsData
-    .filter((tag) => {
-      return pkTagList.includes(tag.name);
-    })
-    .map((tag) => {
-      return { value: tag.id, label: tag.name };
-    });
-  const pdTagOptions = tagsData
-    .filter((tag) => {
-      return pdTagList.includes(tag.name);
-    })
-    .map((tag) => {
-      return { value: tag.id, label: tag.name };
-    });
-
   const effectCompartmentTooltip =
     "Effect compartments will be driven by the concentration in the central compartment (C1), unless unbound concentration for C1 is selected, in which case the effect compartment is driven by the unbound concentration (calc_C1_f)";
-  const modelTypesLabel = "Filter by Model Type";
 
   const pkSelected = pkModels.find((m) => m.id === model.pk_model);
   const pk2Selected = pkModels.find((m) => m.id === model.pk_model2);
@@ -246,57 +203,15 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          {version_greater_than_2 && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Controller
-                name="pk_tags"
-                control={control}
-                render={({ field: { onChange } }) => (
-                  <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
-                    <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
-                    <Select
-                      size="small"
-                      labelId="tags-label"
-                      id="tags"
-                      multiple
-                      value={pkTags}
-                      onChange={onChange}
-                      input={
-                        <OutlinedInput
-                          id="select-multiple-tags"
-                          label={modelTypesLabel}
-                        />
-                      }
-                      renderValue={(selected) => (
-                        <Box
-                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
-                        >
-                          {selected.map((value) => {
-                            const label = tagOptions.find(
-                              (tag) => tag.value === value,
-                            )?.label;
-                            return <Chip key={value} label={label} />;
-                          })}
-                        </Box>
-                      )}
-                    >
-                      {tagOptions.map((tag) => (
-                        <MenuItem key={tag.value} value={tag.value}>
-                          {tag.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-              />
-            </Stack>
-          )}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <PKTagSelect control={control} project={project} />
+          </Stack>
           <PKModelSelect
             control={control}
             defaultProps={defaultProps}
             helpImagePk={helpImagePk}
             pkModels={pkModels}
-            pkTags={pkTags}
+            project={project}
           />
 
           {model.pk_model && (
@@ -442,53 +357,13 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          {version_greater_than_2 && (
-            <Controller
-              name="pd_tags"
-              control={control}
-              render={({ field: { onChange } }) => (
-                <FormControl sx={{ width: "calc(100% - 3rem)" }} size="small">
-                  <InputLabel id="tags-label">{modelTypesLabel}</InputLabel>
-                  <Select
-                    size="small"
-                    labelId="tags-label"
-                    id="tags"
-                    multiple
-                    value={pdTags}
-                    onChange={onChange}
-                    input={
-                      <OutlinedInput
-                        id="select-multiple-tags"
-                        label={modelTypesLabel}
-                      />
-                    }
-                    renderValue={(selected) => (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.map((value) => {
-                          const label = pdTagOptions.find(
-                            (tag) => tag.value === value,
-                          )?.label;
-                          return <Chip key={value} label={label} />;
-                        })}
-                      </Box>
-                    )}
-                  >
-                    {pdTagOptions.map((tag) => (
-                      <MenuItem key={tag.value} value={tag.value}>
-                        {tag.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
-          )}
+          <PDTagSelect control={control} project={project} />
           <PDModelSelect
             control={control}
             defaultProps={defaultProps}
             helpImagePd={helpImagePd}
             pdModels={pdModels}
-            pdTags={pdTags}
+            project={project}
           />
         </Grid>
         <Box width="100%" />

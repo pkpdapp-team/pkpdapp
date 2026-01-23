@@ -5,14 +5,17 @@ import { FormData } from "../Model";
 
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
-import { PharmacokineticListApiResponse } from "../../../app/backendApi";
+import {
+  ProjectRead,
+  PharmacokineticListApiResponse,
+} from "../../../app/backendApi";
 
 type PKModelSelectProps = {
   control: Control<FormData>;
   defaultProps: Record<string, unknown>;
   helpImagePk: string;
   pkModels: PharmacokineticListApiResponse;
-  pkTags: number[];
+  project: ProjectRead;
 };
 
 /**TMDD order:
@@ -70,8 +73,9 @@ export const PKModelSelect: FC<PKModelSelectProps> = ({
   defaultProps,
   helpImagePk,
   pkModels,
-  pkTags,
+  project,
 }) => {
+  const pkTags = project?.pk_tags || [];
   const pkModelsFiltered = pkModels.filter((m) => {
     const is_pk_model = m.model_type ? m.model_type === "PK" : false;
     if (!is_pk_model) {

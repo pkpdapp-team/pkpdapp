@@ -5,14 +5,17 @@ import { Control } from "react-hook-form";
 import { FormData } from "../Model";
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
-import { PharmacodynamicListApiResponse } from "../../../app/backendApi";
+import {
+  PharmacodynamicListApiResponse,
+  ProjectRead,
+} from "../../../app/backendApi";
 
 type PDModelSelectProps = {
   control: Control<FormData>;
   defaultProps: Record<string, unknown>;
   helpImagePd: string;
   pdModels: PharmacodynamicListApiResponse;
-  pdTags: number[];
+  project: ProjectRead;
 };
 
 const pd_model_order = [
@@ -42,8 +45,9 @@ export const PDModelSelect: FC<PDModelSelectProps> = ({
   defaultProps,
   helpImagePd,
   pdModels,
-  pdTags,
+  project,
 }) => {
+  const pdTags = project?.pd_tags || [];
   const pdModelsFiltered = pdModels.filter((m) => {
     const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
     if (m.tags) {
