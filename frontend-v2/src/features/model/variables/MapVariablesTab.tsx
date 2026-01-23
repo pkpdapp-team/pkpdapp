@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import VariableRow from "./VariableRow";
 import HelpButton from "../../../components/HelpButton";
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { TableHeader } from "../../../components/TableHeader";
 import AdditionalParametersRow from "./AdditionalParametersRow";
@@ -56,7 +56,7 @@ export const TABLE_BREAKPOINTS = [
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   variables: VariableRead[];
   units: UnitRead[];
   compound: CompoundRead;

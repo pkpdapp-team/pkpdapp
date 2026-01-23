@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo } from "react";
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import { Control, useFieldArray, useForm } from "react-hook-form";
 import {
   TableCell,
@@ -36,7 +36,7 @@ interface Props {
   variable_from_list: VariableRead;
   variables: VariableRead[];
   units: UnitRead[];
-  modelControl: Control<FormData>;
+  modelControl: Control<ModelFormData>;
 }
 
 const ParameterRow: FC<Props> = ({

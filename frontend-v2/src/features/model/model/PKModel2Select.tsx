@@ -1,14 +1,14 @@
 import { FC } from "react";
 import { Stack } from "@mui/material";
 import { Control } from "react-hook-form";
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
 import { PharmacokineticListApiResponse } from "../../../app/backendApi";
 
 type PKModel2SelectProps = {
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   defaultProps: Record<string, unknown>;
   helpImagePk2: string;
   pkModels: PharmacokineticListApiResponse;

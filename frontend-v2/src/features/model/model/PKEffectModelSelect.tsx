@@ -1,13 +1,13 @@
 import { FC } from "react";
 import { Control } from "react-hook-form";
 
-import { FormData } from "../Model";
+import { ModelFormData } from "../Model";
 import HelpButton from "../../../components/HelpButton";
 import SelectField from "../../../components/SelectField";
 import { PharmacokineticListApiResponse } from "../../../app/backendApi";
 
 type PKEffectModelSelectProps = {
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   defaultProps: Record<string, unknown>;
   helpImageEffect: string;
   pkModels: PharmacokineticListApiResponse;
