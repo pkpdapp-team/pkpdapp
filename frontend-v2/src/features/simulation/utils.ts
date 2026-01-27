@@ -32,16 +32,21 @@ export function getYAxisUnit(
   compound: CompoundRead,
   variable: VariableRead,
   units: UnitRead[],
-) {
+): number | null | undefined {
   if (!variable.name.startsWith("C")) {
     return variable.unit;
   }
-  const concentrationUnitSymbol =
-    variable.name === "CT"
-      ? "pg/mL"
-      : compound.compound_type === "SM"
-        ? "ng/mL"
-        : "mg/mL";
+  let concentrationUnitSymbol: string | undefined;
+  if (variable.name === "CT") {
+    concentrationUnitSymbol = "pg/mL";
+  } else if (compound.compound_type === "SM") {
+    concentrationUnitSymbol = "ng/mL";
+  } else if (compound.compound_type === "LM") {
+    concentrationUnitSymbol = "mg/mL";
+  }
+  if (!concentrationUnitSymbol) {
+    return variable.unit;
+  }
   const concentrationUnit = units.find(
     (unit) => unit.symbol === concentrationUnitSymbol,
   );
