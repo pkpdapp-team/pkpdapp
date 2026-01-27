@@ -30,7 +30,7 @@ import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getDefaultAxisTitles } from "./utils";
+import { getDefaultAxisTitles, getYAxisUnit } from "./utils";
 
 interface SimulationPlotFormProps {
   index: number;
@@ -168,11 +168,12 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     if (!variable) {
       return;
     }
+    const defaultUnit = getYAxisUnit(compound, variable, units);
     if (first) {
       if (right) {
-        setValue(`plots.${index}.y_unit2`, variable.unit);
+        setValue(`plots.${index}.y_unit2`, defaultUnit);
       } else {
-        setValue(`plots.${index}.y_unit`, variable.unit);
+        setValue(`plots.${index}.y_unit`, defaultUnit);
       }
     }
     addYAxis({

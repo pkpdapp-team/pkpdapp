@@ -50,6 +50,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
+import { getYAxisUnit } from "./utils";
 
 const EMPTY_MAP: SliderValues = new Map();
 
@@ -396,6 +397,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     const defaultXUnit =
       units?.find((unit: UnitRead) => unit.symbol === "h")?.id || 0;
     const defaultYScale = variable.name.startsWith("C") ? "lg10" : "lin";
+    const defaultYUnit = getYAxisUnit(compound, variable, units);
     const defaultPlot: SimulationPlotRead = {
       id: 0,
       y_axes: [
@@ -407,7 +409,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       cx_lines: [],
       index: 0,
       x_unit: defaultXUnit,
-      y_unit: variable.unit,
+      y_unit: defaultYUnit,
       y_unit2: null,
       y_scale: defaultYScale,
     };
