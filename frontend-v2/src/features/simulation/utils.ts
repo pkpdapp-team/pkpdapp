@@ -8,6 +8,7 @@ import {
   SubjectGroupRead,
   UnitRead,
   VariableRead,
+  Y2ScaleEnum,
 } from "../../app/backendApi";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
@@ -28,14 +29,23 @@ export const plotColours = [
   "#17becf", // blue-teal
 ];
 
-export function getYAxisUnit(
+type YAxisOptions = {
+  unit: number | null | undefined;
+  scale: Y2ScaleEnum;
+};
+export function getYAxisOptions(
   compound: CompoundRead,
   variable: VariableRead,
   units: UnitRead[],
-): number | null | undefined {
+): YAxisOptions {
   if (!variable.name.startsWith("C")) {
-    return variable.unit;
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
   }
+  const baseUnit = units.find((unit) => unit.id === variable.unit);
+  const compatibleUnits = baseUnit?.compatible_units || [];
   let concentrationUnitSymbol: string | undefined;
   if (variable.name === "CT") {
     concentrationUnitSymbol = "pg/mL";
@@ -45,13 +55,24 @@ export function getYAxisUnit(
     concentrationUnitSymbol = "mg/mL";
   }
   if (!concentrationUnitSymbol) {
-    return variable.unit;
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
   }
-  const concentrationUnit = units.find(
+  const concentrationUnit = compatibleUnits.find(
     (unit) => unit.symbol === concentrationUnitSymbol,
   );
-  const defaultUnit = concentrationUnit ? concentrationUnit.id : variable.unit;
-  return defaultUnit;
+  if (!concentrationUnit) {
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
+  }
+  return {
+    unit: parseInt(concentrationUnit.id),
+    scale: "lg10",
+  };
 }
 
 export function ranges(
