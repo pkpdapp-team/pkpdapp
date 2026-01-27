@@ -30,7 +30,7 @@ import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getDefaultAxisTitles, getYAxisUnit } from "./utils";
+import { getDefaultAxisTitles, getYAxisOptions } from "./utils";
 
 interface SimulationPlotFormProps {
   index: number;
@@ -168,12 +168,18 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     if (!variable) {
       return;
     }
-    const defaultUnit = getYAxisUnit(compound, variable, units);
+    const { unit: defaultUnit, scale: defaultScale } = getYAxisOptions(
+      compound,
+      variable,
+      units,
+    );
     if (first) {
       if (right) {
         setValue(`plots.${index}.y_unit2`, defaultUnit);
+        setValue(`plots.${index}.y2_scale`, defaultScale);
       } else {
         setValue(`plots.${index}.y_unit`, defaultUnit);
+        setValue(`plots.${index}.y_scale`, defaultScale);
       }
     }
     addYAxis({
@@ -183,19 +189,11 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   };
 
   const handleAddYAxis = (variableId: number) => {
-    const variable = variables.find((v) => v.id === variableId);
     commonAddYAxis(variableId, lhs_y_axes.length === 0, false);
-    if (lhs_y_axes.length === 0 && variable?.name.startsWith("C")) {
-      setValue(`plots.${index}.y_scale`, "lg10");
-    }
   };
 
   const handleAddY2Axis = (variableId: number) => {
-    const variable = variables.find((v) => v.id === variableId);
     commonAddYAxis(variableId, rhs_y_axes.length === 0, true);
-    if (rhs_y_axes.length === 0 && variable?.name.startsWith("C")) {
-      setValue(`plots.${index}.y2_scale`, "lg10");
-    }
   };
 
   const handleRemoveYAxis = (yAxis: SimulationYAxisWithIndex) => {
