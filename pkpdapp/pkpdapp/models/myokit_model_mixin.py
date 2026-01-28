@@ -332,6 +332,25 @@ class MyokitModelMixin:
                 species = project.species
                 compound_type = project.compound.compound_type
                 self.reset_params_to_defaults(species, compound_type, new_variables)
+                # loop through all new variables
+                # and set units for concentration variables
+                for v in all_new_variables:
+                    if v.unit is not None and v.name.startswith("C"):
+                        compatible_units = v.unit.get_compatible_units(
+                            compound=project.compound
+                        )
+                        default_unit_symbol = None
+                        if v.name == "CT":
+                            default_unit_symbol = "pg/mL"
+                        elif compound_type == "SM":
+                            default_unit_symbol = "ng/mL"
+                        elif compound_type == "LM":
+                            default_unit_symbol = "mg/mL"
+                        if default_unit_symbol is not None:
+                            for cu in compatible_units:
+                                if cu.symbol == default_unit_symbol:
+                                    v.unit = cu
+                                    break
 
         # save all new variables
         Variable.objects.bulk_create(all_new_variables)
@@ -431,7 +450,7 @@ class MyokitModelMixin:
         variables = model.variables(const=True, sort=True)
         return [self._serialise_variable(v) for v in variables]
 
-    def _convert_unit(self, variable, myokit_variable_sbml, value):
+    def _conversion_factor(self, variable, myokit_variable_sbml):
         target = None
         if self.is_library_model:
             if "CT1" in variable.qname or "AT1" in variable.qname:
@@ -454,6 +473,12 @@ class MyokitModelMixin:
                 and variable.unit_per_body_weight
             ):
                 conversion_factor *= project.species_weight
+        return conversion_factor
+
+    def _convert_unit(self, variable, myokit_variable_sbml, value):
+        conversion_factor = self._conversion_factor(
+            variable, myokit_variable_sbml
+        )
 
         return conversion_factor * value
 
@@ -480,11 +505,11 @@ class MyokitModelMixin:
             if variable.unit is None:
                 conversion_factor = 1.0
             else:
-                conversion_factor = myokit.Unit.conversion_factor(
-                    myokit_variable_sbml.unit(), variable.unit.get_myokit_unit()
-                ).value()
+                conversion_factor = self._conversion_factor(
+                    variable, myokit_variable_sbml
+                )
 
-            result[variable.id] = (conversion_factor * np.frombuffer(v)).tolist()
+            result[variable.id] = (np.frombuffer(v) / conversion_factor).tolist()
 
         return result
 

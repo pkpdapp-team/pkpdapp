@@ -239,11 +239,19 @@ export function useParameters() {
           ? variablePerInterval(intervals, aucVariable, simulation, interval)
           : [];
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
-        return formattedNumber(
-          difference *
-            variableConversionFactor(variable, units) *
-            timeConversionFactor(interval, units),
+        const variableUnit = units?.find((unit) => unit.id === variable.unit);
+        const aucVariableUnit = units?.find(
+          (unit) => unit.id === aucVariable?.unit,
         );
+        const timeUnit = units?.find((unit) => unit.id === interval.unit);
+        const displayUnitSymbol = `${timeUnit?.symbol}*${variableUnit?.symbol}`;
+        const displayUnit = aucVariableUnit?.compatible_units.find(
+          (u) => u.symbol === displayUnitSymbol,
+        );
+        const conversionFactor = parseFloat(
+          displayUnit?.conversion_factor || "1",
+        );
+        return formattedNumber(difference * conversionFactor);
       },
     },
     {
