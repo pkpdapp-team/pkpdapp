@@ -17,6 +17,7 @@ import {
 } from "../../../app/backendApi";
 import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
 import { useApiQueries } from "./MapObservations";
+import { renameVariable } from "../../simulation/Simulations";
 
 function displayUnitSymbol(symbol: string | undefined) {
   return symbol === "" ? "dimensionless" : symbol;
@@ -31,10 +32,12 @@ function useModelOutputs() {
     ? ["environment.t", "PDCompartment.C_Drug"]
     : [];
   return (
-    variables?.filter(
-      (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname),
-    ) || []
+    variables
+      ?.filter(
+        (variable) =>
+          !variable.constant && !filterOutputs.includes(variable.qname),
+      )
+      .map((v) => renameVariable(v, model)) || []
   );
 }
 
