@@ -92,9 +92,14 @@ const getSimulateOutputs = (
     ),
   );
   results?.forEach((v) => {
-    outputs.push(v.qname);
+    if (!outputs.includes(v.qname)) {
+      outputs.push(v.qname);
+    }
     const [compartmentName, name] = v.qname.split(".");
-    outputs.push(`${compartmentName}.calc_${name}_${derivedType}`);
+    const derivedVarName = `${compartmentName}.calc_${name}_${derivedType}`;
+    if (!outputs.includes(derivedVarName)) {
+      outputs.push(derivedVarName);
+    }
   });
 
   return outputs;
