@@ -6,6 +6,7 @@ import {
   Simulation,
   SimulationYAxis,
   SubjectGroupRead,
+  UnitListApiResponse,
   UnitRead,
   VariableRead,
   Y2ScaleEnum,
@@ -36,7 +37,7 @@ type YAxisOptions = {
 export function getYAxisOptions(
   compound: CompoundRead,
   variable: VariableRead,
-  units: UnitRead[],
+  units: UnitListApiResponse,
 ): YAxisOptions {
   if (!variable.name.startsWith("C")) {
     return {

@@ -19,6 +19,7 @@ import {
   CombinedModelRead,
   UnitRead,
   useCombinedModelListQuery,
+  useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
@@ -28,6 +29,7 @@ import {
 } from "../../../app/backendApi";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { renameVariable } from "../../simulation/Simulations";
+import { getYAxisOptions } from "../../simulation/utils";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -97,6 +99,22 @@ function useVariables() {
   return variables;
 }
 
+function useCompound() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { data: compound } = useCompoundRetrieveQuery(
+    { id: project?.compound || 0 },
+    { skip: !project || !project.compound },
+  );
+  return compound;
+}
+
 function VariableRow({
   variable_id,
   variableName,
@@ -107,15 +125,34 @@ function VariableRow({
   unit: UnitRead | undefined;
 }) {
   const units = useUnits();
+  const compound = useCompound();
   const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
-  if (!variable_read) {
+  if (!variable_read || !compound || !units) {
     return "Loading...";
   }
   const variable = variable_read as VariableRead;
+  const { unit: defaultUnitId } = getYAxisOptions(compound, variable, units);
+  if (defaultUnitId && !unitSymbol) {
+    const newThresholdUnit = units.find((u) => u.id === defaultUnitId);
+    if (newThresholdUnit) {
+      setUnitSymbol(newThresholdUnit.symbol);
+    }
+    updateVariable({
+      id: variable.id,
+      variable: {
+        ...variable,
+        threshold_unit: defaultUnitId,
+      },
+    });
+  }
+
+  const selectedUnit = units.find((u) => u.symbol === unitSymbol);
+  const compatibleUnits = selectedUnit?.compatible_units || [];
+
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
     if (!isNaN(newValue)) {
@@ -193,7 +230,7 @@ function VariableRow({
           size="small"
           inputProps={{ "aria-label": `Unit: ${variable.name}` }}
         >
-          {unit?.compatible_units?.map((unit) => (
+          {compatibleUnits.map((unit) => (
             <MenuItem key={unit.id} value={unit.symbol}>
               {unit.symbol}
             </MenuItem>
@@ -238,8 +275,7 @@ const ThresholdsTable: FC<TableProps> = (props) => {
                 variable_id={variable.id}
                 variableName={variable.name}
                 unit={units?.find(
-                  (unit) =>
-                    unit.id === (variable.threshold_unit || variable.unit),
+                  (unit) => unit.id === variable.threshold_unit,
                 )}
               />
             ))}
