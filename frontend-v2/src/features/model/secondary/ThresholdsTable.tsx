@@ -140,14 +140,14 @@ function VariableRow({
     const newThresholdUnit = units.find((u) => u.id === defaultUnitId);
     if (newThresholdUnit) {
       setUnitSymbol(newThresholdUnit.symbol);
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          threshold_unit: defaultUnitId,
+        },
+      });
     }
-    updateVariable({
-      id: variable.id,
-      variable: {
-        ...variable,
-        threshold_unit: defaultUnitId,
-      },
-    });
   }
 
   const selectedUnit = units.find((u) => u.symbol === unitSymbol);
