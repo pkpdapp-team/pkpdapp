@@ -47,7 +47,7 @@ function useNormalisedVariables(variables: VariableListApiResponse) {
   const units = useUnits();
   return variables.map((variable) => {
     const variableUnit = units?.find(
-      (unit) => unit.id === variable.threshold_unit,
+      (unit) => unit.id === variable.secondary_unit,
     );
     const defaultUnit = variableUnit?.compatible_units.find(
       (u) => u.symbol === "pmol/L",
@@ -100,8 +100,11 @@ function variableConversionFactor(
 ) {
   const modelUnit = units?.find((unit) => unit.id === variable.unit);
   const displayUnit = modelUnit?.compatible_units.find(
-    (u) => +u.id === variable.threshold_unit,
+    (u) => +u.id === variable.secondary_unit,
   );
+  if (!displayUnit) {
+    return 1.0;
+  }
   const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
   return conversionFactor;
 }
@@ -239,18 +242,7 @@ export function useParameters() {
           ? variablePerInterval(intervals, aucVariable, simulation, interval)
           : [];
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
-        const variableUnit = units?.find((unit) => unit.id === variable.unit);
-        const aucVariableUnit = units?.find(
-          (unit) => unit.id === aucVariable?.unit,
-        );
-        const timeUnit = units?.find((unit) => unit.id === interval.unit);
-        const displayUnitSymbol = `${timeUnit?.symbol}*${variableUnit?.symbol}`;
-        const displayUnit = aucVariableUnit?.compatible_units.find(
-          (u) => u.symbol === displayUnitSymbol,
-        );
-        const conversionFactor = parseFloat(
-          displayUnit?.conversion_factor || "1",
-        );
+        const conversionFactor = variableConversionFactor(aucVariable!, units);
         return formattedNumber(difference * conversionFactor);
       },
     },

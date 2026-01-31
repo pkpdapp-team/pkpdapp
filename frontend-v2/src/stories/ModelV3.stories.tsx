@@ -668,5 +668,36 @@ export const SecondaryParameters: Story = {
       },
     );
     expect(endTimeInput).toBeInTheDocument();
+
+    const thresholdsTable = canvas.getByRole("table", {
+      name: /Define thresholds and variable units/i,
+    });
+    const unitSelect = await within(thresholdsTable).findByRole("combobox", {
+      name: /Unit: C1/i,
+    });
+    expect(unitSelect).toBeInTheDocument();
+    expect(unitSelect).toHaveTextContent("mg/mL");
+  },
+};
+
+export const ChangeSecondaryUnit: Story = {
+  play: async ({ canvasElement, userEvent, context }) => {
+    await SecondaryParameters.play?.(context);
+
+    const canvas = within(canvasElement);
+    const thresholdsTable = canvas.getByRole("table", {
+      name: /Define thresholds and variable units/i,
+    });
+    const unitSelect = await within(thresholdsTable).findByRole("combobox", {
+      name: /Unit: C1/i,
+    });
+    expect(unitSelect).toBeInTheDocument();
+    expect(unitSelect).toHaveTextContent("mg/mL");
+
+    await selectMenuOption(unitSelect, "pmol/L", userEvent);
+
+    await waitFor(() => {
+      expect(unitSelect).toHaveTextContent("pmol/L");
+    });
   },
 };

@@ -5575,10 +5575,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        threshold_unit:
+        secondary_unit:
           type: integer
           nullable: true
-          description: unit for the threshold values
+          description: display unit for secondary parameters
         unit:
           type: integer
           nullable: true
@@ -6554,10 +6554,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        threshold_unit:
+        secondary_unit:
           type: integer
           nullable: true
-          description: unit for the threshold values
+          description: display unit for secondary parameters
         unit:
           type: integer
           nullable: true

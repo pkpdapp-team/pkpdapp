@@ -30,6 +30,7 @@ import {
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { renameVariable } from "../../simulation/Simulations";
 import { getYAxisOptions } from "../../simulation/utils";
+import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -119,12 +120,15 @@ function VariableRow({
   variable_id,
   variableName,
   unit,
+  timeUnit,
 }: {
   variable_id: number;
   variableName: string;
-  unit: UnitRead | undefined;
+  unit?: UnitRead;
+  timeUnit?: UnitRead;
 }) {
   const units = useUnits();
+  const variables = useVariables();
   const compound = useCompound();
   const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
@@ -135,16 +139,33 @@ function VariableRow({
     return "Loading...";
   }
   const variable = variable_read as VariableRead;
+  const [compartmentName, name] = variable.qname.split(".");
+  const aucVariable = variables?.find(
+    (v) => v.qname === `${compartmentName}.calc_${name}_AUC`,
+  );
   const { unit: defaultUnitId } = getYAxisOptions(compound, variable, units);
   if (defaultUnitId && !unitSymbol) {
     const newThresholdUnit = units.find((u) => u.id === defaultUnitId);
+    const aucUnit = units.find(
+      (unit) =>
+        unit.symbol === `${timeUnit?.symbol}*${newThresholdUnit?.symbol}`,
+    );
     if (newThresholdUnit) {
       setUnitSymbol(newThresholdUnit.symbol);
       updateVariable({
         id: variable.id,
         variable: {
           ...variable,
-          threshold_unit: defaultUnitId,
+          secondary_unit: defaultUnitId,
+        },
+      });
+    }
+    if (aucVariable && aucUnit) {
+      updateVariable({
+        id: aucVariable.id,
+        variable: {
+          ...aucVariable,
+          secondary_unit: aucUnit.id,
         },
       });
     }
@@ -180,12 +201,23 @@ function VariableRow({
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
     const unit = units?.find((unit) => unit.symbol === event.target.value);
+    const aucUnitSymbol = `${timeUnit?.symbol}*${event.target.value}`;
+    const aucUnit = units?.find((unit) => unit.symbol === aucUnitSymbol);
     if (unit) {
       updateVariable({
         id: variable.id,
         variable: {
           ...variable,
-          threshold_unit: unit.id,
+          secondary_unit: unit.id,
+        },
+      });
+    }
+    if (aucVariable && aucUnit) {
+      updateVariable({
+        id: aucVariable.id,
+        variable: {
+          ...aucVariable,
+          secondary_unit: aucUnit.id,
         },
       });
     }
@@ -245,12 +277,16 @@ const ThresholdsTable: FC<TableProps> = (props) => {
   const units = useUnits();
   const variables = useVariables();
   const model = useModel();
+  const [intervals] = useModelTimeIntervals();
 
   const concentrationVariables = variables?.filter((variable) =>
     model?.derived_variables?.find(
       (dv) => dv.pk_variable === variable.id && dv.type === "AUC",
     ),
   );
+  const defaultTimeUnit = units?.find((unit) => unit.symbol === "h");
+  const timeUnitId = intervals[0]?.unit || defaultTimeUnit?.id;
+  const timeUnit = units?.find((unit) => unit.id === timeUnitId);
 
   return (
     <TableContainer
@@ -275,8 +311,9 @@ const ThresholdsTable: FC<TableProps> = (props) => {
                 variable_id={variable.id}
                 variableName={variable.name}
                 unit={units?.find(
-                  (unit) => unit.id === variable.threshold_unit,
+                  (unit) => unit.id === variable.secondary_unit,
                 )}
+                timeUnit={timeUnit}
               />
             ))}
         </TableBody>
