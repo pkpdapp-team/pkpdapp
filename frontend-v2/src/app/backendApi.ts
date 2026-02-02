@@ -4167,8 +4167,8 @@ export type Variable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -4220,8 +4220,8 @@ export type VariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -4271,8 +4271,8 @@ export type PatchedVariable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -4324,8 +4324,8 @@ export type PatchedVariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
