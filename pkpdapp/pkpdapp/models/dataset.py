@@ -286,7 +286,7 @@ class Dataset(models.Model):
 
             subject = subjects[subject_id]
 
-            has_observation = observation != "."
+            has_observation = observation != "" and observation != "."
             is_observation_event = True
             try:
                 event_id_int = int(event_id)
