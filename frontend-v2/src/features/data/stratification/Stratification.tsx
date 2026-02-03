@@ -197,21 +197,22 @@ const Stratification: FC<IStratification> = ({
               </TableHead>
               <TableBody>
                 {catCovariates.map((field, index) => {
-                  const primaryLabel = `heading-primary field-${field}`;
                   const isPrimary = groupColumn === field;
                   return (
                     <TableRow key={field}>
                       <TableCell sx={{ padding: "0 16px" }}>
                         <Radio
+                          id={`group-id-${field}`}
                           name="primary"
                           value={field}
                           checked={isPrimary}
                           onChange={handleGroupChange}
-                          inputProps={{ "aria-labelledby": primaryLabel }}
                           sx={{ padding: 0, transform: "scale(0.8)" }}
                         />
                       </TableCell>
-                      <TableCell id={`field-${field}`}>{field}</TableCell>
+                      <TableCell>
+                        <label htmlFor={`group-id-${field}`}>{field}</label>
+                      </TableCell>
                       <TableCell>
                         {uniqueCovariateValues[index]?.join(",")}
                       </TableCell>
