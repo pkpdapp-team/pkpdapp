@@ -185,6 +185,29 @@ function useSimulationData({
   return { loadingSimulate, simInputs, data, simulateError, dataReference };
 }
 
+/**
+ * Remove plots without y-axes from a simulation.
+ */
+function useCleanEmptyPlots(simulation?: SimulationRead) {
+  const [updateSimulation] = useSimulationUpdateMutation();
+  const newPlots = simulation?.plots.filter((p) => p.y_axes.length > 0);
+
+  if (
+    simulation?.id &&
+    simulation.plots.length > 0 &&
+    newPlots &&
+    newPlots.length !== simulation.plots.length
+  ) {
+    const newSimulation: SimulationRead = { ...simulation, plots: newPlots };
+    updateSimulation({
+      id: simulation?.id,
+      simulation: newSimulation,
+    });
+    return newSimulation;
+  }
+  return simulation;
+}
+
 interface SimulationsTabProps {
   groups?: SubjectGroupRead[];
   project: ProjectRead;
@@ -671,6 +694,8 @@ const Simulations: FC = () => {
       { skip: !project?.compound },
     );
 
+  const cleanSimulation = useCleanEmptyPlots(simulation);
+
   const loading = [
     isGroupsLoading,
     isProjectLoading,
@@ -683,7 +708,14 @@ const Simulations: FC = () => {
     return <div>Loading...</div>;
   }
 
-  if (!project || !model || !variables || !simulation || !units || !compound) {
+  if (
+    !project ||
+    !model ||
+    !variables ||
+    !cleanSimulation ||
+    !units ||
+    !compound
+  ) {
     return <div>Not found</div>;
   }
   return (
@@ -693,7 +725,7 @@ const Simulations: FC = () => {
       compound={compound}
       model={model}
       variables={variables}
-      simulation={simulation}
+      simulation={cleanSimulation}
       units={units}
     />
   );
