@@ -7,6 +7,7 @@
 import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 from pkpdapp.models import Unit, Compound
+from math import log10
 
 
 class TestUnitModel(TestCase):
@@ -16,12 +17,21 @@ class TestUnitModel(TestCase):
             description="description for my cool compound",
         )
 
+    def check_myokit_unit(self, unit_symbol):
+        unit = Unit.objects.get(symbol=unit_symbol)
+        myokit_unit = unit.get_myokit_unit()
+        self.assertEqual(unit.multiplier, log10(myokit_unit.multiplier()))
+
     def check_compatible_unit(self, unit_symbol, compatible_units, compound=None):
         unit = Unit.objects.get(symbol=unit_symbol)
         compat_symbols = [
             u.symbol for u in unit.get_compatible_units(compound=compound)
         ]
         self.assertCountEqual(compat_symbols, compatible_units)
+
+    def test_time_unit_conversion(self):
+        for symbol in ["s", "min", "h", "day", "week"]:
+            self.check_myokit_unit(symbol)
 
     def test_compatible_units(self):
         self.check_compatible_unit("s", ["s", "min", "h", "day", "week"])
