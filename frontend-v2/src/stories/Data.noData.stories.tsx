@@ -126,7 +126,7 @@ export const Stratification: Story = {
     expect(stratificationHeading).toBeInTheDocument();
 
     const routeRadio = await canvas.findByRole("radio", {
-      name: "Group ID Route",
+      name: "Route",
     });
     await userEvent.click(routeRadio);
     expect(routeRadio).toBeChecked();
