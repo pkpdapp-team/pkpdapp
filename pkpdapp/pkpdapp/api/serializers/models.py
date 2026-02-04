@@ -193,6 +193,14 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         new_pkpd_model.read_only = is_read_only
         new_pkpd_model.save()
 
+        # clean up any plots with deleted y axis variables.
+        simulations = new_pkpd_model.project.simulations.all()
+        for sim in simulations:
+            plots = sim.plots.all()
+            for plot in plots:
+                if plot.y_axes.count() == 0:
+                    plot.delete()
+
         return new_pkpd_model
 
 
