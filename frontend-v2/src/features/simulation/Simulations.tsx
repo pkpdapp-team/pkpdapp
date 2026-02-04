@@ -190,19 +190,32 @@ function useSimulationData({
  */
 function useCleanEmptyPlots(simulation?: SimulationRead) {
   const [updateSimulation] = useSimulationUpdateMutation();
+  const [updating, setUpdating] = useState(false);
   const newPlots = simulation?.plots.filter((p) => p.y_axes.length > 0);
 
+  async function update(simulation: SimulationRead) {
+    setUpdating(true);
+    try {
+      await updateSimulation({
+        id: simulation.id,
+        simulation: simulation,
+      });
+    } catch (error) {
+      console.error("Error updating simulation:", error);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
   if (
+    !updating &&
     simulation?.id &&
     simulation.plots.length > 0 &&
     newPlots &&
     newPlots.length !== simulation.plots.length
   ) {
     const newSimulation: SimulationRead = { ...simulation, plots: newPlots };
-    updateSimulation({
-      id: simulation?.id,
-      simulation: newSimulation,
-    });
+    update(newSimulation);
     return newSimulation;
   }
   return simulation;
