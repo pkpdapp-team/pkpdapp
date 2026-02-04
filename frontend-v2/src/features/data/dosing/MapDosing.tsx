@@ -49,11 +49,12 @@ function useApiQueries() {
     { skip: !model?.id },
   );
 
-  const loading = [projectProtocols, units, variables];
+  const loading = [project, projectProtocols, units, variables];
 
   return {
     isLoading: loading.some((x) => !x),
     amountUnit,
+    project,
     projectProtocols,
     units,
     variables,
@@ -74,7 +75,7 @@ const MapDosing: FC<IMapDosing> = ({
   );
 
   // Fetch API data.
-  const { isLoading, amountUnit, projectProtocols, units, variables } =
+  const { isLoading, amountUnit, project, projectProtocols, units, variables } =
     useApiQueries();
 
   useEffect(() => {
@@ -117,6 +118,7 @@ const MapDosing: FC<IMapDosing> = ({
       units={units || []}
       variables={variables || []}
       notificationsInfo={notificationsInfo}
+      project={project!}
     />
   ) : (
     <CreateDosingProtocols
@@ -127,6 +129,7 @@ const MapDosing: FC<IMapDosing> = ({
       units={units || []}
       variables={variables || []}
       notificationsInfo={notificationsInfo}
+      project={project!}
     />
   );
 };
