@@ -16,7 +16,7 @@ import {
   Checkbox,
 } from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
-import { UnitRead, VariableRead } from "../../../app/backendApi";
+import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
 import { validateState } from "../dataValidation";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
@@ -38,6 +38,7 @@ interface IDosingProtocols {
     isOpen: boolean;
     count: number;
   };
+  project: ProjectRead;
 }
 
 function findFieldByType(name: string, state: StepperState) {
@@ -55,6 +56,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   units,
   variables,
   notificationsInfo,
+  project,
 }: IDosingProtocols) => {
   const amountField = findFieldByType("Amount", state);
   const amountVariableField = findFieldByType("Amount Variable", state);
@@ -81,6 +83,27 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     ? dosingRows.map((row) => row[administrationIdField])
     : [];
   const uniqueAdministrationIds = [...new Set(administrationIds)];
+
+  if (!perKgField) {
+    dosingRows.forEach((row) => {
+      const selectedVariable = variables.find(
+        (variable) =>
+          variable.qname === row[amountVariableField || "Amount Variable"],
+      );
+      const isHuman = project.species === "H";
+      const isAvhOrAah =
+        selectedVariable?.name == "Avh" || selectedVariable?.name == "Aah";
+      if (!isHuman && !isAvhOrAah) {
+        row["Per Body Weight(kg)"] = "1";
+      } else {
+        row["Per Body Weight(kg)"] = "0";
+      }
+    });
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Per Body Weight(kg)", "Per Body Weight(kg)"],
+    ]);
+  }
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(

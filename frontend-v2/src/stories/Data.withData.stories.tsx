@@ -171,6 +171,21 @@ export const MapDosing: Story = {
       name: "Dosing",
     });
     expect(mapDosingTable).toBeInTheDocument();
+
+    const unitSelects = canvas.getAllByRole("combobox", {
+      name: "Units",
+    });
+    expect(unitSelects.length).toBe(2);
+    unitSelects.forEach((select) => {
+      expect(select).toHaveTextContent("mg");
+    });
+    const perKgCheckboxes = canvas.getAllByRole("checkbox", {
+      name: "Per Body Weight(kg)",
+    });
+    expect(perKgCheckboxes.length).toBe(2);
+    perKgCheckboxes.forEach((checkbox) => {
+      expect(checkbox).toBeChecked();
+    });
   },
 };
 

@@ -17,7 +17,7 @@ import {
   TextField,
 } from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
-import { UnitRead, VariableRead } from "../../../app/backendApi";
+import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
 import {
@@ -76,6 +76,7 @@ function createDosingRows(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
+  project: ProjectRead,
 ) {
   const idField = findFieldByType("ID", state);
   const timeField = findFieldByType("Time", state);
@@ -97,12 +98,16 @@ function createDosingRows(
       const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
       const adminId = index * 10 + groupIndex;
       const timeUnit = subjectRow?.[timeUnitField] || "h";
+      const [_c, name] = compartment.split(".");
+      const isHuman = project.species === "H";
+      const isAvhOrAah = name == "Avh" || name == "Aah";
+      const isPerKg = !isHuman && !isAvhOrAah;
       const newRow: Row = {
         [idField]: id,
         [administrationIdField]: adminId.toString(),
         "Amount Variable": compartment,
         [amountUnitField]: "mg",
-        [perKgField]: "0",
+        [perKgField]: isPerKg ? "1" : "0",
         [amountField]: "0",
         [timeField]: "0",
         [timeUnitField]: timeUnit,
@@ -141,6 +146,7 @@ function normaliseCSVData(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
+  project: ProjectRead,
 ) {
   const amountField = state.fields.find(
     (field) =>
@@ -166,7 +172,12 @@ function normaliseCSVData(
 
   if (!dosingRows(_data).length) {
     const { dosingRows: newDosingRows, normalisedFields: newNormalisedFields } =
-      createDosingRows(state, administrationIdField, dosingCompartments);
+      createDosingRows(
+        state,
+        administrationIdField,
+        dosingCompartments,
+        project,
+      );
     _data = [..._data, ...newDosingRows];
     _normalisedFields = newNormalisedFields;
   }
@@ -230,6 +241,7 @@ interface IDosingProtocols {
     isOpen: boolean;
     count: number;
   };
+  project: ProjectRead;
 }
 
 const CreateDosingProtocols: FC<IDosingProtocols> = ({
@@ -239,6 +251,7 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
   units,
   variables,
   notificationsInfo,
+  project,
 }: IDosingProtocols) => {
   const amountUnitField = findFieldByType("Amount Unit", state);
   const timeField = findFieldByType("Time", state);
@@ -249,7 +262,9 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
     state,
     administrationIdField,
     dosingCompartments,
+    project,
   );
+
   if (state.data !== _data) {
     state.data = _data;
   }
@@ -367,10 +382,10 @@ const CreateDosingProtocols: FC<IDosingProtocols> = ({
                   (variable) =>
                     variable.qname === currentRow?.["Amount Variable"],
                 );
-                const compatibleUnits = units?.find(
-                  (unit) => unit.id === selectedVariable?.unit,
-                )?.compatible_units;
                 const defaultAmountUnit = "mg";
+                const compatibleUnits = units?.find(
+                  (unit) => unit.symbol === "mg",
+                )?.compatible_units;
                 const selectedAmountUnit =
                   currentRow?.[amountUnitField] || defaultAmountUnit;
                 const isPerKg = currentRow?.[perKgField] === "1";
