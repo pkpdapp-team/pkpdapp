@@ -158,7 +158,10 @@ const Data: FC = () => {
     window.URL.revokeObjectURL(url);
   }
 
-  const group = groups[tab];
+  const groupsWithProtocols = groups.filter(
+    (group) => group.protocols.length > 0,
+  );
+  const group = groupsWithProtocols[tab];
   const protocols = group?.protocols || [];
   const dosingRows = protocols
     .flatMap((protocol) => {
@@ -300,7 +303,7 @@ const Data: FC = () => {
         </Grid>
       </Grid>
       <Tabs value={tab} onChange={handleTabChange} selectionFollowsFocus>
-        {groups?.map((group, index) => (
+        {groupsWithProtocols?.map((group, index) => (
           <Tab key={group.id} label={group.name} {...a11yProps(index)} />
         ))}
       </Tabs>
