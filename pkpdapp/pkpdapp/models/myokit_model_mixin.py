@@ -340,12 +340,12 @@ class MyokitModelMixin:
                             compound=project.compound
                         )
                         default_unit_symbol = None
-                        if v.name == "CT":
+                        if v.name.startswith("CT"):
                             default_unit_symbol = "pg/mL"
                         elif compound_type == "SM":
                             default_unit_symbol = "ng/mL"
                         elif compound_type == "LM":
-                            default_unit_symbol = "mg/mL"
+                            default_unit_symbol = "µg/mL"
                         if default_unit_symbol is not None:
                             for cu in compatible_units:
                                 if cu.symbol == default_unit_symbol:

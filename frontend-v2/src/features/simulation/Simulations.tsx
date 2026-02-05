@@ -50,7 +50,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
-import { getYAxisOptions } from "./utils";
+import { getYAxisOptions, renameVariable } from "./utils";
 
 const EMPTY_MAP: SliderValues = new Map();
 
@@ -58,36 +58,6 @@ type SliderValues = Map<number, number>;
 
 interface ErrorObject {
   error: string;
-}
-
-function getVariableName(
-  variable: VariableRead,
-  model?: CombinedModelRead,
-): string {
-  let variableName = variable.name;
-  if (
-    model?.number_of_effect_compartments &&
-    model.number_of_effect_compartments > 1 &&
-    variable.qname.startsWith("EffectCompartment")
-  ) {
-    const [compartment_name] = variable.qname.split(".");
-    const compartment_number = compartment_name.replace(
-      "EffectCompartment",
-      "",
-    );
-    variableName = `${variable.name}${compartment_number}`;
-  }
-  return variableName;
-}
-
-export function renameVariable(
-  variable: VariableRead,
-  model?: CombinedModelRead,
-): VariableRead {
-  return {
-    ...variable,
-    name: getVariableName(variable, model),
-  };
 }
 
 function addPlotVariableOption(variable: VariableRead) {

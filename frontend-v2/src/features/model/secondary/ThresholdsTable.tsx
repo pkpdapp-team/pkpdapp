@@ -28,7 +28,7 @@ import {
   VariableRead,
 } from "../../../app/backendApi";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
-import { renameVariable } from "../../simulation/Simulations";
+import { renameVariable } from "../../simulation/utils";
 import { getYAxisOptions } from "../../simulation/utils";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 

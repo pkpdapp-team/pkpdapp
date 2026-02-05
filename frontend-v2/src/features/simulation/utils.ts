@@ -48,12 +48,12 @@ export function getYAxisOptions(
   const baseUnit = units.find((unit) => unit.id === variable.unit);
   const compatibleUnits = baseUnit?.compatible_units || [];
   let concentrationUnitSymbol: string | undefined;
-  if (variable.name === "CT") {
+  if (variable.name.startsWith("CT")) {
     concentrationUnitSymbol = "pg/mL";
   } else if (compound.compound_type === "SM") {
     concentrationUnitSymbol = "ng/mL";
   } else if (compound.compound_type === "LM") {
-    concentrationUnitSymbol = "mg/mL";
+    concentrationUnitSymbol = "µg/mL";
   }
   if (!concentrationUnitSymbol) {
     return {
@@ -73,6 +73,36 @@ export function getYAxisOptions(
   return {
     unit: parseInt(concentrationUnit.id),
     scale: "lg10",
+  };
+}
+
+function getVariableName(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): string {
+  let variableName = variable.name;
+  if (
+    model?.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable.qname.startsWith("EffectCompartment")
+  ) {
+    const [compartment_name] = variable.qname.split(".");
+    const compartment_number = compartment_name.replace(
+      "EffectCompartment",
+      "",
+    );
+    variableName = `${variable.name}${compartment_number}`;
+  }
+  return variableName;
+}
+
+export function renameVariable(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): VariableRead {
+  return {
+    ...variable,
+    name: getVariableName(variable, model),
   };
 }
 
