@@ -5,7 +5,7 @@ import { SimulationContext } from "../../contexts/SimulationContext";
 import { RootState } from "../../app/store";
 import { useCombinedModelListQuery } from "../../app/backendApi";
 import { useVariables } from "./useVariables";
-import { renameVariable } from "../simulation/Simulations";
+import { renameVariable } from "../simulation/utils";
 
 export function useConcentrationVariables() {
   const { simulations } = useContext(SimulationContext);

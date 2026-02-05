@@ -676,7 +676,7 @@ export const SecondaryParameters: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("mg/mL");
+    expect(unitSelect).toHaveTextContent("µg/mL");
   },
 };
 
@@ -692,7 +692,7 @@ export const ChangeSecondaryUnit: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("mg/mL");
+    expect(unitSelect).toHaveTextContent("µg/mL");
 
     await selectMenuOption(unitSelect, "pmol/L", userEvent);
 

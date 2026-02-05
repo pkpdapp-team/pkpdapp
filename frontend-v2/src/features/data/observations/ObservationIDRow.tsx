@@ -17,7 +17,7 @@ import {
 } from "../../../app/backendApi";
 import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
 import { useApiQueries } from "./MapObservations";
-import { renameVariable } from "../../simulation/Simulations";
+import { renameVariable } from "../../simulation/utils";
 
 function displayUnitSymbol(symbol: string | undefined) {
   return symbol === "" ? "dimensionless" : symbol;
