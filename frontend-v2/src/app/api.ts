@@ -12,8 +12,22 @@ export const api = backendApi.enhanceEndpoints({
     "Protocol",
     "Unit",
     "Dose",
+    "BiomarkerType",
   ],
   endpoints: {
+    // BiomarkerType
+    biomarkerTypeList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "BiomarkerType" as const,
+                id,
+              })),
+              { type: "BiomarkerType", id: "LIST" },
+            ]
+          : [{ type: "BiomarkerType", id: "LIST" }],
+    },
     // Doses
     doseList: {
       providesTags: (result) => [{ type: "Dose", id: "LIST" }],
@@ -186,6 +200,7 @@ export const api = backendApi.enhanceEndpoints({
         { type: "Simulation", id: "LIST" },
         { type: "Protocol", id: "LIST" },
         { type: "SubjectGroup", id: "LIST" },
+        { type: "BiomarkerType", id: "LIST" },
       ],
     },
     combinedModelCreate: {
