@@ -152,6 +152,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_has_hill_coefficient = None
     __original_has_bioavailability = None
     __original_number_of_effect_compartments = None
+    __original_has_anti_drug_antibodies = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -514,6 +515,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             or self.has_hill_coefficient != self.__original_has_hill_coefficient
             or self.number_of_effect_compartments
             != self.__original_number_of_effect_compartments
+            or self.has_anti_drug_antibodies != self.__original_has_anti_drug_antibodies
         ):
             self.update_model()
 
@@ -530,6 +532,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         self.__original_number_of_effect_compartments = (
             self.number_of_effect_compartments
         )
+        self.__original_has_anti_drug_antibodies = self.has_anti_drug_antibodies
 
     def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
