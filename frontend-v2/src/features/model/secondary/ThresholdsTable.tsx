@@ -144,13 +144,13 @@ function VariableRow({
     (v) => v.qname === `${compartmentName}.calc_${name}_AUC`,
   );
   const { unit: defaultUnitId } = getYAxisOptions(compound, variable, units);
-  if (defaultUnitId && !unitSymbol) {
+  if (defaultUnitId) {
     const newThresholdUnit = units.find((u) => u.id === defaultUnitId);
     const aucUnit = units.find(
       (unit) =>
         unit.symbol === `${timeUnit?.symbol}*${newThresholdUnit?.symbol}`,
     );
-    if (newThresholdUnit) {
+    if (newThresholdUnit && !variable.secondary_unit) {
       setUnitSymbol(newThresholdUnit.symbol);
       updateVariable({
         id: variable.id,
@@ -160,7 +160,7 @@ function VariableRow({
         },
       });
     }
-    if (aucVariable && aucUnit) {
+    if (aucVariable && aucUnit && !aucVariable.secondary_unit) {
       updateVariable({
         id: aucVariable.id,
         variable: {
