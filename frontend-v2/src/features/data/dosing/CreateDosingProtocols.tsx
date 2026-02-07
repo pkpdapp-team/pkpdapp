@@ -89,16 +89,18 @@ function createDosingRows(
   );
   const nextData = [...state.data];
   const uniqueIds = new Set(nextData.map((row) => row[idField]));
-  const uniqueGroupIds = [...new Set(nextData.map((row) => row["Group ID"]))];
+  const uniqueGroupIds = [
+    ...new Set(nextData.map((row) => row[state.groupColumn])),
+  ];
   const newRows: Row[] = [];
   dosingCompartments.forEach((compartment, index) => {
     uniqueIds.forEach((id) => {
       const subjectRow = state.data.find((row) => row[idField] === id);
-      const groupId = subjectRow?.["Group ID"];
+      const groupId = subjectRow?.[state.groupColumn];
       const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
       const adminId = index * 10 + groupIndex;
       const timeUnit = subjectRow?.[timeUnitField] || "h";
-      const [_c, name] = compartment.split(".");
+      const name = compartment.split(".")[1];
       const isHuman = project.species === "H";
       const isAvhOrAah = name == "Avh" || name == "Aah";
       const isPerKg = !isHuman && !isAvhOrAah;
@@ -191,6 +193,9 @@ function normaliseCSVData(
       administrationIdField,
       groupIdField,
     );
+  }
+  if (_data === state.data && _normalisedFields === state.normalisedFields) {
+    return state;
   }
   return { data: _data, normalisedFields: _normalisedFields };
 }

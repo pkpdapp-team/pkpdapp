@@ -70,7 +70,7 @@ class BiomarkerType(models.Model):
     )
     variable = models.ForeignKey(
         "Variable",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="biomarker_types",
         blank=True,
         null=True,
