@@ -342,6 +342,10 @@ class Variable(StoredModel):
                     upper = 1.0
                 elif myokit_variable.qname() == "PKCompartment.F":
                     upper = 1.0
+                elif myokit_variable.qname() == "PKCompartment.Frcy":
+                    upper = 1.0
+                elif myokit_variable.qname() == "Extravascular.Fa2":
+                    upper = 1.0
                 elif myokit_variable.qname() == "PDCompartment.FE":
                     upper = 1.0
                 elif myokit_variable.qname() == "PDCompartment.Emax":
