@@ -200,11 +200,6 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             for plot in plots:
                 if plot.y_axes.count() == 0:
                     plot.delete()
-        # delete any empty subject groups
-        subject_groups = new_pkpd_model.project.groups.all()
-        for sg in subject_groups:
-            if sg.protocols.count() == 0:
-                sg.delete()
         return new_pkpd_model
 
 
