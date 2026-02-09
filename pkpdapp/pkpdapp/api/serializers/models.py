@@ -180,7 +180,8 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                     # this can occur if a variable is removed from the model
                     continue
 
-            # delete any remaining old mappings, derived variables and time intervals
+            # delete any remaining old mappings,
+            # derived variables and time intervals
             for old_model in old_mappings:
                 old_model.delete()
             for old_model in old_derived_vars:

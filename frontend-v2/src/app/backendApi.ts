@@ -143,6 +143,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/combined_model/${queryArg.id}/`,
         method: "PUT",
         body: queryArg.combinedModel,
+        params: {
+          delete_protocols: queryArg.deleteProtocols,
+        },
       }),
     }),
     combinedModelPartialUpdate: build.mutation<
@@ -1326,6 +1329,8 @@ export type CombinedModelRetrieveApiArg = {
 export type CombinedModelUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
 export type CombinedModelUpdateApiArg = {
+  /** Delete linked protocols and dosing variables. */
+  deleteProtocols?: boolean;
   /** A unique integer value identifying this combined model. */
   id: number;
   combinedModel: CombinedModel;
