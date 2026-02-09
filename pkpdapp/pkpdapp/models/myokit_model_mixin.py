@@ -341,10 +341,7 @@ class MyokitModelMixin:
                         )
                         default_unit_symbol = None
                         if v.name == "calc_C1_f":
-                            if compound_type == "SM":
-                                default_unit_symbol = "ng/mL"
-                            elif compound_type == "LM":
-                                default_unit_symbol = "µg/mL"
+                            default_unit_symbol = "ng/mL"
                         elif v.name.startswith("C"):
                             if v.name.startswith("CT"):
                                 default_unit_symbol = "pg/mL"
