@@ -335,17 +335,23 @@ class MyokitModelMixin:
                 # loop through all new variables
                 # and set units for concentration variables
                 for v in all_new_variables:
-                    if v.unit is not None and v.name.startswith("C"):
+                    if v.unit is not None:
                         compatible_units = v.unit.get_compatible_units(
                             compound=project.compound
                         )
                         default_unit_symbol = None
-                        if v.name.startswith("CT"):
-                            default_unit_symbol = "pg/mL"
-                        elif compound_type == "SM":
-                            default_unit_symbol = "ng/mL"
-                        elif compound_type == "LM":
-                            default_unit_symbol = "µg/mL"
+                        if v.name == "calc_C1_f":
+                            if compound_type == "SM":
+                                default_unit_symbol = "ng/mL"
+                            elif compound_type == "LM":
+                                default_unit_symbol = "µg/mL"
+                        elif v.name.startswith("C"):
+                            if v.name.startswith("CT"):
+                                default_unit_symbol = "pg/mL"
+                            elif compound_type == "SM":
+                                default_unit_symbol = "ng/mL"
+                            elif compound_type == "LM":
+                                default_unit_symbol = "µg/mL"
                         if default_unit_symbol is not None:
                             for cu in compatible_units:
                                 if cu.symbol == default_unit_symbol:
