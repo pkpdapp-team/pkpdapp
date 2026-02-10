@@ -479,9 +479,7 @@ class MyokitModelMixin:
         return conversion_factor
 
     def _convert_unit(self, variable, myokit_variable_sbml, value):
-        conversion_factor = self._conversion_factor(
-            variable, myokit_variable_sbml
-        )
+        conversion_factor = self._conversion_factor(variable, myokit_variable_sbml)
 
         return conversion_factor * value
 
@@ -559,7 +557,7 @@ class MyokitModelMixin:
             dosing_protocols=dosing_protocols,
         )
         # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
+        sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
         # Simulate, logging only state variables given by `outputs`
         datalog = sim.run(time_max, log=outputs)
         return self.serialize_datalog(datalog, model)
