@@ -119,14 +119,14 @@ const ParameterRow: FC<Props> = ({
     value: DerivedVariableType | "";
     label: string;
   }[] = [
-    { value: "EMX", label: "Dose Emax" },
-    { value: "IMX", label: "Dose Imax" },
-    { value: "POW", label: "Dose Power Increase" },
-    { value: "NPW", label: "Dose Power Decrease" },
-    { value: "TDI", label: "Time Decrease" },
-    { value: "IND", label: "Time Increase" },
-    { value: "", label: "None" },
-  ];
+      { value: "EMX", label: "Dose Emax" },
+      { value: "IMX", label: "Dose Imax" },
+      { value: "POW", label: "Dose Power Increase" },
+      { value: "NPW", label: "Dose Power Decrease" },
+      { value: "TDI", label: "Time Decrease" },
+      { value: "IND", label: "Time Increase" },
+      { value: "", label: "None" },
+    ];
 
   // Volume parameters should not have MM or EMM nonlinearity
   if (!variable.name.startsWith("V")) {
@@ -182,7 +182,7 @@ const ParameterRow: FC<Props> = ({
   }));
   // variable C1 is the default concentration variable
   const concentrationDefault = timeVaryingVariables.find(
-    (variable) => variable.name === "C1",
+    (variable) => variable.name === "C1" || variable.name === "C1_f",
   )?.id;
 
   const handleNonlinearityChange = (event: SelectChangeEvent<string>) => {
