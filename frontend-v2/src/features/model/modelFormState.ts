@@ -61,6 +61,26 @@ export function useModelFormDataCallback({
           id: model.id,
           combinedModel: data,
         });
+        if (response?.error) {
+          if (confirm("Delete linked protocols and dosing variables?")) {
+            // Resend the form with deleteProtocols set.
+            updateModel({
+              id: model.id,
+              combinedModel: data,
+              deleteProtocols: true,
+            });
+          } else {
+            // Reset the form back to the original model values.
+            updateModel({
+              id: model.id,
+              combinedModel: model,
+            });
+            reset({
+              ...model,
+            });
+          }
+        }
+
         if (response?.data) {
           /* 
               If the pk model has changed

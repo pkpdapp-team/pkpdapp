@@ -212,35 +212,7 @@ class MyokitModelMixin:
         # update the variables of the model
         from pkpdapp.models import Variable
 
-        removed_variables = []
-        if self.is_library_model:
-            removed_variables += [
-                "PKCompartment.b_term",
-                "PKCompartment.c_term",
-                "PKCompartment.RateAbs",
-            ]
-            if not getattr(self, "has_saturation", True):
-                removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
-            if not getattr(self, "has_effect", True):
-                removed_variables += [
-                    "PKCompartment.Ce",
-                    "PKCompartment.AUCe",
-                    "PKCompartment.ke0",
-                    "PKCompartment.Kpu",
-                    "PKCompartment.Kp",
-                ]
-            if not getattr(self, "has_hill_coefficient", True):
-                removed_variables += [
-                    "PDCompartment.HC",
-                    "PDCompartment.HC1st",
-                    "PDCompartment.HC2nd",
-                ]
-            # tlag now on per variable basis
-            removed_variables += ["PKCompartment.tlag"]
-            if not getattr(self, "has_bioavailability", True):
-                removed_variables += ["PKCompartment.F"]
-            if not getattr(self, "has_anti_drug_antibodies", True):
-                removed_variables += ["PKCompartment.CLada", "PKCompartment.tada"]
+        removed_variables = self.calculate_removed_variables()
 
         model = self.get_myokit_model()
         new_variables = []
@@ -357,6 +329,38 @@ class MyokitModelMixin:
 
         # save all new variables
         Variable.objects.bulk_create(all_new_variables)
+
+    def calculate_removed_variables(self):
+        removed_variables = []
+        if self.is_library_model:
+            removed_variables += [
+                "PKCompartment.b_term",
+                "PKCompartment.c_term",
+                "PKCompartment.RateAbs",
+            ]
+            if not getattr(self, "has_saturation", True):
+                removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
+            if not getattr(self, "has_effect", True):
+                removed_variables += [
+                    "PKCompartment.Ce",
+                    "PKCompartment.AUCe",
+                    "PKCompartment.ke0",
+                    "PKCompartment.Kpu",
+                    "PKCompartment.Kp",
+                ]
+            if not getattr(self, "has_hill_coefficient", True):
+                removed_variables += [
+                    "PDCompartment.HC",
+                    "PDCompartment.HC1st",
+                    "PDCompartment.HC2nd",
+                ]
+            # tlag now on per variable basis
+            removed_variables += ["PKCompartment.tlag"]
+            if not getattr(self, "has_bioavailability", True):
+                removed_variables += ["PKCompartment.F"]
+            if not getattr(self, "has_anti_drug_antibodies", True):
+                removed_variables += ["PKCompartment.CLada", "PKCompartment.tada"]
+        return removed_variables
 
     def set_variables_from_inference(self, inference):
         results_for_mle = inference.get_maximum_likelihood()

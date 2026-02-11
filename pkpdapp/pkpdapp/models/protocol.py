@@ -90,7 +90,7 @@ class Protocol(StoredModel):
 
     variable = models.ForeignKey(
         "Variable",
-        on_delete=models.CASCADE,
+        on_delete=models.RESTRICT,
         related_name="protocols",
         blank=True,
         null=True,

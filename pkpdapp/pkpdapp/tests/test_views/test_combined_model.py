@@ -70,12 +70,14 @@ class CombinedModelTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         cm = CombinedModel.objects.get(pk=response.data["id"])
 
-        # set up a protocol
+        # set up a protocol linked to A1 variable
+        a1 = cm.variables.get(name="A1")
         response = self.client.post(
             "/api/protocol/",
             data={
                 "name": "test protocol",
                 "project": self.project.id,
+                "variable": a1.id,
                 "doses": [
                     {
                         "start_time": 0,
@@ -90,17 +92,6 @@ class CombinedModelTestCase(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # attach it to the A1 variables
-        a1 = cm.variables.get(name="A1")
-        response = self.client.patch(
-            f"/api/variable/{a1.id}/?dosed_pk_model_id={cm.id}",
-            data={
-                "protocol": response.data["id"],
-            },
-            format="json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if pd is not None:
             c1 = cm.variables.get(name="C1")
@@ -189,3 +180,112 @@ class CombinedModelTestCase(APITestCase):
         np.testing.assert_allclose(c_drug3, c_drug2, atol=1e-5, rtol=1e-5)
         np.testing.assert_allclose(c1_3, c1_2, atol=1e-5, rtol=1e-5)
         np.testing.assert_allclose(e3, e2, atol=1e-5, rtol=1e-5)
+
+    def test_perform_update_simple_change_succeeds(self):
+        """Test that simple updates without IntegrityError work normally"""
+        # Create a combined model
+        pd = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_elimination",
+        )
+        model = self.create_combined_model("test model", pd)
+        cm = CombinedModel.objects.get(pk=model["id"])
+
+        # Verify protocol exists
+        self.assertEqual(self.project.protocols.count(), 1)
+
+        # Update name - this should work without issues
+        response = self.client.patch(
+            f"/api/combined_model/{cm.id}/",
+            data={"name": "updated model name"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "updated model name")
+
+        # Verify protocol still exists
+        self.assertEqual(self.project.protocols.count(), 1)
+
+    def test_perform_update_with_integrity_error_no_delete_param(self):
+        """Test that IntegrityError is raised when delete_protocols not set"""
+        # Create a combined model with protocol
+        pd1 = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_elimination",
+        )
+        model = self.create_combined_model("test model", pd1)
+        cm = CombinedModel.objects.get(pk=model["id"])
+
+        # Get a protocol that references a variable
+        protocol = self.project.protocols.first()
+        variable = protocol.variable
+        self.assertIsNotNone(variable)
+        self.assertEqual(variable.dosed_pk_model.id, cm.id)
+
+        response = self.client.patch(
+            f"/api/combined_model/{cm.id}/",
+            data={"pk_model": None},
+            format="json",
+        )
+
+        # Should fail with 400 error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+        # Verify protocol still exists
+        self.assertEqual(self.project.protocols.count(), 1)
+
+    def test_perform_update_with_integrity_error_and_delete_true(self):
+        """Test that protocols are deleted when delete_protocols=true"""
+        # Create a combined model with protocol
+        pd1 = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_elimination",
+        )
+        model = self.create_combined_model("test model", pd1)
+        cm = CombinedModel.objects.get(pk=model["id"])
+
+        # Get protocol that references a variable
+        protocol = self.project.protocols.first()
+        variable = protocol.variable
+        self.assertIsNotNone(variable)
+
+        # Verify protocol exists
+        self.assertEqual(self.project.protocols.count(), 1)
+
+        response = self.client.patch(
+            f"/api/combined_model/{cm.id}/?delete_protocols=true",
+            data={"pk_model": None},
+            format="json",
+        )
+
+        # Should succeed
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["pk_model"], None)
+
+        # Verify all protocols have been deleted
+        self.assertEqual(self.project.protocols.count(), 0)
+
+    def test_perform_update_with_integrity_error_and_delete_false(self):
+        """Test that IntegrityError is raised when delete_protocols=false"""
+        # Create a combined model with protocol
+        pd1 = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_elimination",
+        )
+        model = self.create_combined_model("test model", pd1)
+        cm = CombinedModel.objects.get(pk=model["id"])
+
+        # Get protocol that references a variable
+        protocol = self.project.protocols.first()
+        variable = protocol.variable
+        self.assertIsNotNone(variable)
+
+        response = self.client.patch(
+            f"/api/combined_model/{cm.id}/",
+            data={"pk_model": None},
+            format="json",
+        )
+
+        # Should fail with 400 error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+        # Verify protocol still exists
+        self.assertEqual(self.project.protocols.count(), 1)

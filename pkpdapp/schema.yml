@@ -373,6 +373,11 @@ paths:
     put:
       operationId: combined_model_update
       parameters:
+      - in: query
+        name: delete_protocols
+        schema:
+          type: boolean
+        description: Delete linked protocols and dosing variables.
       - in: path
         name: id
         schema:
