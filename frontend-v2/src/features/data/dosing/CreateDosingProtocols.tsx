@@ -14,7 +14,6 @@ import {
   Typography,
   SelectChangeEvent,
   TableContainer,
-  TextField,
 } from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
 import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
@@ -25,6 +24,7 @@ import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../../shared/calculateTableHeights";
+import { NumericTableCell } from "./NumericTableCell";
 
 function findFieldByType(type: string, state: StepperState) {
   return (
@@ -199,41 +199,6 @@ function normaliseCSVData(
   }
   return { data: _data, normalisedFields: _normalisedFields };
 }
-
-type NumericTableCellProps = {
-  id: string;
-  disabled: boolean;
-  label: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  value: string | number | null | undefined;
-};
-const NumericTableCell: FC<NumericTableCellProps> = ({
-  id,
-  disabled,
-  label,
-  onChange,
-  value,
-}) => {
-  return (
-    <TableCell sx={{ width: "10rem" }}>
-      <TextField
-        id={id}
-        disabled={disabled}
-        label={label}
-        value={value}
-        onChange={onChange}
-        type="number"
-        size="small"
-        margin="dense"
-        slotProps={{
-          inputLabel: {
-            shrink: true,
-          },
-        }}
-      />
-    </TableCell>
-  );
-};
 
 interface IDosingProtocols {
   administrationIdField: string;

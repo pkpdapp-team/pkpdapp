@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { ChangeEvent, FC } from "react";
 import {
   Box,
   Select,
@@ -26,6 +26,7 @@ import {
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../../shared/calculateTableHeights";
+import { NumericTableCell } from "./NumericTableCell";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -62,7 +63,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const amountVariableField = findFieldByType("Amount Variable", state);
   const timeField = findFieldByType("Time", state);
   const timeUnitField = findFieldByType("Time Unit", state);
-  const groupIdField = findFieldByType("Group ID", state);
+  const groupIdField = state.groupColumn;
   const addlDosesField = findFieldByType("Additional Doses", state);
   const interDoseField = findFieldByType("Interdose Interval", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
@@ -136,6 +137,31 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         [amountVariableField, "Amount Variable"],
       ]);
     };
+  const handleAmountChange =
+    (id: string) => (event: ChangeEvent<HTMLInputElement>) => {
+      const nextData = [...state.data];
+      const { value } = event.target;
+      nextData
+        .filter((row) =>
+          administrationIdField ? row[administrationIdField] === id : true,
+        )
+        .forEach((row) => {
+          row[amountField] = value;
+        });
+      const newNormalisedFields = new Map([
+        ...state.normalisedFields.entries(),
+        [amountField, "Amount"],
+      ]);
+      state.data = nextData;
+      state.normalisedFields = newNormalisedFields;
+      const { errors, warnings } = validateState({
+        ...state,
+        data: nextData,
+        normalisedFields: newNormalisedFields,
+      });
+      state.errors = errors;
+      state.warnings = warnings;
+    };
   const handleAmountUnitChange = (id: string) => (event: SelectChangeEvent) => {
     const nextData = [...state.data];
     const { value } = event.target;
@@ -178,6 +204,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   return (
     <Box component="div">
       <TableHeader
+        id="dosing-protocols-header"
         label="Dosing"
         tooltip="Set a dosing compartment and unit for each of your subject groups
           here."
@@ -192,7 +219,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
           transition: "all .35s ease-in",
         }}
       >
-        <Table stickyHeader size="small">
+        <Table
+          stickyHeader
+          size="small"
+          aria-labelledby="dosing-protocols-header"
+        >
           <TableHead>
             <TableRow>
               <TableCell>
@@ -256,7 +287,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 <TableRow key={adminId}>
                   <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>
                   <TableCell sx={{ width: "5rem" }}>
-                    <Typography>{currentRow?.["Group ID"] || "."}</Typography>
+                    <Typography>
+                      {currentRow?.[state.groupColumn] || "."}
+                    </Typography>
                   </TableCell>
                   <TableCell sx={{ width: "10rem" }}>
                     <FormControl fullWidth>
@@ -284,11 +317,17 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                       </Select>
                     </FormControl>
                   </TableCell>
-                  <TableCell sx={{ width: "10rem" }}>
-                    <Typography>{amount}</Typography>
-                  </TableCell>
+                  <NumericTableCell
+                    id={`input-amount-${adminId}`}
+                    disabled={!selectedVariable}
+                    label="Amount"
+                    onChange={handleAmountChange(adminId)}
+                    value={amount}
+                  />{" "}
                   <TableCell>
+                    {" "}
                     <FormControl fullWidth>
+                      {" "}
                       <InputLabel
                         size="small"
                         id={`select-unit-${adminId}-label`}
