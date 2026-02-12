@@ -11,6 +11,7 @@ import {
   useUnitListQuery,
   useVariableListQuery,
 } from "../../../app/backendApi";
+import { Row } from "../LoadData";
 
 interface IMapDosing {
   state: StepperState;
@@ -61,18 +62,28 @@ function useApiQueries() {
   };
 }
 
+function findFieldByType(name: string, state: StepperState) {
+  return (
+    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
+    name
+  );
+}
+
 const MapDosing: FC<IMapDosing> = ({
   state,
   notificationsInfo,
 }: IMapDosing) => {
   // Derived state from the uploaded CSV data.
-  const amountUnitField =
-    state.fields.find((field) =>
-      ["Amount Unit", "Unit"].includes(state.normalisedFields.get(field) || ""),
-    ) || "Amount Unit";
-  const administrationIdField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Administration ID",
-  );
+  const amountField = findFieldByType("Amount", state);
+  const amountUnitField = findFieldByType("Amount Unit", state);
+  const administrationIdField = findFieldByType("Administration ID", state);
+  const dosingRows: Row[] = amountField
+    ? state.data.filter(
+        (row) =>
+          (row[amountField] && row[amountField] !== ".") ||
+          parseInt(row[administrationIdField]),
+      )
+    : state.data.filter((row) => parseInt(row[administrationIdField]));
 
   // Fetch API data.
   const { isLoading, amountUnit, project, projectProtocols, units, variables } =
@@ -109,7 +120,7 @@ const MapDosing: FC<IMapDosing> = ({
   });
   const uniqueDosingCompartments = [...new Set(dosingCompartments)];
 
-  return state.hasDosingRows ? (
+  return dosingRows.length ? (
     <DosingProtocols
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField}

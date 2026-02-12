@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { projectHandlers } from "./project.mock";
+import { projectHandlers } from "./project.v3.mock";
 
 import { HttpResponse, delay, http } from "msw";
 import {
@@ -172,13 +172,24 @@ export const MapDosing: Story = {
     });
     expect(mapDosingTable).toBeInTheDocument();
 
+    const variableSelects = await canvas.findAllByRole("combobox", {
+      name: "Variable",
+    });
+    expect(variableSelects).toHaveLength(2);
+    await waitFor(() => {
+      expect(variableSelects[0]).toHaveTextContent("A1");
+      expect(variableSelects[1]).toHaveTextContent("A1");
+    });
+
     const unitSelects = canvas.getAllByRole("combobox", {
       name: "Units",
     });
     expect(unitSelects.length).toBe(2);
-    unitSelects.forEach((select) => {
-      expect(select).toHaveTextContent("mg");
+    await waitFor(() => {
+      expect(unitSelects[0]).toHaveTextContent("mg");
+      expect(unitSelects[1]).toHaveTextContent("mg");
     });
+
     const perKgCheckboxes = canvas.getAllByRole("checkbox", {
       name: "Per Body Weight(kg)",
     });
@@ -186,6 +197,15 @@ export const MapDosing: Story = {
     perKgCheckboxes.forEach((checkbox) => {
       expect(checkbox).toBeChecked();
     });
+
+    const amountInputs = canvas.getAllByRole("spinbutton", {
+      name: "Amount",
+    });
+    expect(amountInputs).toHaveLength(2);
+    amountInputs.forEach((input) => {
+      expect(input).toHaveValue(10);
+    });
+    await userEvent.type(amountInputs[0], "[backspace][backspace]15");
   },
 };
 
