@@ -35,6 +35,7 @@ import {
 import { TableHeader } from "../../../components/TableHeader";
 import { groupDataRows } from "../stratification/Stratification";
 import { ObservationIDRow } from "./ObservationIDRow";
+import { findFieldByType } from "../findFieldByType";
 
 interface IMapObservations {
   state: StepperState;
@@ -95,13 +96,6 @@ export function useApiQueries() {
   );
 
   return { model, variables, units };
-}
-
-function findFieldByType(name: string, state: StepperState) {
-  return (
-    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
-    name
-  );
 }
 
 const MapObservations: FC<IMapObservations> = ({
