@@ -6048,4 +6048,18 @@ export const projectHandlers = [
       status: 200,
     });
   }),
+  http.put("/api/variable/:id", async ({ params, request }) => {
+    await delay();
+    //@ts-expect-error params.id is a string
+    const variableId = parseInt(params.id, 10);
+    const variableData = await request.json();
+    //@ts-expect-error variableData is DefaultBodyType
+    const updatedVariable = { ...variableData, id: variableId };
+    const variableIndex = variables.findIndex((v) => v.id === variableId);
+    if (variableIndex !== -1) { 
+      variables[variableIndex] = updatedVariable; 
+      return HttpResponse.json(updatedVariable, { status: 200, }); 
+    } 
+    return HttpResponse.json({ error: "Variable not found" }, { status: 404 });
+  }),
 ];

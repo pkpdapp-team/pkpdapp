@@ -12,6 +12,7 @@ import {
   useVariableListQuery,
 } from "../../../app/backendApi";
 import { Row } from "../LoadData";
+import { findFieldByType } from "../findFieldByType";
 
 interface IMapDosing {
   state: StepperState;
@@ -60,13 +61,6 @@ function useApiQueries() {
     units,
     variables,
   };
-}
-
-function findFieldByType(name: string, state: StepperState) {
-  return (
-    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
-    name
-  );
 }
 
 const MapDosing: FC<IMapDosing> = ({

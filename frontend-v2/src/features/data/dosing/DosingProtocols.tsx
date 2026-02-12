@@ -20,13 +20,14 @@ import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
 import { validateState } from "../dataValidation";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
-import { generateAdministrationIds } from "./CreateDosingProtocols";
+import { generateAdministrationIds } from "./generateAdministrationIds";
 import {
   calculateTableHeights,
   getTableHeight,
   SINGLE_TABLE_BREAKPOINTS,
 } from "../../../shared/calculateTableHeights";
 import { NumericTableCell } from "./NumericTableCell";
+import { findFieldByType } from "../findFieldByType";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -40,13 +41,6 @@ interface IDosingProtocols {
     count: number;
   };
   project: ProjectRead;
-}
-
-function findFieldByType(name: string, state: StepperState) {
-  return (
-    state.fields.find((field) => state.normalisedFields.get(field) === name) ||
-    name
-  );
 }
 
 const DosingProtocols: FC<IDosingProtocols> = ({
