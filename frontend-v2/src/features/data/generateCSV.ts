@@ -102,7 +102,7 @@ export default function generateCSV(
 
     const dosingRows: Row[] = group.protocols.flatMap(
       (protocol, protocolIndex) => {
-        const adminId = (groupIndex + 1) * 10 + protocolIndex;
+        const adminId = protocolIndex * groups.length + groupIndex + 1;
         const variable = variables?.find((v) => v.id === protocol.variable);
         return parseDosingRow(protocol, units, groupId, adminId, variable);
       },
