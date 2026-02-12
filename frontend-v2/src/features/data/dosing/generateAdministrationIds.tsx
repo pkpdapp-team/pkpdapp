@@ -23,7 +23,7 @@ export function generateAdministrationIds(
   dosingRows.forEach((row) => {
     const groupIndex = uniqueGroupIds.indexOf(row[groupIdField]) + 1;
     const compartmentIndex = dosingCompartments.indexOf(row["Amount Variable"]);
-    const adminId = `${compartmentIndex * 10 + groupIndex}`;
+    const adminId = `${compartmentIndex * uniqueGroupIds.length + groupIndex}`;
     if (row[administrationIdField] !== adminId) {
       row[administrationIdField] = adminId;
     }

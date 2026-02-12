@@ -62,7 +62,7 @@ function createDosingRows(
       const subjectRow = state.data.find((row) => row[idField] === id);
       const groupId = subjectRow?.[state.groupColumn];
       const groupIndex = groupId ? uniqueGroupIds.indexOf(groupId) + 1 : 0;
-      const adminId = index * 10 + groupIndex;
+      const adminId = index * uniqueGroupIds.length + groupIndex;
       const timeUnit = subjectRow?.[timeUnitField] || "h";
       const name = compartment.split(".")[1];
       const isHuman = project.species === "H";
