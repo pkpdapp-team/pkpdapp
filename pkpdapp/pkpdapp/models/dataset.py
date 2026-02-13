@@ -142,12 +142,13 @@ class Dataset(models.Model):
                 subject.group = group
                 subject.save()
         # create group protocol
-        group_id_to_protocol = {}
+        admin_id_to_protocol = {}
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
             dosing_rows[
                 [
                     "GROUP_ID",
+                    "ADMINISTRATION_ID",
                     "ADMINISTRATION_NAME",
                     "AMOUNT_UNIT",
                     "AMOUNT_VARIABLE",
@@ -158,6 +159,7 @@ class Dataset(models.Model):
             .iterrows()
         ):
             group_id = row["GROUP_ID"]
+            admin_id = row["ADMINISTRATION_ID"]
             route = row["ADMINISTRATION_NAME"]
             amount_unit = Unit.objects.get(symbol=row["AMOUNT_UNIT"])
             amount_per_body_weight = row["PER_BODY_WEIGHT_KG"]
@@ -185,7 +187,7 @@ class Dataset(models.Model):
                 amount_per_body_weight=amount_per_body_weight,
                 project=self.project,
             )
-            group_id_to_protocol[group_id] = protocol
+            admin_id_to_protocol[admin_id] = protocol
             group.protocols.add(protocol)
             group.save()
 
@@ -221,6 +223,7 @@ class Dataset(models.Model):
                     "AMOUNT_VARIABLE",
                     "INFUSION_TIME",
                     "EVENT_ID",
+                    "ADMINISTRATION_ID",
                     "ADMINISTRATION_NAME",
                     "ADDITIONAL_DOSES",
                     "INTERDOSE_INTERVAL",
@@ -230,6 +233,7 @@ class Dataset(models.Model):
             .iterrows()
         ):
             group_id = row["GROUP_ID"]
+            admin_id = row["ADMINISTRATION_ID"]
             time = row["TIME"]
             amount = row["AMOUNT"]
             amount_unit = row["AMOUNT_UNIT"]
@@ -238,7 +242,7 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = group_id_to_protocol[group_id]
+            protocol = admin_id_to_protocol[admin_id]
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1
