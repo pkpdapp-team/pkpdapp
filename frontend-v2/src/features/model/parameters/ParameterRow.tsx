@@ -101,7 +101,7 @@ const ParameterRow: FC<Props> = ({
 
   const isPD = variable.qname.startsWith("PD");
   const isPK =
-    variable.qname.startsWith("PK") || variable.qname.startsWith("Extra");
+    variable.qname.startsWith("PK") || variable.qname.startsWith("Extra") || variable.qname.startsWith("Effect")
   const isNonlin = variable.qname.startsWith("PKNonlin");
   const isUD = variable.qname.endsWith("_ud");
   const type = isUD ? "UD" : isPD ? "PD" : "PK";
