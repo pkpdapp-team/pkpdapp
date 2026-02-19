@@ -131,8 +131,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -328,12 +328,12 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   }, [handleSubmit, isDirty, submitCount, simulation, updateSimulation]);
 
   const filterOutputs = model?.is_library_model
-    ? ["environment.t", "PDCompartment.C_Drug"]
+    ? ["environment.t"]
     : [];
   const outputs =
     variables?.filter(
       (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname),
+        !variable.constant && !filterOutputs.includes(variable.qname) && variable.name !== "C_Drug"
     ) || [];
   const outputsSorted = outputs.map((variable) => {
     if (variable.name.startsWith("C")) {
