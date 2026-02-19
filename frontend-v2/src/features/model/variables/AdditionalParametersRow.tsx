@@ -80,7 +80,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
+    undefined;
 
   const onClickDerived = (type: DerivedVariableType) => () => {
     const index = derivedIndex(type, derivedVariables, variable);
@@ -181,6 +181,7 @@ const AdditionalParametersRow: FC<Props> = ({
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
+  const noSecondaryParameters = false;
   const isC1 = model.is_library_model && variable.qname.endsWith(".C1");
   const disableAuc = false;
   const disableRo =
@@ -193,7 +194,7 @@ const AdditionalParametersRow: FC<Props> = ({
 
   const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null;
 
-  if (noMapToPD && noDerivedVariables && noDosing) {
+  if (noMapToPD && noDerivedVariables && noSecondaryParameters && noDosing) {
     return null;
   }
 
@@ -211,7 +212,7 @@ const AdditionalParametersRow: FC<Props> = ({
     variable_name = `${variable.name}${compartment_number}`;
   }
 
-  return noMapToPD && noDerivedVariables ? null : (
+  return (
     <TableRow>
       <TableCell size="small" width="5rem">
         <Tooltip title={variable.description}>
@@ -244,7 +245,7 @@ const AdditionalParametersRow: FC<Props> = ({
         </TableCell>
       )}
       <TableCell size="small" sx={{ width: "15rem" }}>
-        {!noDerivedVariables && (
+        {!noSecondaryParameters && (
           <FormControlLabel
             disabled={disableAuc || isSharedWithMe}
             control={
