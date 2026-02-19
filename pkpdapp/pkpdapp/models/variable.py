@@ -337,6 +337,7 @@ class Variable(StoredModel):
             # lower and upper bounds for library models
             lower = None
             upper = None
+            unit = Unit.get_unit_from_variable(myokit_variable)
             if model.is_library_model:
                 if myokit_variable.qname() == "PDCompartment.Imax":
                     upper = 1.0
@@ -359,6 +360,13 @@ class Variable(StoredModel):
                     and "_tlag_" in myokit_variable.name()
                 ):
                     lower = 0.0
+                elif myokit_variable.qname().startswith(
+                    "PKNonlinearities"
+                ) and myokit_variable.name().endswith("_min"):
+                    parent_name = myokit_variable.name()[:-4]
+                    parent_var = model.variables.filter(name=parent_name).first()
+                    if parent_var is not None:
+                        unit = parent_var.unit
 
             state = myokit_variable.is_state()
             if state:
@@ -376,7 +384,7 @@ class Variable(StoredModel):
                 lower_bound=lower,
                 upper_bound=upper,
                 state=state,
-                unit=Unit.get_unit_from_variable(myokit_variable),
+                unit=unit,
                 dosed_pk_model=model,
                 color=num_variables,
                 display=myokit_variable.name() != "time",
