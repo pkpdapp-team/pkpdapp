@@ -88,14 +88,7 @@ function createDefaultSubjects(state: StepperState) {
     }
     return { ...row, ID: `${subjectCount}` };
   });
-  state.data = newData;
-  // Add "ID" to normalisedFields if it doesn't exist, without resetting other mappings
-  if (!state.normalisedFields.has("ID")) {
-    state.normalisedFields = new Map([
-      ...state.normalisedFields.entries(),
-      ["ID", "ID"],
-    ]);
-  }
+  updateDataAndResetFields(state, newData);
 }
 
 function createDefaultSubjectGroup(state: StepperState) {
@@ -103,14 +96,7 @@ function createDefaultSubjectGroup(state: StepperState) {
   newData.forEach((row) => {
     row["Group"] = "1";
   });
-  state.data = newData;
-  // Add "Group" to normalisedFields if it doesn't exist, without resetting other mappings
-  if (!state.normalisedFields.has("Group")) {
-    state.normalisedFields = new Map([
-      ...state.normalisedFields.entries(),
-      ["Group", "Cat Covariate"],
-    ]);
-  }
+  updateDataAndResetFields(state, newData);
 }
 
 function setMinimumInfusionTime(
@@ -148,10 +134,17 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
   useEffect(() => {
-    if (!normalisedHeaders.includes("ID")) {
+    // Check if ID column exists in the actual data, not just in normalisedHeaders
+    // This prevents re-creating ID column when user manually changes other mappings
+    const hasIDInData = state.data.length > 0 && "ID" in state.data[0];
+    if (!normalisedHeaders.includes("ID") && !hasIDInData) {
       createDefaultSubjects(state);
     }
-    if (!normalisedHeaders.includes("Cat Covariate")) {
+
+    // Check if Group column exists in the actual data
+    // This prevents re-creating Group column when user manually changes other mappings
+    const hasGroupInData = state.data.length > 0 && "Group" in state.data[0];
+    if (!normalisedHeaders.includes("Cat Covariate") && !hasGroupInData) {
       createDefaultSubjectGroup(state);
     }
 
