@@ -8,6 +8,7 @@ import { project, projectHandlers } from "./project.v3.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 
 import { HttpResponse, http } from "msw";
+import * as XLSX from "xlsx";
 
 const datasetHandlers = [
   http.get("/api/dataset/:id", () => {
@@ -106,6 +107,136 @@ export const UploadFile: Story = {
     expect(uploadButton).toBeNull();
   },
 };
+
+// Helper function to create Excel file from CSV data
+function createExcelFromCSV(csvString: string, filename: string, sheetNames?: string[]): File {
+  // Parse CSV to get rows
+  const lines = csvString.trim().split('\n');
+  const data = lines.map(line => {
+    // Simple CSV parsing - split by comma
+    return line.split(',');
+  });
+
+  const workbook = XLSX.utils.book_new();
+
+  if (sheetNames && sheetNames.length > 0) {
+    // Create multiple sheets
+    sheetNames.forEach((sheetName, index) => {
+      const sheetData = index === 0 ? data : [["Other"], ["Data"]];
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    });
+  } else {
+    // Create single sheet
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  }
+
+  const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  return new File([excelBuffer], filename, {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+}
+
+export const UploadExcelFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create Excel file from the same test CSV data
+    const file = createExcelFromCSV(testCSV, "test.xlsx");
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    const notificationsButton = await canvas.findByRole("button", {
+      name: "Notifications 1",
+    });
+    expect(notificationsButton).toBeInTheDocument();
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(49); // 48 data rows + 1 header row
+
+    const uploadButton = canvas.queryByRole("button", {
+      name: "Upload Dataset",
+    });
+    expect(uploadButton).toBeNull();
+  },
+};
+
+export const UploadMultiSheetExcel: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create multi-sheet Excel file (should use first sheet)
+    const file = createExcelFromCSV(testCSV, "test_multi.xlsx", ["MainData", "OtherSheet"]);
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Should still work - uses first sheet
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(49); // 48 data rows + 1 header row
+  },
+};
+
+export const UploadInvalidFileType: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Try to upload a file with invalid MIME type
+    const file = new File(["invalid content"], "test.pdf", { type: "application/pdf" });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Should show error message
+    const errorText = await canvas.findByText(/File type not supported/i);
+    expect(errorText).toBeInTheDocument();
+  },
+};
+
+export const UploadEmptyExcelFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create empty Excel file (workbook with empty sheet)
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet([]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Empty");
+    const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const file = new File([excelBuffer], "empty.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Should show error message about empty file
+    const errorText = await canvas.findByText(/Excel file contains no data/i);
+    expect(errorText).toBeInTheDocument();
+  },
+};
+
 
 export const Stratification: Story = {
   play: async ({ context, canvasElement, userEvent }) => {

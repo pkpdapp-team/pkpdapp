@@ -25,3 +25,8 @@ logfile.log*
 .vscode
 
 notes.md
+AGENTS.md
+agent_plan
+tmp/
+.claude
+.devcontainer
