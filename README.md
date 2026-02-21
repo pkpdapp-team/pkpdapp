@@ -129,11 +129,11 @@ NOTE: the current version of the frontend does not currently use the rabbitmq se
 
 ### Django backend
 
-1. Install sundials, python dev libraries and rabbitmq server
+1. Install dependencies
     - Ubuntu-latest:
 
     ```bash
-    apt-get install libsundials-dev python3-dev rabbitmq-server
+    apt-get install build-essential libsasl2-dev python3-dev libldap2-dev libssl-dev libsundials-dev memcached
     ```
 
     Note: if you are in WSL then the rabbitmq server will not automatically start, you
