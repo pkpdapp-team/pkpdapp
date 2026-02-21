@@ -118,3 +118,19 @@ class TestUnitModel(TestCase):
             ],
             compound=self.compound,
         )
+
+    def test_mm3_unit_compatibility(self):
+        """Test that mm³ is compatible with other volume units"""
+        self.check_compatible_unit("mm³", ["L", "mL", "mm³"])
+
+    def test_mm3_unit_conversions(self):
+        """Test conversion factors for mm³"""
+        mm3 = Unit.objects.get(symbol="mm³")
+        mL = Unit.objects.get(symbol="mL")
+        L = Unit.objects.get(symbol="L")
+
+        # 1 mL = 1000 mm³
+        self.assertAlmostEqual(mm3.convert_to(mL), 1e-3, places=9)
+
+        # 1 L = 1,000,000 mm³
+        self.assertAlmostEqual(mm3.convert_to(L), 1e-6, places=9)
