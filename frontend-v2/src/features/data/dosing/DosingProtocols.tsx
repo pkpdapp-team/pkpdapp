@@ -28,6 +28,7 @@ import {
 } from "../../../shared/calculateTableHeights";
 import { NumericTableCell } from "./NumericTableCell";
 import { findFieldByType } from "../findFieldByType";
+import MappingSummary from "../MappingSummary";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -202,6 +203,16 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         label="Dosing"
         tooltip="Set a dosing compartment and unit for each of your subject groups
           here."
+      />
+      <MappingSummary
+        state={state}
+        title="Mapped Dosing Information"
+        fields={[
+          { label: "Amount Unit", type: "Amount Unit" },
+          { label: "Time Unit", type: "Time Unit", optional: true },
+          { label: "Additional Doses", type: "Additional Doses", optional: true },
+          { label: "Interdose Interval", type: "Interdose Interval", optional: true },
+        ]}
       />
       <TableContainer
         sx={{

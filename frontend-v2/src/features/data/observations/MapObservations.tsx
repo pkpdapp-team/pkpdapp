@@ -36,6 +36,7 @@ import { TableHeader } from "../../../components/TableHeader";
 import { groupDataRows } from "../stratification/Stratification";
 import { ObservationIDRow } from "./ObservationIDRow";
 import { findFieldByType } from "../findFieldByType";
+import MappingSummary from "../MappingSummary";
 
 interface IMapObservations {
   state: StepperState;
@@ -263,6 +264,14 @@ const MapObservations: FC<IMapObservations> = ({
         label="Observations"
         tooltip="Observation units have not been defined in the dataset and need to be
         defined manually."
+      />
+      <MappingSummary
+        state={state}
+        title="Mapped Observation Information"
+        fields={[
+          { label: "Observation Unit", type: "Observation Unit" },
+          { label: "Time Unit", type: "Time Unit", optional: true },
+        ]}
       />
       <Stack>
         <TableContainer
