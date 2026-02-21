@@ -88,7 +88,14 @@ function createDefaultSubjects(state: StepperState) {
     }
     return { ...row, ID: `${subjectCount}` };
   });
-  updateDataAndResetFields(state, newData);
+  state.data = newData;
+  // Add "ID" to normalisedFields if it doesn't exist, without resetting other mappings
+  if (!state.normalisedFields.has("ID")) {
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["ID", "ID"],
+    ]);
+  }
 }
 
 function createDefaultSubjectGroup(state: StepperState) {
@@ -96,7 +103,14 @@ function createDefaultSubjectGroup(state: StepperState) {
   newData.forEach((row) => {
     row["Group"] = "1";
   });
-  updateDataAndResetFields(state, newData);
+  state.data = newData;
+  // Add "Group" to normalisedFields if it doesn't exist, without resetting other mappings
+  if (!state.normalisedFields.has("Group")) {
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Group", "Cat Covariate"],
+    ]);
+  }
 }
 
 function setMinimumInfusionTime(
