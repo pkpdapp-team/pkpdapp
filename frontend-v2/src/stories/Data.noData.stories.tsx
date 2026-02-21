@@ -196,6 +196,48 @@ export const UploadMultiSheetExcel: Story = {
   },
 };
 
+export const UploadInvalidFileType: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Try to upload a file with invalid MIME type
+    const file = new File(["invalid content"], "test.pdf", { type: "application/pdf" });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Should show error message
+    const errorText = await canvas.findByText(/File type not supported/i);
+    expect(errorText).toBeInTheDocument();
+  },
+};
+
+export const UploadEmptyExcelFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create empty Excel file (workbook with empty sheet)
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet([]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Empty");
+    const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const file = new File([excelBuffer], "empty.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Should show error message about empty file
+    const errorText = await canvas.findByText(/Excel file contains no data/i);
+    expect(errorText).toBeInTheDocument();
+  },
+};
+
+
 export const Stratification: Story = {
   play: async ({ context, canvasElement, userEvent }) => {
     const canvas = within(canvasElement);

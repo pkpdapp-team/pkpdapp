@@ -101,22 +101,3 @@ export async function readExcelFile(file: File): Promise<string> {
     throw new Error("The Excel file appears to be corrupted or invalid");
   }
 }
-
-/**
- * Get all sheet names from an Excel file
- * @param file - The Excel file to read
- * @returns Promise resolving to array of sheet names
- * @throws Error if file cannot be parsed
- */
-export async function getSheetNames(file: File): Promise<string[]> {
-  try {
-    const arrayBuffer = await readFileAsArrayBuffer(file);
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    return workbook.SheetNames || [];
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to read Excel file: ${error.message}`);
-    }
-    throw new Error("Failed to read Excel file");
-  }
-}
