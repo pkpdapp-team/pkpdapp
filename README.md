@@ -23,6 +23,7 @@ git clone https://github.com/pkpdapp-team/pkpdapp.git
 cd pkpdapp
 ```
 
+
 ### `.env.prod` file
 
 The configuration of the production application is stored in the `.env.prod` file in the root directory. Edit this file and variables to correspond to your particular setup, in particular make sure `HOST_NAME`, `DATABASE_URL` is set correctly and that `SECRET_KEY` is altered from the default. The variables are described below:
