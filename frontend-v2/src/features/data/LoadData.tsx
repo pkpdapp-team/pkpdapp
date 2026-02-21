@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
+import { isExcelFile, readExcelFile, readFileAsText } from "./fileUtils";
 
 export type Row = {
   [key: string]: string;
@@ -22,7 +23,12 @@ export type Row = {
 export type Data = Row[];
 export type Field = string;
 
-const ALLOWED_TYPES = ["text/csv", "text/plain"];
+const ALLOWED_TYPES = [
+  "text/csv",
+  "text/plain",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel", // .xls
+];
 
 const style = {
   dropArea: {
@@ -149,57 +155,88 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     }
   }, [normalisedHeaders, state]);
 
+  // Helper function to process CSV data (used for both CSV and Excel files)
+  const processCsvData = useCallback(
+    (rawCsv: string, fileName: string) => {
+      const csvData = Papa.parse(rawCsv.trim(), { header: true });
+      const fields = csvData.meta.fields || [];
+      const normalisedFields = new Map(fields.map(normaliseHeader));
+      state.normalisedFields = normalisedFields;
+      // Make a copy of the new state that we can pass to validators.
+      const csvState = {
+        ...state,
+        data: csvData.data as Data,
+        fields,
+        normalisedFields,
+        normalisedHeaders: [...normalisedFields.values()],
+      };
+      const fieldValidation = validateState(csvState);
+      state.hasDosingRows = validateDosingRows(csvState);
+      state.data = csvState.data as Data;
+      const groupColumn =
+        fields.find(
+          (field) => normalisedFields.get(field) === "Cat Covariate",
+        ) || "Group";
+      const errors = csvData.errors
+        .map((e) => e.message)
+        .concat(fieldValidation.errors);
+      state.groupColumn = groupColumn;
+      state.errors = errors;
+      state.warnings = fieldValidation.warnings;
+      state.fileName = fileName;
+    },
+    [state],
+  );
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       state.timeUnit = "";
       state.amountUnit = "";
       state.errors = [];
       state.warnings = [];
-      acceptedFiles.forEach((file) => {
-        const reader = new FileReader();
 
-        reader.onabort = () => (state.errors = ["file reading was aborted"]);
-        reader.onerror = () => (state.errors = ["file reading has failed"]);
-        reader.onload = () => {
-          if (!ALLOWED_TYPES.includes(file.type)) {
+      // Process only the first file (dropzone typically handles one file at a time for this use case)
+      const file = acceptedFiles[0];
+      if (!file) return;
+
+      // Validate file type upfront
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        state.errors = [
+          "File type not supported. Please upload CSV or Excel (.xlsx) files.",
+        ];
+        return;
+      }
+
+      // Check if file is Excel format
+      if (isExcelFile(file.name)) {
+        // Handle Excel files
+        readExcelFile(file)
+          .then((csvString) => {
+            processCsvData(csvString, file.name);
+          })
+          .catch((error) => {
             state.errors = [
-              "Only CSV files are supported. Please upload a CSV file.",
+              error instanceof Error
+                ? error.message
+                : "Failed to parse Excel file",
             ];
-            return;
-          }
-          state.fileName = file.name;
-          // Parse the CSV data
-          const rawCsv = reader.result as string;
-          const csvData = Papa.parse(rawCsv.trim(), { header: true });
-          const fields = csvData.meta.fields || [];
-          const normalisedFields = new Map(fields.map(normaliseHeader));
-          state.normalisedFields = normalisedFields;
-          // Make a copy of the new state that we can pass to validators.
-          const csvState = {
-            ...state,
-            data: csvData.data as Data,
-            fields,
-            normalisedFields,
-            normalisedHeaders: [...normalisedFields.values()],
-          };
-          const fieldValidation = validateState(csvState);
-          state.hasDosingRows = validateDosingRows(csvState);
-          state.data = csvState.data as Data;
-          const groupColumn =
-            fields.find(
-              (field) => normalisedFields.get(field) === "Cat Covariate",
-            ) || "Group";
-          const errors = csvData.errors
-            .map((e) => e.message)
-            .concat(fieldValidation.errors);
-          state.groupColumn = groupColumn;
-          state.errors = errors;
-          state.warnings = fieldValidation.warnings;
-        };
-        reader.readAsText(file);
-      });
+          });
+      } else {
+        // Handle CSV files
+        readFileAsText(file)
+          .then((rawCsv) => {
+            processCsvData(rawCsv, file.name);
+          })
+          .catch((error) => {
+            state.errors = [
+              error instanceof Error
+                ? error.message
+                : "Failed to read file",
+            ];
+          });
+      }
     },
-    [state],
+    [state, processCsvData],
   );
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
@@ -230,7 +267,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
-            <input aria-label="Upload CSV" {...getInputProps()} />
+            <input aria-label="Upload CSV or Excel" {...getInputProps()} />
             <Typography
               style={{
                 display: "flex",
@@ -238,7 +275,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
                 alignItems: "center",
               }}
             >
-              Drag &amp; drop some files here, or click to select files
+              Drag &amp; drop CSV or Excel files here, or click to select files
               <Button
                 variant="outlined"
                 startIcon={<FileDownloadOutlinedIcon />}
