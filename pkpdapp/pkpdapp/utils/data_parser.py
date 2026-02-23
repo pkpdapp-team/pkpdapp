@@ -18,13 +18,18 @@ class DataParser:
             "adm_id",
             "administration_id",
         ],
-        "SUBJECT_ID": ["id", "subject_id", "subject", "subjid", "animal number"],
+        "SUBJECT_ID": [
+            "id", "subject_id", "subject", "subjid",
+            "animal number", "usubjid"
+        ],
         "TIME": [
             "time",
             "timepoint",
             "t",
             "hour_actual",
             "ivar",
+            "afrlt",
+            "nfrlt",
         ],
         "TIME_UNIT": [
             "time unit",
@@ -34,8 +39,9 @@ class DataParser:
             "units_time",
             "unit_time",
             "unit time",
+            "rrltu",
         ],
-        "AMOUNT": ["amt", "amount"],
+        "AMOUNT": ["amt", "amount", "dosea"],
         "AMOUNT_UNIT": [
             "amount unit",
             "amt_unit",
@@ -50,6 +56,7 @@ class DataParser:
             "dose_unit",
             "unit dose",
             "unit_dose",
+            "doseu",
         ],
         "PER_BODY_WEIGHT_KG": [
             "per body weight(kg)",
@@ -74,6 +81,7 @@ class DataParser:
             "conc",
             "observation_value",
             "observationvalue",
+            "aval",
         ],
         "OBSERVATION_NAME": [
             "observation id",
@@ -100,6 +108,7 @@ class DataParser:
             "concentration_unit",
             "unit concentration",
             "unit_concentration",
+            "avalu",
         ],
         "OBSERVATION_VARIABLE": [
             "observation variable",
