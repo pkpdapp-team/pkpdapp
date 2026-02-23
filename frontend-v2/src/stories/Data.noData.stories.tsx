@@ -437,8 +437,8 @@ export const UploadADPCFile: Story = {
   },
 };
 
-// uploads a csv with dosing amounts and units
-export const UploadDosingUnitsFile: Story = {
+// uploads a csv with dosing amounts and units, and observation concentrations and units
+export const UploadObsDoseUnitsFile: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
 
@@ -464,13 +464,13 @@ export const UploadDosingUnitsFile: Story = {
   },
 };
 
-// follows on from UploadDosingUnitsFile to get to the stratification step
-export const DosingUnitsStratification: Story = {
+// follows on from UploadObsDoseUnitsFile to get to the stratification step
+export const ObsDoseUnitsStratification: Story = {
   play: async ({ context, canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
 
     //@ts-expect-error play function arg types mismatch
-    await UploadDosingUnitsFile.play(context);
+    await UploadObsDoseUnitsFile.play(context);
 
     const nextButton = await canvas.findByRole("button", {
       name: "Next",
@@ -489,14 +489,14 @@ export const DosingUnitsStratification: Story = {
 };
 
 
-// follow on from DosingUnitsStratification to get to the Map Dosing step
+// follow on from ObsDoseUnitsStratification to get to the Map Dosing step
 // the amount units should be displayed in the unit selects.
 export const MapDosingShowsAmountUnits: Story = {
   play: async ({ context, canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
 
     //@ts-expect-error play function arg types mismatch
-    await DosingUnitsStratification.play(context);
+    await ObsDoseUnitsStratification.play(context);
 
     const nextButton = await canvas.findByRole("button", {
       name: "Next",
@@ -538,11 +538,21 @@ export const MapDosingShowsAmountUnits: Story = {
     expect(variableSelects.length).toBeGreaterThan(0);
 
     await userEvent.click(variableSelects[0]);
-    const listbox = await screen.findByRole("listbox");
+    let listbox = await screen.findByRole("listbox");
     const a1Option = await within(listbox).findByRole("option", {
       name: "A1",
     });
     await userEvent.selectOptions(listbox, a1Option);
+
+    // If there are multiple administrations, select variable for the second one too
+    if (variableSelects.length > 1) {
+      await userEvent.click(variableSelects[1]);
+      listbox = await screen.findByRole("listbox");
+      const a1Option2 = await within(listbox).findByRole("option", {
+        name: "A1",
+      });
+      await userEvent.selectOptions(listbox, a1Option2);
+    }
 
     // After selecting a dosing compartment, the unit should still show "mg"
     await waitFor(() => {
@@ -564,7 +574,7 @@ export const MapDosingValidation: Story = {
     const canvas = within(canvasElement);
 
     //@ts-expect-error play function arg types mismatch
-    await DosingUnitsStratification.play(context);
+    await ObsDoseUnitsStratification.play(context);
 
     const nextButton = await canvas.findByRole("button", {
       name: "Next",
@@ -660,5 +670,77 @@ export const MapDosingValidation: Story = {
       const nextBtn = canvas.getByRole("button", { name: "Next" });
       expect(nextBtn).not.toBeDisabled();
     }, { timeout: 5000 });
+  },
+};
+
+// follow on from MapDosingShowsAmountUnits to get to the Map Observations step
+// the observation units should be displayed in the unit selects.
+export const MapObservationsShowsObservationUnits: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    //@ts-expect-error play function arg types mismatch
+    await MapDosingShowsAmountUnits.play(context);
+
+    // Wait for the Next button to be enabled
+    await waitFor(() => {
+      const nextBtn = canvas.getByRole("button", { name: "Next" });
+      expect(nextBtn).not.toBeDisabled();
+    }, { timeout: 5000 });
+
+    const nextButton = canvas.getByRole("button", {
+      name: "Next",
+    });
+    expect(nextButton).toBeInTheDocument();
+    expect(nextButton).not.toBeDisabled();
+    await userEvent.click(nextButton);
+
+    // Wait for navigation to Observations tab
+    const mapObservationsHeading = await canvas.findByRole("heading", {
+      name: "Observations",
+    }, { timeout: 10000 });
+    expect(mapObservationsHeading).toBeInTheDocument();
+
+    // The Observation Unit selects should show "mg/L" from the CSV's Units_Conc column
+    // Get all unit selects
+    const unitSelects = canvas.getAllByRole("combobox", {
+      name: "Units",
+    });
+    expect(unitSelects.length).toBeGreaterThan(0);
+
+    // Wait for the first unit select to be rendered
+    await waitFor(() => {
+      const firstUnitSelect = unitSelects[0];
+      const displayedValue = firstUnitSelect.textContent;
+
+      console.log("Observation Unit displayed value:", displayedValue);
+
+      // Expected: "mg/L" (from CSV Units_Conc column)
+      expect(displayedValue).toBe("mg/L");
+    }, { timeout: 5000 });
+
+    const variableSelects = canvas.getAllByRole("combobox", {
+      name: "Variable",
+    });
+    expect(variableSelects.length).toBeGreaterThan(0);
+
+    await userEvent.click(variableSelects[0]);
+    const listbox = await screen.findByRole("listbox");
+    const c1Option = await within(listbox).findByRole("option", {
+      name: "C1",
+    });
+    await userEvent.selectOptions(listbox, c1Option);
+
+    // After selecting an observation compartment, the unit should still show "mg/L"
+    await waitFor(() => {
+      const firstUnitSelect = unitSelects[0];
+      const displayedValue = firstUnitSelect.textContent;
+
+      console.log("Observation Unit after selecting compartment:", displayedValue);
+
+      // The bug causes this to potentially show "None" even after selecting C1
+      // After fix, it should show "mg/L" (possibly with a warning if incompatible)
+      expect(displayedValue).toBe("mg/L");
+    });
   },
 };
