@@ -417,20 +417,18 @@ export const UploadADPCFile: Story = {
     });
     expect(dataTable).toBeInTheDocument();
 
-    // Verify ADPC columns are auto-mapped correctly by checking a few key mappings
-    // The column headers contain the original name and a select dropdown with the mapped type
+    // Verify ADPC columns are auto-mapped correctly by checking the displayed values in selects
+    const allSelects = within(dataTable).getAllByRole("combobox");
 
-    // Check USUBJID maps to ID
-    const usubjidText = await canvas.findByText("USUBJID");
-    expect(usubjidText).toBeInTheDocument();
-
-    // Check AVAL maps to Observation
-    const avalText = await canvas.findByText("AVAL");
-    expect(avalText).toBeInTheDocument();
-
-    // Check DOSEA maps to Amount
-    const doseaText = await canvas.findByText("DOSEA");
-    expect(doseaText).toBeInTheDocument();
+    // For MUI Select, the displayed value is in the element's textContent
+    // Verify each ADPC column is auto-mapped to the correct type
+    expect(allSelects[0]).toHaveTextContent("ID"); // USUBJID → ID
+    expect(allSelects[1]).toHaveTextContent("Time"); // AFRLT → Time
+    expect(allSelects[2]).toHaveTextContent("Time Unit"); // RRLTU → Time Unit
+    expect(allSelects[3]).toHaveTextContent("Observation"); // AVAL → Observation
+    expect(allSelects[4]).toHaveTextContent("Observation Unit"); // AVALU → Observation Unit
+    expect(allSelects[5]).toHaveTextContent("Amount"); // DOSEA → Amount
+    expect(allSelects[6]).toHaveTextContent("Amount Unit"); // DOSEU → Amount Unit
 
     // Check that we have 7 rows (6 data + 1 header)
     const rows = within(dataTable).getAllByRole("row");
