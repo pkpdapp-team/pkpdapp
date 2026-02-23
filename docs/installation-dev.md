@@ -8,6 +8,17 @@ This guide covers setting up a local development environment for PKPDApp, includ
 - Node.js (install via `snap` on Ubuntu 20.04 LTS: `sudo snap install node --classic`)
 - Yarn package manager: `npm install --global yarn`
 - Docker and docker-compose (optional, for production deployments)
+- System dependencies (Ubuntu):
+```bash
+sudo apt-get install build-essential libsasl2-dev python3-dev libldap2-dev libssl-dev libsundials-dev memcached
+```
+
+## Getting started
+
+1. Clone the repo, make sure you have the prerequisites installed, and navigate to the project directory
+2. Run the `start-server-dev.sh` script to set up and run the backend and frontend. This will show you the URLs for both servers and any errors that occur during setup.
+
+For a more detailed manual setup, follow the instructions below.
 
 ## Environment Setup
 
