@@ -18,7 +18,10 @@ class DataParser:
             "adm_id",
             "administration_id",
         ],
-        "SUBJECT_ID": ["id", "subject_id", "subject", "subjid", "animal number", "usubjid"],
+        "SUBJECT_ID": [
+            "id", "subject_id", "subject", "subjid",
+            "animal number", "usubjid"
+        ],
         "TIME": [
             "time",
             "timepoint",
