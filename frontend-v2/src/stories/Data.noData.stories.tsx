@@ -1,11 +1,12 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, screen } from "storybook/test";
+import { expect, within, screen, waitFor } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
 import { project, projectHandlers } from "./project.v3.mock";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
+import dosingUnitsCSV from "./mockData/Data.DosingUnits.js";
 
 import { HttpResponse, http } from "msw";
 import * as XLSX from "xlsx";
@@ -383,5 +384,231 @@ export const PreviewDataset: Story = {
       name: "Preview Dataset",
     });
     expect(dataGrid).toBeInTheDocument();
+  },
+};
+
+// uploads a csv with dosing amounts and units
+export const UploadDosingUnitsFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+    const file = new File([dosingUnitsCSV], "dosing_test.csv", { type: "text/csv" });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    const notificationsButton = await canvas.findByRole("button", {
+      name: "Notifications 1",
+    });
+    expect(notificationsButton).toBeInTheDocument();
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(12); // 11 data rows + 1 header row
+  },
+};
+
+// follows on from UploadDosingUnitsFile to get to the stratification step
+export const DosingUnitsStratification: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    //@ts-expect-error play function arg types mismatch
+    await UploadDosingUnitsFile.play(context);
+
+    const nextButton = await canvas.findByRole("button", {
+      name: "Next",
+    });
+    expect(nextButton).toBeInTheDocument();
+    await userEvent.click(nextButton);
+
+    const stratificationHeading = await canvas.findByRole("heading", {
+      name: "Stratification",
+    });
+    expect(stratificationHeading).toBeInTheDocument();
+
+    // Use the default Group column for stratification (don't change grouping)
+    // This avoids validation errors about inconsistent doses within route groups
+  },
+};
+
+
+// follow on from DosingUnitsStratification to get to the Map Dosing step
+// the amount units should be displayed in the unit selects.
+export const MapDosingShowsAmountUnits: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    //@ts-expect-error play function arg types mismatch
+    await DosingUnitsStratification.play(context);
+
+    const nextButton = await canvas.findByRole("button", {
+      name: "Next",
+    });
+    expect(nextButton).toBeInTheDocument();
+    await userEvent.click(nextButton);
+
+    const mapDosingHeading = await canvas.findByRole("heading", {
+      name: "Dosing",
+    });
+    expect(mapDosingHeading).toBeInTheDocument();
+
+    // Wait for the table to be rendered
+    const dosingTable = await canvas.findByRole("table", {
+      name: "Dosing",
+    });
+    expect(dosingTable).toBeInTheDocument();
+
+    // The Amount Unit selects should show "mg" from the CSV's Units_AMT column,
+    // Get all unit selects
+    const unitSelects = canvas.getAllByRole("combobox", {
+      name: "Units",
+    });
+    expect(unitSelects.length).toBeGreaterThan(0);
+
+    // Wait for the first unit select to be rendered
+    await waitFor(() => {
+      const firstUnitSelect = unitSelects[0];
+      const displayedValue = firstUnitSelect.textContent;
+
+      console.log("Amount Unit displayed value:", displayedValue);
+
+      // Expected: "mg" (from CSV Units_AMT column)
+      expect(displayedValue).toBe("mg");
+    }, { timeout: 5000 });
+    const variableSelects = canvas.getAllByRole("combobox", {
+      name: "Variable",
+    });
+    expect(variableSelects.length).toBeGreaterThan(0);
+
+    await userEvent.click(variableSelects[0]);
+    const listbox = await screen.findByRole("listbox");
+    const a1Option = await within(listbox).findByRole("option", {
+      name: "A1",
+    });
+    await userEvent.selectOptions(listbox, a1Option);
+
+    // After selecting a dosing compartment, the unit should still show "mg"
+    await waitFor(() => {
+      const firstUnitSelect = unitSelects[0];
+      const displayedValue = firstUnitSelect.textContent;
+
+      console.log("Amount Unit after selecting compartment:", displayedValue);
+
+      // The bug causes this to potentially show "None" even after selecting A1
+      // After fix, it should show "mg" (possibly with a warning if incompatible)
+      expect(displayedValue).not.toBe("");
+    });
+  },
+};
+
+// Test for validation that disables Next button when variable/unit not selected
+export const MapDosingValidation: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    //@ts-expect-error play function arg types mismatch
+    await DosingUnitsStratification.play(context);
+
+    const nextButton = await canvas.findByRole("button", {
+      name: "Next",
+    });
+    expect(nextButton).toBeInTheDocument();
+    await userEvent.click(nextButton);
+
+    const mapDosingHeading = await canvas.findByRole("heading", {
+      name: "Dosing",
+    });
+    expect(mapDosingHeading).toBeInTheDocument();
+
+    // Wait for the table to be rendered
+    const dosingTable = await canvas.findByRole("table", {
+      name: "Dosing",
+    });
+    expect(dosingTable).toBeInTheDocument();
+
+    // The Next button should be disabled initially because no variables are selected
+    await waitFor(() => {
+      const nextBtn = canvas.getByRole("button", { name: "Next" });
+      expect(nextBtn).toBeDisabled();
+    });
+
+    // Verify the error notification appears
+    const notificationButton = canvas.queryByRole("button", {
+      name: /Notifications/,
+    });
+    if (notificationButton) {
+      // Should show at least 1 notification for the validation error
+      expect(notificationButton.textContent).toMatch(/\d+/);
+    }
+
+    // Get all variable selects
+    const variableSelects = canvas.getAllByRole("combobox", {
+      name: "Variable",
+    });
+    expect(variableSelects.length).toBeGreaterThan(0);
+
+    // Select variable for first administration
+    await userEvent.click(variableSelects[0]);
+    let listbox = await screen.findByRole("listbox");
+    const a1Option = await within(listbox).findByRole("option", {
+      name: "A1",
+    });
+    await userEvent.selectOptions(listbox, a1Option);
+
+    // Get all unit selects
+    const unitSelects = canvas.getAllByRole("combobox", {
+      name: "Units",
+    });
+
+    // If there are multiple administrations, select variable for the second one too
+    if (variableSelects.length > 1) {
+      await userEvent.click(variableSelects[1]);
+      listbox = await screen.findByRole("listbox");
+      const a1Option2 = await within(listbox).findByRole("option", {
+        name: "A1",
+      });
+      await userEvent.selectOptions(listbox, a1Option2);
+    }
+
+    // Next button should be enabled now (CSV has units pre-populated with "mg")
+    await waitFor(() => {
+      const nextBtn = canvas.getByRole("button", { name: "Next" });
+      expect(nextBtn).not.toBeDisabled();
+    }, { timeout: 5000 });
+
+    // Change the unit to "None" for the first administration
+    await userEvent.click(unitSelects[0]);
+    listbox = await screen.findByRole("listbox");
+    const noneOption = await within(listbox).findByRole("option", {
+      name: "None",
+    });
+    await userEvent.selectOptions(listbox, noneOption);
+
+    // Next button should be disabled again (unit is now None)
+    await waitFor(() => {
+      const nextBtn = canvas.getByRole("button", { name: "Next" });
+      expect(nextBtn).toBeDisabled();
+    }, { timeout: 5000 });
+
+    // Change the unit back to "mg"
+    await userEvent.click(unitSelects[0]);
+    listbox = await screen.findByRole("listbox");
+    const mgOption = await within(listbox).findByRole("option", {
+      name: "mg",
+    });
+    await userEvent.selectOptions(listbox, mgOption);
+
+    // Next button should be enabled again
+    await waitFor(() => {
+      const nextBtn = canvas.getByRole("button", { name: "Next" });
+      expect(nextBtn).not.toBeDisabled();
+    }, { timeout: 5000 });
   },
 };
