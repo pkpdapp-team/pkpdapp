@@ -1,4 +1,4 @@
-import { ChangeEvent, FC } from "react";
+import { ChangeEvent, FC, useEffect, useMemo } from "react";
 import {
   Box,
   Select,
@@ -63,10 +63,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
+      (row) =>
+        (row[amountField] && row[amountField] !== ".") ||
+        parseInt(row[administrationIdField]),
+    )
     : state.data.filter((row) => parseInt(row[administrationIdField]));
   const missingAdministrationIds = dosingRows.some(
     (row) => !(administrationIdField in row),
@@ -74,10 +74,12 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   if (amountField && missingAdministrationIds) {
     generateAdministrationIds(dosingRows, "Administration ID", groupIdField);
   }
-  const administrationIds = administrationIdField
-    ? dosingRows.map((row) => row[administrationIdField])
-    : [];
-  const uniqueAdministrationIds = [...new Set(administrationIds)];
+  const uniqueAdministrationIds = useMemo(() => {
+    const administrationIds = administrationIdField
+      ? dosingRows.map((row) => row[administrationIdField])
+      : [];
+    return [...new Set(administrationIds)];
+  }, [administrationIdField, dosingRows]);
 
   if (!perKgField) {
     dosingRows.forEach((row) => {
@@ -100,6 +102,39 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     ]);
   }
 
+  // Validate that all administrations have a variable and unit selected
+  // Only run validation when component is mounted or when selections change
+  useEffect(() => {
+    const errorMessage = "Please select a variable and unit for all dosing administrations.";
+
+    // Check if all administrations have a variable and unit selected
+    const allAdministrationsValid = uniqueAdministrationIds.every((id) => {
+      const rows = dosingRows.filter((row) => row[administrationIdField] === id);
+      const firstRow = rows[0];
+
+      const hasVariable = firstRow && firstRow[amountVariableField] && firstRow[amountVariableField] !== "";
+      const hasUnit = firstRow && firstRow[amountUnitField] && firstRow[amountUnitField] !== "";
+
+      return hasVariable && hasUnit;
+    });
+
+    // Add or remove error based on validation
+    if (!allAdministrationsValid && !state.errors.includes(errorMessage)) {
+      state.errors = [...state.errors, errorMessage];
+    }
+
+    if (allAdministrationsValid && state.errors.includes(errorMessage)) {
+      state.errors = state.errors.filter((error) => error !== errorMessage);
+    }
+
+    // Clean up error when component unmounts
+    return () => {
+      if (state.errors.includes(errorMessage)) {
+        state.errors = state.errors.filter((error) => error !== errorMessage);
+      }
+    };
+  }, [uniqueAdministrationIds, dosingRows, administrationIdField, amountVariableField, amountUnitField, state]);
+
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
       (unit) => unit.symbol === amountUnit?.symbol,
@@ -109,7 +144,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       variable.constant === false &&
       variableUnit?.symbol !== "" &&
       amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
+      undefined
     );
   };
   const modelAmounts = variables?.filter(isAmount) || [];
@@ -264,15 +299,15 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                   variable.qname ===
                   currentRow?.[amountVariableField || "Amount Variable"],
               );
-              const compatibleUnits = units?.find(
-                (unit) => unit.id === selectedVariable?.unit,
+              const amountUnits = units?.find(
+                (unit) => unit.symbol === "mg",
               )?.compatible_units;
               const adminUnit =
                 amountUnitField && currentRow && currentRow[amountUnitField];
               const amount = currentRow?.[amountField];
               const time = currentRow?.[timeField];
               const isPerKg = currentRow?.[perKgField] === "1";
-              const displayedUnit = compatibleUnits?.find(
+              const displayedUnit = amountUnits?.find(
                 (unit) => unit.symbol === adminUnit,
               )
                 ? adminUnit
@@ -333,14 +368,14 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                         id={`select-unit-${adminId}`}
                         label="Units"
                         value={displayedUnit}
-                        disabled={!compatibleUnits?.length}
+                        disabled={!amountUnits?.length}
                         onChange={handleAmountUnitChange(adminId)}
                         sx={{ maxWidth: "10rem" }}
                         size="small"
                         margin="dense"
                       >
                         <MenuItem value="">None</MenuItem>
-                        {compatibleUnits?.map((unit) => (
+                        {amountUnits?.map((unit) => (
                           <MenuItem key={unit.symbol} value={unit.symbol}>
                             {unit.symbol}
                           </MenuItem>
