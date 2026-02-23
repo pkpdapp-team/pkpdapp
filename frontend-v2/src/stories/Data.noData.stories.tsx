@@ -387,6 +387,56 @@ export const PreviewDataset: Story = {
   },
 };
 
+// Test ADPC column name mapping
+export const UploadADPCFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create ADPC-formatted CSV with CDISC standard column names
+    const adpcCSV = `USUBJID,AFRLT,RRLTU,AVAL,AVALU,DOSEA,DOSEU
+1,0,h,.,ng/mL,50,mg
+1,0.5,h,95,ng/mL,50,mg
+1,1,h,80,ng/mL,50,mg
+2,0,h,.,ng/mL,50,mg
+2,0.5,h,115,ng/mL,50,mg
+2,1,h,95,ng/mL,50,mg`;
+
+    const file = new File([adpcCSV], "adpc_test.csv", { type: "text/csv" });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Verify data table is shown
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+
+    // Verify ADPC columns are auto-mapped correctly by checking the displayed values in selects
+    const allSelects = within(dataTable).getAllByRole("combobox");
+
+    // For MUI Select, the displayed value is in the element's textContent
+    // Verify each ADPC column is auto-mapped to the correct type
+    expect(allSelects[0]).toHaveTextContent("ID"); // USUBJID → ID
+    expect(allSelects[1]).toHaveTextContent("Time"); // AFRLT → Time
+    expect(allSelects[2]).toHaveTextContent("Time Unit"); // RRLTU → Time Unit
+    expect(allSelects[3]).toHaveTextContent("Observation"); // AVAL → Observation
+    expect(allSelects[4]).toHaveTextContent("Observation Unit"); // AVALU → Observation Unit
+    expect(allSelects[5]).toHaveTextContent("Amount"); // DOSEA → Amount
+    expect(allSelects[6]).toHaveTextContent("Amount Unit"); // DOSEU → Amount Unit
+
+    // Check that we have 7 rows (6 data + 1 header)
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(7);
+  },
+};
+
 // uploads a csv with dosing amounts and units
 export const UploadDosingUnitsFile: Story = {
   play: async ({ canvasElement, userEvent }) => {

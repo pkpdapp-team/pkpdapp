@@ -6,7 +6,7 @@ const normalisation = {
   "Additional Doses": ["additional doses", "additional dose", "addl"],
   "Administration ID": ["administration id", "cmt", "adm"],
   "Administration Name": ["route"],
-  Amount: ["amount", "amt"],
+  Amount: ["amount", "amt", "dosea"],
   "Amount Unit": [
     "amount unit",
     "amt_unit",
@@ -21,6 +21,7 @@ const normalisation = {
     "dose_unit",
     "unit dose",
     "unit_dose",
+    "doseu",
   ],
   "Per Body Weight(kg)": [
     "per body weight(kg)",
@@ -47,7 +48,7 @@ const normalisation = {
   "Cont Covariate": ["cont covariate", "weight", "wt", "bw", "age", "dose"],
   "Event ID": ["event id", "evid"],
   "Group ID": ["group id"],
-  ID: ["id", "subject", "animal number", "subject_id", "subjid"],
+  ID: ["id", "subject", "animal number", "subject_id", "subjid", "usubjid"],
   "Ignored Observation": ["ignored observation", "mdv"],
   "Infusion Duration": [
     "infusion time",
@@ -67,6 +68,7 @@ const normalisation = {
     "cobs",
     "obs",
     "concentration",
+    "aval",
   ],
   "Observation Unit": [
     "observation unit",
@@ -86,12 +88,13 @@ const normalisation = {
     "concentration_unit",
     "unit concentration",
     "unit_concentration",
+    "avalu",
   ],
   "Observation ID": ["observation id", "observation_id", "ytype", "dvid"],
   "Observation Variable": ["observation variable", "observation_var"],
   Occasion: ["occasion", "occ"],
   Regressor: ["x", "regressor"],
-  Time: ["time", "t", "ivar", "hour_actual"],
+  Time: ["time", "t", "ivar", "hour_actual", "afrlt", "nfrlt"],
   "Time Unit": [
     "time unit",
     "time_unit",
@@ -100,6 +103,7 @@ const normalisation = {
     "tunit",
     "units_time",
     "unit_time",
+    "rrltu",
   ],
 };
 
