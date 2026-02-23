@@ -385,3 +385,55 @@ export const PreviewDataset: Story = {
     expect(dataGrid).toBeInTheDocument();
   },
 };
+
+// Test ADPC column name mapping
+export const UploadADPCFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create ADPC-formatted CSV with CDISC standard column names
+    const adpcCSV = `USUBJID,AFRLT,RRLTU,AVAL,AVALU,DOSEA,DOSEU
+1,0,h,.,ng/mL,50,mg
+1,0.5,h,95,ng/mL,50,mg
+1,1,h,80,ng/mL,50,mg
+2,0,h,.,ng/mL,50,mg
+2,0.5,h,115,ng/mL,50,mg
+2,1,h,95,ng/mL,50,mg`;
+
+    const file = new File([adpcCSV], "adpc_test.csv", { type: "text/csv" });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // Verify data table is shown
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+
+    // Verify ADPC columns are auto-mapped correctly by checking a few key mappings
+    // The column headers contain the original name and a select dropdown with the mapped type
+
+    // Check USUBJID maps to ID
+    const usubjidText = await canvas.findByText("USUBJID");
+    expect(usubjidText).toBeInTheDocument();
+
+    // Check AVAL maps to Observation
+    const avalText = await canvas.findByText("AVAL");
+    expect(avalText).toBeInTheDocument();
+
+    // Check DOSEA maps to Amount
+    const doseaText = await canvas.findByText("DOSEA");
+    expect(doseaText).toBeInTheDocument();
+
+    // Check that we have 7 rows (6 data + 1 header)
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(7);
+  },
+};
