@@ -149,9 +149,6 @@ export const CreateAdministrationIdFromGroups: Story = {
     });
     expect(mapDosingHeading).toBeInTheDocument();
 
-    // BUG: At this point, Administration ID should be created for the two groups
-    // and added to normalisedFields, but before the fix it wasn't being added
-
     // Verify we have 2 dosing protocol rows (one for each group)
     const variableSelects = canvas.getAllByRole("combobox", {
       name: "Variable",
