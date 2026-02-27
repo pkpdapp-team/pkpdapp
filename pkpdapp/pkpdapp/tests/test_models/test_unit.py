@@ -56,13 +56,13 @@ class TestUnitModel(TestCase):
         self.check_compatible_unit("nmol", ["mol", "nmol", "pmol", "µmol"])
         self.check_compatible_unit(
             "nmol",
-            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg", "µg"],
             compound=self.compound,
         )
-        self.check_compatible_unit("mg", ["mg", "g", "ng", "kg"])
+        self.check_compatible_unit("mg", ["mg", "g", "ng", "kg", "µg"])
         self.check_compatible_unit(
             "mg",
-            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg", "µg"],
             compound=self.compound,
         )
         self.check_compatible_unit(
@@ -134,3 +134,23 @@ class TestUnitModel(TestCase):
 
         # 1 L = 1,000,000 mm³
         self.assertAlmostEqual(mm3.convert_to(L), 1e-6, places=9)
+
+    def test_ug_unit_compatibility(self):
+        """Test that µg is compatible with other mass units"""
+        self.check_compatible_unit("µg", ["mg", "g", "ng", "kg", "µg"])
+
+    def test_ug_unit_conversions(self):
+        """Test conversion factors for µg"""
+        ug = Unit.objects.get(symbol="µg")
+        mg = Unit.objects.get(symbol="mg")
+        g = Unit.objects.get(symbol="g")
+        ng = Unit.objects.get(symbol="ng")
+
+        # 1 mg = 1000 µg
+        self.assertAlmostEqual(ug.convert_to(mg), 1e-3, places=9)
+
+        # 1 g = 1,000,000 µg
+        self.assertAlmostEqual(ug.convert_to(g), 1e-6, places=9)
+
+        # 1 µg = 1000 ng
+        self.assertAlmostEqual(ug.convert_to(ng), 1e3, places=9)
