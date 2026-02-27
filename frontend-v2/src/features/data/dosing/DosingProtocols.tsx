@@ -73,6 +73,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   );
   if (amountField && missingAdministrationIds) {
     generateAdministrationIds(dosingRows, "Administration ID", groupIdField);
+    // Ensure Administration ID is added to normalisedFields
+    state.normalisedFields = new Map([
+      ...state.normalisedFields.entries(),
+      ["Administration ID", "Administration ID"],
+    ]);
   }
   const uniqueAdministrationIds = useMemo(() => {
     const administrationIds = administrationIdField
