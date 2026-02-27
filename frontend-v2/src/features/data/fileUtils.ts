@@ -78,9 +78,9 @@ export async function readExcelFile(file: File): Promise<string> {
     const worksheet = workbook.Sheets[firstSheetName];
 
     // Convert to CSV
-    // Options: strip: true removes trailing commas, blankrows: false removes empty rows
+    // Options: strip: false preserves trailing empty columns, blankrows: false removes empty rows
     const csv = XLSX.utils.sheet_to_csv(worksheet, {
-      strip: true,
+      strip: false,
       blankrows: false,
     });
 

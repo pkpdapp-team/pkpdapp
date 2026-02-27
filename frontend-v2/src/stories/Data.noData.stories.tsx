@@ -744,3 +744,56 @@ export const MapObservationsShowsObservationUnits: Story = {
     });
   },
 };
+
+// Test for Excel file with empty last 2 columns - reproduces bug where insufficient columns are parsed
+export const UploadExcelFileWithEmptyLastColumns: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    // Create test data with n columns where the last 2 are empty (all values are empty strings)
+    // This simulates the scenario where Excel file has defined columns but no data in the last 2
+    const testDataWithEmptyColumns = `ID;Group;Route;Time;Units_Time;Conc;Units_Conc;Cens;AMT;Units_AMT;ADM;ADDL;II;Units_II;TINF;EmptyCol1;EmptyCol2
+1;1;IV;0;h;0;mg/L;0;500;mg/kg;1;1;168;h;0;;
+1;1;IV;2;h;89.92;mg/L;0;;mg/kg;;;;h;;;
+1;1;IV;7;h;24.45;mg/L;0;;mg/kg;;;;h;;;
+1;1;IV;24;h;366.10;mg/L;0;;mg/kg;;;;h;;;
+2;1;IV;0;h;0;mg/L;0;500;mg/kg;1;1;168;h;0;;
+2;1;IV;2;h;55.89;mg/L;0;;mg/kg;;;;h;;;
+2;1;IV;7;h;255.55;mg/L;0;;mg/kg;;;;h;;;`;
+
+    // Create Excel file from CSV with empty last columns
+    const file = createExcelFromCSV(testDataWithEmptyColumns, "test_empty_cols.xlsx");
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    // After the fix, the data should load successfully even with empty last columns
+    const notificationsButton = await canvas.findByRole("button", {
+      name: "Notifications 1",
+    });
+    expect(notificationsButton).toBeInTheDocument();
+
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+
+    // Verify we have the correct number of rows (7 data rows + 1 header row)
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(8);
+
+    // Verify that columns are present (including the empty ones)
+    // The fix ensures empty trailing columns are preserved
+    const firstRow = rows[0];
+    const cells = within(firstRow).getAllByRole("columnheader");
+    // Should have at least 17 columns from the original data
+    // (may have additional auto-generated columns like mapping dropdowns)
+    expect(cells.length).toBeGreaterThanOrEqual(17);
+  },
+};
