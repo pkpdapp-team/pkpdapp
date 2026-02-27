@@ -29,7 +29,6 @@ class DataParser:
             "hour_actual",
             "ivar",
             "afrlt",
-            "nfrlt",
         ],
         "TIME_UNIT": [
             "time unit",
