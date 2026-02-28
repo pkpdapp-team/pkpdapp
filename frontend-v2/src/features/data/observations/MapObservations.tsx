@@ -311,7 +311,7 @@ const MapObservations: FC<IMapObservations> = ({
                   );
                   return (
                     <ObservationIDRow
-                      key={obsVariable?.qname}
+                      key={obsId}
                       obsId={obsId}
                       obsVariable={obsVariable}
                       obsUnit={obsUnit}
@@ -327,7 +327,7 @@ const MapObservations: FC<IMapObservations> = ({
         <Tabs value={tab} onChange={handleTabChange} selectionFollowsFocus>
           {groupIDs.map((groupID, index) => (
             <Tab
-              key={groupID}
+              key={`group-${index}-${groupID}`}
               label={`Group ${groupID}`}
               {...a11yProps(index)}
             />
