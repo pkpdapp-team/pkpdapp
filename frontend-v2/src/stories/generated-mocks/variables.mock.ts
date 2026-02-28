@@ -5,7 +5,7 @@ import { http, HttpResponse, delay } from "msw";
 
 export const variables = [
   {
-    id: 66,
+    id: 105,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -31,10 +31,10 @@ export const variables = [
     unit: 9,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 67,
+    id: 106,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -60,10 +60,10 @@ export const variables = [
     unit: 9,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 68,
+    id: 107,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -89,10 +89,10 @@ export const variables = [
     unit: 74,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 69,
+    id: 108,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -118,10 +118,10 @@ export const variables = [
     unit: 74,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 70,
+    id: 109,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -147,10 +147,10 @@ export const variables = [
     unit: 47,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 71,
+    id: 110,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -176,12 +176,12 @@ export const variables = [
     unit: 44,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 72,
+    id: 111,
     protocols: [
-      6
+      9
     ],
     read_only: false,
     datetime: null,
@@ -207,10 +207,10 @@ export const variables = [
     unit: 3,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 73,
+    id: 112,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -236,10 +236,10 @@ export const variables = [
     unit: 9,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 74,
+    id: 113,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -265,10 +265,10 @@ export const variables = [
     unit: 47,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 75,
+    id: 114,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -294,10 +294,10 @@ export const variables = [
     unit: 20,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 76,
+    id: 115,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -323,10 +323,10 @@ export const variables = [
     unit: 74,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 77,
+    id: 116,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -352,10 +352,10 @@ export const variables = [
     unit: 74,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   },
   {
-    id: 78,
+    id: 117,
     protocols: [],
     read_only: false,
     datetime: null,
@@ -381,7 +381,7 @@ export const variables = [
     unit: 74,
     pd_model: null,
     pk_model: null,
-    dosed_pk_model: 6
+    dosed_pk_model: 9
   }
 ] as unknown as VariableRead[];
 

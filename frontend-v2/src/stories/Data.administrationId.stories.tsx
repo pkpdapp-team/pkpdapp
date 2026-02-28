@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { project, projectHandlers } from "./project.v3.mock";
+import { project, projectHandlers } from "./generated-mocks";
 
 import { HttpResponse, http } from "msw";
 

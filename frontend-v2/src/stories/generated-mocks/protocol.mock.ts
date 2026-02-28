@@ -5,10 +5,10 @@ import { http, HttpResponse, delay } from "msw";
 
 export const protocols = [
   {
-    id: 6,
+    id: 9,
     doses: [
       {
-        id: 6,
+        id: 9,
         start_time: 0.0,
         amount: 100.0,
         duration: 0.001,
@@ -16,7 +16,7 @@ export const protocols = [
         repeat_interval: 24.0,
         read_only: false,
         datetime: null,
-        protocol: 6
+        protocol: 9
       }
     ],
     subjects: [],
@@ -26,17 +26,17 @@ export const protocols = [
     dose_type: "D",
     amount_per_body_weight: false,
     dataset: null,
-    project: 6,
-    compound: 6,
+    project: 9,
+    compound: 9,
     time_unit: 20,
     amount_unit: 22,
-    variable: 72,
+    variable: 111,
     group: null
   }
 ] as unknown as ProtocolRead[];
 
 export const dose = {
-  id: 6,
+  id: 9,
   start_time: 0.0,
   amount: 100.0,
   duration: 0.001,
@@ -44,7 +44,7 @@ export const dose = {
   repeat_interval: 24.0,
   read_only: false,
   datetime: null,
-  protocol: 6
+  protocol: 9
 } as unknown as DoseRead;
 
 export const protocolHandlers = [

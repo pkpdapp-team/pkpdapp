@@ -12,10 +12,17 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Model from "../features/model/Model";
-import { model, project, projectHandlers } from "./project.v3.mock";
-import { pkModels, pdModels, tagsData } from "./model.v3.mock";
+import {
+  project,
+  projectHandlers,
+  pkModels,
+  pdModels,
+  tags as tagsData,
+  combinedModels,
+} from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
+const model = combinedModels[0];
 let mockModel = { ...model };
 let mockProject = { ...project };
 const modelSpy = fn();
