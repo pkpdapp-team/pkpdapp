@@ -1,4 +1,4 @@
-import { FC, MouseEvent, ReactNode } from "react";
+import { FC, MouseEvent, KeyboardEvent, ReactNode } from "react";
 import { Box, SxProps, Theme } from "@mui/material";
 
 interface IconNonButtonProps {
@@ -20,10 +20,20 @@ const IconNonButton: FC<IconNonButtonProps> = ({
   sx = {},
   name,
 }) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLSpanElement>) => {
+    if ((e.key === "Enter" || e.key === " ") && onClick) {
+      e.preventDefault();
+      onClick(e as unknown as MouseEvent<HTMLSpanElement>);
+    }
+  };
+
   return (
     <Box
       component="span"
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       aria-label={name}
       sx={{
         display: "flex",
