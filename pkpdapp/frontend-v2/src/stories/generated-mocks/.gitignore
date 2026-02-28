@@ -1,5 +1,0 @@
-# Auto-generated files - do not commit
-*.mock.ts
-!README.md
-
-# Only commit the README, not the generated mock files
