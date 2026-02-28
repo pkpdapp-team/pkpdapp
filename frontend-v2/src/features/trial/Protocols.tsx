@@ -12,9 +12,9 @@ import {
   TableRow,
   Tabs,
   Tab,
-  IconButton,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
+import IconNonButton from "../../components/IconNonButton";
 import {
   useCombinedModelListQuery,
   useSubjectGroupCreateMutation,
@@ -276,26 +276,18 @@ export const Protocols: FC<ProtocolsProps> = ({
                 {...a11yProps(index + 1)}
                 icon={
                   !groups?.[index] ? undefined : (
-                    <Box
-                      component="span"
+                    <IconNonButton
+                      name="remove"
                       onClick={async (e) => {
                         e.stopPropagation();
                         removeGroup(groups?.[index]?.id)();
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        cursor: "pointer",
-                        padding: "8px",
-                        borderRadius: "50%",
-                        "&:hover": { backgroundColor: "action.hover" },
                       }}
                     >
                       {selectedDoses.length === 0 && (
                         <Error color="error" sx={{ marginRight: ".5rem" }} />
                       )}
                       <RemoveCircleOutlineIcon fontSize="small" />
-                    </Box>
+                    </IconNonButton>
                   )
                 }
                 iconPosition="end"

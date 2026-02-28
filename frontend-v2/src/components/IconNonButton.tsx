@@ -1,0 +1,43 @@
+import { FC, MouseEvent, ReactNode } from "react";
+import { Box, SxProps, Theme } from "@mui/material";
+
+interface IconNonButtonProps {
+  children: ReactNode;
+  onClick?: (e: MouseEvent<HTMLSpanElement>) => void;
+  sx?: SxProps<Theme>;
+  name?: string;
+}
+
+/**
+ * A component that looks and behaves like an IconButton but renders as a span
+ * instead of a button element. This is useful when you need an icon button
+ * inside another button-like component (e.g., Tab) to avoid nested button elements
+ * which cause hydration errors.
+ */
+const IconNonButton: FC<IconNonButtonProps> = ({
+  children,
+  onClick,
+  sx = {},
+  name,
+}) => {
+  return (
+    <Box
+      component="span"
+      onClick={onClick}
+      aria-label={name}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+        padding: "8px",
+        borderRadius: "50%",
+        "&:hover": { backgroundColor: "action.hover" },
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
+  );
+};
+
+export default IconNonButton;

@@ -1,8 +1,9 @@
-import { Tabs, Tab, Box, Button, IconButton } from "@mui/material";
+import { Tabs, Tab, Box, Button } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { SyntheticEvent, FC, useState } from "react";
 import ResultsTab from "./ResultsTab";
 import { TableHeader } from "../../components/TableHeader";
+import IconNonButton from "../../components/IconNonButton";
 import { useResults } from "./useResults";
 import { ResultsTableRead } from "../../app/backendApi";
 import { useSelector } from "react-redux";
@@ -119,23 +120,15 @@ const Results: FC = () => {
                 sx={{ maxHeight: "48px", minHeight: 0 }}
                 icon={
                   index === 0 ? undefined : (
-                    <Box
-                      component="span"
+                    <IconNonButton
+                      name="remove"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleTabRemove(table)(e as unknown as React.MouseEvent<HTMLButtonElement>);
                       }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        cursor: "pointer",
-                        padding: "8px",
-                        borderRadius: "50%",
-                        "&:hover": { backgroundColor: "action.hover" },
-                      }}
                     >
                       <RemoveCircleOutlineIcon fontSize="small" />
-                    </Box>
+                    </IconNonButton>
                   )
                 }
                 iconPosition="end"
