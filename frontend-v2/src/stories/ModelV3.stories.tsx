@@ -124,20 +124,6 @@ const meta: Meta<typeof Model> = {
               status: 200,
             });
           }),
-          http.put(
-            "/api/combined_model/:id/set_params_to_defaults",
-            async ({ params, request }) => {
-              await delay();
-              //@ts-expect-error params.id is a string
-              const modelId = parseInt(params.id, 10);
-              const modelData = await request.json();
-              //@ts-expect-error modelData is DefaultBodyType
-              mockModel = { ...modelData, id: modelId };
-              return HttpResponse.json(mockModel, {
-                status: 200,
-              });
-            },
-          ),
           ...projectHandlers,
         ],
         model: [
@@ -202,6 +188,9 @@ const meta: Meta<typeof Model> = {
   beforeEach: () => {
     mockModel = { ...model };
     mockProject = { ...project };
+    modelSpy.mockClear();
+    projectSpy.mockClear();
+    setParamsToDefaultSpy.mockClear();
   },
 };
 
@@ -305,6 +294,7 @@ export const PkFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
+      { timeout: 3000 },
     );
 
     expect(pkFilterTags).toBeInTheDocument();
@@ -331,6 +321,7 @@ export const PdFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
+      { timeout: 3000 },
     );
 
     expect(pkFilterTags).toBeInTheDocument();

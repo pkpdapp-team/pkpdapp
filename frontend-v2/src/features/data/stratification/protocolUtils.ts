@@ -74,7 +74,7 @@ export function getSubjectDoses(state: StepperState): SubjectDoses[] {
 export function stripDoses(subjectDosing: IDose[] = []) {
   // strip subject ID from dosing rows.
   return subjectDosing.map((dose: IDose) => {
-    const { subject: _s, ...rest } = dose;
+    const { subject: _, ...rest } = dose;
     return rest;
   });
 }

@@ -1,8 +1,10 @@
 import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
+import { isCommonAssetRequest } from "msw";
 import { store } from "../src/app/store";
 import { api } from "../src/app/api";
+import { setProject } from "../src/features/main/mainSlice";
 
 /*
  * Initializes MSW
@@ -13,6 +15,14 @@ initialize({
   quiet: true, // Set to true to avoid logging in the console
   serviceWorker: {
     url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+  },
+  onUnhandledRequest(request, print) {
+    // Suppress warnings for common static assets (CSS, JS, images, fonts, etc.)
+    if (isCommonAssetRequest(request)) {
+      return;
+    }
+    // Still log warnings for unhandled API requests
+    print.warning();
   },
 });
 
@@ -59,6 +69,7 @@ const preview: Preview = {
   loaders: [mswLoader],
   beforeEach: async () => {
     store.dispatch(api.util.resetApiState());
+    store.dispatch(setProject(undefined));
   },
 };
 

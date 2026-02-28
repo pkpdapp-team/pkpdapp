@@ -7,7 +7,7 @@ const CollapsibleSidebarContext = createContext({
   onExpand: () => {
     return;
   },
-  setHasSimulationsExpandedChanged: (_isChanged: boolean) => {},
+  setHasSimulationsExpandedChanged: (_: boolean) => {},
   isExpanded: true,
   animationClasses: "",
   simulationAnimationClasses: "",

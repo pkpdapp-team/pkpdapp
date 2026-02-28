@@ -25,7 +25,7 @@ const IGNORED_COLUMNS = ["Ignore"];
 function normaliseDataColumn(state: StepperState, type: string) {
   const normalisedHeaders = [...state.normalisedFields.entries()];
   const matchingFields =
-    normalisedHeaders.filter(([_key, value]) => value === type) || [];
+    normalisedHeaders.filter(([, value]) => value === type) || [];
   if (matchingFields.length !== 1) {
     // only normalise a column if there is exactly one column of that type.
     return state;
