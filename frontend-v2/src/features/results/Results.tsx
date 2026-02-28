@@ -119,9 +119,23 @@ const Results: FC = () => {
                 sx={{ maxHeight: "48px", minHeight: 0 }}
                 icon={
                   index === 0 ? undefined : (
-                    <IconButton name="remove" onClick={handleTabRemove(table)}>
+                    <Box
+                      component="span"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTabRemove(table)(e as unknown as React.MouseEvent<HTMLButtonElement>);
+                      }}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        padding: "8px",
+                        borderRadius: "50%",
+                        "&:hover": { backgroundColor: "action.hover" },
+                      }}
+                    >
                       <RemoveCircleOutlineIcon fontSize="small" />
-                    </IconButton>
+                    </Box>
                   )
                 }
                 iconPosition="end"
