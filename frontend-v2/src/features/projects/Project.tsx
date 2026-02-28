@@ -411,11 +411,11 @@ const ProjectEditorRow: FC<Props> = ({
               </Tooltip>
               {isSharedWithMe && (
                 <Tooltip title="This project is shared with me as view-only">
-                  <div>
+                  <span>
                     <IconButton disabled>
                       <VisibilityIcon />
                     </IconButton>
-                  </div>
+                  </span>
                 </Tooltip>
               )}
             </Stack>
@@ -489,7 +489,11 @@ const ProjectRow: FC<Props> = (props) => {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <TableRow>
+        <TableCell colSpan={6}>Loading...</TableCell>
+      </TableRow>
+    );
   }
 
   return <ProjectEditorRow {...props} compound={compound} />;

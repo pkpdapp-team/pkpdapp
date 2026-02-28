@@ -91,7 +91,11 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol]);
 
   if (isVariableLoading) {
-    return <div>Loading...</div>;
+    return (
+      <TableRow>
+        <TableCell colSpan={8}>Loading...</TableCell>
+      </TableRow>
+    );
   }
 
   const handleAddRow = async () => {

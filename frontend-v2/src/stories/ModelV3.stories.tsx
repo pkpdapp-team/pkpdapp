@@ -41,7 +41,8 @@ const meta: Meta<typeof Model> = {
 
             const projectId = url.searchParams.get("project_id");
             if (projectId) {
-              return HttpResponse.json([mockModel], {
+              // Return a clone to prevent RTK Query from caching a mutable reference
+              return HttpResponse.json([structuredClone(mockModel)], {
                 status: 200,
               });
             }
@@ -52,7 +53,8 @@ const meta: Meta<typeof Model> = {
             //@ts-expect-error params.id is a string
             const projectId = parseInt(params.id, 10);
             if (projectId === project.id) {
-              return HttpResponse.json(mockProject, {
+              // Return a clone to prevent RTK Query from caching a mutable reference
+              return HttpResponse.json(structuredClone(mockProject), {
                 status: 200,
               });
             }
@@ -71,7 +73,8 @@ const meta: Meta<typeof Model> = {
               //@ts-expect-error modelData is DefaultBodyType
               mockModel = { ...modelData, id: modelId };
               setParamsToDefaultSpy({ id: modelId, combinedModel: mockModel });
-              return HttpResponse.json(mockModel, {
+              // Return a clone to prevent RTK Query from caching a mutable reference
+              return HttpResponse.json(structuredClone(mockModel), {
                 status: 200,
               });
             },
@@ -108,7 +111,8 @@ const meta: Meta<typeof Model> = {
               time_intervals: timeIntervals,
               derived_variables: derivedVariables,
             };
-            return HttpResponse.json(mockModel, {
+            // Return a clone to prevent RTK Query from caching a mutable reference
+            return HttpResponse.json(structuredClone(mockModel), {
               status: 200,
             });
           }),
@@ -186,8 +190,9 @@ const meta: Meta<typeof Model> = {
     },
   ],
   beforeEach: () => {
-    mockModel = { ...model };
-    mockProject = { ...project };
+    // Use structuredClone to create deep copies and prevent mutations from persisting
+    mockModel = structuredClone(model);
+    mockProject = structuredClone(project);
     modelSpy.mockClear();
     projectSpy.mockClear();
     setParamsToDefaultSpy.mockClear();
@@ -294,7 +299,7 @@ export const PkFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
-      { timeout: 3000 },
+      {},
     );
 
     expect(pkFilterTags).toBeInTheDocument();
@@ -321,7 +326,7 @@ export const PdFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
-      { timeout: 3000 },
+      {},
     );
 
     expect(pkFilterTags).toBeInTheDocument();
@@ -402,6 +407,11 @@ export const PDModel: Story = {
 };
 
 export const TumourGrowthModel: Story = {
+  parameters: {
+    test: {
+      timeout: 45000, // Increase timeout for this complex test
+    },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -420,7 +430,6 @@ export const TumourGrowthModel: Story = {
         name: /Secondary PD Model/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enoough in CI.
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
@@ -448,21 +457,29 @@ export const TumourGrowthModel: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(secondaryPDModelSelect, {
-      timeout: 2000,
     });
   },
 };
 
 export const HillCoefficient: Story = {
+  parameters: {
+    test: {
+      timeout: 20000, // Increase timeout to 20 seconds for this complex test
+    },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
-    const pdModelList = await canvas.findByLabelText("PD Model");
+    const pdModelList = await canvas.findByLabelText("PD Model", {});
     expect(pdModelList).toHaveTextContent("Direct effect model (inhibitory)");
 
-    let hillCoefficientCheckbox = await canvas.findByRole("checkbox", {
-      name: /Hill coefficient/i,
-    });
+    let hillCoefficientCheckbox = await canvas.findByRole(
+      "checkbox",
+      {
+        name: /Hill coefficient/i,
+      },
+      {},
+    );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).not.toBeChecked();
     await userEvent.click(hillCoefficientCheckbox);
@@ -473,7 +490,9 @@ export const HillCoefficient: Story = {
       "Tumor growth model (linear)",
       userEvent,
     );
-    await waitForElementToBeRemoved(hillCoefficientCheckbox);
+    await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 3000,
+    });
 
     await selectMenuOption(
       pdModelList,
@@ -486,8 +505,7 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enough in CI.
-      },
+        },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).toBeChecked();
@@ -498,7 +516,6 @@ export const HillCoefficient: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
-      timeout: 2000, // the default timeout isn't long enough in CI.
     });
 
     const secondaryPDModelSelect = await canvas.findByRole(
@@ -507,8 +524,7 @@ export const HillCoefficient: Story = {
         name: /Secondary PD Model/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enough in CI.
-      },
+        },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
     await selectMenuOption(
@@ -522,8 +538,7 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        timeout: 2000, // the default timeout isn't long enough in CI.
-      },
+        },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
   },

@@ -296,10 +296,12 @@ const ThresholdsTable: FC<TableProps> = (props) => {
     >
       <Table {...props} stickyHeader>
         <TableHead>
-          <TableCell>Variable</TableCell>
-          <TableCell>Lower Threshold</TableCell>
-          <TableCell>Upper Threshold</TableCell>
-          <TableCell>Unit</TableCell>
+          <TableRow>
+            <TableCell>Variable</TableCell>
+            <TableCell>Lower Threshold</TableCell>
+            <TableCell>Upper Threshold</TableCell>
+            <TableCell>Unit</TableCell>
+          </TableRow>
         </TableHead>
         <TableBody>
           {concentrationVariables

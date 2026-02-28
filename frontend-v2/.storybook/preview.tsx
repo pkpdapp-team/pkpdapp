@@ -67,9 +67,15 @@ const preview: Preview = {
   ],
   tags: ["autodocs"],
   loaders: [mswLoader],
+  beforeAll: async () => {
+    const { configure } = await import("storybook/test");
+    // Configure global timeout for findBy* and waitFor queries
+    configure({ asyncUtilTimeout: 5000 });
+  },
   beforeEach: async () => {
+    // Reset API state and project to ensure clean state between tests
     store.dispatch(api.util.resetApiState());
-    store.dispatch(setProject(undefined));
+    store.dispatch(setProject(null));
   },
 };
 

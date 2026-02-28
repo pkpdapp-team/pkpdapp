@@ -6130,7 +6130,8 @@ export const projectHandlers = [
 
     const projectId = url.searchParams.get("project_id");
     if (projectId) {
-      return HttpResponse.json([model], {
+      // Return a fresh copy of the model to prevent mutations from persisting across tests
+      return HttpResponse.json([structuredClone(model)], {
         status: 200,
       });
     }

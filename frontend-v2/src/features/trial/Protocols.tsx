@@ -323,7 +323,6 @@ export const Protocols: FC<ProtocolsProps> = ({
             <TableHead>
               <TableRow>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Dose</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
@@ -331,7 +330,6 @@ export const Protocols: FC<ProtocolsProps> = ({
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Per Body Weight (kg)
                     <HelpButton title="Per Body Weight">
                       If checked, the dose is given in amount per body
@@ -339,12 +337,10 @@ export const Protocols: FC<ProtocolsProps> = ({
                   </div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Number of Doses</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Start Time
                     <HelpButton title="Start Time">
                       Time of the first dose
@@ -353,7 +349,6 @@ export const Protocols: FC<ProtocolsProps> = ({
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Dose Duration
                     <HelpButton title="Dose Duration">
                       Duration of dosing. For IV bolus PO/SC dosing use the
@@ -362,11 +357,9 @@ export const Protocols: FC<ProtocolsProps> = ({
                   </div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Dosing Interval</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
                 {tab === 0 && (
