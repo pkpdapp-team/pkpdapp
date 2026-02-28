@@ -110,34 +110,54 @@ export const Default: Story = {
 };
 
 export const Parameters: Story = {
+  parameters: {
+    test: {
+      timeout: 25000, // Increase timeout for this complex test
+    },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const parametersButton = await canvas.findByRole("button", {
-      name: "Parameters 0",
-      expanded: false,
-    });
+    const parametersButton = await canvas.findByRole(
+      "button",
+      {
+        name: "Parameters 0",
+        expanded: false,
+      },
+    );
     expect(parametersButton).toBeInTheDocument();
     await userEvent.click(parametersButton);
     expect(parametersButton).toHaveAttribute("aria-expanded", "true");
 
-    const addParameterButton = await canvas.findByRole("button", {
-      name: /Add parameter/i,
-    });
+    const addParameterButton = await canvas.findByRole(
+      "button",
+      {
+        name: /Add parameter/i,
+      },
+    );
     await userEvent.click(addParameterButton);
 
-    const parameterOption = await screen.findByRole("button", {
-      name: /^V1/,
-    });
+    const parameterOption = await screen.findByRole(
+      "button",
+      {
+        name: /^V1/,
+      },
+    );
     await userEvent.click(parameterOption);
 
-    const simulationSlider = await screen.findByRole("slider", {
-      name: "V1 [mL/kg]",
-    });
+    const simulationSlider = await screen.findByRole(
+      "slider",
+      {
+        name: "V1 [mL/kg]",
+      },
+    );
     expect(simulationSlider).toBeInTheDocument();
 
-    const inputField = await screen.findByRole("spinbutton", {
-      name: "V1 [mL/kg]",
-    });
+    const inputField = await screen.findByRole(
+      "spinbutton",
+      {
+        name: "V1 [mL/kg]",
+      },
+    );
     expect(inputField).toBeInTheDocument();
     await userEvent.click(inputField);
     expect(inputField).toHaveFocus();

@@ -6,17 +6,17 @@ import {
   Popover,
   SxProps,
 } from "@mui/material";
-import { FC, MouseEvent, ReactNode, useState } from "react";
+import { MouseEvent, ReactNode, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
-type Option = {
+type Option<T = unknown> = {
   label: string;
-  value: any;
+  value: T;
 };
 
-type Props = {
-  options: Option[];
-  onOptionSelected: (value: Option["value"]) => void;
+type Props<T = unknown> = {
+  options: Option<T>[];
+  onOptionSelected: (value: T) => void;
   children?: ReactNode;
   disabled?: boolean;
   data_cy?: string;
@@ -25,7 +25,7 @@ type Props = {
   variant?: "text" | "outlined" | "contained";
 };
 
-const DropdownButton: FC<Props> = ({
+const DropdownButton = <T = unknown,>({
   data_cy,
   options,
   onOptionSelected,
@@ -34,7 +34,7 @@ const DropdownButton: FC<Props> = ({
   useIcon,
   sx,
   variant = "contained",
-}) => {
+}: Props<T>) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   if (useIcon === undefined) {
@@ -45,7 +45,7 @@ const DropdownButton: FC<Props> = ({
     setAnchorEl(event.currentTarget);
   };
 
-  const handleOptionSelected = (option: Option) => {
+  const handleOptionSelected = (option: Option<T>) => {
     setAnchorEl(null);
     onOptionSelected(option.value);
   };

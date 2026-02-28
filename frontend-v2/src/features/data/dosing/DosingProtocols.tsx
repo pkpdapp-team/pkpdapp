@@ -357,11 +357,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                     label="Amount"
                     onChange={handleAmountChange(adminId)}
                     value={amount}
-                  />{" "}
+                  />
                   <TableCell>
-                    {" "}
                     <FormControl fullWidth>
-                      {" "}
                       <InputLabel
                         size="small"
                         id={`select-unit-${adminId}-label`}

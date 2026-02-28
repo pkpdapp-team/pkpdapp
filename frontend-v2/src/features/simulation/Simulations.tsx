@@ -607,7 +607,6 @@ const Simulations: FC = () => {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups, isLoading: isGroupsLoading } = useSubjectGroups();
-  console.log("Subject groups in Simulations:", groups);
   const projectIdOrZero = projectId || 0;
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectIdOrZero }, { skip: !projectId });

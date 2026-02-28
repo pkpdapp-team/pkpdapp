@@ -158,6 +158,10 @@ def add_area_under_curve(
         The created AUC variable.
     """
     var_name = myokit_var.name()
+    if "desc" in myokit_var.meta:
+        var_desc = myokit_var.meta["desc"]
+    else:
+        var_desc = var_name
     myokit_compartment = myokit_var.parent()
     auc_var_name = f"calc_{var_name}_AUC"
     if myokit_compartment.has_variable(auc_var_name):
@@ -170,7 +174,7 @@ def add_area_under_curve(
         unit=myokit_var.unit() * time_var.unit(),
     )
     auc_var.meta["desc"] = (
-        f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
+        f'Area under curve for {var_desc}'  # noqa: E501
     )
     return auc_var
 

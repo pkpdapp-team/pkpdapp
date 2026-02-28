@@ -331,7 +331,6 @@ const MapVariablesTab: FC<Props> = ({
               {haveTLag && (
                 <TableCell size="small">
                   <span style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Lag Time <span style={{ color: "red" }}>*</span>
                     <HelpButton title={"Lag Time"}>{lagTimeHelp}</HelpButton>
                   </span>
@@ -390,9 +389,10 @@ const MapVariablesTab: FC<Props> = ({
       >
         <Table stickyHeader sx={{ "& .MuiTableCell-head": { lineHeight: 1 } }}>
           <TableHead>
-            <TableCell>
-              <span style={{ ...defaultHeaderSx }}>Name</span>
-            </TableCell>
+            <TableRow>
+              <TableCell>
+                <span style={{ ...defaultHeaderSx }}>Name</span>
+              </TableCell>
             {model?.pd_model && (
               <Tooltip
                 placement="top-start"
@@ -413,7 +413,6 @@ const MapVariablesTab: FC<Props> = ({
             >
               <TableCell>
                 <span style={{ ...defaultHeaderSx }}>
-                  {" "}
                   Secondary parameters
                   <HelpButton title={"Secondary Parameters"}>
                     {aucHelp}
@@ -427,7 +426,6 @@ const MapVariablesTab: FC<Props> = ({
             >
               <TableCell>
                 <span style={{ ...defaultHeaderSx }}>
-                  {" "}
                   Link to Static Receptor Occupancy
                   <HelpButton title={"Link to Static Receptor Occupancy"}>
                     {sROHelp}
@@ -443,7 +441,6 @@ const MapVariablesTab: FC<Props> = ({
                 >
                   <TableCell>
                     <span style={{ ...defaultHeaderSx }}>
-                      {" "}
                       Unbound Concentration
                       <HelpButton title={"Unbound Concentration"}>
                         {unboundHelp}
@@ -457,7 +454,6 @@ const MapVariablesTab: FC<Props> = ({
                 >
                   <TableCell>
                     <span style={{ ...defaultHeaderSx }}>
-                      {" "}
                       Blood Concentration
                       <HelpButton title={"Blood concentration"}>
                         {bloodHelp}
@@ -467,6 +463,7 @@ const MapVariablesTab: FC<Props> = ({
                 </Tooltip>
               </>
             )}
+            </TableRow>
           </TableHead>
           <TableBody>
             {timeVaryingVariables.sort(sortVariables).map((variable) => (

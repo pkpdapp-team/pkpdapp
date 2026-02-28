@@ -203,7 +203,7 @@ export const Default: Story = {
       const projectTableRows = projectsTable.querySelectorAll("tbody tr");
       expect(projectTableRows).toHaveLength(1); // 1 header row + 1 data row
     });
-    const projectRadioButton = within(projectsTable).getByRole("radio", {
+    const projectRadioButton = await within(projectsTable).findByRole("radio", {
       name: project.name,
     });
     expect(projectRadioButton).toBeInTheDocument();

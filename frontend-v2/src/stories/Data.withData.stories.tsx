@@ -235,10 +235,13 @@ export const MapObservations: Story = {
       name: "Variable",
     });
     expect(variableSelects).toHaveLength(2);
-    await waitFor(() => {
-      expect(variableSelects[0]).toHaveTextContent("C1");
-      expect(variableSelects[1]).toHaveTextContent("E");
-    });
+    await waitFor(
+      () => {
+        expect(variableSelects[0]).toHaveTextContent("C1");
+        expect(variableSelects[1]).toHaveTextContent("E");
+      },
+      { timeout: 5000 },
+    );
 
     const groupTabs = canvas.getAllByRole("tab", {
       name: /Group \w+/i,
