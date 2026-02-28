@@ -6,7 +6,7 @@ Django management command to automatically generate TypeScript mock files for St
 
 ```bash
 cd pkpdapp
-DEBUG=1 python manage.py generate_storybook_mocks
+python manage.py generate_storybook_mocks
 ```
 
 This creates TypeScript mock files in `frontend-v2/src/stories/generated-mocks/` with realistic test data from the Django API.
@@ -44,21 +44,21 @@ All files are created in `frontend-v2/src/stories/generated-mocks/`:
 Specify where to write mock files (default: `frontend-v2/src/stories/generated-mocks`)
 
 ```bash
-DEBUG=1 python manage.py generate_storybook_mocks --output-dir=custom/path
+python manage.py generate_storybook_mocks --output-dir=custom/path
 ```
 
 ### `--clean`
 Delete existing test data before generating
 
 ```bash
-DEBUG=1 python manage.py generate_storybook_mocks --clean
+python manage.py generate_storybook_mocks --clean
 ```
 
 ### `--dry-run`
 Preview what would be generated without writing files
 
 ```bash
-DEBUG=1 python manage.py generate_storybook_mocks --dry-run
+python manage.py generate_storybook_mocks --dry-run
 ```
 
 ## When to Regenerate
