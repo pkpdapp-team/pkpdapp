@@ -60,6 +60,68 @@ export default {
 };
 ```
 
+## Ensuring Mocks are Generated
+
+### For Local Development
+
+```bash
+# From pkpdapp directory
+./scripts/generate-mocks.sh
+
+# Or from frontend-v2 directory (if package.json is configured)
+yarn generate-mocks
+```
+
+### Before Running Tests
+
+The mocks should be generated before running Storybook tests. You have several options:
+
+**Option 1: Add pre-test hook** (Recommended)
+Add to `frontend-v2/package.json`:
+```json
+{
+  "scripts": {
+    "pretest": "node scripts/ensure-mocks.js",
+    "generate-mocks": "cd ../pkpdapp && ./scripts/generate-mocks.sh"
+  }
+}
+```
+
+**Option 2: Manual generation**
+```bash
+cd pkpdapp
+DEBUG=1 python manage.py generate_storybook_mocks
+```
+
+**Option 3: Combined command**
+```json
+{
+  "scripts": {
+    "test:with-mocks": "yarn generate-mocks && yarn test"
+  }
+}
+```
+
+### In CI/CD
+
+Add a step to your CI pipeline before frontend tests:
+
+```yaml
+# GitHub Actions example
+- name: Generate Storybook Mocks
+  run: |
+    cd pkpdapp
+    DEBUG=1 python manage.py migrate
+    DEBUG=1 python manage.py generate_storybook_mocks
+
+- name: Run Frontend Tests
+  run: |
+    cd frontend-v2
+    yarn test
+```
+
+See [PACKAGE_JSON_UPDATES.md](../../PACKAGE_JSON_UPDATES.md) for detailed integration instructions.
+
 ## Important Notes
 
 - **DO NOT EDIT THESE FILES MANUALLY** - They are auto-generated and will be overwritten
@@ -67,3 +129,4 @@ export default {
   1. Create a separate mock file, or
   2. Modify the Django management command to generate different data
 - The generated data is based on a fresh database with only the library models loaded
+- **DO NOT COMMIT** the generated `.mock.ts` files to git (they're in `.gitignore`)
