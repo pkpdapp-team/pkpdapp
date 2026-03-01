@@ -12,10 +12,20 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Model from "../features/model/Model";
-import { model, project, projectHandlers } from "./project.v3.mock";
-import { pkModels, pdModels, tagsData } from "./model.v3.mock";
+import {
+  project,
+  projectHandlers,
+  pkModels,
+  pdModels,
+  tags as tagsData,
+  combinedModels,
+  protocolHandlers,
+  variableHandlers,
+  unitHandlers,
+} from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
+const model = combinedModels[0];
 let mockModel = { ...model };
 let mockProject = { ...project };
 const modelSpy = fn();
@@ -129,6 +139,9 @@ const meta: Meta<typeof Model> = {
             });
           }),
           ...projectHandlers,
+          ...protocolHandlers,
+          ...variableHandlers,
+          ...unitHandlers,
         ],
         model: [
           http.get("/api/tag", async () => {
@@ -682,7 +695,7 @@ export const SecondaryParameters: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
   },
 };
 
@@ -698,7 +711,7 @@ export const ChangeSecondaryUnit: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
 
     await selectMenuOption(unitSelect, "pmol/L", userEvent);
 
