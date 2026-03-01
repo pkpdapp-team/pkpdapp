@@ -454,6 +454,16 @@ import {{ http, HttpResponse, delay }} from "msw";
 export const variables = {self._to_typescript(variables)} as unknown as VariableRead[];
 
 export const variableHandlers = [
+  http.get("/api/variable/:id", async ({{ params }}) => {{
+    await delay();
+    //@ts-expect-error params.id is a string
+    const variableId = parseInt(params.id, 10);
+    const variable = variables.find(v => v.id === variableId);
+    if (variable) {{
+      return HttpResponse.json(variable, {{ status: 200 }});
+    }}
+    return HttpResponse.json({{ error: "Variable not found" }}, {{ status: 404 }});
+  }}),
   http.get("/api/variable", async ({{ request }}) => {{
     await delay();
     const url = new URL(request.url);

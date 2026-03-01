@@ -4,7 +4,12 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { projectHandlers } from "./generated-mocks";
+import {
+  projectHandlers,
+  modelHandlers,
+  unitHandlers,
+  simulationHandlers,
+} from "./generated-mocks";
 
 import { HttpResponse, delay, http } from "msw";
 import {
@@ -51,7 +56,10 @@ const meta: Meta<typeof Data> = {
             return HttpResponse.json(protocols, { status: 200 });
           }),
           ...projectHandlers,
+          ...unitHandlers,
+          ...simulationHandlers,
         ],
+        model: modelHandlers,
         dataset: datasetHandlers,
       },
     },

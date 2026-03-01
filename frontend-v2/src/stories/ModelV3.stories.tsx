@@ -19,6 +19,9 @@ import {
   pdModels,
   tags as tagsData,
   combinedModels,
+  protocolHandlers,
+  variableHandlers,
+  unitHandlers,
 } from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
@@ -136,6 +139,9 @@ const meta: Meta<typeof Model> = {
             });
           }),
           ...projectHandlers,
+          ...protocolHandlers,
+          ...variableHandlers,
+          ...unitHandlers,
         ],
         model: [
           http.get("/api/tag", async () => {
@@ -689,7 +695,7 @@ export const SecondaryParameters: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
   },
 };
 
@@ -705,7 +711,7 @@ export const ChangeSecondaryUnit: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
 
     await selectMenuOption(unitSelect, "pmol/L", userEvent);
 

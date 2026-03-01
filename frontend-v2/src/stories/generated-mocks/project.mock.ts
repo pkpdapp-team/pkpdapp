@@ -4,27 +4,27 @@ import { ProjectRead, CompoundRead, UserRead, SubjectGroupRead } from "../../app
 import { http, HttpResponse, delay } from "msw";
 
 export const project = {
-  id: 16,
+  id: 17,
   user_access: [
     {
-      id: 16,
+      id: 17,
       read_only: false,
       user: 9,
-      project: 16
+      project: 17
     }
   ],
   datasets: [],
   protocols: [
-    16
+    17
   ],
   name: "Storybook Test Project",
   description: "Automatically generated for Storybook mocks",
-  created: "2026-03-01T00:18:21.108896Z",
+  created: "2026-03-01T00:57:23.391498Z",
   tags: "",
   species: "R",
   species_weight: 0.25,
   version: 3,
-  compound: 16,
+  compound: 17,
   species_weight_unit: 53,
   users: [
     9
@@ -34,7 +34,7 @@ export const project = {
 } as unknown as ProjectRead;
 
 export const compound = {
-  id: 16,
+  id: 17,
   efficacy_experiments: [],
   name: "Test Compound",
   description: "Automatically generated test compound for Storybook",
@@ -77,7 +77,8 @@ export const users = [
       13,
       14,
       15,
-      16
+      16,
+      17
     ]
   }
 ] as unknown as UserRead[];
