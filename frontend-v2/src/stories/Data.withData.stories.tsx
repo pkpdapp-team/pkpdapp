@@ -6,9 +6,10 @@ import { setProject as setReduxProject } from "../features/main/mainSlice";
 import Data from "../features/data/Data";
 import {
   projectHandlers,
-  modelHandlers,
   unitHandlers,
   simulationHandlers,
+  combinedModels,
+  variables,
 } from "./generated-mocks";
 
 import { HttpResponse, delay, http } from "msw";
@@ -37,6 +38,25 @@ const datasetHandlers = [
     await delay();
     return HttpResponse.json(biomarkerTypes, { status: 200 });
   }),
+  http.get("/api/combined_model", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
+    if (projectId && parseInt(projectId) === project.id) {
+      return HttpResponse.json(combinedModels, { status: 200 });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/variable", async ({ request }) => {
+    await delay();
+    const url = new URL(request.url);
+    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
+    if (dosedPkModelId) {
+      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      return HttpResponse.json(filtered, { status: 200 });
+    }
+    return HttpResponse.json(variables, { status: 200 });
+  }),
 ];
 
 const meta: Meta<typeof Data> = {
@@ -59,7 +79,6 @@ const meta: Meta<typeof Data> = {
           ...unitHandlers,
           ...simulationHandlers,
         ],
-        model: modelHandlers,
         dataset: datasetHandlers,
       },
     },

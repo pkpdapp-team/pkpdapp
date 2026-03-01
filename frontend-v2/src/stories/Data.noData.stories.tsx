@@ -8,9 +8,10 @@ import {
   project,
   projectHandlers,
   protocolHandlers,
-  modelHandlers,
   unitHandlers,
   simulationHandlers,
+  combinedModels,
+  variables,
 } from "./generated-mocks";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 import dosingUnitsCSV from "./mockData/Data.DosingUnits.js";
@@ -39,6 +40,23 @@ const datasetHandlers = [
   http.get("/api/biomarker_type", () => {
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/combined_model", ({ request }) => {
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
+    if (projectId && parseInt(projectId) === project.id) {
+      return HttpResponse.json(combinedModels, { status: 200 });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/variable", ({ request }) => {
+    const url = new URL(request.url);
+    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
+    if (dosedPkModelId) {
+      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      return HttpResponse.json(filtered, { status: 200 });
+    }
+    return HttpResponse.json(variables, { status: 200 });
+  }),
 ];
 
 const meta: Meta<typeof Data> = {
@@ -54,7 +72,6 @@ const meta: Meta<typeof Data> = {
           ...unitHandlers,
           ...simulationHandlers,
         ],
-        model: modelHandlers,
         dataset: datasetHandlers,
       },
     },
