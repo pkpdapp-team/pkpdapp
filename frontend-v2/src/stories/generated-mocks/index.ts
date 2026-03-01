@@ -6,3 +6,4 @@ export * from "./model.mock";
 export * from "./protocol.mock";
 export * from "./units.mock";
 export * from "./variables.mock";
+export * from "./simulation.mock";
