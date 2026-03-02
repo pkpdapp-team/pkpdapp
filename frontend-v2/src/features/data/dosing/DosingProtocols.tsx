@@ -53,6 +53,16 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   notificationsInfo,
   project,
 }: IDosingProtocols) => {
+  console.log("DosingProtocols render", {
+    administrationIdField,
+    amountUnitField,
+    amountUnit,
+    state,
+    units,
+    variables,
+    notificationsInfo,
+    project,
+  });
   const amountField = findFieldByType("Amount", state);
   const amountVariableField = findFieldByType("Amount Variable", state);
   const timeField = findFieldByType("Time", state);
@@ -235,6 +245,20 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       state.data = nextData;
     };
 
+  const handleFieldChange =
+    (id: string, field: string) => (event: ChangeEvent<HTMLInputElement>) => {
+      const nextData = [...state.data];
+      const { value } = event.target;
+      nextData
+        .filter((row) =>
+          administrationIdField ? row[administrationIdField] === id : true,
+        )
+        .forEach((row) => {
+          row[field] = value;
+        });
+      state.data = nextData;
+    };
+
   return (
     <Box component="div">
       <TableHeader
@@ -396,24 +420,32 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ width: "5rem" }}>
-                    <Typography>{time}</Typography>
-                  </TableCell>
+                  <NumericTableCell
+                    id={`input-time-${adminId}`}
+                    disabled={false}
+                    label="Time"
+                    onChange={handleFieldChange(adminId, timeField)}
+                    value={time}
+                  />
                   <TableCell>
                     <Typography>
                       {currentRow?.[timeUnitField] || "."}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography>
-                      {currentRow?.[addlDosesField] || "."}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography>
-                      {currentRow?.[interDoseField] || "."}
-                    </Typography>
-                  </TableCell>
+                  <NumericTableCell
+                    id={`input-addDoses-${adminId}`}
+                    disabled={false}
+                    label="Additional Doses"
+                    onChange={handleFieldChange(adminId, addlDosesField)}
+                    value={currentRow?.[addlDosesField]}
+                  />
+                  <NumericTableCell
+                    id={`input-doseInterval-${adminId}`}
+                    disabled={false}
+                    label="Interdose Interval"
+                    onChange={handleFieldChange(adminId, interDoseField)}
+                    value={currentRow?.[interDoseField]}
+                  />
                 </TableRow>
               );
             })}
