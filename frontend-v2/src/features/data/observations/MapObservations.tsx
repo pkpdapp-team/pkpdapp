@@ -162,7 +162,7 @@ const MapObservations: FC<IMapObservations> = ({
         .filter((row) =>
           observationIdField
             ? row[observationIdField] === id
-            : observationField in row && row[observationField] !== ".",
+            : observationField in row && row[observationField] !== "." && row[observationField] !== "",
         )
         .forEach((row) => {
           row[observationVariableField] = value;

@@ -95,13 +95,13 @@ export const UploadFileWithoutAdministrationId: Story = {
     // This reproduces the bug where Administration ID needs to be created
     // but is not added to normalisedFields
     const csvWithoutAdm = `ID;Group;Route;Time;Units_Time;Conc;Units_Conc;AMT;Units_AMT
-1;1;IV;0;h;0;mg/L;100;mg
+1;1;IV;0;h;;;100;mg
 1;1;IV;2;h;10;mg/L;;
 1;1;IV;4;h;8;mg/L;;
-2;1;IV;0;h;0;mg/L;100;mg
+2;1;IV;0;h;;;100;mg
 2;1;IV;2;h;12;mg/L;;
 2;1;IV;4;h;9;mg/L;;
-3;2;SC;0;h;0;mg/L;150;mg
+3;2;SC;0;h;;;150;mg
 3;2;SC;2;h;15;mg/L;;
 3;2;SC;4;h;12;mg/L;;`;
 
