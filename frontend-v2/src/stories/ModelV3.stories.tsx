@@ -23,6 +23,7 @@ import {
   variableHandlers,
   unitHandlers,
   simulationHandlers,
+  subjectGroupHandlers,
 } from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
@@ -144,6 +145,7 @@ const meta: Meta<typeof Model> = {
           ...variableHandlers,
           ...unitHandlers,
           ...simulationHandlers,
+          ...subjectGroupHandlers,
         ],
         model: [
           http.get("/api/tag", async () => {
@@ -301,11 +303,6 @@ export const ShowMMTCode: Story = {
 };
 
 export const PkFiltering: Story = {
-  parameters: {
-    test: {
-      timeout: 20000, // Increase timeout for this complex test
-    },
-  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -339,11 +336,6 @@ export const PkFiltering: Story = {
 };
 
 export const PdFiltering: Story = {
-  parameters: {
-    test: {
-      timeout: 20000, // Increase timeout for this complex test
-    },
-  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -439,11 +431,6 @@ export const PDModel: Story = {
 };
 
 export const TumourGrowthModel: Story = {
-  parameters: {
-    test: {
-      timeout: 45000, // Increase timeout for this complex test
-    },
-  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -496,11 +483,6 @@ export const TumourGrowthModel: Story = {
 };
 
 export const HillCoefficient: Story = {
-  parameters: {
-    test: {
-      timeout: 20000, // Increase timeout to 20 seconds for this complex test
-    },
-  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -572,8 +554,6 @@ export const HillCoefficient: Story = {
       userEvent,
     );
 
-    await delay(500); // Small delay to ensure model updates
-
     hillCoefficientCheckbox = await canvas.findByRole(
       "checkbox",
       {
@@ -614,7 +594,7 @@ export const LagTime: Story = {
         name: /Lag time/i,
       });
       expect(removedLagTimeCheckbox).not.toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
 
     // Now select First order absorption model again
     await selectMenuOption(
@@ -623,19 +603,19 @@ export const LagTime: Story = {
       userEvent,
     );
 
-    await delay(1000);
-
     const lagTimeCheckbox = await canvas.findByRole("checkbox", {
       name: /Lag time/i,
-    });
+    }, {
+      timeout: 10000,
+    }
+    );
     expect(lagTimeCheckbox).not.toBeChecked();
     await userEvent.click(lagTimeCheckbox);
     expect(lagTimeCheckbox).toBeChecked();
 
-    await delay(1000); // Wait for the model to update
     const errorTab = await canvas.findByRole("tab", {
       name: /Map Variables Please select a lag time variable/i,
-    });
+    }, { timeout: 10000 });
     expect(errorTab).toBeInTheDocument();
     await userEvent.click(errorTab);
 
@@ -648,10 +628,9 @@ export const LagTime: Story = {
     expect(lagTimeCheckbox2).toBeChecked();
 
     // Test that the error message has disappeared.
-    await delay(1000); // Wait for the model to update
     const mapVariablesTab = await canvas.findByRole("tab", {
       name: "Map Variables",
-    });
+    }, { timeout: 10000 });
     expect(mapVariablesTab).toBeInTheDocument();
   },
 };

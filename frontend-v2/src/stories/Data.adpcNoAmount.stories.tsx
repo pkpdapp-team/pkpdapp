@@ -12,6 +12,7 @@ import {
   simulationHandlers,
   combinedModels,
   variables,
+  subjectGroupHandlers,
 } from "./generated-mocks/index";
 
 import { HttpResponse, http } from "msw";
@@ -28,9 +29,7 @@ const datasetHandlers = [
       { status: 200 },
     );
   }),
-  http.get("/api/subject_group", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
+  ...subjectGroupHandlers,
   http.get("/api/subject", () => {
     return HttpResponse.json([], { status: 200 });
   }),
