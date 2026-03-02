@@ -5,10 +5,10 @@ import { http, HttpResponse, delay } from "msw";
 
 export const protocols = [
   {
-    id: 61,
+    id: 64,
     doses: [
       {
-        id: 71,
+        id: 74,
         start_time: 0.0,
         amount: 100.0,
         duration: 0.001,
@@ -16,7 +16,7 @@ export const protocols = [
         repeat_interval: 24.0,
         read_only: false,
         datetime: null,
-        protocol: 61
+        protocol: 64
       }
     ],
     subjects: [],
@@ -26,18 +26,18 @@ export const protocols = [
     dose_type: "D",
     amount_per_body_weight: false,
     dataset: null,
-    project: 33,
-    compound: 33,
+    project: 34,
+    compound: 34,
     time_unit: 20,
     amount_unit: 22,
-    variable: 429,
+    variable: 445,
     group: null
   },
   {
-    id: 62,
+    id: 65,
     doses: [
       {
-        id: 72,
+        id: 75,
         start_time: 0.0,
         amount: 10.0,
         duration: 0.0833,
@@ -45,7 +45,7 @@ export const protocols = [
         repeat_interval: 1.0,
         read_only: false,
         datetime: null,
-        protocol: 62
+        protocol: 65
       }
     ],
     subjects: [],
@@ -54,19 +54,19 @@ export const protocols = [
     name: "WithData Test Dataset-Data-Group 1",
     dose_type: "D",
     amount_per_body_weight: true,
-    dataset: 15,
-    project: 33,
+    dataset: 16,
+    project: 34,
     compound: null,
     time_unit: 20,
     amount_unit: 22,
-    variable: 429,
-    group: 29
+    variable: 445,
+    group: 31
   },
   {
-    id: 63,
+    id: 66,
     doses: [
       {
-        id: 73,
+        id: 76,
         start_time: 0.0,
         amount: 10.0,
         duration: 0.0833,
@@ -74,7 +74,7 @@ export const protocols = [
         repeat_interval: 1.0,
         read_only: false,
         datetime: null,
-        protocol: 63
+        protocol: 66
       }
     ],
     subjects: [],
@@ -83,18 +83,18 @@ export const protocols = [
     name: "WithData Test Dataset-Data-Group 2",
     dose_type: "D",
     amount_per_body_weight: true,
-    dataset: 15,
-    project: 33,
+    dataset: 16,
+    project: 34,
     compound: null,
     time_unit: 20,
     amount_unit: 22,
-    variable: 429,
-    group: 30
+    variable: 445,
+    group: 32
   }
 ] as unknown as ProtocolRead[];
 
 export const dose = {
-  id: 71,
+  id: 74,
   start_time: 0.0,
   amount: 100.0,
   duration: 0.001,
@@ -102,7 +102,7 @@ export const dose = {
   repeat_interval: 24.0,
   read_only: false,
   datetime: null,
-  protocol: 61
+  protocol: 64
 } as unknown as DoseRead;
 
 export const protocolHandlers = [

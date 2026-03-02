@@ -3,8 +3,7 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import json
-import os
+# flake8: noqa: E501
 from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
@@ -73,7 +72,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Would generate files in: {output_dir_no_data}")
 
             # Step 5: Create dataset with CSV data
-            self.stdout.write("\n" + "="*60)
+            self.stdout.write("\n" + "=" * 60)
             self.stdout.write("Creating dataset with CSV data...")
             dataset_data = self._create_dataset_with_csv(test_data)
 
@@ -484,6 +483,18 @@ export const variableHandlers = [
       return HttpResponse.json(filtered, {{ status: 200 }});
     }}
     return HttpResponse.json(variables, {{ status: 200 }});
+  }}),
+  http.put("/api/variable/:id", async ({{ params, request }}) => {{
+    await delay();
+    //@ts-expect-error params.id is a string
+    const variableId = parseInt(params.id, 10);
+    const updatedData = await request.json();
+    const variable = variables.find(v => v.id === variableId);
+    if (variable) {{
+      // Return the updated data (in real app would update the variable)
+      return HttpResponse.json(updatedData, {{ status: 200 }});
+    }}
+    return HttpResponse.json({{ error: "Variable not found" }}, {{ status: 404 }});
   }}),
 ];
 """

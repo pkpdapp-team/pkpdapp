@@ -1317,6 +1317,92 @@ export const subjectGroups = [
     id_in_dataset: "2",
     dataset: 14,
     project: 32
+  },
+  {
+    id: 29,
+    subjects: [
+      85,
+      86,
+      87
+    ],
+    protocols: [
+      {
+        id: 62,
+        doses: [
+          {
+            id: 72,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 62
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 15,
+        project: 33,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 429,
+        group: 29
+      }
+    ],
+    name: "Data-Group 1",
+    id_in_dataset: "1",
+    dataset: 15,
+    project: 33
+  },
+  {
+    id: 30,
+    subjects: [
+      88,
+      89,
+      90
+    ],
+    protocols: [
+      {
+        id: 63,
+        doses: [
+          {
+            id: 73,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 63
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 15,
+        project: 33,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 429,
+        group: 30
+      }
+    ],
+    name: "Data-Group 2",
+    id_in_dataset: "2",
+    dataset: 15,
+    project: 33
   }
 ] as unknown as SubjectGroupRead[];
 
