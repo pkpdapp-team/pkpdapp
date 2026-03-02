@@ -603,6 +603,66 @@ export const subjects = [
     dataset: 10,
     protocol: null,
     group: 20
+  },
+  {
+    id: 61,
+    id_in_dataset: 1,
+    shape: 0,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 21
+  },
+  {
+    id: 62,
+    id_in_dataset: 2,
+    shape: 9,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 21
+  },
+  {
+    id: 63,
+    id_in_dataset: 3,
+    shape: 18,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 21
+  },
+  {
+    id: 64,
+    id_in_dataset: 4,
+    shape: 27,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 22
+  },
+  {
+    id: 65,
+    id_in_dataset: 5,
+    shape: 37,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 22
+  },
+  {
+    id: 66,
+    id_in_dataset: 6,
+    shape: 47,
+    display: true,
+    metadata: "{}",
+    dataset: 11,
+    protocol: null,
+    group: 22
   }
 ] as unknown as SubjectRead[];
 

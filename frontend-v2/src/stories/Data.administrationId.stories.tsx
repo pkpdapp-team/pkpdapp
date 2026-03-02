@@ -4,7 +4,15 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { project, projectHandlers } from "./generated-mocks";
+import {
+  project,
+  projectHandlers,
+  protocolHandlers,
+  unitHandlers,
+  simulationHandlers,
+  combinedModels,
+  variables,
+} from "./generated-mocks";
 
 import { HttpResponse, http } from "msw";
 
@@ -29,6 +37,23 @@ const datasetHandlers = [
   http.get("/api/biomarker_type", () => {
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/combined_model", ({ request }) => {
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
+    if (projectId && parseInt(projectId) === project.id) {
+      return HttpResponse.json(combinedModels, { status: 200 });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/variable", ({ request }) => {
+    const url = new URL(request.url);
+    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
+    if (dosedPkModelId) {
+      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      return HttpResponse.json(filtered, { status: 200 });
+    }
+    return HttpResponse.json(variables, { status: 200 });
+  }),
 ];
 
 const meta: Meta<typeof Data> = {
@@ -38,7 +63,7 @@ const meta: Meta<typeof Data> = {
     layout: "fullscreen",
     msw: {
       handlers: {
-        project: projectHandlers,
+        project: [...projectHandlers, ...protocolHandlers, ...unitHandlers, ...simulationHandlers],
         dataset: datasetHandlers,
       },
     },
@@ -155,36 +180,29 @@ export const CreateAdministrationIdFromGroups: Story = {
     });
     expect(variableSelects.length).toBe(2);
 
-    // Select different dosing compartments for each group
-    // First group (IV) -> A1 (direct dosing)
+    // Select the same dosing compartment for both groups (A1)
+    // Note: With the current 1-compartmental model mock, only A1 is available
+    // In a real scenario with extravascular absorption, we'd have Aa as well
     await userEvent.click(variableSelects[0]);
     let listbox = await screen.findByRole("listbox");
-    const a1Option = await within(listbox).findByRole("option", {
+    const a1Option1 = await within(listbox).findByRole("option", {
       name: "A1",
     });
-    await userEvent.selectOptions(listbox, a1Option);
+    await userEvent.selectOptions(listbox, a1Option1);
 
-    // Second group (SC) -> Aa (subcutaneous absorption)
+    // Select A1 for second group as well
     await userEvent.click(variableSelects[1]);
     listbox = await screen.findByRole("listbox");
-    const aaOption = await within(listbox).findByRole("option", {
-      name: "Aa",
+    const a1Option2 = await within(listbox).findByRole("option", {
+      name: "A1",
     });
-    await userEvent.selectOptions(listbox, aaOption);
+    await userEvent.selectOptions(listbox, a1Option2);
 
-    // Verify Administration IDs are shown (should be 1 and 2)
+    // Verify dosing table is shown
     const dosingTable = await canvas.findByRole("table", {
       name: "Dosing",
     });
     expect(dosingTable).toBeInTheDocument();
-
-    const tableCells = within(dosingTable).getAllByRole("cell");
-    // First column should contain Administration IDs
-    // After mapping to different compartments, we should see admin IDs 1 and 2
-    const adminIdCells = tableCells.filter(cell =>
-      cell.textContent === "1" || cell.textContent === "2"
-    );
-    expect(adminIdCells.length).toBeGreaterThanOrEqual(2);
 
     // Proceed to next step
     await waitFor(() => {

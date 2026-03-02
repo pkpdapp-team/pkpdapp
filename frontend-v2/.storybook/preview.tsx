@@ -2,9 +2,12 @@ import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { isCommonAssetRequest } from "msw";
+import { configure } from "@testing-library/react";
 import { store } from "../src/app/store";
 import { api } from "../src/app/api";
-import { setProject } from "../src/features/main/mainSlice";
+
+// Configure global timeout for findBy* and waitFor queries
+configure({ asyncUtilTimeout: 5000 });
 
 /*
  * Initializes MSW
@@ -67,15 +70,10 @@ const preview: Preview = {
   ],
   tags: ["autodocs"],
   loaders: [mswLoader],
-  beforeAll: async () => {
-    const { configure } = await import("storybook/test");
-    // Configure global timeout for findBy* and waitFor queries
-    configure({ asyncUtilTimeout: 5000 });
-  },
-  beforeEach: async () => {
-    // Reset API state and project to ensure clean state between tests
+  async beforeEach() {
+    // Reset API state to ensure clean cache before each story
+    // Note: Each story's decorator handles setting the project appropriately
     store.dispatch(api.util.resetApiState());
-    store.dispatch(setProject(null));
   },
 };
 

@@ -189,13 +189,13 @@ const Data: FC = () => {
     .map((row, index) => ({ id: index + 1, ...row }));
   const dosingColumns = dosingRows[0]
     ? Object.keys(dosingRows[0])
-        .filter((field) => field !== "id" && field !== "Route")
-        .map((field) => ({
-          field,
-          headerName: field,
-          minWidth:
-            field === "Amount Variable" ? 150 : field.length > 10 ? 130 : 30,
-        }))
+      .filter((field) => field !== "id" && field !== "Route")
+      .map((field) => ({
+        field,
+        headerName: field,
+        minWidth:
+          field === "Amount Variable" ? 150 : field.length > 10 ? 130 : 30,
+      }))
     : [];
   const groupId = group?.id_in_dataset || group?.name;
   const observations =
@@ -223,17 +223,17 @@ const Data: FC = () => {
   const [firstRow] = observations;
   const columns = firstRow
     ? Object.keys(firstRow)
-        .filter((field) => field !== "id")
-        .map((field) => ({
-          field,
-          headerName: field,
-          minWidth:
-            field === "Observation Variable"
-              ? 150
-              : field.length > 10
-                ? 120
-                : 30,
-        }))
+      .filter((field) => field !== "id")
+      .map((field) => ({
+        field,
+        headerName: field,
+        minWidth:
+          field === "Observation Variable"
+            ? 150
+            : field.length > 10
+              ? 120
+              : 30,
+      }))
     : [];
 
   const noData = !groups.length && !observations.length;

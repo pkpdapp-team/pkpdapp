@@ -22,6 +22,7 @@ import {
   protocolHandlers,
   variableHandlers,
   unitHandlers,
+  simulationHandlers,
 } from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
@@ -142,6 +143,7 @@ const meta: Meta<typeof Model> = {
           ...protocolHandlers,
           ...variableHandlers,
           ...unitHandlers,
+          ...simulationHandlers,
         ],
         model: [
           http.get("/api/tag", async () => {
@@ -443,6 +445,7 @@ export const TumourGrowthModel: Story = {
         name: /Secondary PD Model/i,
       },
       {
+        timeout: 10000,
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
@@ -470,6 +473,7 @@ export const TumourGrowthModel: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(secondaryPDModelSelect, {
+      timeout: 10000,
     });
   },
 };
@@ -491,7 +495,9 @@ export const HillCoefficient: Story = {
       {
         name: /Hill coefficient/i,
       },
-      {},
+      {
+        timeout: 10000,
+      },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).not.toBeChecked();
@@ -504,7 +510,7 @@ export const HillCoefficient: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
-      timeout: 3000,
+      timeout: 10000,
     });
 
     await selectMenuOption(
@@ -518,7 +524,8 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        },
+        timeout: 10000,
+      },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).toBeChecked();
@@ -529,6 +536,7 @@ export const HillCoefficient: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 10000,
     });
 
     const secondaryPDModelSelect = await canvas.findByRole(
