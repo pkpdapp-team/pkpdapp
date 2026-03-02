@@ -1059,6 +1059,264 @@ export const subjectGroups = [
     id_in_dataset: "2",
     dataset: 11,
     project: 29
+  },
+  {
+    id: 23,
+    subjects: [
+      67,
+      68,
+      69
+    ],
+    protocols: [
+      {
+        id: 53,
+        doses: [
+          {
+            id: 63,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 53
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 12,
+        project: 30,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 385,
+        group: 23
+      }
+    ],
+    name: "Data-Group 1",
+    id_in_dataset: "1",
+    dataset: 12,
+    project: 30
+  },
+  {
+    id: 24,
+    subjects: [
+      70,
+      71,
+      72
+    ],
+    protocols: [
+      {
+        id: 54,
+        doses: [
+          {
+            id: 64,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 54
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 12,
+        project: 30,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 385,
+        group: 24
+      }
+    ],
+    name: "Data-Group 2",
+    id_in_dataset: "2",
+    dataset: 12,
+    project: 30
+  },
+  {
+    id: 25,
+    subjects: [
+      73,
+      74,
+      75
+    ],
+    protocols: [
+      {
+        id: 56,
+        doses: [
+          {
+            id: 66,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 56
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 13,
+        project: 31,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 400,
+        group: 25
+      }
+    ],
+    name: "Data-Group 1",
+    id_in_dataset: "1",
+    dataset: 13,
+    project: 31
+  },
+  {
+    id: 26,
+    subjects: [
+      76,
+      77,
+      78
+    ],
+    protocols: [
+      {
+        id: 57,
+        doses: [
+          {
+            id: 67,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 57
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 13,
+        project: 31,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 400,
+        group: 26
+      }
+    ],
+    name: "Data-Group 2",
+    id_in_dataset: "2",
+    dataset: 13,
+    project: 31
+  },
+  {
+    id: 27,
+    subjects: [
+      79,
+      80,
+      81
+    ],
+    protocols: [
+      {
+        id: 59,
+        doses: [
+          {
+            id: 69,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 59
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 14,
+        project: 32,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 414,
+        group: 27
+      }
+    ],
+    name: "Data-Group 1",
+    id_in_dataset: "1",
+    dataset: 14,
+    project: 32
+  },
+  {
+    id: 28,
+    subjects: [
+      82,
+      83,
+      84
+    ],
+    protocols: [
+      {
+        id: 60,
+        doses: [
+          {
+            id: 70,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 60
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "WithData Test Dataset-Data-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 14,
+        project: 32,
+        compound: null,
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 414,
+        group: 28
+      }
+    ],
+    name: "Data-Group 2",
+    id_in_dataset: "2",
+    dataset: 14,
+    project: 32
   }
 ] as unknown as SubjectGroupRead[];
 

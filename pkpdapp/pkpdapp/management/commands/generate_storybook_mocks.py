@@ -141,6 +141,9 @@ class Command(BaseCommand):
 
         # Step 4: Create combined model
         pk_model = PharmacokineticModel.objects.get(name="1-compartmental model")
+        pk_model2 = PharmacokineticModel.objects.get(
+            name="First order absorption model"
+        )
         pd_model = PharmacodynamicModel.objects.get(
             name="Direct effect model (inhibitory)"
         )
@@ -149,6 +152,7 @@ class Command(BaseCommand):
             name="1-compartmental + Direct effect",
             project=project,
             pk_model=pk_model,
+            pk_model2=pk_model2,
             pd_model=pd_model,
             species="R",
             has_effect=False,

@@ -5,33 +5,50 @@ import { http, HttpResponse, delay } from "msw";
 
 export const combinedModels = [
   {
-    id: 30,
+    id: 33,
     mappings: [
       {
-        id: 30,
+        id: 33,
         datetime: null,
         read_only: false,
-        pkpd_model: 30,
-        pk_variable: 386,
-        pd_variable: 380
+        pkpd_model: 33,
+        pk_variable: 431,
+        pd_variable: 423
       }
     ],
     derived_variables: [],
     time_intervals: [],
     components: [
       {
+        name: "Extravascular",
+        states: [
+          428
+        ],
+        variables: [
+          421
+        ],
+        outputs: [
+          428,
+          430
+        ],
+        equations: [
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>Extravascular.RateAbs</mi><mo>=</mo><mrow><mi>Extravascular.ka</mi><mo>*</mo><mi>Extravascular.Aa</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dExtravascular.Aa</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mo>-</mo><mi>Extravascular.RateAbs</mi></mrow></mrow></math>"
+        ]
+      },
+      {
         name: "PDCompartment",
         states: [],
         variables: [
-          379,
-          381,
-          382
+          422,
+          424,
+          425
         ],
         outputs: [
-          380,
-          389,
-          390,
-          391
+          423,
+          434,
+          435,
+          436
         ],
         equations: [
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C_Drug</mi><mo>=</mo><mrow><mn>1.0</mn><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow></math>",
@@ -43,20 +60,21 @@ export const combinedModels = [
       {
         name: "PKCompartment",
         states: [
-          385
+          429
         ],
         variables: [
-          383,
-          384
+          426,
+          427
         ],
         outputs: [
-          385,
-          386,
-          387
+          429,
+          431,
+          432
         ],
         equations: [
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PKCompartment.CLimm</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>environment.t</mi><mo>&lt;</mo><mi>PKCompartment.tada</mi></mrow></piece><otherwise><mi>PKCompartment.CLada</mi></otherwise></piecewise></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PKCompartment.C1</mi><mo>=</mo><mfrac><mi>PKCompartment.A1</mi><mi>PKCompartment.V1</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PKCompartment.RateAbs</mi><mo>=</mo><mi>Extravascular.RateAbs</mi></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPKCompartment.A1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mi>PKCompartment.RateAbs</mi><mo>*</mo><mi>PKCompartment.F</mi></mrow><mo>-</mo><mrow><mi>PKCompartment.CL</mi><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow><mo>-</mo><mrow><mi>PKCompartment.CLimm</mi><mo>*</mo><mi>PKCompartment.C1</mi></mrow></mrow></mrow></math>"
         ]
       },
@@ -65,28 +83,31 @@ export const combinedModels = [
         states: [],
         variables: [],
         outputs: [
-          388
+          433
         ],
         equations: []
       }
     ],
     variables: [
-      379,
-      380,
-      381,
-      382,
-      383,
-      384,
-      385,
-      386,
-      387,
-      388,
-      389,
-      390,
-      391
+      421,
+      422,
+      423,
+      424,
+      425,
+      426,
+      427,
+      428,
+      429,
+      430,
+      431,
+      432,
+      433,
+      434,
+      435,
+      436
     ],
-    mmt: "[[model]]\nauthor: Michael Gertz\nname: 1-compartmental model\n# Initial values\nPKCompartment.A1 = 0\n\n[PDCompartment]\nC50 = 100000 : Concentration that produces half-maximal effects\n    in [mM (1e-09)]\nC_Drug = 1 * PKCompartment.C1 : Drug concentration causing the PD effect\n    in [mM (1e-09)]\nE = if(E0 == 0, -Imax * PDO, E0 * (1 - Imax * PDO))\n    in [1]\n    desc: PD effect\nE0 = 100 : Baseline of the PD effect\n    in [1]\nHC = 1 : Hill coefficient\n    in [1]\nINH = Imax * PDO : PD inhibition\n    in [1]\nImax = 0.8\n    in [1]\n    desc: Maximal Inhibitory effect (value range: 0 (no effect) to 1 (complete inhibition))\nPDO = C_Drug^HC / (C_Drug^HC + C50^HC) : Pharmacodynamic occupancy\n    in [1]\n\n[PKCompartment]\ndot(A1) = RateAbs * F - CL * C1 - CLimm * C1\n    in [mol (1e-12)]\n    desc: Amount of drug in the central compartment\nC1 = A1 / V1 : Concentration of drug in the central compartment\n    in [mM (1e-09)]\nCL = 1 : Linear clearance from central compartment\n    in [m^3/s (2.777777777777775e-07)]\nCLada = 0 : ADA-mediated clearance\n    in [m^3/s (2.777777777777775e-07)]\nCLimm = if(environment.t < tada, 0, CLada)\n    in [m^3/s (2.777777777777775e-07)]\nF = 1 : Fraction absorbed / bioavailability\n    in [1]\nRateAbs = 0 : Absorption rate\n    in [kat (2.777777777777775e-16)]\nV1 = 1 : Volume of the central compartment\n    in [L]\ntada = 240 : Time at which ADA-mediated clearance first occurs\n    in [s (3600)]\n\n[environment]\nt = 0 bind time\n    in [s (3600)]\n\n",
-    sbml: "<sbml xmlns=\"http://www.sbml.org/sbml/level3/version2/core\" level=\"3\" version=\"2\">\n  <model id=\"1-compartmental model\" timeUnits=\"s_times_3600\">\n    <listOfUnitDefinitions>\n      <unitDefinition id=\"s_times_3600\">\n        <unit kind=\"second\" exponent=\"1.0\" multiplier=\"3600.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"m3_per_s_times_2_dot_777777777777775e_minus_07\">\n        <unit kind=\"metre\" exponent=\"3.0\" multiplier=\"2.777777777777775e-07\"/>\n        <unit kind=\"second\" exponent=\"-1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"mM_times_1e_minus_9\">\n        <unit kind=\"metre\" exponent=\"-3.0\" multiplier=\"1e-09\"/>\n        <unit kind=\"mole\" exponent=\"1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"kat_times_2_dot_777777777777775e_minus_16\">\n        <unit kind=\"second\" exponent=\"-1.0\" multiplier=\"2.777777777777775e-16\"/>\n        <unit kind=\"mole\" exponent=\"1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"mol_times_1e_minus_12\">\n        <unit kind=\"mole\" exponent=\"1.0\" multiplier=\"1e-12\"/>\n      </unitDefinition>\n    </listOfUnitDefinitions>\n    <listOfParameters>\n      <parameter id=\"F\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"V1\" units=\"litre\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"CL\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"CLada\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\" constant=\"true\" value=\"0.0\"/>\n      <parameter id=\"tada\" units=\"s_times_3600\" constant=\"true\" value=\"240.0\"/>\n      <parameter id=\"CLimm\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\"/>\n      <parameter id=\"C1\" units=\"mM_times_1e_minus_9\"/>\n      <parameter id=\"RateAbs\" units=\"kat_times_2_dot_777777777777775e_minus_16\" constant=\"true\" value=\"0.0\"/>\n      <parameter id=\"A1\" units=\"mol_times_1e_minus_12\"/>\n      <parameter id=\"E0\" constant=\"true\" value=\"100.0\"/>\n      <parameter id=\"Imax\" constant=\"true\" value=\"0.8\"/>\n      <parameter id=\"C50\" units=\"mM_times_1e_minus_9\" constant=\"true\" value=\"100000.0\"/>\n      <parameter id=\"HC\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"C_Drug\" units=\"mM_times_1e_minus_9\"/>\n      <parameter id=\"PDO\"/>\n      <parameter id=\"INH\"/>\n      <parameter id=\"E\"/>\n    </listOfParameters>\n    <listOfInitialAssignments>\n      <initialAssignment symbol=\"A1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n    </listOfInitialAssignments>\n    <listOfRules>\n      <assignmentRule variable=\"CLimm\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <piecewise>\n            <piece>\n              <cn>0.0</cn>\n              <apply>\n                <lt/>\n                <ci>http://www.sbml.org/sbml/symbols/time</ci>\n                <ci>tada</ci>\n              </apply>\n            </piece>\n            <otherwise>\n              <ci>CLada</ci>\n            </otherwise>\n          </piecewise>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"C1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <divide/>\n            <ci>A1</ci>\n            <ci>V1</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <rateRule variable=\"A1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <minus/>\n            <apply>\n              <minus/>\n              <apply>\n                <times/>\n                <ci>RateAbs</ci>\n                <ci>F</ci>\n              </apply>\n              <apply>\n                <times/>\n                <ci>CL</ci>\n                <ci>C1</ci>\n              </apply>\n            </apply>\n            <apply>\n              <times/>\n              <ci>CLimm</ci>\n              <ci>C1</ci>\n            </apply>\n          </apply>\n        </math>\n      </rateRule>\n      <assignmentRule variable=\"C_Drug\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <times/>\n            <cn>1.0</cn>\n            <ci>C1</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"PDO\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <divide/>\n            <apply>\n              <power/>\n              <ci>C_Drug</ci>\n              <ci>HC</ci>\n            </apply>\n            <apply>\n              <plus/>\n              <apply>\n                <power/>\n                <ci>C_Drug</ci>\n                <ci>HC</ci>\n              </apply>\n              <apply>\n                <power/>\n                <ci>C50</ci>\n                <ci>HC</ci>\n              </apply>\n            </apply>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"INH\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <times/>\n            <ci>Imax</ci>\n            <ci>PDO</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"E\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <piecewise>\n            <piece>\n              <apply>\n                <times/>\n                <apply>\n                  <minus/>\n                  <ci>Imax</ci>\n                </apply>\n                <ci>PDO</ci>\n              </apply>\n              <apply>\n                <eq/>\n                <ci>E0</ci>\n                <cn>0.0</cn>\n              </apply>\n            </piece>\n            <otherwise>\n              <apply>\n                <times/>\n                <ci>E0</ci>\n                <apply>\n                  <minus/>\n                  <cn>1.0</cn>\n                  <apply>\n                    <times/>\n                    <ci>Imax</ci>\n                    <ci>PDO</ci>\n                  </apply>\n                </apply>\n              </apply>\n            </otherwise>\n          </piecewise>\n        </math>\n      </assignmentRule>\n    </listOfRules>\n  </model>\n</sbml>\n",
+    mmt: "[[model]]\nauthor: Michael Gertz\nname: 1-compartmental model\n# Initial values\nPKCompartment.A1 = 0\nExtravascular.Aa = 0\n\n[Extravascular]\ndot(Aa) = -RateAbs : Amount of drug in absorption compartment\n    in [mol (1e-12)]\nRateAbs = ka * Aa : Absorption rate\n    in [kat (2.777777777777775e-16)]\nka = 1 : First order absorption rate constant\n    in [S/F (0.0002777777777777778)]\n\n[PDCompartment]\nC50 = 100000 : Concentration that produces half-maximal effects\n    in [mM (1e-09)]\nC_Drug = 1 * PKCompartment.C1 : Drug concentration causing the PD effect\n    in [mM (1e-09)]\nE = if(E0 == 0, -Imax * PDO, E0 * (1 - Imax * PDO))\n    in [1]\n    desc: PD effect\nE0 = 100 : Baseline of the PD effect\n    in [1]\nHC = 1 : Hill coefficient\n    in [1]\nINH = Imax * PDO : PD inhibition\n    in [1]\nImax = 0.8\n    in [1]\n    desc: Maximal Inhibitory effect (value range: 0 (no effect) to 1 (complete inhibition))\nPDO = C_Drug^HC / (C_Drug^HC + C50^HC) : Pharmacodynamic occupancy\n    in [1]\n\n[PKCompartment]\ndot(A1) = RateAbs * F - CL * C1 - CLimm * C1\n    in [mol (1e-12)]\n    desc: Amount of drug in the central compartment\nC1 = A1 / V1 : Concentration of drug in the central compartment\n    in [mM (1e-09)]\nCL = 1 : Linear clearance from central compartment\n    in [m^3/s (2.777777777777775e-07)]\nCLada = 0 : ADA-mediated clearance\n    in [m^3/s (2.777777777777775e-07)]\nCLimm = if(environment.t < tada, 0, CLada)\n    in [m^3/s (2.777777777777775e-07)]\nF = 1 : Fraction absorbed / bioavailability\n    in [1]\nRateAbs = Extravascular.RateAbs : Absorption rate\n    in [kat (2.777777777777775e-16)]\nV1 = 1 : Volume of the central compartment\n    in [L]\ntada = 240 : Time at which ADA-mediated clearance first occurs\n    in [s (3600)]\n\n[environment]\nt = 0 bind time\n    in [s (3600)]\n\n",
+    sbml: "<sbml xmlns=\"http://www.sbml.org/sbml/level3/version2/core\" level=\"3\" version=\"2\">\n  <model id=\"1-compartmental model\" timeUnits=\"s_times_3600\">\n    <listOfUnitDefinitions>\n      <unitDefinition id=\"s_times_3600\">\n        <unit kind=\"second\" exponent=\"1.0\" multiplier=\"3600.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"m3_per_s_times_2_dot_777777777777775e_minus_07\">\n        <unit kind=\"metre\" exponent=\"3.0\" multiplier=\"2.777777777777775e-07\"/>\n        <unit kind=\"second\" exponent=\"-1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"mM_times_1e_minus_9\">\n        <unit kind=\"metre\" exponent=\"-3.0\" multiplier=\"1e-09\"/>\n        <unit kind=\"mole\" exponent=\"1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"kat_times_2_dot_777777777777775e_minus_16\">\n        <unit kind=\"second\" exponent=\"-1.0\" multiplier=\"2.777777777777775e-16\"/>\n        <unit kind=\"mole\" exponent=\"1.0\"/>\n      </unitDefinition>\n      <unitDefinition id=\"mol_times_1e_minus_12\">\n        <unit kind=\"mole\" exponent=\"1.0\" multiplier=\"1e-12\"/>\n      </unitDefinition>\n      <unitDefinition id=\"S_per_F_times_0_dot_0002777777777777778\">\n        <unit kind=\"second\" exponent=\"-1.0\" multiplier=\"0.0002777777777777778\"/>\n      </unitDefinition>\n    </listOfUnitDefinitions>\n    <listOfParameters>\n      <parameter id=\"F\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"V1\" units=\"litre\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"CL\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"CLada\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\" constant=\"true\" value=\"0.0\"/>\n      <parameter id=\"tada\" units=\"s_times_3600\" constant=\"true\" value=\"240.0\"/>\n      <parameter id=\"CLimm\" units=\"m3_per_s_times_2_dot_777777777777775e_minus_07\"/>\n      <parameter id=\"C1\" units=\"mM_times_1e_minus_9\"/>\n      <parameter id=\"PKCompartment_RateAbs\" units=\"kat_times_2_dot_777777777777775e_minus_16\"/>\n      <parameter id=\"A1\" units=\"mol_times_1e_minus_12\"/>\n      <parameter id=\"ka\" units=\"S_per_F_times_0_dot_0002777777777777778\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"Extravascular_RateAbs\" units=\"kat_times_2_dot_777777777777775e_minus_16\"/>\n      <parameter id=\"Aa\" units=\"mol_times_1e_minus_12\"/>\n      <parameter id=\"E0\" constant=\"true\" value=\"100.0\"/>\n      <parameter id=\"Imax\" constant=\"true\" value=\"0.8\"/>\n      <parameter id=\"C50\" units=\"mM_times_1e_minus_9\" constant=\"true\" value=\"100000.0\"/>\n      <parameter id=\"HC\" constant=\"true\" value=\"1.0\"/>\n      <parameter id=\"C_Drug\" units=\"mM_times_1e_minus_9\"/>\n      <parameter id=\"PDO\"/>\n      <parameter id=\"INH\"/>\n      <parameter id=\"E\"/>\n    </listOfParameters>\n    <listOfInitialAssignments>\n      <initialAssignment symbol=\"A1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n      <initialAssignment symbol=\"Aa\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <cn>0.0</cn>\n        </math>\n      </initialAssignment>\n    </listOfInitialAssignments>\n    <listOfRules>\n      <assignmentRule variable=\"CLimm\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <piecewise>\n            <piece>\n              <cn>0.0</cn>\n              <apply>\n                <lt/>\n                <ci>http://www.sbml.org/sbml/symbols/time</ci>\n                <ci>tada</ci>\n              </apply>\n            </piece>\n            <otherwise>\n              <ci>CLada</ci>\n            </otherwise>\n          </piecewise>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"C1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <divide/>\n            <ci>A1</ci>\n            <ci>V1</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"PKCompartment_RateAbs\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <ci>Extravascular_RateAbs</ci>\n        </math>\n      </assignmentRule>\n      <rateRule variable=\"A1\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <minus/>\n            <apply>\n              <minus/>\n              <apply>\n                <times/>\n                <ci>PKCompartment_RateAbs</ci>\n                <ci>F</ci>\n              </apply>\n              <apply>\n                <times/>\n                <ci>CL</ci>\n                <ci>C1</ci>\n              </apply>\n            </apply>\n            <apply>\n              <times/>\n              <ci>CLimm</ci>\n              <ci>C1</ci>\n            </apply>\n          </apply>\n        </math>\n      </rateRule>\n      <assignmentRule variable=\"Extravascular_RateAbs\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <times/>\n            <ci>ka</ci>\n            <ci>Aa</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <rateRule variable=\"Aa\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <minus/>\n            <ci>Extravascular_RateAbs</ci>\n          </apply>\n        </math>\n      </rateRule>\n      <assignmentRule variable=\"C_Drug\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <times/>\n            <cn>1.0</cn>\n            <ci>C1</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"PDO\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <divide/>\n            <apply>\n              <power/>\n              <ci>C_Drug</ci>\n              <ci>HC</ci>\n            </apply>\n            <apply>\n              <plus/>\n              <apply>\n                <power/>\n                <ci>C_Drug</ci>\n                <ci>HC</ci>\n              </apply>\n              <apply>\n                <power/>\n                <ci>C50</ci>\n                <ci>HC</ci>\n              </apply>\n            </apply>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"INH\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <apply>\n            <times/>\n            <ci>Imax</ci>\n            <ci>PDO</ci>\n          </apply>\n        </math>\n      </assignmentRule>\n      <assignmentRule variable=\"E\">\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n          <piecewise>\n            <piece>\n              <apply>\n                <times/>\n                <apply>\n                  <minus/>\n                  <ci>Imax</ci>\n                </apply>\n                <ci>PDO</ci>\n              </apply>\n              <apply>\n                <eq/>\n                <ci>E0</ci>\n                <cn>0.0</cn>\n              </apply>\n            </piece>\n            <otherwise>\n              <apply>\n                <times/>\n                <ci>E0</ci>\n                <apply>\n                  <minus/>\n                  <cn>1.0</cn>\n                  <apply>\n                    <times/>\n                    <ci>Imax</ci>\n                    <ci>PDO</ci>\n                  </apply>\n                </apply>\n              </apply>\n            </otherwise>\n          </piecewise>\n        </math>\n      </assignmentRule>\n    </listOfRules>\n  </model>\n</sbml>\n",
     time_unit: 20,
     is_library_model: true,
     read_only: false,
@@ -102,9 +123,9 @@ export const combinedModels = [
     has_bioavailability: false,
     has_hill_coefficient: false,
     time_max: 30.0,
-    project: 30,
+    project: 33,
     pk_model: 23,
-    pk_model2: null,
+    pk_model2: 52,
     pk_effect_model: 51,
     pd_model: 20,
     pd_model2: null

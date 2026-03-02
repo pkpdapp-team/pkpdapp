@@ -572,11 +572,29 @@ export const LagTime: Story = {
 
     const pkModelList = await canvas.findByLabelText("Extravascular PK Model");
 
-    const notLagTimeCheckbox = await canvas.queryByRole("checkbox", {
+    // Lag time should initially be present since pk_model2 is set to "First order absorption model"
+    const initialLagTimeCheckbox = await canvas.findByRole("checkbox", {
       name: /Lag time/i,
     });
-    expect(notLagTimeCheckbox).not.toBeInTheDocument();
+    expect(initialLagTimeCheckbox).toBeInTheDocument();
+    expect(initialLagTimeCheckbox).not.toBeChecked();
 
+    // Select None for extravascular model
+    await selectMenuOption(
+      pkModelList,
+      "None",
+      userEvent,
+    );
+
+    await delay(1000);
+
+    // Lag time checkbox should now be gone
+    const removedLagTimeCheckbox = canvas.queryByRole("checkbox", {
+      name: /Lag time/i,
+    });
+    expect(removedLagTimeCheckbox).not.toBeInTheDocument();
+
+    // Now select First order absorption model again
     await selectMenuOption(
       pkModelList,
       "First order absorption model",

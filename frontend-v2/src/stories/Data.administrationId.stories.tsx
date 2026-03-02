@@ -180,29 +180,36 @@ export const CreateAdministrationIdFromGroups: Story = {
     });
     expect(variableSelects.length).toBe(2);
 
-    // Select the same dosing compartment for both groups (A1)
-    // Note: With the current 1-compartmental model mock, only A1 is available
-    // In a real scenario with extravascular absorption, we'd have Aa as well
+    // Select different dosing compartments for each group
+    // First group (IV) -> A1 (direct dosing)
     await userEvent.click(variableSelects[0]);
     let listbox = await screen.findByRole("listbox");
-    const a1Option1 = await within(listbox).findByRole("option", {
+    const a1Option = await within(listbox).findByRole("option", {
       name: "A1",
     });
-    await userEvent.selectOptions(listbox, a1Option1);
+    await userEvent.selectOptions(listbox, a1Option);
 
-    // Select A1 for second group as well
+    // Second group (SC) -> Aa (subcutaneous absorption)
     await userEvent.click(variableSelects[1]);
     listbox = await screen.findByRole("listbox");
-    const a1Option2 = await within(listbox).findByRole("option", {
-      name: "A1",
+    const aaOption = await within(listbox).findByRole("option", {
+      name: "Aa",
     });
-    await userEvent.selectOptions(listbox, a1Option2);
+    await userEvent.selectOptions(listbox, aaOption);
 
-    // Verify dosing table is shown
+    // Verify Administration IDs are shown (should be 1 and 2)
     const dosingTable = await canvas.findByRole("table", {
       name: "Dosing",
     });
     expect(dosingTable).toBeInTheDocument();
+
+    const tableCells = within(dosingTable).getAllByRole("cell");
+    // First column should contain Administration IDs
+    // After mapping to different compartments, we should see admin IDs 1 and 2
+    const adminIdCells = tableCells.filter(cell =>
+      cell.textContent === "1" || cell.textContent === "2"
+    );
+    expect(adminIdCells.length).toBeGreaterThanOrEqual(2);
 
     // Proceed to next step
     await waitFor(() => {
