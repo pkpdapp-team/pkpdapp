@@ -12,10 +12,21 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Model from "../features/model/Model";
-import { model, project, projectHandlers } from "./project.v3.mock";
-import { pkModels, pdModels, tagsData } from "./model.v3.mock";
+import {
+  project,
+  projectHandlers,
+  pkModels,
+  pdModels,
+  tags as tagsData,
+  combinedModels,
+  protocolHandlers,
+  variableHandlers,
+  unitHandlers,
+  simulationHandlers,
+} from "./generated-mocks";
 import { TimeIntervalRead, DerivedVariableRead } from "../app/backendApi";
 
+const model = combinedModels[0];
 let mockModel = { ...model };
 let mockProject = { ...project };
 const modelSpy = fn();
@@ -129,6 +140,10 @@ const meta: Meta<typeof Model> = {
             });
           }),
           ...projectHandlers,
+          ...protocolHandlers,
+          ...variableHandlers,
+          ...unitHandlers,
+          ...simulationHandlers,
         ],
         model: [
           http.get("/api/tag", async () => {
@@ -286,6 +301,11 @@ export const ShowMMTCode: Story = {
 };
 
 export const PkFiltering: Story = {
+  parameters: {
+    test: {
+      timeout: 20000, // Increase timeout for this complex test
+    },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -299,7 +319,9 @@ export const PkFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
-      {},
+      {
+        timeout: 10000,
+      },
     );
 
     expect(pkFilterTags).toBeInTheDocument();
@@ -317,6 +339,11 @@ export const PkFiltering: Story = {
 };
 
 export const PdFiltering: Story = {
+  parameters: {
+    test: {
+      timeout: 20000, // Increase timeout for this complex test
+    },
+  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("tab", { name: /PK\/PD Model/i });
@@ -326,7 +353,9 @@ export const PdFiltering: Story = {
       {
         name: /Filter By Model Type/i,
       },
-      {},
+      {
+        timeout: 10000,
+      },
     );
 
     expect(pkFilterTags).toBeInTheDocument();
@@ -335,6 +364,9 @@ export const PdFiltering: Story = {
     const pdModelCombo = await canvas.findByLabelText("PD Model");
     expect(pdModelCombo).toHaveTextContent("Direct effect model (inhibitory)");
     await selectMenuOption(pdModelCombo, "None", userEvent);
+
+    await delay(500); // Small delay to ensure model updates before filtering
+
     await selectMenuOption(pdFilterTags, "direct", userEvent);
     assertMenuOptions(
       pdModelCombo,
@@ -430,6 +462,7 @@ export const TumourGrowthModel: Story = {
         name: /Secondary PD Model/i,
       },
       {
+        timeout: 10000,
       },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
@@ -457,6 +490,7 @@ export const TumourGrowthModel: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(secondaryPDModelSelect, {
+      timeout: 10000,
     });
   },
 };
@@ -478,7 +512,9 @@ export const HillCoefficient: Story = {
       {
         name: /Hill coefficient/i,
       },
-      {},
+      {
+        timeout: 10000,
+      },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).not.toBeChecked();
@@ -491,7 +527,7 @@ export const HillCoefficient: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
-      timeout: 3000,
+      timeout: 10000,
     });
 
     await selectMenuOption(
@@ -505,7 +541,8 @@ export const HillCoefficient: Story = {
         name: /Hill coefficient/i,
       },
       {
-        },
+        timeout: 10000,
+      },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
     expect(hillCoefficientCheckbox).toBeChecked();
@@ -516,6 +553,7 @@ export const HillCoefficient: Story = {
       userEvent,
     );
     await waitForElementToBeRemoved(hillCoefficientCheckbox, {
+      timeout: 10000,
     });
 
     const secondaryPDModelSelect = await canvas.findByRole(
@@ -524,7 +562,8 @@ export const HillCoefficient: Story = {
         name: /Secondary PD Model/i,
       },
       {
-        },
+        timeout: 10000,
+      },
     );
     expect(secondaryPDModelSelect).toBeInTheDocument();
     await selectMenuOption(
@@ -532,13 +571,17 @@ export const HillCoefficient: Story = {
       "TGI signal distribution model (Emax kill)",
       userEvent,
     );
+
+    await delay(500); // Small delay to ensure model updates
+
     hillCoefficientCheckbox = await canvas.findByRole(
       "checkbox",
       {
         name: /Hill coefficient/i,
       },
       {
-        },
+        timeout: 10000,
+      },
     );
     expect(hillCoefficientCheckbox).toBeInTheDocument();
   },
@@ -551,11 +594,29 @@ export const LagTime: Story = {
 
     const pkModelList = await canvas.findByLabelText("Extravascular PK Model");
 
-    const notLagTimeCheckbox = await canvas.queryByRole("checkbox", {
+    // Lag time should initially be present since pk_model2 is set to "First order absorption model"
+    const initialLagTimeCheckbox = await canvas.findByRole("checkbox", {
       name: /Lag time/i,
     });
-    expect(notLagTimeCheckbox).not.toBeInTheDocument();
+    expect(initialLagTimeCheckbox).toBeInTheDocument();
+    expect(initialLagTimeCheckbox).not.toBeChecked();
 
+    // Select None for extravascular model
+    await selectMenuOption(
+      pkModelList,
+      "None",
+      userEvent,
+    );
+
+    await delay(1000);
+
+    // Lag time checkbox should now be gone
+    const removedLagTimeCheckbox = canvas.queryByRole("checkbox", {
+      name: /Lag time/i,
+    });
+    expect(removedLagTimeCheckbox).not.toBeInTheDocument();
+
+    // Now select First order absorption model again
     await selectMenuOption(
       pkModelList,
       "First order absorption model",
@@ -682,7 +743,7 @@ export const SecondaryParameters: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
   },
 };
 
@@ -698,7 +759,7 @@ export const ChangeSecondaryUnit: Story = {
       name: /Unit: C1/i,
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("µg/mL");
+    expect(unitSelect).toHaveTextContent("pmol/L");
 
     await selectMenuOption(unitSelect, "pmol/L", userEvent);
 

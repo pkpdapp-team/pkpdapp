@@ -4,7 +4,15 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { project, projectHandlers } from "./project.v3.mock";
+import {
+  project,
+  projectHandlers,
+  protocolHandlers,
+  unitHandlers,
+  simulationHandlers,
+  combinedModels,
+  variables,
+} from "./generated-mocks";
 
 import { HttpResponse, http } from "msw";
 
@@ -29,6 +37,23 @@ const datasetHandlers = [
   http.get("/api/biomarker_type", () => {
     return HttpResponse.json([], { status: 200 });
   }),
+  http.get("/api/combined_model", ({ request }) => {
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get("project_id");
+    if (projectId && parseInt(projectId) === project.id) {
+      return HttpResponse.json(combinedModels, { status: 200 });
+    }
+    return HttpResponse.json([], { status: 200 });
+  }),
+  http.get("/api/variable", ({ request }) => {
+    const url = new URL(request.url);
+    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
+    if (dosedPkModelId) {
+      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      return HttpResponse.json(filtered, { status: 200 });
+    }
+    return HttpResponse.json(variables, { status: 200 });
+  }),
 ];
 
 const meta: Meta<typeof Data> = {
@@ -38,7 +63,7 @@ const meta: Meta<typeof Data> = {
     layout: "fullscreen",
     msw: {
       handlers: {
-        project: projectHandlers,
+        project: [...projectHandlers, ...protocolHandlers, ...unitHandlers, ...simulationHandlers],
         dataset: datasetHandlers,
       },
     },
