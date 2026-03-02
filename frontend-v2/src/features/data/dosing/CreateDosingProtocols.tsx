@@ -1,32 +1,21 @@
-import { ChangeEvent, FC } from "react";
-import {
-  Box,
-  Checkbox,
-  Select,
-  FormControl,
-  MenuItem,
-  InputLabel,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Typography,
-  SelectChangeEvent,
-  TableContainer,
-} from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
-import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
+import { ProjectRead } from "../../../app/backendApi";
 import { Row } from "../LoadData";
-import { TableHeader } from "../../../components/TableHeader";
-import {
-  calculateTableHeights,
-  getTableHeight,
-  SINGLE_TABLE_BREAKPOINTS,
-} from "../../../shared/calculateTableHeights";
-import { NumericTableCell } from "./NumericTableCell";
 import { findFieldByType } from "../findFieldByType";
 import { generateAdministrationIds } from "./generateAdministrationIds";
+
+/**
+ * Find the Dose or DOSEA continuous covariate field.
+ * @param state stepper state
+ * @returns the field name if found, otherwise undefined
+ */
+export function findDoseCovariateField(state: StepperState): string | undefined {
+  return state.fields.find(
+    (field) =>
+      (field.toLowerCase() === "dose" || field.toLowerCase() === "dosea") &&
+      state.normalisedFields.get(field) === "Cont Covariate"
+  );
+}
 
 /**
  * Create dosing rows for each subject and dosing compartment.
@@ -36,7 +25,7 @@ import { generateAdministrationIds } from "./generateAdministrationIds";
  * @param dosingCompartments dosing compartments for the model
  * @param amountUnit amount unit for the model (either pmol or pmol/kg.)
  */
-function createDosingRows(
+export function createDosingRows(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
@@ -48,6 +37,7 @@ function createDosingRows(
   const amountField = findFieldByType("Amount", state);
   const amountUnitField = findFieldByType("Amount Unit", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
+  const doseCovariateField = findDoseCovariateField(state);
   const covariateFields = state.fields.filter(
     (field) => state.normalisedFields.get(field) === "Cat Covariate",
   );
@@ -68,13 +58,17 @@ function createDosingRows(
       const isHuman = project.species === "H";
       const isAvhOrAah = name == "Avh" || name == "Aah";
       const isPerKg = !isHuman && !isAvhOrAah;
+      // Use Dose/DOSEA continuous covariate value if available, otherwise default to "0"
+      const doseAmount = doseCovariateField && subjectRow?.[doseCovariateField]
+        ? subjectRow[doseCovariateField]
+        : "0";
       const newRow: Row = {
         [idField]: id,
         [administrationIdField]: adminId.toString(),
         "Amount Variable": compartment,
         [amountUnitField]: "mg",
         [perKgField]: isPerKg ? "1" : "0",
-        [amountField]: "0",
+        [amountField]: doseAmount,
         [timeField]: "0",
         [timeUnitField]: timeUnit,
         "Infusion Duration": "0.0833",
@@ -108,7 +102,7 @@ function createDosingRows(
   };
 }
 
-function normaliseCSVData(
+export function normaliseCSVData(
   state: StepperState,
   administrationIdField: string,
   dosingCompartments: string[],
@@ -163,257 +157,3 @@ function normaliseCSVData(
   }
   return { data: _data, normalisedFields: _normalisedFields };
 }
-
-interface IDosingProtocols {
-  administrationIdField: string;
-  amountUnitField?: string;
-  dosingCompartments?: string[];
-  state: StepperState;
-  units: UnitRead[];
-  variables: VariableRead[];
-  notificationsInfo: {
-    isOpen: boolean;
-    count: number;
-  };
-  project: ProjectRead;
-}
-
-const CreateDosingProtocols: FC<IDosingProtocols> = ({
-  administrationIdField,
-  dosingCompartments = [],
-  state,
-  units,
-  variables,
-  notificationsInfo,
-  project,
-}: IDosingProtocols) => {
-  const amountUnitField = findFieldByType("Amount Unit", state);
-  const timeField = findFieldByType("Time", state);
-  const groupIdField = findFieldByType("Group ID", state);
-  const perKgField = findFieldByType("Per Body Weight(kg)", state);
-
-  const { data: _data, normalisedFields: _normalisedFields } = normaliseCSVData(
-    state,
-    administrationIdField,
-    dosingCompartments,
-    project,
-  );
-
-  if (state.data !== _data) {
-    state.data = _data;
-  }
-  if (state.normalisedFields !== _normalisedFields) {
-    state.normalisedFields = _normalisedFields;
-  }
-
-  type InputChangeEvent =
-    | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    | SelectChangeEvent;
-  const handleInputChange =
-    (id: string, field: string) => (event: InputChangeEvent) => {
-      const nextData = [...state.data];
-      const { value } = event.target;
-      nextData
-        .filter(
-          (row) => row[administrationIdField] === id && row["Amount"] !== ".",
-        )
-        .forEach((row) => {
-          row[field] = value;
-        });
-      state.data = nextData;
-    };
-
-  const handlePerBodyWeightChange =
-    (id: string) => (event: ChangeEvent<HTMLInputElement>) => {
-      const nextData = [...state.data];
-      const { checked } = event.target;
-      nextData
-        .filter(
-          (row) => row[administrationIdField] === id && row["Amount"] !== ".",
-        )
-        .forEach((row) => {
-          row[perKgField] = checked ? "1" : "0";
-        });
-      state.data = nextData;
-    };
-
-  return (
-    <Box component="div">
-      <TableHeader
-        id="create-dosing-protocols-header"
-        label="Dosing"
-        tooltip="Map dosing compartments to your subject groups here. You can set dose
-          amounts, units and intervals under Trial Design, once you have
-          uploaded your data."
-      />
-      <TableContainer
-        sx={{
-          maxHeight: calculateTableHeights({
-            baseHeight: getTableHeight({ steps: SINGLE_TABLE_BREAKPOINTS }),
-            isOpen: notificationsInfo.isOpen,
-            count: notificationsInfo.count,
-          }),
-          transition: "all .35s ease-in",
-        }}
-      >
-        <Table
-          stickyHeader
-          size="small"
-          aria-labelledby="create-dosing-protocols-header"
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography>Administration ID</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Group</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Dosing Compartment</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Amount</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Amount Unit</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Per Body Weight(kg)</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Time</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Time Unit</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Additional Doses</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography>Interdose Interval</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {dosingCompartments.map((compartment) => {
-              const dosingRows = _data.filter(
-                (row) =>
-                  row["Amount Variable"] === compartment &&
-                  row["Amount"] !== ".",
-              );
-              const administrationIds = dosingRows.map(
-                (row) => row[administrationIdField],
-              );
-              const uniqueAdministrationIds = [...new Set(administrationIds)];
-              return uniqueAdministrationIds.map((adminId) => {
-                const [currentRow] = dosingRows.filter((row) =>
-                  administrationIdField
-                    ? row[administrationIdField] === adminId
-                    : true,
-                );
-                const selectedVariable = variables?.find(
-                  (variable) =>
-                    variable.qname === currentRow?.["Amount Variable"],
-                );
-                const defaultAmountUnit = "mg";
-                const compatibleUnits = units?.find(
-                  (unit) => unit.symbol === "mg",
-                )?.compatible_units;
-                const selectedAmountUnit =
-                  currentRow?.[amountUnitField] || defaultAmountUnit;
-                const isPerKg = currentRow?.[perKgField] === "1";
-                return (
-                  <TableRow key={adminId}>
-                    <TableCell sx={{ width: "5rem" }}>
-                      {currentRow?.[administrationIdField]}
-                    </TableCell>
-                    <TableCell sx={{ width: "5rem" }}>
-                      {currentRow?.[groupIdField]}
-                    </TableCell>
-                    <TableCell sx={{ width: "10rem" }}>
-                      {selectedVariable?.name}
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-amount-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Amount"
-                      onChange={handleInputChange(adminId, "Amount")}
-                      value={currentRow?.["Amount"]}
-                    />
-                    <TableCell sx={{ width: "10rem" }}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          size="small"
-                          id={`select-unit-${adminId}-label`}
-                        >
-                          Units
-                        </InputLabel>
-                        <Select
-                          labelId={`select-unit-${adminId}-label`}
-                          id={`select-unit-${adminId}`}
-                          label="Units"
-                          disabled={!selectedVariable}
-                          value={selectedAmountUnit}
-                          onChange={handleInputChange(adminId, amountUnitField)}
-                          sx={{ maxWidth: "10rem" }}
-                          size="small"
-                          margin="dense"
-                        >
-                          {compatibleUnits?.map((unit) => (
-                            <MenuItem key={unit.symbol} value={unit.symbol}>
-                              {unit.symbol}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        name={"amount_per_body_weight"}
-                        checked={isPerKg}
-                        onChange={handlePerBodyWeightChange(adminId)}
-                        slotProps={{
-                          input: { "aria-label": "Per Body Weight(kg)" },
-                        }}
-                      />
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-time-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Time"
-                      onChange={handleInputChange(adminId, timeField)}
-                      value={currentRow?.[timeField]}
-                    />
-                    <TableCell sx={{ width: "10rem" }}>
-                      <Typography>{currentRow?.["Time Unit"]}</Typography>
-                    </TableCell>
-                    <NumericTableCell
-                      id={`input-addDoses-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Additional Doses"
-                      onChange={handleInputChange(adminId, "Additional Doses")}
-                      value={currentRow?.["Additional Doses"]}
-                    />
-                    <NumericTableCell
-                      id={`input-doseInterval-${adminId}`}
-                      disabled={!selectedVariable}
-                      label="Interdose Interval"
-                      onChange={handleInputChange(
-                        adminId,
-                        "Interdose Interval",
-                      )}
-                      value={currentRow?.["Interdose Interval"]}
-                    />
-                  </TableRow>
-                );
-              });
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  );
-};
-
-export default CreateDosingProtocols;

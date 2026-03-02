@@ -339,6 +339,19 @@ export const validateState = (state: StepperState) => {
       );
     }
   }
+
+  // Check if Dose or DOSEA continuous covariate is present
+  const doseCovariateField = fields.find(
+    (field) =>
+      (field.toLowerCase() === "dose" || field.toLowerCase() === "dosea") &&
+      normalisedFields.get(field) === "Cont Covariate"
+  );
+  if (doseCovariateField && hasNoDosing) {
+    warnings.push(
+      "Dose or DOSEA continuous covariate found, using this value for dosing amount.",
+    );
+  }
+
   if (
     normalisedHeaders.includes("Observation") &&
     !normalisedHeaders.includes("Observation Unit")

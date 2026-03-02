@@ -1,6 +1,6 @@
 import { FC, useEffect } from "react";
 import DosingProtocols from "./DosingProtocols";
-import CreateDosingProtocols from "./CreateDosingProtocols";
+import { normaliseCSVData } from "./CreateDosingProtocols";
 import { StepperState } from "../LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
@@ -114,22 +114,29 @@ const MapDosing: FC<IMapDosing> = ({
   });
   const uniqueDosingCompartments = [...new Set(dosingCompartments)];
 
-  return dosingRows.length ? (
+  // If there are no dosing rows, normalize the CSV data to create them
+  if (!dosingRows.length) {
+    const { data: _data, normalisedFields: _normalisedFields } = normaliseCSVData(
+      state,
+      administrationIdField || "Administration ID",
+      uniqueDosingCompartments,
+      project!,
+    );
+
+    if (state.data !== _data) {
+      state.data = _data;
+    }
+    if (state.normalisedFields !== _normalisedFields) {
+      state.normalisedFields = _normalisedFields;
+    }
+  }
+
+  // Always render DosingProtocols
+  return (
     <DosingProtocols
       administrationIdField={administrationIdField || "Administration ID"}
       amountUnitField={amountUnitField}
       amountUnit={amountUnit}
-      state={state}
-      units={units || []}
-      variables={variables || []}
-      notificationsInfo={notificationsInfo}
-      project={project!}
-    />
-  ) : (
-    <CreateDosingProtocols
-      administrationIdField={administrationIdField || "Administration ID"}
-      amountUnitField={amountUnitField || ""}
-      dosingCompartments={uniqueDosingCompartments}
       state={state}
       units={units || []}
       variables={variables || []}
