@@ -67,11 +67,12 @@ export default function useObservationRows(state: StepperState, tab: string) {
   }
   const observationRows = observationField
     ? rows.filter(
-        (row) =>
-          row["Group ID"] === tab &&
-          observationField in row &&
-          row[observationField] !== ".",
-      )
+      (row) =>
+        row["Group ID"] === tab &&
+        observationField in row &&
+        row[observationField] !== "" &&
+        row[observationField] !== ".",
+    )
     : [];
   const observationIds = observationIdField
     ? observationRows.map((row) => row[observationIdField || "Observation ID"])
