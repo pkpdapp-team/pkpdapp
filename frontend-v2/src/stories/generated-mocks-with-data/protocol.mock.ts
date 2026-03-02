@@ -32,6 +32,64 @@ export const protocols = [
     amount_unit: 22,
     variable: 372,
     group: null
+  },
+  {
+    id: 50,
+    doses: [
+      {
+        id: 60,
+        start_time: 0.0,
+        amount: 10.0,
+        duration: 0.0833,
+        repeats: 1,
+        repeat_interval: 1.0,
+        read_only: false,
+        datetime: null,
+        protocol: 50
+      }
+    ],
+    subjects: [],
+    read_only: false,
+    datetime: null,
+    name: "WithData Test Dataset-Data-Group 1",
+    dose_type: "D",
+    amount_per_body_weight: true,
+    dataset: 11,
+    project: 29,
+    compound: null,
+    time_unit: 20,
+    amount_unit: 22,
+    variable: 372,
+    group: 21
+  },
+  {
+    id: 51,
+    doses: [
+      {
+        id: 61,
+        start_time: 0.0,
+        amount: 10.0,
+        duration: 0.0833,
+        repeats: 1,
+        repeat_interval: 1.0,
+        read_only: false,
+        datetime: null,
+        protocol: 51
+      }
+    ],
+    subjects: [],
+    read_only: false,
+    datetime: null,
+    name: "WithData Test Dataset-Data-Group 2",
+    dose_type: "D",
+    amount_per_body_weight: true,
+    dataset: 11,
+    project: 29,
+    compound: null,
+    time_unit: 20,
+    amount_unit: 22,
+    variable: 372,
+    group: 22
   }
 ] as unknown as ProtocolRead[];
 

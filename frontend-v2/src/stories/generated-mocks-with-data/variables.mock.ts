@@ -7402,7 +7402,9 @@ export const variables = [
   {
     id: 372,
     protocols: [
-      49
+      49,
+      50,
+      51
     ],
     read_only: false,
     datetime: null,
