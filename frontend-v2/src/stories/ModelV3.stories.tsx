@@ -608,13 +608,13 @@ export const LagTime: Story = {
       userEvent,
     );
 
-    await delay(1000);
-
     // Lag time checkbox should now be gone
-    const removedLagTimeCheckbox = canvas.queryByRole("checkbox", {
-      name: /Lag time/i,
+    await waitFor(() => {
+      const removedLagTimeCheckbox = canvas.queryByRole("checkbox", {
+        name: /Lag time/i,
+      });
+      expect(removedLagTimeCheckbox).not.toBeInTheDocument();
     });
-    expect(removedLagTimeCheckbox).not.toBeInTheDocument();
 
     // Now select First order absorption model again
     await selectMenuOption(
