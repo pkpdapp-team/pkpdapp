@@ -2,6 +2,8 @@ import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { isCommonAssetRequest } from "msw";
+import { configure } from "storybook/test";
+
 import { store } from "../src/app/store";
 import { api } from "../src/app/api";
 import { setProject } from "../src/features/main/mainSlice";
@@ -68,7 +70,6 @@ const preview: Preview = {
   tags: ["autodocs"],
   loaders: [mswLoader],
   beforeAll: async () => {
-    const { configure } = await import("storybook/test");
     // Configure global timeout for findBy* and waitFor queries
     configure({ asyncUtilTimeout: 5000 });
   },
