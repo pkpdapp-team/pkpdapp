@@ -32,8 +32,18 @@ def add_pk_variable(
     None
     """
     var_type = derived_variable.type
-    if var_type in pd_model_var_types:
+    # Skip if this is a PD-only type (not in pk_model_var_types)
+    if var_type not in pk_model_var_types:
         return
+
+    # For types that can be in both PK and PD, skip if variable is in PD compartment
+    # PK variables can be in: PKCompartment, Extravascular, EffectCompartment{X}
+    # PD variables are in: PDCompartment, PDCompartment2, etc.
+    if var_type in pd_model_var_types:
+        var_qname = derived_variable.pk_variable.qname
+        # Check if variable is in any PD compartment (PDCompartment, PDCompartment2, etc.)
+        if var_qname.startswith("PDCompartment"):
+            return
 
     try:
         myokit_var = pk_model.get(derived_variable.pk_variable.qname)
@@ -80,8 +90,18 @@ def add_pd_variable(
     None
     """
     var_type = derived_variable.type
-    if var_type in pk_model_var_types:
+    # Skip if this is a PK-only type (not in pd_model_var_types)
+    if var_type not in pd_model_var_types:
         return
+
+    # For types that can be in both PK and PD, skip if variable is NOT in PD compartment
+    # PK variables can be in: PKCompartment, Extravascular, EffectCompartment{X}
+    # PD variables are in: PDCompartment, PDCompartment2, etc.
+    if var_type in pk_model_var_types:
+        var_qname = derived_variable.pk_variable.qname
+        # Check if variable is in any PD compartment (PDCompartment, PDCompartment2, etc.)
+        if not var_qname.startswith("PDCompartment"):
+            return
 
     try:
         myokit_var: myokit.Variable = pkpd_model.get(derived_variable.pk_variable.qname)
@@ -1061,6 +1081,7 @@ pk_model_var_types = {
 
 
 pd_model_var_types = {
+    DerivedVariable.Type.AREA_UNDER_CURVE: add_area_under_curve,
     DerivedVariable.Type.MICHAELIS_MENTEN: add_michaelis_menten,
     DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN: add_extended_michaelis_menten,
     DerivedVariable.Type.EMAX: add_emax,
