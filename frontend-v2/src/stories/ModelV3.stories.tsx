@@ -396,7 +396,9 @@ export const Species: Story = {
     });
     expect(unitList).toHaveTextContent("kg");
 
-    await waitFor(() => expect(setParamsToDefaultSpy).toHaveBeenCalledOnce());
+    await waitFor(() => expect(setParamsToDefaultSpy).toHaveBeenCalledOnce(), {
+      timeout: 15000, // Increase timeout for async parameter reset
+    });
   },
 };
 

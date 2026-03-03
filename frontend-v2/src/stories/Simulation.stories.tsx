@@ -110,11 +110,6 @@ export const Default: Story = {
 };
 
 export const Parameters: Story = {
-  parameters: {
-    test: {
-      timeout: 25000, // Increase timeout for this complex test
-    },
-  },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const parametersButton = await canvas.findByRole(
@@ -161,8 +156,10 @@ export const Parameters: Story = {
     expect(inputField).toBeInTheDocument();
     await userEvent.click(inputField);
     expect(inputField).toHaveFocus();
-    await userEvent.keyboard("{backspace>6}");
-    await userEvent.type(inputField, "100");
+
+    // Select all and replace with new value for more reliable input
+    await userEvent.tripleClick(inputField);
+    await userEvent.keyboard("100");
     await userEvent.tab();
 
     await waitFor(() => {
