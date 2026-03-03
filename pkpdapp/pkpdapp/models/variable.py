@@ -362,6 +362,17 @@ class Variable(StoredModel):
                     if parent_var is not None:
                         unit = parent_var.unit
                         unit_per_body_weight = parent_var.unit_per_body_weight
+                elif myokit_variable.qname().startswith("PKNonlinearities") and (
+                    myokit_variable.name().startswith("D50_")
+                    or myokit_variable.name().startswith("Ref_D_")
+                ):
+                    # D50 and Ref_D should inherit unit from first dose in first protocol
+                    project = model.get_project()
+                    if project is not None:
+                        protocol = project.protocols.first()
+                        if protocol is not None and protocol.amount_unit is not None:
+                            unit = protocol.amount_unit
+                            unit_per_body_weight = protocol.amount_per_body_weight
                 elif (
                     myokit_variable.qname().startswith("PKCompartment")
                     and "_tlag_" in myokit_variable.name()
