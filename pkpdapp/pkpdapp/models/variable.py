@@ -356,6 +356,12 @@ class Variable(StoredModel):
                     lower = 0.0
                 elif myokit_variable.qname() == "PKCompartment.CLmax":
                     lower = 0.0
+                elif myokit_variable.qname() == "PKCompartment.CLada":
+                    lower = 0.0
+                    parent_var = model.variables.filter(name="CL").first()
+                    if parent_var is not None:
+                        unit = parent_var.unit
+                        unit_per_body_weight = parent_var.unit_per_body_weight
                 elif (
                     myokit_variable.qname().startswith("PKCompartment")
                     and "_tlag_" in myokit_variable.name()
