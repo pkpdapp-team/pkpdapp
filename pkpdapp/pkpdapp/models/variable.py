@@ -366,7 +366,8 @@ class Variable(StoredModel):
                     myokit_variable.name().startswith("D50_")
                     or myokit_variable.name().startswith("Ref_D_")
                 ):
-                    # D50 and Ref_D should inherit unit from first dose in first protocol
+                    # D50 and Ref_D should inherit unit from first dose in
+                    # first protocol
                     project = model.get_project()
                     if project is not None:
                         protocol = project.protocols.first()
