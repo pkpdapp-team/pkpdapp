@@ -39,7 +39,7 @@ interface Props {
   onChange: () => void;
 }
 
-const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
+const derivedVariableRegex = /calc_.*_(f|bl|RO|AUC)/;
 
 const AdditionalParametersRow: FC<Props> = ({
   project,
@@ -181,7 +181,6 @@ const AdditionalParametersRow: FC<Props> = ({
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
-  const noSecondaryParameters = false;
   const isC1 = model.is_library_model && variable.qname.endsWith(".C1");
   const disableAuc = false;
   const disableRo =
@@ -193,6 +192,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const noDosing = !isAmount;
 
   const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null;
+  const noSecondaryParameters = isDerivedVariable || variable.qname === "PKCompartment.CLimm";
 
   if (noMapToPD && noDerivedVariables && noSecondaryParameters && noDosing) {
     return null;

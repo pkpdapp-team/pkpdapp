@@ -302,3 +302,50 @@ class TestDerivedVariables(TestCase):
         self.assertFalse(
             self.pkpd_model.get_myokit_model().get("PDCompartment.C_Drug").is_constant()
         )
+
+    def test_area_under_curve(self):
+        # Create AUC derived variable for C1 (PK concentration in compartment 1)
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self.pkpd_model.variables.get(
+                qname="PKCompartment.C1",
+            ),
+            type=DerivedVariable.Type.AREA_UNDER_CURVE,
+        )
+
+        # Create AUC derived variable for E (PD effect)
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self.pkpd_model.variables.get(
+                qname="PDCompartment.E",
+            ),
+            type=DerivedVariable.Type.AREA_UNDER_CURVE,
+        )
+
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        myokit_model = self.pkpd_model.get_myokit_model()
+
+        # Check that both AUC variables were created
+        c1_auc_var_qname = "PKCompartment.calc_C1_AUC"
+        e_auc_var_qname = "PDCompartment.calc_E_AUC"
+        vars = [v.qname() for v in myokit_model.variables()]
+        self.assertIn(c1_auc_var_qname, vars)
+        self.assertIn(e_auc_var_qname, vars)
+
+        # Test C1 AUC variable (PK)
+        c1_auc_var = myokit_model.get(c1_auc_var_qname)
+        self.assertTrue(c1_auc_var.is_state())
+        self.assertEqual(
+            str(c1_auc_var.rhs()),
+            "PKCompartment.C1"
+        )
+        self.assertEqual(float(c1_auc_var.initial_value()), 0.0)
+
+        # Test E AUC variable (PD)
+        e_auc_var = myokit_model.get(e_auc_var_qname)
+        self.assertTrue(e_auc_var.is_state())
+        self.assertEqual(
+            str(e_auc_var.rhs()),
+            "PDCompartment.E"
+        )
+        self.assertEqual(float(e_auc_var.initial_value()), 0.0)
