@@ -356,6 +356,24 @@ class Variable(StoredModel):
                     lower = 0.0
                 elif myokit_variable.qname() == "PKCompartment.CLmax":
                     lower = 0.0
+                elif myokit_variable.qname() == "PKCompartment.CLada":
+                    lower = 0.0
+                    parent_var = model.variables.filter(name="CL").first()
+                    if parent_var is not None:
+                        unit = parent_var.unit
+                        unit_per_body_weight = parent_var.unit_per_body_weight
+                elif myokit_variable.qname().startswith("PKNonlinearities") and (
+                    myokit_variable.name().startswith("D50_")
+                    or myokit_variable.name().startswith("Ref_D_")
+                ):
+                    # D50 and Ref_D should inherit unit from first dose in
+                    # first protocol
+                    project = model.get_project()
+                    if project is not None:
+                        protocol = project.protocols.first()
+                        if protocol is not None and protocol.amount_unit is not None:
+                            unit = protocol.amount_unit
+                            unit_per_body_weight = protocol.amount_per_body_weight
                 elif (
                     myokit_variable.qname().startswith("PKCompartment")
                     and "_tlag_" in myokit_variable.name()
@@ -365,6 +383,14 @@ class Variable(StoredModel):
                     "PKNonlinearities"
                 ) and myokit_variable.name().endswith("_min"):
                     parent_name = myokit_variable.name()[:-4]
+                    parent_var = model.variables.filter(name=parent_name).first()
+                    if parent_var is not None:
+                        unit = parent_var.unit
+                        unit_per_body_weight = parent_var.unit_per_body_weight
+                elif myokit_variable.qname().startswith(
+                    "PKNonlinearities"
+                ) and myokit_variable.name().startswith("Km_"):
+                    parent_name = myokit_variable.name()[3:]
                     parent_var = model.variables.filter(name=parent_name).first()
                     if parent_var is not None:
                         unit = parent_var.unit

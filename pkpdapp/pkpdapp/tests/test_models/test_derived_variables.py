@@ -19,6 +19,7 @@ from pkpdapp.models import (
     Compound,
     Protocol,
     Dose,
+    Unit,
 )
 
 
@@ -128,6 +129,11 @@ class TestDerivedVariables(TestCase):
         self.assertEqual(pmin_var.unit, parent_unit)
         self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
+        # Check that Km has the same unit as parent
+        km_var = self.pkpd_model.variables.get(qname="PKNonlinearities.Km_C_Drug")
+        self.assertEqual(km_var.unit, parent_unit)
+        self.assertEqual(km_var.unit_per_body_weight, parent_per_kg)
+
     def test_emax(self):
         parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
         # Set unit_per_body_weight to True to test if Pmin inherits it
@@ -135,6 +141,13 @@ class TestDerivedVariables(TestCase):
         parent_var.save()
         parent_unit = parent_var.unit
         parent_per_kg = parent_var.unit_per_body_weight
+
+        # Set protocol with specific amount unit and per_kg
+        protocol = self.project.protocols.first()
+        dose_unit = Unit.objects.get(symbol="µg")
+        protocol.amount_unit = dose_unit
+        protocol.amount_per_body_weight = True
+        protocol.save()
 
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
@@ -171,6 +184,11 @@ class TestDerivedVariables(TestCase):
         self.assertEqual(pmin_var.unit, parent_unit)
         self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
+        # Check that D50 has the same unit and unit_per_body_weight as the dose
+        d50_var = self.pkpd_model.variables.get(qname="PKNonlinearities.D50_C_Drug")
+        self.assertEqual(d50_var.unit, dose_unit)
+        self.assertEqual(d50_var.unit_per_body_weight, True)
+
     def test_imax(self):
         parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
         # Set unit_per_body_weight to True to test if Pmin inherits it
@@ -178,6 +196,13 @@ class TestDerivedVariables(TestCase):
         parent_var.save()
         parent_unit = parent_var.unit
         parent_per_kg = parent_var.unit_per_body_weight
+
+        # Set protocol with specific amount unit and per_kg
+        protocol = self.project.protocols.first()
+        dose_unit = Unit.objects.get(symbol="µg")
+        protocol.amount_unit = dose_unit
+        protocol.amount_per_body_weight = True
+        protocol.save()
 
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
@@ -212,8 +237,20 @@ class TestDerivedVariables(TestCase):
         self.assertEqual(pmin_var.unit, parent_unit)
         self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
+        # Check that D50 has the same unit and unit_per_body_weight as the dose
+        d50_var = self.pkpd_model.variables.get(qname="PKNonlinearities.D50_C_Drug")
+        self.assertEqual(d50_var.unit, dose_unit)
+        self.assertEqual(d50_var.unit_per_body_weight, True)
+
     def test_power(self):
         # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
+        # Set protocol with specific amount unit and per_kg
+        protocol = self.project.protocols.first()
+        dose_unit = Unit.objects.get(symbol="µg")
+        protocol.amount_unit = dose_unit
+        protocol.amount_per_body_weight = True
+        protocol.save()
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
             pk_variable=self.pkpd_model.variables.get(
@@ -242,6 +279,11 @@ class TestDerivedVariables(TestCase):
             str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_Power^PDCompartment.HC / (PKNonlinearities.C_Drug_Power^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
+
+        # Check that Ref_D has the same unit and unit_per_body_weight as the dose
+        ref_d_var = self.pkpd_model.variables.get(qname="PKNonlinearities.Ref_D_C_Drug")
+        self.assertEqual(ref_d_var.unit, dose_unit)
+        self.assertEqual(ref_d_var.unit_per_body_weight, True)
 
     def test_exp_decay(self):
         parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
