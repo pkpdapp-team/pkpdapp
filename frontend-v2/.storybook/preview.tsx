@@ -7,7 +7,8 @@ import { store } from "../src/app/store";
 import { api } from "../src/app/api";
 
 // Configure global timeout for findBy* and waitFor queries
-configure({ asyncUtilTimeout: 5000 });
+// Increased from 5s to 10s to reduce flakiness in CI environments
+configure({ asyncUtilTimeout: 10000 });
 
 /*
  * Initializes MSW

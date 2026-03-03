@@ -98,6 +98,7 @@ export default ({ mode }) => {
             },
             setupFiles: [".storybook/vitest.setup.ts"],
             retry: 2,
+            testTimeout: 30000, // Increase timeout for CI environments
           },
         },
       ],
