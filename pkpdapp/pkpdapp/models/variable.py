@@ -338,6 +338,7 @@ class Variable(StoredModel):
             lower = None
             upper = None
             unit = Unit.get_unit_from_variable(myokit_variable)
+            unit_per_body_weight = False
             if model.is_library_model:
                 if myokit_variable.qname() == "PDCompartment.Imax":
                     upper = 1.0
@@ -367,6 +368,7 @@ class Variable(StoredModel):
                     parent_var = model.variables.filter(name=parent_name).first()
                     if parent_var is not None:
                         unit = parent_var.unit
+                        unit_per_body_weight = parent_var.unit_per_body_weight
 
             state = myokit_variable.is_state()
             if state:
@@ -385,6 +387,7 @@ class Variable(StoredModel):
                 upper_bound=upper,
                 state=state,
                 unit=unit,
+                unit_per_body_weight=unit_per_body_weight,
                 dosed_pk_model=model,
                 color=num_variables,
                 display=myokit_variable.name() != "time",
