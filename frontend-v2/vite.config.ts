@@ -53,24 +53,15 @@ export default ({ mode }) => {
       outDir: "build",
       rollupOptions: {
         output: {
-          manualChunks: {
-            plotly: ["plotly.js-basic-dist-min"],
-            material: [
-              "@mui/material",
-              "@mui/icons-material",
-              "@mui/x-data-grid",
-            ],
-            vendor: [
-              "@reduxjs/toolkit",
-              "@reduxjs/toolkit/query",
-              "papaparse",
-              "react",
-              "react-dom",
-              "react-hook-form",
-              "react-dropzone",
-              "react-redux",
-              "react-toastify",
-            ],
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              // Separate Plotly since it's large and independent
+              if (id.includes("plotly.js")) {
+                return "plotly";
+              }
+              // Everything else goes into vendor to avoid circular dependencies
+              return "vendor";
+            }
           },
         },
       },
