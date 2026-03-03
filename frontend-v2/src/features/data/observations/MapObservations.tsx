@@ -36,6 +36,7 @@ import { TableHeader } from "../../../components/TableHeader";
 import { groupDataRows } from "../stratification/Stratification";
 import { ObservationIDRow } from "./ObservationIDRow";
 import { findFieldByType } from "../findFieldByType";
+import { normaliseUnitSymbol } from "../unitUtils";
 
 interface IMapObservations {
   state: StepperState;
@@ -156,7 +157,7 @@ const MapObservations: FC<IMapObservations> = ({
       nextData
         .map((row) => {
           row[observationVariableField] = row[observationVariableField] || "";
-          row[observationUnitField] = row[observationUnitField] || "";
+          row[observationUnitField] = normaliseUnitSymbol(row[observationUnitField]) || "";
           return row;
         })
         .filter((row) =>
@@ -306,8 +307,9 @@ const MapObservations: FC<IMapObservations> = ({
                     (variable) =>
                       variable.qname === observationVariables[currentRow],
                   );
+                  const obsUnitSymbol = normaliseUnitSymbol(observationUnits[currentRow]);
                   const obsUnit = units.find(
-                    (unit) => unit.symbol === observationUnits[currentRow],
+                    (unit) => unit.symbol === obsUnitSymbol,
                   );
                   return (
                     <ObservationIDRow
