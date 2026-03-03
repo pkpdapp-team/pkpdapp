@@ -84,11 +84,16 @@ class TestDerivedVariables(TestCase):
         )
 
     def test_extended_michaelis_menten(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
-            pk_variable=self.pkpd_model.variables.get(
-                qname="PDCompartment.C_Drug",
-            ),
+            pk_variable=parent_var,
             secondary_variable=self.pkpd_model.variables.get(
                 qname="PKCompartment.C1",
             ),
@@ -118,12 +123,22 @@ class TestDerivedVariables(TestCase):
             "PKNonlinearities.C_Drug_C1_eMM^PDCompartment.HC / (PKNonlinearities.C_Drug_C1_eMM^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
+
     def test_emax(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
-            pk_variable=self.pkpd_model.variables.get(
-                qname="PDCompartment.C_Drug",
-            ),
+            pk_variable=parent_var,
             type=DerivedVariable.Type.EMAX,
         )
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
@@ -151,12 +166,22 @@ class TestDerivedVariables(TestCase):
             "PKNonlinearities.C_Drug_Emax^PDCompartment.HC / (PKNonlinearities.C_Drug_Emax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
+
     def test_imax(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
-            pk_variable=self.pkpd_model.variables.get(
-                qname="PDCompartment.C_Drug",
-            ),
+            pk_variable=parent_var,
             type=DerivedVariable.Type.IMAX,
         )
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
@@ -181,6 +206,11 @@ class TestDerivedVariables(TestCase):
             str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_Imax^PDCompartment.HC / (PKNonlinearities.C_Drug_Imax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
+
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
     def test_power(self):
         # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
@@ -214,11 +244,16 @@ class TestDerivedVariables(TestCase):
         )
 
     def test_exp_decay(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
-            pk_variable=self.pkpd_model.variables.get(
-                qname="PDCompartment.C_Drug",
-            ),
+            pk_variable=parent_var,
             type=DerivedVariable.Type.EXP_DECAY,
         )
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
@@ -242,13 +277,23 @@ class TestDerivedVariables(TestCase):
             "PKNonlinearities.C_Drug_TDI^PDCompartment.HC / (PKNonlinearities.C_Drug_TDI^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
 
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
+
     def test_exp_growth(self):
         # base_variable_IND = base_variable * [1-exp(-k_X*time)] +Xmin
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
-            pk_variable=self.pkpd_model.variables.get(
-                qname="PDCompartment.C_Drug",
-            ),
+            pk_variable=parent_var,
             type=DerivedVariable.Type.EXP_INCREASE,
         )
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
@@ -271,6 +316,11 @@ class TestDerivedVariables(TestCase):
             str(myokit_model.get("PDCompartment.PDO").rhs()),
             "PKNonlinearities.C_Drug_IND^PDCompartment.HC / (PKNonlinearities.C_Drug_IND^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
         )
+
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
     def test_fraction_unbound_plasma(self):
         DerivedVariable.objects.create(
