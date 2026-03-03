@@ -41,7 +41,8 @@ def add_pk_variable(
     # PD variables are in: PDCompartment, PDCompartment2, etc.
     if var_type in pd_model_var_types:
         var_qname = derived_variable.pk_variable.qname
-        # Check if variable is in any PD compartment (PDCompartment, PDCompartment2, etc.)
+        # Check if variable is in any PD compartment
+        # (PDCompartment, PDCompartment2, etc.)
         if var_qname.startswith("PDCompartment"):
             return
 
@@ -99,7 +100,8 @@ def add_pd_variable(
     # PD variables are in: PDCompartment, PDCompartment2, etc.
     if var_type in pk_model_var_types:
         var_qname = derived_variable.pk_variable.qname
-        # Check if variable is in any PD compartment (PDCompartment, PDCompartment2, etc.)
+        # Check if variable is in any PD compartment
+        # (PDCompartment, PDCompartment2, etc.)
         if not var_qname.startswith("PDCompartment"):
             return
 
