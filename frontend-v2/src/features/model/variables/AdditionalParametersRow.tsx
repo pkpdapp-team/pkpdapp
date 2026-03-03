@@ -192,7 +192,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const noDosing = !isAmount;
 
   const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null;
-  const noSecondaryParameters = isDerivedVariable;
+  const noSecondaryParameters = isDerivedVariable || variable.qname === "PKCompartment.CLimm";
 
   if (noMapToPD && noDerivedVariables && noSecondaryParameters && noDosing) {
     return null;
