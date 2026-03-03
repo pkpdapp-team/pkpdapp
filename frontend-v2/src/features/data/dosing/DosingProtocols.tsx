@@ -28,6 +28,7 @@ import {
 } from "../../../shared/calculateTableHeights";
 import { NumericTableCell } from "./NumericTableCell";
 import { findFieldByType } from "../findFieldByType";
+import { normaliseUnitSymbol } from "../unitUtils";
 
 interface IDosingProtocols {
   administrationIdField: string;
@@ -174,6 +175,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         )
         .forEach((row) => {
           row[amountVariableField] = value;
+          row[amountUnitField] = normaliseUnitSymbol(row[amountUnitField] || "")
         });
       state.data = nextData;
       state.normalisedFields = new Map([
@@ -333,13 +335,14 @@ const DosingProtocols: FC<IDosingProtocols> = ({
               )?.compatible_units;
               const adminUnit =
                 amountUnitField && currentRow && currentRow[amountUnitField];
+              const normalisedAdminUnit = normaliseUnitSymbol(adminUnit || "");
               const amount = currentRow?.[amountField];
               const time = currentRow?.[timeField];
               const isPerKg = currentRow?.[perKgField] === "1";
               const displayedUnit = amountUnits?.find(
-                (unit) => unit.symbol === adminUnit,
+                (unit) => unit.symbol === normalisedAdminUnit,
               )
-                ? adminUnit
+                ? normalisedAdminUnit
                 : "";
               return (
                 <TableRow key={adminId}>
