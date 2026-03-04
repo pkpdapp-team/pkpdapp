@@ -27,7 +27,8 @@ const pkTagList = [
   "QSS",
   "MM",
   "bispecific",
-  "constant",
+  "constant target concentration",
+  "soluble target",
 ];
 const modelTypesLabel = "Filter by Model Type";
 

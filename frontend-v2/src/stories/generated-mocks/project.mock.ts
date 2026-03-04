@@ -4,37 +4,37 @@ import { ProjectRead, CompoundRead, UserRead } from "../../app/backendApi";
 import { http, HttpResponse, delay } from "msw";
 
 export const project = {
-  id: 34,
+  id: 105,
   user_access: [
     {
-      id: 34,
+      id: 124,
       read_only: false,
-      user: 9,
-      project: 34
+      user: 2,
+      project: 105
     }
   ],
   datasets: [],
   protocols: [
-    64
+    5092
   ],
   name: "Storybook Test Project",
   description: "Automatically generated for Storybook mocks",
-  created: "2026-03-02T10:22:06.434519Z",
+  created: "2026-03-04T16:00:59.379262Z",
   tags: "",
   species: "R",
   species_weight: 0.25,
   version: 3,
-  compound: 34,
-  species_weight_unit: 53,
+  compound: 130,
+  species_weight_unit: 41,
   users: [
-    9
+    2
   ],
   pk_tags: [],
   pd_tags: []
 } as unknown as ProjectRead;
 
 export const compound = {
-  id: 34,
+  id: 130,
   efficacy_experiments: [],
   name: "Test Compound",
   description: "Automatically generated test compound for Storybook",
@@ -51,64 +51,72 @@ export const compound = {
   dissociation_constant: null,
   is_soluble: true,
   use_efficacy: null,
-  molecular_mass_unit: 75,
-  intrinsic_clearance_unit: 19,
-  target_molecular_mass_unit: 75,
-  target2_molecular_mass_unit: 75,
-  target_concentration_unit: 10,
-  dissociation_unit: 10
+  molecular_mass_unit: 54,
+  intrinsic_clearance_unit: 8,
+  target_molecular_mass_unit: 54,
+  target2_molecular_mass_unit: 54,
+  target_concentration_unit: 1,
+  dissociation_unit: 1
 } as unknown as CompoundRead;
 
 export const users = [
   {
-    id: 9,
-    username: "storybook_test_user",
-    first_name: "Storybook",
-    last_name: "Test",
-    email: "test@pkpdapp.com",
+    id: 1,
+    username: "jim",
+    first_name: "",
+    last_name: "",
+    email: "james.odonnell@dtc.ox.ac.uk",
     profile: {
-      id: 9,
-      user: 9
+      id: 1,
+      user: 1
     },
     project_set: [
-      10,
+      1,
+      2,
+      3,
+      7,
+      8,
+      9,
       11,
       12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      20,
-      21,
-      22,
-      23,
-      24,
       25,
       26,
       27,
       28,
       29,
       30,
-      31,
-      32,
       33,
-      34
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      43,
+      57,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      74,
+      103,
+      104
     ]
   },
   {
-    id: 10,
-    username: "test",
-    first_name: "",
-    last_name: "",
-    email: "test@example.com",
+    id: 2,
+    username: "storybook_test_user",
+    first_name: "Storybook",
+    last_name: "Test",
+    email: "test@pkpdapp.com",
     profile: {
-      id: 10,
-      user: 10
+      id: 2,
+      user: 2
     },
     project_set: [
-      19
+      105
     ]
   }
 ] as unknown as UserRead[];
