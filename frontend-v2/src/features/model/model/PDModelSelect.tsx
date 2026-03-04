@@ -8,6 +8,7 @@ import SelectField from "../../../components/SelectField";
 import {
   PharmacodynamicListApiResponse,
   ProjectRead,
+  useTagListQuery,
 } from "../../../app/backendApi";
 
 type PDModelSelectProps = {
@@ -47,18 +48,22 @@ export const PDModelSelect: FC<PDModelSelectProps> = ({
   pdModels,
   project,
 }) => {
+  const { data: tagsData } = useTagListQuery();
+  const ddiTag = tagsData?.find((tag) => tag.name === "DDI");
   const pdTags = project?.pd_tags || [];
-  const pdModelsFiltered = pdModels.filter((m) => {
-    const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
-    if (m.tags) {
-      for (const tag of pdTags) {
-        if (!m.tags.includes(tag)) {
-          return false;
+  const pdModelsFiltered = pdModels
+    .filter((m) => !m.tags?.includes(ddiTag?.id || -1))
+    .filter((m) => {
+      const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
+      if (m.tags) {
+        for (const tag of pdTags) {
+          if (!m.tags.includes(tag)) {
+            return false;
+          }
         }
       }
-    }
-    return is_pd_model;
-  });
+      return is_pd_model;
+    });
   const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered.map((m) => {
       return { value: m.id, label: m.name };
