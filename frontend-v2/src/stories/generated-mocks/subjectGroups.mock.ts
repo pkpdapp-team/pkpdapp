@@ -6,890 +6,4340 @@ import { http, HttpResponse, delay } from "msw";
 export const subjectGroups = [
   {
     id: 1,
-    subjects: [
-      1,
-      2,
-      3
-    ],
-    protocols: [
-      {
-        id: 20,
-        doses: [
-          {
-            id: 22,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 20
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "New Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 1,
-        project: 19,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 238,
-        group: 1
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 1,
-    project: 19
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 2,
-    subjects: [
-      4,
-      5,
-      6
-    ],
-    protocols: [
-      {
-        id: 21,
-        doses: [
-          {
-            id: 20,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 21
-          },
-          {
-            id: 21,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 21
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "New Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 1,
-        project: 19,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 238,
-        group: 2
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 1,
-    project: 19
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 3,
-    subjects: [
-      7,
-      8,
-      9
-    ],
-    protocols: [
-      {
-        id: 23,
-        doses: [
-          {
-            id: 26,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 23
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 2,
-        project: 20,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 255,
-        group: 3
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 2,
-    project: 20
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 4,
-    subjects: [
-      10,
-      11,
-      12
-    ],
-    protocols: [
-      {
-        id: 24,
-        doses: [
-          {
-            id: 24,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 24
-          },
-          {
-            id: 25,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 24
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 2,
-        project: 20,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 255,
-        group: 4
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 2,
-    project: 20
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 5,
-    subjects: [
-      13,
-      14,
-      15
-    ],
-    protocols: [
-      {
-        id: 26,
-        doses: [
-          {
-            id: 30,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 26
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 3,
-        project: 21,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 268,
-        group: 5
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 3,
-    project: 21
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 6,
-    subjects: [
-      16,
-      17,
-      18
-    ],
-    protocols: [
-      {
-        id: 27,
-        doses: [
-          {
-            id: 28,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 27
-          },
-          {
-            id: 29,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 27
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 3,
-        project: 21,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 268,
-        group: 6
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 3,
-    project: 21
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 7,
-    subjects: [
-      19,
-      20,
-      21
-    ],
-    protocols: [
-      {
-        id: 29,
-        doses: [
-          {
-            id: 34,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 29
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 4,
-        project: 22,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 281,
-        group: 7
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 4,
-    project: 22
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 8,
-    subjects: [
-      22,
-      23,
-      24
-    ],
-    protocols: [
-      {
-        id: 30,
-        doses: [
-          {
-            id: 32,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 30
-          },
-          {
-            id: 33,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 30
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 4,
-        project: 22,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 281,
-        group: 8
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 4,
-    project: 22
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 9,
-    subjects: [
-      25,
-      26,
-      27
-    ],
-    protocols: [
-      {
-        id: 32,
-        doses: [
-          {
-            id: 38,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 32
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 5,
-        project: 23,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 294,
-        group: 9
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 5,
-    project: 23
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 10,
-    subjects: [
-      28,
-      29,
-      30
-    ],
-    protocols: [
-      {
-        id: 33,
-        doses: [
-          {
-            id: 36,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 33
-          },
-          {
-            id: 37,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 33
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 5,
-        project: 23,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 294,
-        group: 10
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 5,
-    project: 23
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 11,
-    subjects: [
-      31,
-      32,
-      33
-    ],
-    protocols: [
-      {
-        id: 35,
-        doses: [
-          {
-            id: 42,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 35
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 6,
-        project: 24,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 307,
-        group: 11
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 6,
-    project: 24
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 12,
-    subjects: [
-      34,
-      35,
-      36
-    ],
-    protocols: [
-      {
-        id: 36,
-        doses: [
-          {
-            id: 40,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 36
-          },
-          {
-            id: 41,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 36
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 6,
-        project: 24,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 307,
-        group: 12
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 6,
-    project: 24
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 13,
-    subjects: [
-      37,
-      38,
-      39
-    ],
-    protocols: [
-      {
-        id: 38,
-        doses: [
-          {
-            id: 46,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 38
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 7,
-        project: 25,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 320,
-        group: 13
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 7,
-    project: 25
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 14,
-    subjects: [
-      40,
-      41,
-      42
-    ],
-    protocols: [
-      {
-        id: 39,
-        doses: [
-          {
-            id: 44,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 39
-          },
-          {
-            id: 45,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 39
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 7,
-        project: 25,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 320,
-        group: 14
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 7,
-    project: 25
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 15,
-    subjects: [
-      43,
-      44,
-      45
-    ],
-    protocols: [
-      {
-        id: 41,
-        doses: [
-          {
-            id: 50,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 41
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 8,
-        project: 26,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 333,
-        group: 15
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 8,
-    project: 26
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 16,
-    subjects: [
-      46,
-      47,
-      48
-    ],
-    protocols: [
-      {
-        id: 42,
-        doses: [
-          {
-            id: 48,
-            start_time: 0.0,
-            amount: 500.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 42
-          },
-          {
-            id: 49,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 42
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 8,
-        project: 26,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 333,
-        group: 16
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 8,
-    project: 26
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 17,
-    subjects: [
-      49,
-      50,
-      51
-    ],
-    protocols: [
-      {
-        id: 44,
-        doses: [
-          {
-            id: 54,
-            start_time: 0.0,
-            amount: 0.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 44
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
-        dose_type: "D",
-        amount_per_body_weight: false,
-        dataset: 9,
-        project: 27,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 346,
-        group: 17
-      }
-    ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 9,
-    project: 27
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
     id: 18,
-    subjects: [
-      52,
-      53,
-      54
-    ],
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 19,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 20,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 21,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 22,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 23,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 24,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 25,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 26,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 27,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 28,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 29,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 30,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 31,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 32,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 33,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 34,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 35,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 36,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 37,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 38,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 39,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 40,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 41,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 42,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 43,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 44,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 45,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 46,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 47,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 48,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 49,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 50,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 51,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 52,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 53,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 54,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 55,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 56,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 57,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 58,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 59,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 60,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 61,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 62,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 63,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 64,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 65,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 66,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 67,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 68,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 69,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 70,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 71,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 72,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 73,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 74,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 75,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 76,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 77,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 78,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 79,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 80,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 81,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 82,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 83,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 84,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 85,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 86,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 87,
+    subjects: [],
+    protocols: [],
+    name: "Group IV",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 88,
+    subjects: [],
+    protocols: [],
+    name: "Group SC",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 89,
+    subjects: [],
+    protocols: [],
+    name: "Group IV",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 90,
+    subjects: [],
+    protocols: [],
+    name: "Group SC",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 91,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 92,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 93,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 94,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 95,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 96,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 97,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 98,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 99,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 100,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 101,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 102,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 103,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 104,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 105,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 106,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 107,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 108,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 109,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 110,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 111,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 112,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 113,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 114,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 115,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 116,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 117,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 118,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 119,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 120,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 121,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 122,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 123,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 124,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 125,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 126,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 127,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 128,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 129,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 130,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 131,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 132,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 133,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 134,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 135,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 136,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 137,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 138,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 139,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 140,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 141,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 142,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 143,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 144,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 145,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 146,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 147,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 148,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 149,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 150,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 151,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 152,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 153,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 154,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 155,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 156,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 157,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 158,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 159,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 160,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 161,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 162,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 163,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 164,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 165,
+    subjects: [],
     protocols: [
       {
-        id: 45,
+        id: 506,
         doses: [
           {
-            id: 52,
+            id: 1097,
             start_time: 0.0,
-            amount: 500.0,
+            amount: 20.0,
             duration: 0.0833,
             repeats: 1,
-            repeat_interval: 1.0,
+            repeat_interval: 24.0,
             read_only: false,
             datetime: null,
-            protocol: 45
-          },
-          {
-            id: 53,
-            start_time: 0.0,
-            amount: 100.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 45
+            protocol: 506
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
+        name: "New Dataset-1",
         dose_type: "D",
         amount_per_body_weight: false,
-        dataset: 9,
-        project: 27,
+        dataset: null,
+        project: null,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 346,
-        group: 18
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 165
       }
     ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 9,
-    project: 27
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
   },
   {
-    id: 19,
+    id: 166,
+    subjects: [],
+    protocols: [
+      {
+        id: 509,
+        doses: [
+          {
+            id: 1099,
+            start_time: 0.0,
+            amount: 20.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 509
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 166
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 167,
+    subjects: [],
+    protocols: [
+      {
+        id: 512,
+        doses: [
+          {
+            id: 1109,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 512
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 167
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 168,
+    subjects: [],
+    protocols: [
+      {
+        id: 515,
+        doses: [
+          {
+            id: 1108,
+            start_time: 0.0,
+            amount: 20.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 515
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 168
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 169,
+    subjects: [],
+    protocols: [
+      {
+        id: 518,
+        doses: [
+          {
+            id: 1124,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 518
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 169
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 170,
+    subjects: [],
+    protocols: [
+      {
+        id: 521,
+        doses: [
+          {
+            id: 1123,
+            start_time: 0.0,
+            amount: 20.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 521
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 170
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 171,
+    subjects: [],
+    protocols: [
+      {
+        id: 524,
+        doses: [
+          {
+            id: 1115,
+            start_time: 0.0,
+            amount: 500.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 524
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 171
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 172,
+    subjects: [],
+    protocols: [
+      {
+        id: 527,
+        doses: [
+          {
+            id: 1122,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 527
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 172
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 173,
+    subjects: [],
+    protocols: [
+      {
+        id: 530,
+        doses: [
+          {
+            id: 1157,
+            start_time: 0.0,
+            amount: 20.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 530
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 173
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 174,
+    subjects: [],
+    protocols: [
+      {
+        id: 533,
+        doses: [
+          {
+            id: 1158,
+            start_time: 0.0,
+            amount: 25.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 533
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 174
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 175,
+    subjects: [],
+    protocols: [
+      {
+        id: 538,
+        doses: [
+          {
+            id: 1166,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 3,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 538
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 175
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 176,
+    subjects: [],
+    protocols: [
+      {
+        id: 541,
+        doses: [
+          {
+            id: 1170,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 541
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 176
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 177,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 178,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 179,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 180,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 181,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 182,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 183,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 184,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 185,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 186,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 187,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 188,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 189,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 190,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 191,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 192,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 193,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 194,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 195,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 196,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 197,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 198,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 199,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 200,
+    subjects: [],
+    protocols: [],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 243,
     subjects: [
-      55,
-      56,
-      57
+      667,
+      668,
+      669
     ],
     protocols: [
       {
-        id: 47,
+        id: 693,
         doses: [
           {
-            id: 58,
+            id: 1668,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 693
+          }
+        ],
+        subjects: [
+          667,
+          668,
+          669
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 150,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 243
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 150,
+    project: null
+  },
+  {
+    id: 244,
+    subjects: [
+      670,
+      671,
+      672
+    ],
+    protocols: [
+      {
+        id: 696,
+        doses: [
+          {
+            id: 1622,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 696
+          }
+        ],
+        subjects: [
+          670,
+          671,
+          672
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 150,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 244
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 150,
+    project: null
+  },
+  {
+    id: 259,
+    subjects: [],
+    protocols: [
+      {
+        id: 711,
+        doses: [
+          {
+            id: 1680,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 711
+          },
+          {
+            id: 1681,
+            start_time: 24.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 711
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 150,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 259
+      }
+    ],
+    name: "Group 3",
+    id_in_dataset: null,
+    dataset: 150,
+    project: null
+  },
+  {
+    id: 261,
+    subjects: [
+      673,
+      674,
+      675
+    ],
+    protocols: [
+      {
+        id: 714,
+        doses: [
+          {
+            id: 1641,
+            start_time: 0.0,
+            amount: 500.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 714
+          }
+        ],
+        subjects: [
+          673,
+          674,
+          675
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 1,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 261
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 1,
+    project: null
+  },
+  {
+    id: 262,
+    subjects: [
+      676,
+      677,
+      678
+    ],
+    protocols: [
+      {
+        id: 717,
+        doses: [
+          {
+            id: 1644,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 717
+          }
+        ],
+        subjects: [
+          676,
+          677,
+          678
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 1,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 262
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 1,
+    project: null
+  },
+  {
+    id: 264,
+    subjects: [],
+    protocols: [
+      {
+        id: 724,
+        doses: [
+          {
+            id: 1663,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 724
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1_f",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 1,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 264
+      },
+      {
+        id: 725,
+        doses: [
+          {
+            id: 1662,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 725
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 1,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 264
+      }
+    ],
+    name: "Group 3",
+    id_in_dataset: null,
+    dataset: 1,
+    project: null
+  },
+  {
+    id: 266,
+    subjects: [
+      679,
+      680,
+      681
+    ],
+    protocols: [
+      {
+        id: 732,
+        doses: [
+          {
+            id: 2244,
+            start_time: 0.0,
+            amount: 2000.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 732
+          }
+        ],
+        subjects: [
+          679,
+          680,
+          681
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 168,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 266
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 168,
+    project: null
+  },
+  {
+    id: 267,
+    subjects: [
+      682,
+      683,
+      684
+    ],
+    protocols: [
+      {
+        id: 735,
+        doses: [
+          {
+            id: 2242,
+            start_time: 0.0,
+            amount: 1000.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 735
+          }
+        ],
+        subjects: [
+          682,
+          683,
+          684
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 168,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 267
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 168,
+    project: null
+  },
+  {
+    id: 268,
+    subjects: [],
+    protocols: [
+      {
+        id: 738,
+        doses: [
+          {
+            id: 1704,
+            start_time: 0.0,
+            amount: 12.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 738
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 168,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 268
+      }
+    ],
+    name: "Group 3",
+    id_in_dataset: null,
+    dataset: 168,
+    project: null
+  },
+  {
+    id: 270,
+    subjects: [
+      691,
+      692,
+      693,
+      694,
+      695,
+      696
+    ],
+    protocols: [
+      {
+        id: 746,
+        doses: [
+          {
+            id: 1722,
+            start_time: 0.0,
+            amount: 1.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 746
+          }
+        ],
+        subjects: [
+          691,
+          692,
+          693,
+          694,
+          695,
+          696
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 173,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 270
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 173,
+    project: null
+  },
+  {
+    id: 271,
+    subjects: [],
+    protocols: [],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: null
+  },
+  {
+    id: 280,
+    subjects: [
+      714
+    ],
+    protocols: [
+      {
+        id: 770,
+        doses: [
+          {
+            id: 1747,
+            start_time: 0.0,
+            amount: 15.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 770
+          }
+        ],
+        subjects: [
+          714
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 178,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 280
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 178,
+    project: null
+  },
+  {
+    id: 333,
+    subjects: [
+      805
+    ],
+    protocols: [
+      {
+        id: 877,
+        doses: [
+          {
+            id: 1969,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 877
+          }
+        ],
+        subjects: [
+          805
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 188,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 333
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 188,
+    project: null
+  },
+  {
+    id: 336,
+    subjects: [],
+    protocols: [
+      {
+        id: 882,
+        doses: [
+          {
+            id: 1971,
+            start_time: 0.0,
+            amount: 50.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 882
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 188,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 336
+      },
+      {
+        id: 883,
+        doses: [
+          {
+            id: 1897,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 24.0,
+            read_only: false,
+            datetime: null,
+            protocol: 883
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 188,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 336
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 188,
+    project: null
+  },
+  {
+    id: 399,
+    subjects: [
+      995,
+      996,
+      997
+    ],
+    protocols: [
+      {
+        id: 1090,
+        doses: [
+          {
+            id: 2079,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1090
+          }
+        ],
+        subjects: [
+          995,
+          996,
+          997
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 144,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 399
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 144,
+    project: null
+  },
+  {
+    id: 400,
+    subjects: [
+      998,
+      999,
+      1000
+    ],
+    protocols: [
+      {
+        id: 1093,
+        doses: [
+          {
+            id: 2082,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1093
+          }
+        ],
+        subjects: [
+          998,
+          999,
+          1000
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 144,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 400
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 144,
+    project: null
+  },
+  {
+    id: 403,
+    subjects: [
+      1007,
+      1008,
+      1009
+    ],
+    protocols: [
+      {
+        id: 1103,
+        doses: [
+          {
+            id: 2143,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1103
+          }
+        ],
+        subjects: [
+          1007,
+          1008,
+          1009
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 232,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 403
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 232,
+    project: null
+  },
+  {
+    id: 404,
+    subjects: [
+      1010,
+      1011,
+      1012
+    ],
+    protocols: [
+      {
+        id: 1106,
+        doses: [
+          {
+            id: 2113,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1106
+          }
+        ],
+        subjects: [
+          1010,
+          1011,
+          1012
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 232,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 404
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 232,
+    project: null
+  },
+  {
+    id: 415,
+    subjects: [],
+    protocols: [
+      {
+        id: 1145,
+        doses: [
+          {
+            id: 2209,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1145
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1 - Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 235,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 415
+      },
+      {
+        id: 1146,
+        doses: [
+          {
+            id: 2219,
+            start_time: 0.0,
+            amount: 0.001,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1146
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 235,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 415
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 235,
+    project: null
+  },
+  {
+    id: 416,
+    subjects: [],
+    protocols: [
+      {
+        id: 1147,
+        doses: [
+          {
+            id: 2206,
+            start_time: 0.0,
+            amount: 0.01,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1147
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1 - Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 235,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 416
+      },
+      {
+        id: 1148,
+        doses: [
+          {
+            id: 2216,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1148
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 235,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 416
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 235,
+    project: null
+  },
+  {
+    id: 421,
+    subjects: [
+      1043,
+      1044,
+      1045
+    ],
+    protocols: [
+      {
+        id: 1165,
+        doses: [
+          {
+            id: 2253,
+            start_time: 0.0,
+            amount: 33.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1165
+          }
+        ],
+        subjects: [
+          1043,
+          1044,
+          1045
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 237,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 421
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: null,
+    dataset: 237,
+    project: null
+  },
+  {
+    id: 422,
+    subjects: [
+      1046,
+      1047,
+      1048
+    ],
+    protocols: [
+      {
+        id: 1168,
+        doses: [
+          {
+            id: 2254,
+            start_time: 0.0,
+            amount: 7.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1168
+          }
+        ],
+        subjects: [
+          1046,
+          1047,
+          1048
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 237,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 422
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: null,
+    dataset: 237,
+    project: null
+  },
+  {
+    id: 448,
+    subjects: [
+      1121,
+      1122,
+      1123
+    ],
+    protocols: [
+      {
+        id: 1248,
+        doses: [
+          {
+            id: 2548,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1248
+          }
+        ],
+        subjects: [
+          1121,
+          1122,
+          1123
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 197,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 448
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: null,
+    dataset: 197,
+    project: null
+  },
+  {
+    id: 449,
+    subjects: [
+      1124,
+      1125,
+      1126
+    ],
+    protocols: [
+      {
+        id: 1251,
+        doses: [
+          {
+            id: 2551,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1251
+          }
+        ],
+        subjects: [
+          1124,
+          1125,
+          1126
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 197,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 449
+      }
+    ],
+    name: "Group SC",
+    id_in_dataset: null,
+    dataset: 197,
+    project: null
+  },
+  {
+    id: 593,
+    subjects: [
+      1529,
+      1530,
+      1531
+    ],
+    protocols: [
+      {
+        id: 1679,
+        doses: [
+          {
+            id: 3030,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1679
+          }
+        ],
+        subjects: [
+          1529,
+          1530,
+          1531
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 233,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 593
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: "IV",
+    dataset: 233,
+    project: null
+  },
+  {
+    id: 594,
+    subjects: [
+      1532,
+      1533,
+      1534
+    ],
+    protocols: [
+      {
+        id: 1682,
+        doses: [
+          {
+            id: 3033,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1682
+          }
+        ],
+        subjects: [
+          1532,
+          1533,
+          1534
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 233,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 594
+      }
+    ],
+    name: "Group SC",
+    id_in_dataset: "SC",
+    dataset: 233,
+    project: null
+  },
+  {
+    id: 602,
+    subjects: [],
+    protocols: [
+      {
+        id: 1700,
+        doses: [
+          {
+            id: 3059,
+            start_time: 0.0,
+            amount: 1.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1700
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1 - Group 3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 38,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 602
+      },
+      {
+        id: 1701,
+        doses: [
+          {
+            id: 3072,
+            start_time: 0.0,
+            amount: 9.0,
+            duration: 0.0833,
+            repeats: 3,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1701
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 38,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 602
+      }
+    ],
+    name: "Group 3",
+    id_in_dataset: "3",
+    dataset: null,
+    project: 38
+  },
+  {
+    id: 653,
+    subjects: [
+      1632,
+      1633,
+      1634
+    ],
+    protocols: [
+      {
+        id: 1813,
+        doses: [
+          {
+            id: 3218,
+            start_time: 0.0,
+            amount: 500.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1813
+          }
+        ],
+        subjects: [
+          1632,
+          1633,
+          1634
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 236,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 653
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: "1",
+    dataset: 236,
+    project: null
+  },
+  {
+    id: 654,
+    subjects: [
+      1635,
+      1636,
+      1637
+    ],
+    protocols: [
+      {
+        id: 1816,
+        doses: [
+          {
+            id: 3221,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.02,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 1816
+          }
+        ],
+        subjects: [
+          1635,
+          1636,
+          1637
+        ],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-4",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 236,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 654
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: "2",
+    dataset: 236,
+    project: null
+  },
+  {
+    id: 1344,
+    subjects: [
+      3466,
+      3467,
+      3468
+    ],
+    protocols: [
+      {
+        id: 3545,
+        doses: [
+          {
+            id: 6250,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3545
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 244,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1344
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: "IV",
+    dataset: 244,
+    project: null
+  },
+  {
+    id: 1345,
+    subjects: [
+      3469,
+      3470,
+      3471
+    ],
+    protocols: [
+      {
+        id: 3546,
+        doses: [
+          {
+            id: 6251,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3546
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-Group SC",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 244,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1345
+      }
+    ],
+    name: "Group SC",
+    id_in_dataset: "SC",
+    dataset: 244,
+    project: null
+  },
+  {
+    id: 1407,
+    subjects: [],
+    protocols: [
+      {
+        id: 3617,
+        doses: [
+          {
+            id: 6401,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3617
+          },
+          {
+            id: 6402,
+            start_time: 168.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3617
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1 - Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 39,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1407
+      },
+      {
+        id: 3618,
+        doses: [
+          {
+            id: 6396,
+            start_time: 168.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3618
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 39,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1407
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: "1",
+    dataset: null,
+    project: 39
+  },
+  {
+    id: 1520,
+    subjects: [
+      4047
+    ],
+    protocols: [
+      {
+        id: 3749,
+        doses: [
+          {
+            id: 6613,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3749
+          },
+          {
+            id: 6616,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3749
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1520
+      },
+      {
+        id: 3752,
+        doses: [
+          {
+            id: 6619,
+            start_time: 144.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3752
+          },
+          {
+            id: 6623,
+            start_time: 480.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3752
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1520
+      }
+    ],
+    name: "Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 240,
+    project: null
+  },
+  {
+    id: 1521,
+    subjects: [
+      4048
+    ],
+    protocols: [
+      {
+        id: 3750,
+        doses: [
+          {
+            id: 6614,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3750
+          },
+          {
+            id: 6617,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3750
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1521
+      },
+      {
+        id: 3753,
+        doses: [
+          {
+            id: 6620,
+            start_time: 120.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3753
+          },
+          {
+            id: 6622,
+            start_time: 144.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3753
+          },
+          {
+            id: 6624,
+            start_time: 480.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3753
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1521
+      }
+    ],
+    name: "Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 240,
+    project: null
+  },
+  {
+    id: 1522,
+    subjects: [
+      4049
+    ],
+    protocols: [
+      {
+        id: 3751,
+        doses: [
+          {
+            id: 6615,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3751
+          },
+          {
+            id: 6618,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3751
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1522
+      },
+      {
+        id: 3754,
+        doses: [
+          {
+            id: 6621,
+            start_time: 144.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3754
+          },
+          {
+            id: 6625,
+            start_time: 480.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3754
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Mean IL6R for PKD explor plasma only with dosing.csv-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 240,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1522
+      }
+    ],
+    name: "Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 240,
+    project: null
+  },
+  {
+    id: 1523,
+    subjects: [
+      4050
+    ],
+    protocols: [
+      {
+        id: 3755,
+        doses: [
+          {
+            id: 6626,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3755
+          },
+          {
+            id: 6629,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3755
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1523
+      },
+      {
+        id: 3758,
+        doses: [
+          {
+            id: 6632,
+            start_time: 144.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3758
+          },
+          {
+            id: 6636,
+            start_time: 480.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3758
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1523
+      }
+    ],
+    name: "Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 243,
+    project: null
+  },
+  {
+    id: 1524,
+    subjects: [
+      4051
+    ],
+    protocols: [
+      {
+        id: 3756,
+        doses: [
+          {
+            id: 6627,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3756
+          },
+          {
+            id: 6630,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3756
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1524
+      },
+      {
+        id: 3759,
+        doses: [
+          {
+            id: 6633,
+            start_time: 120.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3759
+          },
+          {
+            id: 6635,
+            start_time: 144.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3759
+          },
+          {
+            id: 6637,
+            start_time: 480.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3759
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1524
+      }
+    ],
+    name: "Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 243,
+    project: null
+  },
+  {
+    id: 1525,
+    subjects: [
+      4052
+    ],
+    protocols: [
+      {
+        id: 3757,
+        doses: [
+          {
+            id: 6628,
+            start_time: 0.0,
+            amount: 0.2,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3757
+          },
+          {
+            id: 6631,
+            start_time: 24.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3757
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1525
+      },
+      {
+        id: 3760,
+        doses: [
+          {
+            id: 6634,
+            start_time: 144.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3760
+          },
+          {
+            id: 6638,
+            start_time: 480.0,
+            amount: 16.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3760
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 243,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 68,
+        variable: null,
+        group: 1525
+      }
+    ],
+    name: "Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 243,
+    project: null
+  },
+  {
+    id: 1526,
+    subjects: [
+      4053,
+      4054,
+      4055,
+      4056
+    ],
+    protocols: [
+      {
+        id: 3761,
+        doses: [
+          {
+            id: 6639,
             start_time: 0.0,
             amount: 0.0,
             duration: 0.0833,
@@ -897,96 +4347,1288 @@ export const subjectGroups = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 47
+            protocol: 3761
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_1",
         dose_type: "D",
-        amount_per_body_weight: true,
-        dataset: 10,
-        project: 28,
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 359,
-        group: 19
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1526
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 10,
-    project: 28
+    name: "Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 245,
+    project: null
   },
   {
-    id: 20,
+    id: 1527,
     subjects: [
-      58,
-      59,
-      60
+      4057,
+      4058,
+      4059,
+      4060
     ],
     protocols: [
       {
-        id: 48,
+        id: 3762,
         doses: [
           {
-            id: 56,
+            id: 6640,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3762
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1527
+      }
+    ],
+    name: "Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1528,
+    subjects: [
+      4061,
+      4062,
+      4063,
+      4064
+    ],
+    protocols: [
+      {
+        id: 3763,
+        doses: [
+          {
+            id: 6641,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3763
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1528
+      }
+    ],
+    name: "Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1529,
+    subjects: [
+      4065,
+      4066,
+      4067,
+      4068
+    ],
+    protocols: [
+      {
+        id: 3764,
+        doses: [
+          {
+            id: 6642,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3764
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_4",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1529
+      }
+    ],
+    name: "Group Group_4",
+    id_in_dataset: "Group_4",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1530,
+    subjects: [
+      4069,
+      4070,
+      4071,
+      4072
+    ],
+    protocols: [
+      {
+        id: 3765,
+        doses: [
+          {
+            id: 6643,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3765
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_5",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1530
+      }
+    ],
+    name: "Group Group_5",
+    id_in_dataset: "Group_5",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1531,
+    subjects: [
+      4073,
+      4074,
+      4075,
+      4076
+    ],
+    protocols: [
+      {
+        id: 3766,
+        doses: [
+          {
+            id: 6644,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3766
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_6",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1531
+      }
+    ],
+    name: "Group Group_6",
+    id_in_dataset: "Group_6",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1532,
+    subjects: [
+      4077,
+      4078,
+      4079,
+      4080
+    ],
+    protocols: [
+      {
+        id: 3767,
+        doses: [
+          {
+            id: 6645,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3767
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_7",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1532
+      }
+    ],
+    name: "Group Group_7",
+    id_in_dataset: "Group_7",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1533,
+    subjects: [
+      4081,
+      4082,
+      4083,
+      4084
+    ],
+    protocols: [
+      {
+        id: 3768,
+        doses: [
+          {
+            id: 6646,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3768
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_8",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1533
+      }
+    ],
+    name: "Group Group_8",
+    id_in_dataset: "Group_8",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1534,
+    subjects: [
+      4085,
+      4086,
+      4087,
+      4088
+    ],
+    protocols: [
+      {
+        id: 3769,
+        doses: [
+          {
+            id: 6647,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3769
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_9",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1534
+      }
+    ],
+    name: "Group Group_9",
+    id_in_dataset: "Group_9",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1535,
+    subjects: [
+      4089,
+      4090,
+      4091,
+      4092
+    ],
+    protocols: [
+      {
+        id: 3770,
+        doses: [
+          {
+            id: 6648,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3770
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M01_RPK33 SEL02_SRS1553 Results morphit V2.csv-Group Group_10",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 245,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1535
+      }
+    ],
+    name: "Group Group_10",
+    id_in_dataset: "Group_10",
+    dataset: 245,
+    project: null
+  },
+  {
+    id: 1536,
+    subjects: [],
+    protocols: [
+      {
+        id: 3771,
+        doses: [
+          {
+            id: 6652,
+            start_time: 0.0,
+            amount: 3.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3771
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 40,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1536
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: "1",
+    dataset: null,
+    project: 40
+  },
+  {
+    id: 1634,
+    subjects: [
+      4402,
+      4403,
+      4404
+    ],
+    protocols: [
+      {
+        id: 3926,
+        doses: [
+          {
+            id: 7227,
+            start_time: 0.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3926
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_03.csv-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 252,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1634
+      },
+      {
+        id: 3927,
+        doses: [
+          {
+            id: 6940,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3927
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_03.csv-Group 1",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 252,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1634
+      }
+    ],
+    name: "Group 1",
+    id_in_dataset: "1",
+    dataset: 252,
+    project: null
+  },
+  {
+    id: 1635,
+    subjects: [
+      4405,
+      4406,
+      4407
+    ],
+    protocols: [
+      {
+        id: 3928,
+        doses: [
+          {
+            id: 6941,
+            start_time: 0.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3928
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_03.csv-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 252,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1635
+      },
+      {
+        id: 3929,
+        doses: [
+          {
+            id: 6946,
+            start_time: 0.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 3929
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_03.csv-Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 252,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1635
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: "2",
+    dataset: 252,
+    project: null
+  },
+  {
+    id: 1648,
+    subjects: [
+      4420,
+      4421,
+      4422
+    ],
+    protocols: [
+      {
+        id: 4100,
+        doses: [
+          {
+            id: 10170,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4100
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 269,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1648
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: "IV",
+    dataset: 269,
+    project: null
+  },
+  {
+    id: 1649,
+    subjects: [
+      4423,
+      4424,
+      4425
+    ],
+    protocols: [
+      {
+        id: 4101,
+        doses: [
+          {
+            id: 10171,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4101
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Group SC",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 269,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1649
+      }
+    ],
+    name: "Group SC",
+    id_in_dataset: "SC",
+    dataset: 269,
+    project: null
+  },
+  {
+    id: 1685,
+    subjects: [
+      4426,
+      4427,
+      4428
+    ],
+    protocols: [
+      {
+        id: 4161,
+        doses: [
+          {
+            id: 10367,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4161
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 234,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1685
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: "IV",
+    dataset: 234,
+    project: null
+  },
+  {
+    id: 1686,
+    subjects: [
+      4429,
+      4430,
+      4431
+    ],
+    protocols: [
+      {
+        id: 4162,
+        doses: [
+          {
+            id: 10368,
+            start_time: 0.0,
+            amount: 10.0,
+            duration: 0.02,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4162
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "New Dataset-Group SC",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 234,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1686
+      }
+    ],
+    name: "Group SC",
+    id_in_dataset: "SC",
+    dataset: 234,
+    project: null
+  },
+  {
+    id: 1687,
+    subjects: [],
+    protocols: [
+      {
+        id: 4163,
+        doses: [
+          {
+            id: 10370,
+            start_time: 168.0,
+            amount: 0.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4163
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "A1 - Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 57,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1687
+      },
+      {
+        id: 4164,
+        doses: [
+          {
+            id: 10371,
+            start_time: 0.0,
+            amount: 3.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4164
+          },
+          {
+            id: 10372,
+            start_time: 84.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4164
+          },
+          {
+            id: 10374,
+            start_time: 168.0,
+            amount: 0.5,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4164
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Aa - Group 2",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: null,
+        project: 57,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 66,
+        variable: null,
+        group: 1687
+      }
+    ],
+    name: "Group 2",
+    id_in_dataset: "2",
+    dataset: null,
+    project: 57
+  },
+  {
+    id: 1702,
+    subjects: [
+      4474,
+      4475,
+      4476
+    ],
+    protocols: [
+      {
+        id: 4199,
+        doses: [
+          {
+            id: 10412,
             start_time: 0.0,
             amount: 500.0,
             duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
+            repeats: 2,
+            repeat_interval: 168.0,
             read_only: false,
             datetime: null,
-            protocol: 48
-          },
+            protocol: 4199
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_multipleYTYPE.csv-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 304,
+        project: null,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: null,
+        group: 1702
+      }
+    ],
+    name: "Group IV",
+    id_in_dataset: "IV",
+    dataset: 304,
+    project: null
+  },
+  {
+    id: 1703,
+    subjects: [
+      4477,
+      4478,
+      4479
+    ],
+    protocols: [
+      {
+        id: 4200,
+        doses: [
           {
-            id: 57,
+            id: 10413,
             start_time: 0.0,
             amount: 100.0,
             duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
+            repeats: 2,
+            repeat_interval: 168.0,
             read_only: false,
             datetime: null,
-            protocol: 48
+            protocol: 4200
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: true,
-        dataset: 10,
-        project: 28,
+        name: "Data.File_pkpd.explorer_multipleYTYPE.csv-Group SC",
+        dose_type: "I",
+        amount_per_body_weight: false,
+        dataset: 304,
+        project: null,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 359,
-        group: 20
+        time_unit: 9,
+        amount_unit: 11,
+        variable: null,
+        group: 1703
       }
     ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 10,
-    project: 28
+    name: "Group SC",
+    id_in_dataset: "SC",
+    dataset: 304,
+    project: null
   },
   {
-    id: 21,
+    id: 1734,
     subjects: [
-      61,
-      62,
-      63
+      4570,
+      4571,
+      4572
     ],
     protocols: [
       {
-        id: 50,
+        id: 4244,
         doses: [
           {
-            id: 60,
+            id: 10459,
+            start_time: 0.0,
+            amount: 100.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4244
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 307,
+        project: 72,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3199,
+        group: 1734
+      }
+    ],
+    name: "Data-Group IV",
+    id_in_dataset: "IV",
+    dataset: 307,
+    project: 72
+  },
+  {
+    id: 1735,
+    subjects: [
+      4573,
+      4574,
+      4575
+    ],
+    protocols: [
+      {
+        id: 4245,
+        doses: [
+          {
+            id: 10457,
+            start_time: 0.0,
+            amount: 500.0,
+            duration: 0.0833,
+            repeats: 2,
+            repeat_interval: 168.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4245
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group SC",
+        dose_type: "I",
+        amount_per_body_weight: true,
+        dataset: 307,
+        project: 72,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3199,
+        group: 1735
+      }
+    ],
+    name: "Data-Group SC",
+    id_in_dataset: "SC",
+    dataset: 307,
+    project: 72
+  },
+  {
+    id: 1739,
+    subjects: [
+      4576,
+      4577,
+      4578
+    ],
+    protocols: [
+      {
+        id: 4264,
+        doses: [],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 306,
+        project: 71,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3165,
+        group: 1739
+      },
+      {
+        id: 4265,
+        doses: [],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group IV",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 306,
+        project: 71,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3166,
+        group: 1739
+      }
+    ],
+    name: "Data-Group IV",
+    id_in_dataset: "IV",
+    dataset: 306,
+    project: 71
+  },
+  {
+    id: 1740,
+    subjects: [
+      4579,
+      4580,
+      4581
+    ],
+    protocols: [
+      {
+        id: 4266,
+        doses: [],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group SC",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 306,
+        project: 71,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3165,
+        group: 1740
+      },
+      {
+        id: 4267,
+        doses: [],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "Data.File_pkpd.explorer_06.csv-Data-Group SC",
+        dose_type: "D",
+        amount_per_body_weight: false,
+        dataset: 306,
+        project: 71,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 3166,
+        group: 1740
+      }
+    ],
+    name: "Data-Group SC",
+    id_in_dataset: "SC",
+    dataset: 306,
+    project: 71
+  },
+  {
+    id: 2117,
+    subjects: [
+      6248,
+      6249,
+      6250,
+      6251,
+      6252
+    ],
+    protocols: [
+      {
+        id: 4878,
+        doses: [
+          {
+            id: 11087,
+            start_time: 0.0,
+            amount: 3.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4878
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_1",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 308,
+        project: 74,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 4927,
+        group: 2117
+      }
+    ],
+    name: "Data-Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 308,
+    project: 74
+  },
+  {
+    id: 2118,
+    subjects: [
+      6253,
+      6254,
+      6255,
+      6256,
+      6257
+    ],
+    protocols: [
+      {
+        id: 4879,
+        doses: [
+          {
+            id: 11088,
+            start_time: 0.0,
+            amount: 2.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4879
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_2",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 308,
+        project: 74,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 4927,
+        group: 2118
+      }
+    ],
+    name: "Data-Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 308,
+    project: 74
+  },
+  {
+    id: 2119,
+    subjects: [
+      6258,
+      6259,
+      6260,
+      6261,
+      6262
+    ],
+    protocols: [
+      {
+        id: 4880,
+        doses: [
+          {
+            id: 11089,
+            start_time: 0.0,
+            amount: 4.0,
+            duration: 0.0833,
+            repeats: 1,
+            repeat_interval: 1.0,
+            read_only: false,
+            datetime: null,
+            protocol: 4880
+          }
+        ],
+        subjects: [],
+        read_only: false,
+        datetime: null,
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_3",
+        dose_type: "D",
+        amount_per_body_weight: true,
+        dataset: 308,
+        project: 74,
+        compound: null,
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 4927,
+        group: 2119
+      }
+    ],
+    name: "Data-Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 308,
+    project: 74
+  },
+  {
+    id: 2148,
+    subjects: [
+      6359,
+      6360,
+      6361,
+      6362,
+      6363
+    ],
+    protocols: [
+      {
+        id: 4929,
+        doses: [
+          {
+            id: 11138,
             start_time: 0.0,
             amount: 10.0,
             duration: 0.0833,
@@ -994,415 +5636,340 @@ export const subjectGroups = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 50
+            protocol: 4929
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_1",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 11,
-        project: 29,
+        dataset: 337,
+        project: 103,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 372,
-        group: 21
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5068,
+        group: 2148
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 11,
-    project: 29
+    name: "Data-Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 337,
+    project: 103
   },
   {
-    id: 22,
+    id: 2149,
     subjects: [
-      64,
-      65,
-      66
+      6364,
+      6365,
+      6366,
+      6367,
+      6368
     ],
     protocols: [
       {
-        id: 51,
+        id: 4930,
         doses: [
           {
-            id: 61,
+            id: 11139,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 11.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 51
+            protocol: 4930
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_2",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 11,
-        project: 29,
+        dataset: 337,
+        project: 103,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 372,
-        group: 22
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5068,
+        group: 2149
       }
     ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 11,
-    project: 29
+    name: "Data-Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 337,
+    project: 103
   },
   {
-    id: 23,
+    id: 2150,
     subjects: [
-      67,
-      68,
-      69
+      6369,
+      6370,
+      6371,
+      6372,
+      6373
     ],
     protocols: [
       {
-        id: 53,
+        id: 4931,
         doses: [
           {
-            id: 63,
+            id: 11140,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 12.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 53
+            protocol: 4931
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_3",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 12,
-        project: 30,
+        dataset: 337,
+        project: 103,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 385,
-        group: 23
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5068,
+        group: 2150
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 12,
-    project: 30
+    name: "Data-Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 337,
+    project: 103
   },
   {
-    id: 24,
+    id: 2231,
     subjects: [
-      70,
-      71,
-      72
+      6770,
+      6771,
+      6772,
+      6773,
+      6774
     ],
     protocols: [
       {
-        id: 54,
+        id: 5086,
         doses: [
           {
-            id: 64,
+            id: 11313,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 3.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 54
+            protocol: 5086
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_1",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 12,
-        project: 30,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 385,
-        group: 24
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 12,
-    project: 30
-  },
-  {
-    id: 25,
-    subjects: [
-      73,
-      74,
-      75
-    ],
-    protocols: [
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5269,
+        group: 2231
+      },
       {
-        id: 56,
+        id: 5087,
         doses: [
           {
-            id: 66,
+            id: 11314,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 1.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 56
+            protocol: 5087
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_1",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 13,
-        project: 31,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 400,
-        group: 25
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5281,
+        group: 2231
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 13,
-    project: 31
+    name: "Data-Group Group_1",
+    id_in_dataset: "Group_1",
+    dataset: 338,
+    project: 104
   },
   {
-    id: 26,
+    id: 2232,
     subjects: [
-      76,
-      77,
-      78
+      6775,
+      6776,
+      6777,
+      6778,
+      6779
     ],
     protocols: [
       {
-        id: 57,
+        id: 5088,
         doses: [
           {
-            id: 67,
+            id: 11315,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 1.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 57
+            protocol: 5088
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_2",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 13,
-        project: 31,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 400,
-        group: 26
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 13,
-    project: 31
-  },
-  {
-    id: 27,
-    subjects: [
-      79,
-      80,
-      81
-    ],
-    protocols: [
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5269,
+        group: 2232
+      },
       {
-        id: 59,
+        id: 5089,
         doses: [
           {
-            id: 69,
+            id: 11316,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 3.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 59
+            protocol: 5089
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_2",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 14,
-        project: 32,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 414,
-        group: 27
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5281,
+        group: 2232
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 14,
-    project: 32
+    name: "Data-Group Group_2",
+    id_in_dataset: "Group_2",
+    dataset: 338,
+    project: 104
   },
   {
-    id: 28,
+    id: 2233,
     subjects: [
-      82,
-      83,
-      84
+      6780,
+      6781,
+      6782,
+      6783,
+      6784
     ],
     protocols: [
       {
-        id: 60,
+        id: 5090,
         doses: [
           {
-            id: 70,
+            id: 11317,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 2.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 60
+            protocol: 5090
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_3",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 14,
-        project: 32,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 414,
-        group: 28
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 14,
-    project: 32
-  },
-  {
-    id: 29,
-    subjects: [
-      85,
-      86,
-      87
-    ],
-    protocols: [
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5269,
+        group: 2233
+      },
       {
-        id: 62,
+        id: 5091,
         doses: [
           {
-            id: 72,
+            id: 11318,
             start_time: 0.0,
-            amount: 10.0,
+            amount: 2.0,
             duration: 0.0833,
             repeats: 1,
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 62
+            protocol: 5091
           }
         ],
         subjects: [],
         read_only: false,
         datetime: null,
-        name: "WithData Test Dataset-Data-Group 1",
+        name: "M02_Selvita_03_FcRntg_woIVIG_PK_results_fin_16012024_morphit (1).csv-Data-Group Group_3",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 15,
-        project: 33,
+        dataset: 338,
+        project: 104,
         compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 429,
-        group: 29
+        time_unit: 9,
+        amount_unit: 11,
+        variable: 5281,
+        group: 2233
       }
     ],
-    name: "Data-Group 1",
-    id_in_dataset: "1",
-    dataset: 15,
-    project: 33
-  },
-  {
-    id: 30,
-    subjects: [
-      88,
-      89,
-      90
-    ],
-    protocols: [
-      {
-        id: 63,
-        doses: [
-          {
-            id: 73,
-            start_time: 0.0,
-            amount: 10.0,
-            duration: 0.0833,
-            repeats: 1,
-            repeat_interval: 1.0,
-            read_only: false,
-            datetime: null,
-            protocol: 63
-          }
-        ],
-        subjects: [],
-        read_only: false,
-        datetime: null,
-        name: "WithData Test Dataset-Data-Group 2",
-        dose_type: "D",
-        amount_per_body_weight: true,
-        dataset: 15,
-        project: 33,
-        compound: null,
-        time_unit: 20,
-        amount_unit: 22,
-        variable: 429,
-        group: 30
-      }
-    ],
-    name: "Data-Group 2",
-    id_in_dataset: "2",
-    dataset: 15,
-    project: 33
+    name: "Data-Group Group_3",
+    id_in_dataset: "Group_3",
+    dataset: 338,
+    project: 104
   }
 ] as unknown as SubjectGroupRead[];
 
