@@ -29,6 +29,7 @@ const pkTagList = [
   "bispecific",
   "constant target concentration",
   "soluble target",
+  "favorites",
 ];
 const modelTypesLabel = "Filter by Model Type";
 
