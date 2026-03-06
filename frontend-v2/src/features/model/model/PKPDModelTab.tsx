@@ -88,6 +88,7 @@ const PKPDModelTab: FC<Props> = ({
   );
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isSbmlModalOpen, setIsSbmlModalOpen] = useState(false);
+  const [isDiffslModalOpen, setIsDiffslModalOpen] = useState(false);
 
   const loading = [pdModelLoading, pkModelLoading];
   if (loading.some((l) => l)) {
@@ -432,6 +433,13 @@ const PKPDModelTab: FC<Props> = ({
               >
                 Show SBML code
               </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIsDiffslModalOpen(true)}
+                endIcon={<CodeOutlinedIcon />}
+              >
+                Show DiffSL code
+              </Button>
             </Stack>
           </Stack>
         </Grid>
@@ -447,6 +455,12 @@ const PKPDModelTab: FC<Props> = ({
         onClose={() => setIsSbmlModalOpen(false)}
         code={model.sbml}
         language="xml"
+      />
+      <CodeModal
+        isOpen={isDiffslModalOpen}
+        onClose={() => setIsDiffslModalOpen(false)}
+        code={model.diffsl.code}
+        language="diffsl"
       />
     </Stack>
   );

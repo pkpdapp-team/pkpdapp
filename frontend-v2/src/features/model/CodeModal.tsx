@@ -8,12 +8,14 @@ import production from "react/jsx-runtime";
 import { rehypeDom } from "rehype-dom";
 import rehypeReact from "rehype-react";
 import mmt from "./mmt";
+import diffsl from "./diffsl";
 
 hljs.configure({
   cssSelector: "code",
 });
 hljs.registerLanguage("xml", xml);
 hljs.registerLanguage("mmt", mmt);
+hljs.registerLanguage("diffsl", diffsl);
 
 function highlightCode(code: string, language: string): JSX.Element {
   const highlightedCode = hljs.highlight(code, { language }).value;
