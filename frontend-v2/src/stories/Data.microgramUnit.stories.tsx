@@ -15,7 +15,7 @@ import {
   subjectGroupHandlers,
 } from "./generated-mocks";
 
-import { HttpResponse, delay, http } from "msw";
+import { HttpResponse, http } from "msw";
 
 const datasetHandlers = [
   http.get("/api/dataset/:id", () => {
