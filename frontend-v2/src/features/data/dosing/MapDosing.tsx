@@ -13,6 +13,7 @@ import {
 } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { findFieldByType } from "../findFieldByType";
+import { normaliseUnitSymbol } from "../unitUtils";
 
 interface IMapDosing {
   state: StepperState;
@@ -88,7 +89,10 @@ const MapDosing: FC<IMapDosing> = ({
       !!amountUnitField &&
       state.data
         .map((row) => row[amountUnitField])
-        .some((symbol) => !units?.find((unit) => unit.symbol === symbol));
+        .some(
+          (symbol) =>
+            !units?.find((unit) => unit.symbol === normaliseUnitSymbol(symbol)),
+        );
     if (
       !isLoading &&
       hasInvalidUnits &&
@@ -116,12 +120,13 @@ const MapDosing: FC<IMapDosing> = ({
 
   // If there are no dosing rows, normalize the CSV data to create them
   if (!dosingRows.length) {
-    const { data: _data, normalisedFields: _normalisedFields } = normaliseCSVData(
-      state,
-      administrationIdField || "Administration ID",
-      uniqueDosingCompartments,
-      project!,
-    );
+    const { data: _data, normalisedFields: _normalisedFields } =
+      normaliseCSVData(
+        state,
+        administrationIdField || "Administration ID",
+        uniqueDosingCompartments,
+        project!,
+      );
 
     if (state.data !== _data) {
       state.data = _data;
