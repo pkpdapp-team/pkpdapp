@@ -7,6 +7,13 @@
 from django.db import migrations
 import importlib
 
+
+def remove_soluble_tag(apps, schema_editor):
+    Tag = apps.get_model("pkpdapp", "Tag")
+    tag = Tag.objects.get(name="soluble")
+    tag.delete()
+
+
 v3models = importlib.import_module("pkpdapp.migrations.0027_version_3_models")
 
 
@@ -17,5 +24,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(remove_soluble_tag),
         migrations.RunPython(v3models.load_pkpd_models),
     ]

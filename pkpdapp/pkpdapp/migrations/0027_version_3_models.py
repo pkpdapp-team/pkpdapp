@@ -34,6 +34,7 @@ def load_pkpd_models(apps, schema_editor):
             "indirect",
             "TGI",
             "DDI",
+            "favorites",
         ]
         for i, col in enumerate(first_row):
             assert col.startswith(first_row_expect[i])
@@ -89,7 +90,10 @@ def load_pkpd_models(apps, schema_editor):
 
             for tag in tags:
                 # constant tag changed to constant target concentration part way through, so support both
-                tag_model = Tag.objects.filter(name__startswith=tag).first()
+                try:
+                    tag_model = Tag.objects.get(name=tag)
+                except Tag.DoesNotExist:
+                    tag_model = Tag.objects.filter(name__startswith=tag).first()
                 if tag_model:
                     model.tags.add(tag_model)
             model.save()
