@@ -232,7 +232,9 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             if outputs is not None else None
         )
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.diffsl', delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode='w', suffix='.diffsl', delete=False
+        ) as temp_file:
             temp_path = temp_file.name
 
         try:

@@ -72,10 +72,10 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     @extend_schema_field(inline_serializer(
         name="DiffSLOutput",
         fields={
-            "inputs":        serializers.ListField(child=serializers.CharField()),
-            "outputs":       serializers.ListField(child=serializers.CharField()),
+            "inputs": serializers.ListField(child=serializers.CharField()),
+            "outputs": serializers.ListField(child=serializers.CharField()),
             "state_indices": serializers.DictField(child=serializers.IntegerField()),
-            "code":          serializers.CharField(),
+            "code": serializers.CharField(),
         }
     ))
     def get_diffsl(self, m) -> dict:
@@ -109,18 +109,18 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
             result = m.get_diffsl(inputs=inputs, outputs=outputs, states=states)
             return {
-                "inputs":        inputs or [],
-                "outputs":       outputs,
+                "inputs": inputs or [],
+                "outputs": outputs,
                 "state_indices": result["state_indices"],
-                "code":          result["code"],
+                "code": result["code"],
             }
         except Exception as e:
             print(traceback.format_exc())
             return {
-                "inputs":        [],
-                "outputs":       [],
+                "inputs": [],
+                "outputs": [],
                 "state_indices": {},
-                "code":          f"Error converting to DiffSL: {e}",
+                "code": f"Error converting to DiffSL: {e}",
             }
 
     def get_time_unit(self, m) -> int:
