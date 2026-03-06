@@ -19,5 +19,6 @@ export function hasPerWeightOption(
   const isPKandVol = isPK && unit?.m === 3;
   const is_Ref_D_or_D50 =
     variable.name.startsWith("Ref_D") || variable.name.startsWith("D50");
-  return isPKandVol || is_Ref_D_or_D50;
+  const isVmax = variable.name.startsWith("Vmax");
+  return isPKandVol || is_Ref_D_or_D50 || isVmax;
 }
