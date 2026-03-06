@@ -3840,6 +3840,10 @@ components:
         mmt:
           type: string
           readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
+          readOnly: true
         sbml:
           type: string
           readOnly: true
@@ -3926,6 +3930,7 @@ components:
       required:
       - components
       - derived_variables
+      - diffsl
       - id
       - is_library_model
       - mappings
@@ -4155,6 +4160,28 @@ components:
       - pk_variable
       - pkpd_model
       - type
+    DiffSLOutput:
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: string
+        outputs:
+          type: array
+          items:
+            type: string
+        state_indices:
+          type: object
+          additionalProperties:
+            type: integer
+        code:
+          type: string
+      required:
+      - code
+      - inputs
+      - outputs
+      - state_indices
     Dose:
       type: object
       properties:
@@ -4635,6 +4662,10 @@ components:
           readOnly: true
         mmt:
           type: string
+          readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
           readOnly: true
         sbml:
           type: string
@@ -5405,7 +5436,7 @@ components:
         name:
           type: string
           description: name of the tag
-          maxLength: 20
+          maxLength: 50
     PatchedUnit:
       type: object
       properties:
@@ -6308,7 +6339,7 @@ components:
         name:
           type: string
           description: name of the tag
-          maxLength: 20
+          maxLength: 50
       required:
       - id
       - name

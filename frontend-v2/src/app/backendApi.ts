@@ -2324,6 +2324,14 @@ export type CombinedModel = {
   /** second PD part of model */
   pd_model2?: number | null;
 };
+export type DiffSlOutput = {
+  inputs: string[];
+  outputs: string[];
+  state_indices: {
+    [key: string]: number;
+  };
+  code: string;
+};
 export type CombinedModelRead = {
   id: number;
   mappings: PkpdMappingRead[];
@@ -2332,6 +2340,7 @@ export type CombinedModelRead = {
   components: string;
   variables: number[];
   mmt: string;
+  diffsl: DiffSlOutput;
   sbml: string;
   time_unit: number;
   is_library_model: boolean;
@@ -2435,6 +2444,7 @@ export type PatchedCombinedModelRead = {
   components?: string;
   variables?: number[];
   mmt?: string;
+  diffsl?: DiffSlOutput;
   sbml?: string;
   time_unit?: number;
   is_library_model?: boolean;
