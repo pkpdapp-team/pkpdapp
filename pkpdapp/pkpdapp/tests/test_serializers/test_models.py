@@ -144,5 +144,3 @@ class TestCombinedModelSerializer(TestCase):
         self.assertNotIn("Error converting", diffsl["code"])
         self.assertIn("u_i {", diffsl["code"])
         self.assertIn("F_i {", diffsl["code"])
-
-        print(diffsl["code"])
