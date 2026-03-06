@@ -52,7 +52,9 @@ const datasetHandlers = [
     const url = new URL(request.url);
     const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
     if (dosedPkModelId) {
-      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      const filtered = variables.filter(
+        (v) => v.dosed_pk_model === parseInt(dosedPkModelId, 10),
+      );
       return HttpResponse.json(filtered, { status: 200 });
     }
     return HttpResponse.json(variables, { status: 200 });
@@ -140,12 +142,16 @@ export const UploadFile: Story = {
 };
 
 // Helper function to create Excel file from CSV data
-function createExcelFromCSV(csvString: string, filename: string, sheetNames?: string[]): File {
+function createExcelFromCSV(
+  csvString: string,
+  filename: string,
+  sheetNames?: string[],
+): File {
   // Parse CSV to get rows
-  const lines = csvString.trim().split('\n');
-  const data = lines.map(line => {
+  const lines = csvString.trim().split("\n");
+  const data = lines.map((line) => {
     // Simple CSV parsing - split by comma
-    return line.split(',');
+    return line.split(",");
   });
 
   const workbook = XLSX.utils.book_new();
@@ -210,7 +216,10 @@ export const UploadMultiSheetExcel: Story = {
     expect(fileInput).toBeInTheDocument();
 
     // Create multi-sheet Excel file (should use first sheet)
-    const file = createExcelFromCSV(testCSV, "test_multi.xlsx", ["MainData", "OtherSheet"]);
+    const file = createExcelFromCSV(testCSV, "test_multi.xlsx", [
+      "MainData",
+      "OtherSheet",
+    ]);
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     // Should still work - uses first sheet
@@ -235,7 +244,9 @@ export const UploadInvalidFileType: Story = {
     expect(fileInput).toBeInTheDocument();
 
     // Try to upload a file with invalid MIME type
-    const file = new File(["invalid content"], "test.pdf", { type: "application/pdf" });
+    const file = new File(["invalid content"], "test.pdf", {
+      type: "application/pdf",
+    });
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     // Should show error message
@@ -255,7 +266,10 @@ export const UploadEmptyExcelFile: Story = {
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet([]);
     XLSX.utils.book_append_sheet(workbook, worksheet, "Empty");
-    const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const excelBuffer = XLSX.write(workbook, {
+      type: "array",
+      bookType: "xlsx",
+    });
     const file = new File([excelBuffer], "empty.xlsx", {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
@@ -267,7 +281,6 @@ export const UploadEmptyExcelFile: Story = {
     expect(errorText).toBeInTheDocument();
   },
 };
-
 
 export const Stratification: Story = {
   play: async ({ context, canvasElement, userEvent }) => {
@@ -474,7 +487,9 @@ export const UploadObsDoseUnitsFile: Story = {
 
     const fileInput = canvasElement.querySelector("input[type=file]");
     expect(fileInput).toBeInTheDocument();
-    const file = new File([dosingUnitsCSV], "dosing_test.csv", { type: "text/csv" });
+    const file = new File([dosingUnitsCSV], "dosing_test.csv", {
+      type: "text/csv",
+    });
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     const notificationsButton = await canvas.findByRole("button", {
@@ -518,7 +533,6 @@ export const ObsDoseUnitsStratification: Story = {
   },
 };
 
-
 // follow on from ObsDoseUnitsStratification to get to the Map Dosing step
 // the amount units should be displayed in the unit selects.
 export const MapDosingShowsAmountUnits: Story = {
@@ -553,15 +567,18 @@ export const MapDosingShowsAmountUnits: Story = {
     expect(unitSelects.length).toBeGreaterThan(0);
 
     // Wait for the first unit select to be rendered
-    await waitFor(() => {
-      const firstUnitSelect = unitSelects[0];
-      const displayedValue = firstUnitSelect.textContent;
+    await waitFor(
+      () => {
+        const firstUnitSelect = unitSelects[0];
+        const displayedValue = firstUnitSelect.textContent;
 
-      console.log("Amount Unit displayed value:", displayedValue);
+        console.log("Amount Unit displayed value:", displayedValue);
 
-      // Expected: "mg" (from CSV Units_AMT column)
-      expect(displayedValue).toBe("mg");
-    }, { timeout: 5000 });
+        // Expected: "mg" (from "mg/kg" inCSV Units_AMT column)
+        expect(displayedValue).toBe("mg");
+      },
+      { timeout: 5000 },
+    );
     const variableSelects = canvas.getAllByRole("combobox", {
       name: "Variable",
     });
@@ -588,12 +605,17 @@ export const MapDosingShowsAmountUnits: Story = {
     await waitFor(() => {
       const firstUnitSelect = unitSelects[0];
       const displayedValue = firstUnitSelect.textContent;
+      const perKgCheckboxes = canvas.getAllByRole("checkbox", {
+        name: "Per Body Weight(kg)",
+      });
 
       console.log("Amount Unit after selecting compartment:", displayedValue);
 
       // The bug causes this to potentially show "None" even after selecting A1
       // After fix, it should show "mg" (possibly with a warning if incompatible)
       expect(displayedValue).not.toBe("");
+
+      expect(perKgCheckboxes[0]).toBeChecked();
     });
   },
 };
@@ -667,11 +689,14 @@ export const MapDosingValidation: Story = {
       await userEvent.selectOptions(listbox, a1Option2);
     }
 
-    // Next button should be enabled now (CSV has units pre-populated with "mg")
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).not.toBeDisabled();
-    }, { timeout: 5000 });
+    // Next button should be enabled now (CSV has units pre-populated with "mg/kg")
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).not.toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
 
     // Change the unit to "None" for the first administration
     await userEvent.click(unitSelects[0]);
@@ -682,10 +707,13 @@ export const MapDosingValidation: Story = {
     await userEvent.selectOptions(listbox, noneOption);
 
     // Next button should be disabled again (unit is now None)
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).toBeDisabled();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
 
     // Change the unit back to "mg"
     await userEvent.click(unitSelects[0]);
@@ -696,10 +724,13 @@ export const MapDosingValidation: Story = {
     await userEvent.selectOptions(listbox, mgOption);
 
     // Next button should be enabled again
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).not.toBeDisabled();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).not.toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
   },
 };
 
@@ -713,10 +744,13 @@ export const MapObservationsShowsObservationUnits: Story = {
     await MapDosingShowsAmountUnits.play(context);
 
     // Wait for the Next button to be enabled
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).not.toBeDisabled();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).not.toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
 
     const nextButton = canvas.getByRole("button", {
       name: "Next",
@@ -726,9 +760,13 @@ export const MapObservationsShowsObservationUnits: Story = {
     await userEvent.click(nextButton);
 
     // Wait for navigation to Observations tab
-    const mapObservationsHeading = await canvas.findByRole("heading", {
-      name: "Observations",
-    }, { timeout: 10000 });
+    const mapObservationsHeading = await canvas.findByRole(
+      "heading",
+      {
+        name: "Observations",
+      },
+      { timeout: 10000 },
+    );
     expect(mapObservationsHeading).toBeInTheDocument();
 
     // The Observation Unit selects should show "mg/L" from the CSV's Units_Conc column
@@ -739,15 +777,18 @@ export const MapObservationsShowsObservationUnits: Story = {
     expect(unitSelects.length).toBeGreaterThan(0);
 
     // Wait for the first unit select to be rendered
-    await waitFor(() => {
-      const firstUnitSelect = unitSelects[0];
-      const displayedValue = firstUnitSelect.textContent;
+    await waitFor(
+      () => {
+        const firstUnitSelect = unitSelects[0];
+        const displayedValue = firstUnitSelect.textContent;
 
-      console.log("Observation Unit displayed value:", displayedValue);
+        console.log("Observation Unit displayed value:", displayedValue);
 
-      // Expected: "mg/L" (from CSV Units_Conc column)
-      expect(displayedValue).toBe("mg/L");
-    }, { timeout: 5000 });
+        // Expected: "mg/L" (from CSV Units_Conc column)
+        expect(displayedValue).toBe("mg/L");
+      },
+      { timeout: 5000 },
+    );
 
     const variableSelects = canvas.getAllByRole("combobox", {
       name: "Variable",
@@ -766,7 +807,10 @@ export const MapObservationsShowsObservationUnits: Story = {
       const firstUnitSelect = unitSelects[0];
       const displayedValue = firstUnitSelect.textContent;
 
-      console.log("Observation Unit after selecting compartment:", displayedValue);
+      console.log(
+        "Observation Unit after selecting compartment:",
+        displayedValue,
+      );
 
       // The bug causes this to potentially show "None" even after selecting C1
       // After fix, it should show "mg/L" (possibly with a warning if incompatible)
@@ -795,7 +839,10 @@ export const UploadExcelFileWithEmptyLastColumns: Story = {
 2;1;IV;7;h;255.55;mg/L;0;;mg/kg;;;;h;;;`;
 
     // Create Excel file from CSV with empty last columns
-    const file = createExcelFromCSV(testDataWithEmptyColumns, "test_empty_cols.xlsx");
+    const file = createExcelFromCSV(
+      testDataWithEmptyColumns,
+      "test_empty_cols.xlsx",
+    );
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     // After the fix, the data should load successfully even with empty last columns
