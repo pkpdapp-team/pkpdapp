@@ -89,7 +89,8 @@ def load_pkpd_models(apps, schema_editor):
                 )
 
             for tag in tags:
-                # constant tag changed to constant target concentration part way through, so support both
+                # constant tag changed to constant target concentration part way,
+                # so support both
                 try:
                     tag_model = Tag.objects.get(name=tag)
                 except Tag.DoesNotExist:
