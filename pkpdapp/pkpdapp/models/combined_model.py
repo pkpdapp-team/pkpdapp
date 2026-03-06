@@ -14,6 +14,9 @@ from pkpdapp.models import (
     DerivedVariable,
 )
 import myokit
+import os
+import tempfile
+from myokit.formats.diffsl import DiffSLExporter
 from django.db import models
 from django.urls import reverse
 import logging
@@ -215,6 +218,41 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     def get_mmt(self):
         myokit_model = self.get_myokit_model()
         return myokit_model.code()
+
+    def get_diffsl(self, inputs=None, outputs=None, states=None):
+        myokit_model = self.get_myokit_model()
+        diffsl_exporter = DiffSLExporter()
+
+        myokit_inputs = (
+            [myokit_model.get(qname) for qname in inputs]
+            if inputs is not None else None
+        )
+        myokit_outputs = (
+            [myokit_model.get(qname) for qname in outputs]
+            if outputs is not None else None
+        )
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.diffsl', delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            diffsl_exporter.model(
+                temp_path, myokit_model,
+                inputs=myokit_inputs, outputs=myokit_outputs,
+            )
+            with open(temp_path, 'r') as f:
+                code = f.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+        state_indices = {}
+        if states is not None:
+            for qname in states:
+                myokit_var = myokit_model.get(qname)
+                state_indices[qname] = diffsl_exporter.get_state_index(myokit_var)
+
+        return {"code": code, "state_indices": state_indices}
 
     def get_sbml(self):
         sbml_model = myokit.formats.sbml.Model.from_myokit_model(

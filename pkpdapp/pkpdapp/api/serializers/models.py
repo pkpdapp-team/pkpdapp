@@ -16,6 +16,7 @@ from pkpdapp.models import (
     Variable,
     TimeInterval,
 )
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from pkpdapp.api.serializers import ValidSbml, ValidMmt
 
 
@@ -53,6 +54,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField("get_components")
     variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     mmt = serializers.SerializerMethodField("get_mmt", read_only=True)
+    diffsl = serializers.SerializerMethodField("get_diffsl", read_only=True)
     sbml = serializers.SerializerMethodField("get_sbml", read_only=True)
     time_unit = serializers.SerializerMethodField("get_time_unit")
     is_library_model = serializers.SerializerMethodField("get_is_library_model")
@@ -66,6 +68,60 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def get_mmt(self, m) -> str:
         return m.get_mmt()
+
+    @extend_schema_field(inline_serializer(
+        name="DiffSLOutput",
+        fields={
+            "inputs":        serializers.ListField(child=serializers.CharField()),
+            "outputs":       serializers.ListField(child=serializers.CharField()),
+            "state_indices": serializers.DictField(child=serializers.IntegerField()),
+            "code":          serializers.CharField(),
+        }
+    ))
+    def get_diffsl(self, m) -> dict:
+        try:
+            # inputs: slider variables from all simulations in the project
+            inputs = None
+            if m.project is not None:
+                slider_qnames = list(
+                    m.project.simulations
+                    .values_list("sliders__variable__qname", flat=True)
+                    .exclude(sliders__variable__qname=None)
+                    .distinct()
+                )
+                if slider_qnames:
+                    inputs = slider_qnames
+
+            # outputs: non-constant variables whose name does not start with 'A'
+            outputs = list(
+                m.variables
+                .filter(constant=False)
+                .exclude(name__startswith='A')
+                .values_list("qname", flat=True)
+            )
+
+            # states: all state variables
+            states = list(
+                m.variables
+                .filter(state=True)
+                .values_list("qname", flat=True)
+            )
+
+            result = m.get_diffsl(inputs=inputs, outputs=outputs, states=states)
+            return {
+                "inputs":        inputs or [],
+                "outputs":       outputs,
+                "state_indices": result["state_indices"],
+                "code":          result["code"],
+            }
+        except Exception as e:
+            print(traceback.format_exc())
+            return {
+                "inputs":        [],
+                "outputs":       [],
+                "state_indices": {},
+                "code":          f"Error converting to DiffSL: {e}",
+            }
 
     def get_time_unit(self, m) -> int:
         unit = m.get_time_unit()
