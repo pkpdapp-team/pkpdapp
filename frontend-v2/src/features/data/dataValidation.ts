@@ -335,7 +335,7 @@ export const validateState = (state: StepperState) => {
       );
     } else {
       warnings.push(
-        "Amount units have not been defined in the dataset and need to be defined manually.",
+        "Amount units have not been defined in the dataset and need to be defined under Map Dosing.",
       );
     }
   }
@@ -344,7 +344,7 @@ export const validateState = (state: StepperState) => {
   const doseCovariateField = fields.find(
     (field) =>
       (field.toLowerCase() === "dose" || field.toLowerCase() === "dosea") &&
-      normalisedFields.get(field) === "Cont Covariate"
+      normalisedFields.get(field) === "Cont Covariate",
   );
   if (doseCovariateField && hasNoDosing) {
     warnings.push(
@@ -357,7 +357,7 @@ export const validateState = (state: StepperState) => {
     !normalisedHeaders.includes("Observation Unit")
   ) {
     warnings.push(
-      "Observation units have not been defined in the dataset and need to be defined manually.",
+      "Observation units have not been defined in the dataset and need to be defined under Map Observations.",
     );
   }
   return { errors, warnings };
