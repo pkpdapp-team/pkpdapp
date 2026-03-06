@@ -13,19 +13,19 @@ t = 0 in [h] bind time
 
 [PDCompartment]
 
-TS0 = 0.1 in [mL]
-	desc: Initial tumor volume/ size 
-	
-kge = 0.005 in [1/h] 
+TS0 = 0.1 in [dimensionless]
+	desc: Initial tumor volume/ size
+
+kge = 0.005 in [1/h]
 	desc: Exponential growth rate constant
-	
+
 gamma = 1 in [dimensionless]
 	desc: 0 < gamma <= 1; gamma = 1 leads to exponential growth, gamma = 2/3, tumor radius expands linearly with time
 
 Growth = if(TS > 1e12,
     0,
-    kge*TS^gamma) in [mL/h]
-	desc: Tumor growth rate	
+    kge*TS^gamma) in [1/h]
+	desc: Tumor growth rate
 
-dot(TS) = Growth in [mL]
+dot(TS) = Growth in [dimensionless]
 	desc: Tumor volume/ size

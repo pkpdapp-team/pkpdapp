@@ -36,7 +36,7 @@ def load_pkpd_models(apps, schema_editor):
             "DDI",
         ]
         for i, col in enumerate(first_row):
-            assert col == first_row_expect[i]
+            assert col.startswith(first_row_expect[i])
         for row in models:
             # tags are 1-compartment to the end
             filename = row[0]
@@ -88,8 +88,10 @@ def load_pkpd_models(apps, schema_editor):
                 )
 
             for tag in tags:
-                tag_model = Tag.objects.get(name=tag)
-                model.tags.add(tag_model)
+                # constant tag changed to constant target concentration part way through, so support both
+                tag_model = Tag.objects.filter(name__startswith=tag).first()
+                if tag_model:
+                    model.tags.add(tag_model)
             model.save()
 
 

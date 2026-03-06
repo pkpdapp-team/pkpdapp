@@ -16,7 +16,7 @@ t = 0 in [h] bind time
 
 [PDCompartment]
 
-TS0 = 0.1 in [mL]
+TS0 = 0.1 in [dimensionless]
 	desc: Initial tumor volume/ size
 	
 kKill = 0.00000001 in [1/h*L/pmol]
@@ -34,7 +34,7 @@ C_Drug = 1 in [pmol/L]
 Kill = kKill * C_Drug in [1/h]
 	desc: Tumor kill rate constant
 
-dot(TS) = -K3*TS in [mL]
+dot(TS) = -K3*TS in [dimensionless]
 	desc: Tumor volume size
 	
 dot(K1) = (Kill-K1)/tau in [1/h]
