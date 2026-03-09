@@ -13,16 +13,16 @@ t = 0 in [h] bind time
 	
 [PDCompartment]
 
-TS0 = 0.1 in [mL]
-	desc: Initial tumor volume/ size 
-	
-kgl = 0.01 in [mL/h]
+TS0 = 0.1 in [dimensionless]
+	desc: Initial tumor volume/ size
+
+kgl = 0.01 in [1/h]
 	desc: Linear growth rate
 
 Growth = if(TS > 1e12,
     0,
-    kgl) in [mL/h]
-	desc: Tumor growth rate	
+    kgl) in [1/h]
+	desc: Tumor growth rate
 
-dot(TS) = Growth in [mL]
+dot(TS) = Growth in [dimensionless]
 	desc: Tumor volume/ size

@@ -33,6 +33,7 @@ def update_pd_models(apps, schema_editor):
             "indirect",
             "TGI",
             "DDI",
+            "favorites",
         ]
         for i, col in enumerate(first_row):
             assert col == first_row_expect[i]

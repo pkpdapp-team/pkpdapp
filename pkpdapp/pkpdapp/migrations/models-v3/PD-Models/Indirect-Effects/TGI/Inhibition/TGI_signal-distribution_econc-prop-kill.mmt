@@ -16,7 +16,7 @@ t = 0 in [h] bind time
 
 [PDCompartment]
 	
-TS0 = 0.1 in [mL]
+TS0 = 0.1 in [dimensionless]
 	desc: Initial tumor volume/ size
 	
 kmax = 0.015 in [1/h]
@@ -37,8 +37,8 @@ C_Drug = 1 in [pmol/L]
 Kill = kmax * (1 - exp(-log(2)/C50 * C_Drug)) in [1/h]
 	desc: Tumor kill rate constant
 
-dot(TS) = -K3*TS in [mL]
-	desc: Tumor size/ size 
+dot(TS) = -K3*TS in [dimensionless]
+	desc: Tumor volume/ size
 	
 dot(K1) = (Kill-K1)/tau in [1/h]
 	desc: Transit compartment 1 (delay of killing due to signal distribution) 

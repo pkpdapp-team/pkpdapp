@@ -62,10 +62,10 @@ const pk_model_order = [
   "2-compartmental QSS TMDD model (1 binding site) - soluble target",
   "2-compartmental QSS TMDD model (1 binding site) - soluble target (catch and release)",
 
-  "1-compartmental extended Michaelis-Menten TMDD model",
-  "1-compartmental extended Michaelis-Menten TMDD model - constant target",
-  "2-compartmental extended Michaelis-Menten TMDD model",
-  "2-compartmental extended Michaelis-Menten TMDD model - constant target",
+  "1-compartmental Michaelis-Menten TMDD model (linear and saturable CL)",
+  "1-compartmental Michaelis-Menten TMDD model (saturable CL only)",
+  "2-compartmental Michaelis-Menten TMDD model (linear and saturable CL)",
+  "2-compartmental Michaelis-Menten TMDD model (saturable CL only)",
 ];
 
 export const PKModelSelect: FC<PKModelSelectProps> = ({
