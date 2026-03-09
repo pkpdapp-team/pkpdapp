@@ -1,4 +1,4 @@
-import { Field, Row } from "./LoadData";
+import { Row } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
 
 const normalisation = {
@@ -363,15 +363,6 @@ export const validateState = (state: StepperState) => {
   return { errors, warnings };
 };
 
-function normaliseHeader(header: string): [Field, string] {
-  for (const [key, value] of Object.entries(normalisation)) {
-    if (value.includes(header.toLowerCase())) {
-      return [header, key];
-    }
-  }
-  return [header, "Ignore"];
-}
-
 export function parsePerKgDoses(state: StepperState): void {
   const { data, fields, normalisedFields } = state;
   const amountUnitField =
@@ -440,11 +431,65 @@ export function normaliseFields(
   fields: string[],
   normalisedFields: Map<string, string> = new Map<string, string>(),
 ): Map<string, string> {
-  return new Map(
-    fields.map((field) =>
-      normalisedFields.has(field)
-        ? [field, normalisedFields.get(field)]
-        : normaliseHeader(field),
-    ),
-  ) as Map<string, string>;
+  const newNormalisedFields = new Map<string, string>();
+  fields.forEach((field) => {
+    if (normalisedFields.has(field)) {
+      newNormalisedFields.set(field, normalisedFields.get(field) as string);
+    }
+  });
+  const lowerFields = fields.map((field) => field.toLowerCase());
+  const prefixCounts: Record<string, number> = {};
+  for (const prefixes of Object.values(normalisation)) {
+    for (const prefix of prefixes) {
+      prefixCounts[prefix] = lowerFields.filter((f) =>
+        f.startsWith(`${prefix}_`),
+      ).length;
+    }
+  }
+
+  const hasUniquePrefixMatch = (lowerField: string, prefix: string) => {
+    if (!lowerField.startsWith(`${prefix}_`)) {
+      return false;
+    }
+    const matchingFieldsCount = prefixCounts[prefix] || 0;
+    return matchingFieldsCount === 1;
+  };
+
+  const findNormalisedHeader = (lowerField: string) => {
+    // First, perform an exact-match pass across all normalised headers.
+    for (const [header, prefixes] of Object.entries(normalisation)) {
+      if (prefixes.includes(lowerField)) {
+        return header;
+      }
+    }
+
+    // Then, among all prefix matches, choose the most specific (longest) prefix.
+    let bestMatchHeader: string | null = null;
+    let bestMatchPrefixLength = -1;
+    for (const [header, prefixes] of Object.entries(normalisation)) {
+      for (const prefix of prefixes) {
+        if (hasUniquePrefixMatch(lowerField, prefix)) {
+          if (prefix.length > bestMatchPrefixLength) {
+            bestMatchPrefixLength = prefix.length;
+            bestMatchHeader = header;
+          }
+        }
+      }
+    }
+    if (bestMatchHeader !== null) {
+      return bestMatchHeader;
+    }
+
+    return "Ignore";
+  };
+
+  fields.forEach((field, index) => {
+    if (normalisedFields.has(field)) {
+      return;
+    }
+    const lowerField = lowerFields[index];
+    newNormalisedFields.set(field, findNormalisedHeader(lowerField));
+  });
+
+  return newNormalisedFields;
 }

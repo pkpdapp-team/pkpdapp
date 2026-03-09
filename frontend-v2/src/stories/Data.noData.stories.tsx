@@ -480,6 +480,88 @@ export const UploadADPCFile: Story = {
   },
 };
 
+// Test loose header prefix matching in normaliseFields via data upload flow
+export const UploadLooseHeaderFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    const looseHeaderCSV = `subject_id,time_actual,conc_val,amount_total,misc_note
+1,0,95,50,alpha
+1,1,80,,beta
+2,0,110,50,gamma
+2,1,90,,delta`;
+
+    const file = new File([looseHeaderCSV], "loose_headers.csv", {
+      type: "text/csv",
+    });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+
+    const allSelects = within(dataTable).getAllByRole("combobox");
+
+    expect(allSelects[0]).toHaveTextContent("ID");
+    expect(allSelects[1]).toHaveTextContent("Time");
+    expect(allSelects[2]).toHaveTextContent("Observation");
+    expect(allSelects[3]).toHaveTextContent("Amount");
+    expect(allSelects[4]).toHaveTextContent("Ignore");
+
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(5);
+  },
+};
+
+// Test ambiguous prefix matching in normaliseFields via data upload flow
+export const UploadAmbiguousPrefixFile: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+
+    const ambiguousPrefixCSV = `subject_id,time_start,time_stop,conc_peak,conc_trough
+1,0,1,95,80
+2,0,1,110,90`;
+
+    const file = new File([ambiguousPrefixCSV], "ambiguous_prefixes.csv", {
+      type: "text/csv",
+    });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    const dataTableHeading = await canvas.findByRole("heading", {
+      name: "Imported Data Table",
+    });
+    expect(dataTableHeading).toBeInTheDocument();
+
+    const dataTable = canvas.getByRole("table", {
+      name: "Imported Data Table",
+    });
+    expect(dataTable).toBeInTheDocument();
+
+    const allSelects = within(dataTable).getAllByRole("combobox");
+
+    expect(allSelects[0]).toHaveTextContent("ID");
+    expect(allSelects[1]).toHaveTextContent("Ignore");
+    expect(allSelects[2]).toHaveTextContent("Ignore");
+    expect(allSelects[3]).toHaveTextContent("Ignore");
+    expect(allSelects[4]).toHaveTextContent("Ignore");
+
+    const rows = within(dataTable).getAllByRole("row");
+    expect(rows.length).toBe(3);
+  },
+};
+
 // uploads a csv with dosing amounts and units, and observation concentrations and units
 export const UploadObsDoseUnitsFile: Story = {
   play: async ({ canvasElement, userEvent }) => {
