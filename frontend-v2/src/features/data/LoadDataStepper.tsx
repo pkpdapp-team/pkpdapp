@@ -17,7 +17,7 @@ import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
 import Stratification from "./stratification/Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
-  normaliseHeader,
+  normaliseFields,
   parsePerKgDoses,
   removeIgnoredObservations,
   validateDataRow,
@@ -96,7 +96,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   let displayedErrors = [...errors];
   const [warnings, setWarnings] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
-    new Map(csvFields.map(normaliseHeader)),
+    normaliseFields(csvFields),
   );
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
