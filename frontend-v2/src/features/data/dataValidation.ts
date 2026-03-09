@@ -363,7 +363,7 @@ export const validateState = (state: StepperState) => {
   return { errors, warnings };
 };
 
-export function normaliseHeader(header: string): [Field, string] {
+function normaliseHeader(header: string): [Field, string] {
   for (const [key, value] of Object.entries(normalisation)) {
     if (value.includes(header.toLowerCase())) {
       return [header, key];
@@ -424,9 +424,22 @@ export function csvFieldsFromData(data: Row[]): string[] {
  */
 export function normalisedFieldsFromData(
   data: Row[],
-  normalisedFields: Map<string, string>,
+  normalisedFields: Map<string, string> = new Map<string, string>(),
 ): Map<string, string> {
   const fields = csvFieldsFromData(data);
+  return normaliseFields(fields, normalisedFields);
+}
+
+/**
+ *  Normalise the headers for an uploaded CSV dataset
+ * @param fields Original fields from the uploaded data
+ * @param normalisedFields Optional map of existing normalised headers.
+ * @returns
+ */
+export function normaliseFields(
+  fields: string[],
+  normalisedFields: Map<string, string> = new Map<string, string>(),
+): Map<string, string> {
   return new Map(
     fields.map((field) =>
       normalisedFields.has(field)

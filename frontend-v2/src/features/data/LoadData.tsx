@@ -4,7 +4,8 @@ import { FC, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
-  normaliseHeader,
+  normalisedFieldsFromData,
+  normaliseFields,
   validateDosingRows,
   validateState,
 } from "./dataValidation";
@@ -61,9 +62,11 @@ interface ILoadDataProps {
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
   if (data.length > 0) {
-    const newFields = Object.keys(data[0]);
     state.data = data;
-    const normalisedFields = new Map(newFields.map(normaliseHeader));
+    const normalisedFields = normalisedFieldsFromData(
+      data,
+      state.normalisedFields,
+    );
     state.normalisedFields = normalisedFields;
   }
 }
@@ -167,7 +170,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     (rawCsv: string, fileName: string) => {
       const csvData = Papa.parse(rawCsv.trim(), { header: true });
       const fields = csvData.meta.fields || [];
-      const normalisedFields = new Map(fields.map(normaliseHeader));
+      const normalisedFields = normaliseFields(fields);
       state.normalisedFields = normalisedFields;
       // Make a copy of the new state that we can pass to validators.
       const csvState = {
@@ -236,9 +239,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           })
           .catch((error) => {
             state.errors = [
-              error instanceof Error
-                ? error.message
-                : "Failed to read file",
+              error instanceof Error ? error.message : "Failed to read file",
             ];
           });
       }
