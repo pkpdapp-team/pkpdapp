@@ -289,14 +289,21 @@ export const validateState = (state: StepperState) => {
   const hasNoDosing = !validateDosingRows(state);
   const newData = state.data.map((row) => ({ ...row })) as Row[];
 
-  // normalise amount unit symbols (e.g. mm3, ug, uL→µL, umol→µmol)
+  // normalise unit symbols (e.g. mm3, ug, uL→µL, umol→µmol)
   const amountUnitField = fields.find(
     (field) => normalisedFields.get(field) === "Amount Unit",
+  );
+  const observationUnitField = fields.find(
+    (field) => normalisedFields.get(field) === "Observation Unit",
   );
   newData.forEach((row) => {
     if (amountUnitField) {
       const amountUnit = row[amountUnitField];
       row[amountUnitField] = normaliseUnitSymbol(amountUnit);
+    }
+    if (observationUnitField) {
+      const observationUnit = row[observationUnitField];
+      row[observationUnitField] = normaliseUnitSymbol(observationUnit);
     }
   });
   // check for mandatory fields
