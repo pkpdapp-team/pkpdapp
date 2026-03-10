@@ -182,7 +182,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       };
       const fieldValidation = validateState(csvState);
       state.hasDosingRows = validateDosingRows(csvState);
-      state.data = csvState.data as Data;
+      state.data = fieldValidation.data as Data;
       const groupColumn =
         fields.find(
           (field) => normalisedFields.get(field) === "Cat Covariate",
