@@ -253,11 +253,12 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
     state.normalisedFields = normalisedFields;
-    const { errors, warnings } = validateState({
+    const { errors, warnings, data } = validateState({
       ...state,
       normalisedFields,
       normalisedHeaders: [...normalisedFields.values()],
     });
+    state.data = data;
     state.errors = errors;
     state.warnings = warnings;
   };
