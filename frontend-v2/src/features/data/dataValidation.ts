@@ -1,5 +1,6 @@
 import { Row } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
+import { normaliseUnitSymbol } from "./unitUtils";
 
 const normalisation = {
   Ignore: ["ignore"],
@@ -286,6 +287,18 @@ export const validateState = (state: StepperState) => {
   const { fields, normalisedFields, normalisedHeaders } = state;
   const errors: string[] = [];
   const hasNoDosing = !validateDosingRows(state);
+  const newData = state.data.map((row) => ({ ...row })) as Row[];
+
+  // normalise amount unit symbols (e.g. mm3, ug, uL→µL, umol→µmol)
+  const amountUnitField = fields.find(
+    (field) => normalisedFields.get(field) === "Amount Unit",
+  );
+  newData.forEach((row) => {
+    if (amountUnitField) {
+      const amountUnit = row[amountUnitField];
+      row[amountUnitField] = normaliseUnitSymbol(amountUnit);
+    }
+  });
   // check for mandatory fields
   for (const field of manditoryHeaders) {
     if (!normalisedHeaders.includes(field)) {
@@ -360,7 +373,7 @@ export const validateState = (state: StepperState) => {
       "Observation units have not been defined in the dataset and need to be defined under Map Observations.",
     );
   }
-  return { errors, warnings };
+  return { errors, warnings, data: newData };
 };
 
 export function parsePerKgDoses(state: StepperState): void {
