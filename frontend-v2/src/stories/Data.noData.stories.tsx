@@ -382,22 +382,28 @@ export const MapObservations: Story = {
     });
     expect(variableSelect).toBeInTheDocument();
     await userEvent.click(variableSelect);
-    const listbox = await screen.findByRole("listbox");
+    let listbox = await screen.findByRole("listbox");
     const observationOption = await within(listbox).findByRole("option", {
-      name: "C1",
+      name: "E",
     });
     await userEvent.selectOptions(listbox, observationOption);
     variableSelect = canvas.getByRole("combobox", {
       name: "Variable",
     });
-    expect(variableSelect).toHaveTextContent("C1");
+    expect(variableSelect).toHaveTextContent("E");
     const unitSelect = canvas.getByRole("combobox", {
       name: "Units",
     });
     expect(unitSelect).toBeInTheDocument();
-    expect(unitSelect).toHaveTextContent("mg/L");
+    await userEvent.click(unitSelect);
+    listbox = await screen.findByRole("listbox");
+    const dimensionlessOption = await within(listbox).findByRole("option", {
+      name: "dimensionless",
+    });
+    await userEvent.selectOptions(listbox, dimensionlessOption);
+    expect(unitSelect).toHaveTextContent("dimensionless");
     const perKgCheckbox = canvas.getByRole("checkbox", {
-      name: "Per Body Weight(kg) for C1",
+      name: "Per Body Weight(kg) for E",
     });
     expect(perKgCheckbox).toBeInTheDocument();
     expect(perKgCheckbox).not.toBeChecked();
