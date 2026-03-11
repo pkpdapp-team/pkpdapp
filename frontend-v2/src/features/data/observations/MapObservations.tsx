@@ -157,13 +157,16 @@ const MapObservations: FC<IMapObservations> = ({
       nextData
         .map((row) => {
           row[observationVariableField] = row[observationVariableField] || "";
-          row[observationUnitField] = normaliseUnitSymbol(row[observationUnitField]) || "";
+          row[observationUnitField] =
+            normaliseUnitSymbol(row[observationUnitField]) || "";
           return row;
         })
         .filter((row) =>
           observationIdField
             ? row[observationIdField] === id
-            : observationField in row && row[observationField] !== "." && row[observationField] !== "",
+            : observationField in row &&
+              row[observationField] !== "." &&
+              row[observationField] !== "",
         )
         .forEach((row) => {
           row[observationVariableField] = value;
@@ -307,9 +310,13 @@ const MapObservations: FC<IMapObservations> = ({
                     (variable) =>
                       variable.qname === observationVariables[currentRow],
                   );
-                  const obsUnitSymbol = normaliseUnitSymbol(observationUnits[currentRow]);
+                  const obsUnitSymbol = normaliseUnitSymbol(
+                    observationUnits[currentRow],
+                  );
                   const obsUnit = units.find(
-                    (unit) => unit.symbol === obsUnitSymbol,
+                    (unit) =>
+                      unit.symbol ===
+                      (obsUnitSymbol === "dimensionless" ? "" : obsUnitSymbol),
                   );
                   return (
                     <ObservationIDRow
