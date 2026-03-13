@@ -5,7 +5,6 @@
 #
 
 from django.db import migrations
-import importlib
 
 
 def remove_soluble_tag(apps, schema_editor):
