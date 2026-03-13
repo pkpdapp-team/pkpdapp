@@ -44,13 +44,11 @@ P0 = E0*kdegE/(kdegP*FE) in [dimensionless]
 PDO = C_Drug^HC/(C_Drug^HC+C50^HC) in [dimensionless]
 	desc: Pharmacodynamic occupancy
 	
-STM = if(E0 == 0 , 
-	+Emax*PDO , 
-	(1+(Emax-1)*PDO)) in [dimensionless]
+STM = 1+(Emax-1)*PDO in [dimensionless]
 	desc: PD Stimulus
 
-dot(P) = kdegP*P0 - kdegP*P*(FE*(1+(Emax-1)*PDO) + (1-FE)) in [dimensionless]
+dot(P) = kdegP*P0 - kdegP*P*(FE*STM + (1-FE)) in [dimensionless]
 	desc: Precursor
 	
-dot(E) = kdegP*P*(FE*(1+(Emax-1)*PDO)) - kdegE*E in [dimensionless]
+dot(E) = kdegP*P*FE*STM - kdegE*E in [dimensionless]
 	desc: PD effect

@@ -37,16 +37,16 @@ CLdif = 0.00002 in [L/h]
 CLdifT1 = 0.00002 in [L/h]
 	desc: Apparent clearance due to diffusion of T1 from the vitreous to aqueous humour 	
 	
-CvhT1_0 = 1 in [pmol/L]
+CvhT1_0 = 10 in [pmol/L]
 	desc: Baseline concentration of the target in the vitreous humour compartment
 
-KD = 1 in [pmol/L]
+KD = 1000 in [pmol/L]
 	desc: Dissociation constant 
 
 koff = 1 in [1/h]
 	desc: Dissociation rate constant
 	
-alpha = 0 in [dimensionless]
+alpha = 0 in [1/h]
 	desc: feedback exponent 	
 	
 FAvid = 1 in [dimensionless]
@@ -108,13 +108,13 @@ PerInhvh_BaselineT1 = (1-CvhT1_f/CvhT1_0)*100 in [dimensionless]
   
 
 ROah_T1_Model = CahT1_b/CahT1_t*100 in [dimensionless]
-  desc: Receptor (Target 1) occupancy in vitreous humour
+  desc: Receptor (Target 1) occupancy in aqueous humour
 	
 PerInhahT1 = (1-CahT1_f/CahT1_t)*100 in [dimensionless]
-  desc: Percent inhbition relative to TOTAL target 1 in vitreous humour
+  desc: Percent inhbition relative to TOTAL target 1 in aqueous humour
 	
 PerInhah_BaselineT1 = (1-CahT1_f/(CvhT1_0*CLdifT1/Qah))*100 in [dimensionless]	
-  desc: Percent inhibition relative to the initial steady-state concentration of target 1 in vitreous humour
+  desc: Percent inhibition relative to the initial steady-state concentration of target 1 in aqueous humour
   
 STM = (CvhT1_0/CvhT1_f)^alpha in [dimensionless]
 	desc: feedback stimulus

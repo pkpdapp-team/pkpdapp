@@ -33,10 +33,10 @@ Vah = 0.00015 in [L]
 Qah = 0.00015 in [L/h]
 	desc: Aqueous humour flow 
 
-CvhT1_0 = 1 in [pmol/L]
+CvhT1_0 = 10 in [pmol/L]
 	desc: Baseline concentration of target 1 in the vitreous humour
 	
-CvhT2_0 = 1 in [pmol/L]
+CvhT2_0 = 10 in [pmol/L]
 	desc: Baseline concentration of target 2 in the vitreous humour	
 	
 CLdif = 0.00002 in [L/h]
@@ -48,10 +48,10 @@ CLdifT1 = 0.00002 in [L/h]
 CLdifT2 = 0.00002 in [L/h]
 	desc: Apparent clearance due to diffusion of T2 from the vitreous to aqueous humour 
 	
-KD1 = 1 in [pmol/L]
+KD1 = 1000 in [pmol/L]
 	desc: Dissociation constant of the interaction with the first target 
 	
-KD2 = 1 in [pmol/L]
+KD2 = 1000 in [pmol/L]
 	desc: Dissociation constant of the interaction with the second target	
 
 koff1 = 1 in [1/h]
@@ -109,7 +109,7 @@ CvhT2_t = (AvhT2_f + AvhDT2 + AvhDT1T2)/Vvh in [pmol/L]
   desc: Concentration of TOTAL target 2 in the vitreous humour compartment (Mw T2)
 
 CvhDT1T2_b = AvhDT1T2/Vvh in [pmol/L]	
-  desc: Concentration of TERNARY complexe in the vitreous humour compartment (Mw drug)	
+  desc: Concentration of TERNARY complex in the vitreous humour compartment (Mw drug)	
 	
 CahT1_f = AahT1_f/Vah in [pmol/L]
 	desc: Concentration of free T1 in the aqueous humour
@@ -118,19 +118,19 @@ CahT2_f = AahT2_f/Vah in [pmol/L]
 	desc: Concentration of free T2 in the aqueous humour
 	
 CahT1_b = (AahDT1 + AahDT1T2)/Vah in [pmol/L]	
-  desc: Concentration of BOUND target 1 in the aqeuous humour compartment (Mw T1)
+  desc: Concentration of BOUND target 1 in the aqueous humour compartment (Mw T1)
   
 CahT2_b = (AahDT2 + AahDT1T2)/Vah in [pmol/L]	
-  desc: Concentration of BOUND target 2 in the aqeuous humour compartment (Mw T2)
+  desc: Concentration of BOUND target 2 in the aqueous humour compartment (Mw T2)
 	
 CahT1_t = (AahT1_f + AahDT1 + AahDT1T2)/Vah in [pmol/L]	
-  desc: Concentration of TOTAL target 1 in the aqeuous humour compartment (Mw T1)
+  desc: Concentration of TOTAL target 1 in the aqueous humour compartment (Mw T1)
   
 CahT2_t = (AahT2_f + AahDT2 + AahDT1T2)/Vah in [pmol/L]	
-  desc: Concentration of TOTAL target 2 in the aqeuous humour compartment (Mw T2)
+  desc: Concentration of TOTAL target 2 in the aqueous humour compartment (Mw T2)
 
 CahDT1T2_b = AahDT1T2/Vah in [pmol/L]	
-  desc: Concentration of TERNARY complexe in the aqeuous humour compartment (Mw drug)	
+  desc: Concentration of TERNARY complex in the aqueous humour compartment (Mw drug)	
   
 
 ROvh_T1_Model = CvhT1_b/CvhT1_t*100 in [dimensionless]
@@ -194,16 +194,16 @@ dot(Aah_f) = CLdif*Cvh_f - Qah*Cah_f - kon1*Cah_f*CahT1_f*Vah + koff1*AahDT1 - k
     desc: Amount of FREE drug in the aqueous humour	
 
 dot(AahT1_f) = CLdifT1*CvhT1_f - Qah*CahT1_f - kon1*Cah_f*CahT1_f*Vah + koff1*AahDT1 -kon1*FAvid*AahDT2*CahT1_f +koff1*AahDT1T2 in [pmol]
-  desc: Amount of FREE target 1 in the vitreous humour compartment
+  desc: Amount of FREE target 1 in the aqueous humour compartment
 
 dot(AahT2_f) = CLdifT2*CvhT2_f - Qah*CahT2_f - kon2*Cah_f*CahT2_f*Vah + koff2*AahDT2 -kon2*FAvid*AahDT1*CahT2_f +koff2*AahDT1T2 in [pmol]
-  desc: Amount of FREE target 2 in the vitreous humour compartment 	
+  desc: Amount of FREE target 2 in the aqueous humour compartment 	
 
 dot(AahDT1) = CLdif/Vvh*AvhDT1 + kon1*Cah_f*CahT1_f*Vah - (koff1+Qah/Vah)*AahDT1 -kon2*FAvid*AahDT1*CahT2_f +koff2*AahDT1T2 in [pmol]
-  desc: Amount of BOUND drug/ target 1 in the vitreous humour compartment
+  desc: Amount of BOUND drug/ target 1 in the aqueous humour compartment
 
 dot(AahDT2) = CLdif/Vvh*AvhDT2 + kon2*Cah_f*CahT2_f*Vah - (koff2+Qah/Vah)*AahDT2 -kon1*FAvid*AahDT2*CahT1_f +koff1*AahDT1T2 in [pmol]
-  desc: Amount of BOUND drug/ target 2 in the vitreous humour compartment 
+  desc: Amount of BOUND drug/ target 2 in the aqueous humour compartment 
 
 dot(AahDT1T2) = CLdif/Vvh*AvhDT1T2 + kon2*FAvid*AahDT1*CahT2_f +kon1*FAvid*AahDT2*CahT1_f -(koff1+koff2+Qah/Vah)*AahDT1T2 in [pmol]
-  desc: Amount of ternary complexes between drug, T1 and T2 in the vitreous humour compartment	
+  desc: Amount of ternary complexes between drug, T1 and T2 in the aqueous humour compartment	
