@@ -48,7 +48,9 @@ const datasetHandlers = [
     const url = new URL(request.url);
     const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
     if (dosedPkModelId) {
-      const filtered = variables.filter(v => v.dosed_pk_model === parseInt(dosedPkModelId, 10));
+      const filtered = variables.filter(
+        (v) => v.dosed_pk_model === parseInt(dosedPkModelId, 10),
+      );
       return HttpResponse.json(filtered, { status: 200 });
     }
     return HttpResponse.json(variables, { status: 200 });
@@ -62,7 +64,12 @@ const meta: Meta<typeof Data> = {
     layout: "fullscreen",
     msw: {
       handlers: {
-        project: [...projectHandlers, ...protocolHandlers, ...unitHandlers, ...simulationHandlers],
+        project: [
+          ...projectHandlers,
+          ...protocolHandlers,
+          ...unitHandlers,
+          ...simulationHandlers,
+        ],
         dataset: datasetHandlers,
       },
     },
@@ -95,16 +102,24 @@ export const UploadFileWithoutAdministrationId: Story = {
     // but is not added to normalisedFields
     const csvWithoutAdm = `ID;Group;Route;Time;Units_Time;Conc;Units_Conc;AMT;Units_AMT
 1;1;IV;0;h;;;100;mg
+1;1;IV;2;h;;;10;mg
+1;1;IV;4;h;;;10;mg
 1;1;IV;2;h;10;mg/L;;
 1;1;IV;4;h;8;mg/L;;
 2;1;IV;0;h;;;100;mg
+2;1;IV;2;h;;;10;mg
+2;1;IV;4;h;;;10;mg
 2;1;IV;2;h;12;mg/L;;
 2;1;IV;4;h;9;mg/L;;
 3;2;SC;0;h;;;150;mg
+3;2;SC;2;h;;;50;mg
+3;2;SC;4;h;;;50;mg
 3;2;SC;2;h;15;mg/L;;
 3;2;SC;4;h;12;mg/L;;`;
 
-    const file = new File([csvWithoutAdm], "test_no_adm.csv", { type: "text/csv" });
+    const file = new File([csvWithoutAdm], "test_no_adm.csv", {
+      type: "text/csv",
+    });
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     // Verify data table is shown
@@ -118,14 +133,14 @@ export const UploadFileWithoutAdministrationId: Story = {
     });
     expect(dataTable).toBeInTheDocument();
 
-    // Check that we have the correct number of rows (9 data + 1 header)
+    // Check that we have the correct number of rows (15 data + 1 header)
     const rows = within(dataTable).getAllByRole("row");
-    expect(rows.length).toBe(10);
+    expect(rows.length).toBe(16);
 
     // Verify there's NO ADM column initially in the uploaded data
     const allSelects = within(dataTable).getAllByRole("combobox");
     const admSelectIndex = allSelects.findIndex(
-      (select) => select.textContent === "Administration ID"
+      (select) => select.textContent === "Administration ID",
     );
     // Should NOT find Administration ID in the initial upload
     expect(admSelectIndex).toBe(-1);
@@ -173,11 +188,11 @@ export const CreateAdministrationIdFromGroups: Story = {
     });
     expect(mapDosingHeading).toBeInTheDocument();
 
-    // Verify we have 2 dosing protocol rows (one for each group)
+    // Verify we have 6 dosing protocol rows (three for each admin ID)
     const variableSelects = canvas.getAllByRole("combobox", {
       name: "Variable",
     });
-    expect(variableSelects.length).toBe(2);
+    expect(variableSelects.length).toBe(6);
 
     // Select different dosing compartments for each group
     // First group (IV) -> A1 (direct dosing)
@@ -189,7 +204,7 @@ export const CreateAdministrationIdFromGroups: Story = {
     await userEvent.selectOptions(listbox, a1Option);
 
     // Second group (SC) -> Aa (subcutaneous absorption)
-    await userEvent.click(variableSelects[1]);
+    await userEvent.click(variableSelects[3]);
     listbox = await screen.findByRole("listbox");
     const aaOption = await within(listbox).findByRole("option", {
       name: "Aa",
@@ -205,16 +220,19 @@ export const CreateAdministrationIdFromGroups: Story = {
     const tableCells = within(dosingTable).getAllByRole("cell");
     // First column should contain Administration IDs
     // After mapping to different compartments, we should see admin IDs 1 and 2
-    const adminIdCells = tableCells.filter(cell =>
-      cell.textContent === "1" || cell.textContent === "2"
+    const adminIdCells = tableCells.filter(
+      (cell) => cell.textContent === "1" || cell.textContent === "2",
     );
     expect(adminIdCells.length).toBeGreaterThanOrEqual(2);
 
     // Proceed to next step
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).not.toBeDisabled();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).not.toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
 
     const nextButton3 = canvas.getByRole("button", {
       name: "Next",
@@ -239,10 +257,13 @@ export const CreateAdministrationIdFromGroups: Story = {
     await userEvent.selectOptions(obsListbox, c1Option);
 
     // Proceed to Preview
-    await waitFor(() => {
-      const nextBtn = canvas.getByRole("button", { name: "Next" });
-      expect(nextBtn).not.toBeDisabled();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const nextBtn = canvas.getByRole("button", { name: "Next" });
+        expect(nextBtn).not.toBeDisabled();
+      },
+      { timeout: 5000 },
+    );
 
     const nextButton4 = canvas.getByRole("button", {
       name: "Next",
@@ -266,16 +287,20 @@ export const CreateAdministrationIdFromGroups: Story = {
     // After the fix, it should be present with values 1 and 2 for the two groups
 
     // Wait for grid to be populated
-    await waitFor(() => {
-      const gridCells = within(dataGrid).getAllByRole("gridcell");
-      expect(gridCells.length).toBeGreaterThan(0);
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        const gridCells = within(dataGrid).getAllByRole("gridcell");
+        expect(gridCells.length).toBeGreaterThan(0);
+      },
+      { timeout: 5000 },
+    );
 
     // Get all column headers to find the Administration ID column
     const columnHeaders = within(dataGrid).getAllByRole("columnheader");
-    const adminIdHeader = columnHeaders.find(header =>
-      header.textContent?.includes("Administration ID") ||
-      header.textContent?.includes("ADM")
+    const adminIdHeader = columnHeaders.find(
+      (header) =>
+        header.textContent?.includes("Administration ID") ||
+        header.textContent?.includes("ADM"),
     );
 
     // Administration ID column should exist
@@ -285,14 +310,14 @@ export const CreateAdministrationIdFromGroups: Story = {
     const gridCells = within(dataGrid).getAllByRole("gridcell");
 
     // Find cells containing Administration ID value "1" for group 1 (IV)
-    const adminId1Cells = gridCells.filter(cell => {
+    const adminId1Cells = gridCells.filter((cell) => {
       const text = cell.textContent?.trim();
       return text === "1";
     });
     expect(adminId1Cells.length).toBeGreaterThan(0);
 
     // Find cells containing Administration ID value "2" for group 2 (SC)
-    const adminId2Cells = gridCells.filter(cell => {
+    const adminId2Cells = gridCells.filter((cell) => {
       const text = cell.textContent?.trim();
       return text === "2";
     });
