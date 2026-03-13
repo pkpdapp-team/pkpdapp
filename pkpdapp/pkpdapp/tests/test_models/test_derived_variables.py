@@ -129,10 +129,13 @@ class TestDerivedVariables(TestCase):
         self.assertEqual(pmin_var.unit, parent_unit)
         self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
 
-        # Check that Km has the same unit as parent
+        # Check that Km has the same unit as secondary variable
+        secondary_unit = self.pkpd_model.variables.get(qname="PKCompartment.C1").unit
+        secondary_per_kg = self.pkpd_model.variables.get(
+            qname="PKCompartment.C1").unit_per_body_weight
         km_var = self.pkpd_model.variables.get(qname="PKNonlinearities.Km_C_Drug")
-        self.assertEqual(km_var.unit, parent_unit)
-        self.assertEqual(km_var.unit_per_body_weight, parent_per_kg)
+        self.assertEqual(km_var.unit, secondary_unit)
+        self.assertEqual(km_var.unit_per_body_weight, secondary_per_kg)
 
     def test_emax(self):
         parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
