@@ -643,18 +643,31 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                     unit = Unit.objects.filter(
                         symbol=defaultVal.get("unit", "")
                     ).first()
+                    # TODO: previously only the vol_per_kg units were per body weight
+                    # but now vmax can also be per body weight
+                    # in the future might want to swap to just enumerating some
+                    # names...?
                     is_vol_per_kg = False
+                    is_vmax = v.name in ["Vmax"]
                     if unit is not None:
                         is_vol_per_kg = unit.m == 3 and unit.g == -1
                         if is_vol_per_kg:
                             unit = Unit.objects.filter(
                                 symbol=defaultVal.get("unit", "")[:-3]
                             ).first()
+                    # vmax is a special case that might be in units of amount/time
+                    # or amount/(time*kg)
+                    if is_vmax:
+                        is_per_kg = defaultVal.get("unit", "").endswith("/kg")
+                        if is_per_kg:
+                            unit = Unit.objects.filter(
+                                symbol=defaultVal.get("unit", "")[:-3]).first()
                     value = defaultVal.get("value", None)
                     if value is None or unit is None:
                         continue
                     v.default_value = value
-                    v.unit_per_body_weight = is_preclinical and is_vol_per_kg
+                    v.unit_per_body_weight = is_preclinical and (
+                        is_vol_per_kg or is_vmax)
                     v.unit = unit
                     if not v._state.adding:
                         v.save()
