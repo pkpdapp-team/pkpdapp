@@ -339,7 +339,7 @@ class MyokitModelMixin:
                 "PKCompartment.RateAbs",
             ]
             if not getattr(self, "has_saturation", True):
-                removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
+                removed_variables += ["PKCompartment.CLmax"]
             if not getattr(self, "has_effect", True):
                 removed_variables += [
                     "PKCompartment.Ce",
