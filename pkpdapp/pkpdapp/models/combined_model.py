@@ -663,12 +663,13 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                             unit = Unit.objects.filter(
                                 symbol=defaultVal.get("unit", "")[:-3]).first()
                     value = defaultVal.get("value", None)
-                    if value is None or unit is None:
-                        continue
-                    v.default_value = value
-                    v.unit_per_body_weight = is_preclinical and (
-                        is_vol_per_kg or is_vmax)
-                    v.unit = unit
+                    print(f"setting {v.qname} to default value {value} and unit {unit}")
+                    if value is not None:
+                        v.default_value = value
+                    if unit is not None:
+                        v.unit_per_body_weight = is_preclinical and (
+                            is_vol_per_kg or is_vmax)
+                        v.unit = unit
                     if not v._state.adding:
                         v.save()
 
