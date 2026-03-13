@@ -392,20 +392,14 @@ class Variable(StoredModel):
                     "PKNonlinearities"
                 ) and myokit_variable.name().startswith("Km_"):
                     parent_name = myokit_variable.name()[3:]
-                    print(
-                        f"checking for parent variable {parent_name} of {myokit_variable.qname()}")
                     if parent_name is not None:
                         derived_variable = DerivedVariable.objects.filter(
                             pkpd_model=model,
                             pk_variable__name=parent_name,
                         ).first()
-                        print(
-                            f"found derived variable {derived_variable} for parent variable {parent_name}")
                         if derived_variable is not None:
                             p_var = derived_variable.secondary_variable
                             if p_var is not None:
-                                print(
-                                    f"found parent variable {p_var.qname} with unit {p_var.unit}")
                                 unit = p_var.unit
                                 unit_per_body_weight = p_var.unit_per_body_weight
 
