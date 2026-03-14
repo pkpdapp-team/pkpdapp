@@ -40,7 +40,7 @@ class DataParser:
             "unit time",
             "rrltu",
         ],
-        "AMOUNT": ["amt", "amount", "dosea"],
+        "AMOUNT": ["amt", "amount"],
         "AMOUNT_UNIT": [
             "amount unit",
             "amt_unit",

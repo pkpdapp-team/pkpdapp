@@ -477,7 +477,7 @@ export const UploadADPCFile: Story = {
     expect(allSelects[2]).toHaveTextContent("Time Unit"); // RRLTU → Time Unit
     expect(allSelects[3]).toHaveTextContent("Observation"); // AVAL → Observation
     expect(allSelects[4]).toHaveTextContent("Observation Unit"); // AVALU → Observation Unit
-    expect(allSelects[5]).toHaveTextContent("Amount"); // DOSEA → Amount
+    expect(allSelects[5]).toHaveTextContent("Cont Covariate"); // DOSEA → Cont Covariate
     expect(allSelects[6]).toHaveTextContent("Amount Unit"); // DOSEU → Amount Unit
 
     // Check that we have 7 rows (6 data + 1 header)

@@ -14,10 +14,10 @@ class TestColumnMapping(TestCase):
 
     def test_adpc_column_mapping(self):
         """Test that ADPC column names are correctly mapped"""
-        csv_data = """USUBJID,AFRLT,RRLTU,AVAL,AVALU,DOSEA,DOSEU
-1,0,h,100,ng/mL,50,mg
-1,1,h,80,ng/mL,50,mg
-2,0,h,120,ng/mL,50,mg"""
+        csv_data = """USUBJID,AFRLT,RRLTU,AVAL,AVALU,AMT,DOSEA,DOSEU
+1,0,h,100,ng/mL,50,7,mg
+1,1,h,80,ng/mL,50,7,mg
+2,0,h,120,ng/mL,50,7,mg"""
 
         parser = DataParser()
         data = parser.parse_from_str(csv_data)
@@ -28,14 +28,19 @@ class TestColumnMapping(TestCase):
         self.assertIn("TIME_UNIT", data.columns)  # RRLTU
         self.assertIn("OBSERVATION", data.columns)  # AVAL
         self.assertIn("OBSERVATION_UNIT", data.columns)  # AVALU
-        self.assertIn("AMOUNT", data.columns)  # DOSEA
+        self.assertIn("AMOUNT", data.columns)  # AMT
         self.assertIn("AMOUNT_UNIT", data.columns)  # DOSEU
+
+        # Verify DOSEA remains a covariate and does not map to AMOUNT
+        self.assertIn("dosea", data.columns)
+        self.assertListEqual(data["AMOUNT"].tolist(), [50, 50, 50])
+        self.assertListEqual(data["dosea"].tolist(), [7, 7, 7])
 
     def test_adpc_case_insensitive(self):
         """Test that ADPC column mapping is case-insensitive"""
-        csv_data = """usubjid,afrlt,aval,dosea
-1,0,100,50
-2,1,80,50"""
+        csv_data = """usubjid,afrlt,aval,amt,dosea
+1,0,100,25,5
+2,1,80,30,6"""
 
         parser = DataParser()
         data = parser.parse_from_str(csv_data)
@@ -44,19 +49,26 @@ class TestColumnMapping(TestCase):
         self.assertIn("TIME", data.columns)
         self.assertIn("OBSERVATION", data.columns)
         self.assertIn("AMOUNT", data.columns)
+        self.assertIn("dosea", data.columns)
+        self.assertListEqual(data["AMOUNT"].tolist(), [25, 30])
+        self.assertListEqual(data["dosea"].tolist(), [5, 6])
 
     def test_adpc_dataset_creation(self):
         """Test end-to-end dataset creation with ADPC format"""
-        csv_data = """USUBJID,AFRLT,RRLTU,AVAL,AVALU,DOSEA,DOSEU
-1,0,h,.,ng/mL,50,mg
-1,0.5,h,95,ng/mL,50,mg
-1,1,h,80,ng/mL,50,mg
-2,0,h,.,ng/mL,50,mg
-2,0.5,h,115,ng/mL,50,mg
-2,1,h,95,ng/mL,50,mg"""
+        csv_data = """USUBJID,AFRLT,RRLTU,AVAL,AVALU,AMT,DOSEA,DOSEU
+1,0,h,.,ng/mL,50,7,mg
+1,0.5,h,95,ng/mL,50,7,mg
+1,1,h,80,ng/mL,50,7,mg
+2,0,h,.,ng/mL,50,7,mg
+2,0.5,h,115,ng/mL,50,7,mg
+2,1,h,95,ng/mL,50,7,mg"""
 
         parser = DataParser()
         data = parser.parse_from_str(csv_data)
+
+        self.assertIn("AMOUNT", data.columns)
+        self.assertIn("dosea", data.columns)
+        self.assertListEqual(data["AMOUNT"].tolist(), [50, 50, 50, 50, 50, 50])
 
         dataset = Dataset.objects.create(
             name="ADPC Test Dataset",
