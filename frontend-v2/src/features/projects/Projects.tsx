@@ -28,6 +28,7 @@ import {
   useSimulationCreateMutation,
   useUnitListQuery,
   useCompoundListQuery,
+  useTagListQuery,
   CompoundRead,
   ProjectRead,
 } from "../../app/backendApi";
@@ -111,6 +112,7 @@ const ProjectTable: FC = () => {
   const user = useSelector((state: RootState) => state.login.user);
   const { data: compounds, isLoading: compoundsLoading } =
     useCompoundListQuery();
+  const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
 
   let projects = projectsUnordered ? [...projectsUnordered] : undefined;
 
@@ -123,7 +125,7 @@ const ProjectTable: FC = () => {
   const [addSimulation] = useSimulationCreateMutation();
   const { addDataset } = useDataset(selectedProject);
 
-  if (isLoading || unitsLoading || compoundsLoading) {
+  if (isLoading || unitsLoading || compoundsLoading || tagsLoading) {
     return <div>Loading...</div>;
   }
 
@@ -178,6 +180,9 @@ const ProjectTable: FC = () => {
   }
 
   const projectNames = projects?.map((project) => project.name) || [];
+  const favoritePkTagId = tagsData?.find(
+    (tag) => tag.name === "favorites",
+  )?.id;
   const handleAddRow = (type: "SM" | "LM") => {
     const user_access = [
       { id: user?.id || 0, read_only: false, user: user?.id || 0, project: 0 },
@@ -199,6 +204,7 @@ const ProjectTable: FC = () => {
       compound: 0,
       user_access,
       species_weight_unit: kg_unit,
+      pk_tags: favoritePkTagId ? [favoritePkTagId] : [],
     };
 
     let compound: Compound | undefined = undefined;
