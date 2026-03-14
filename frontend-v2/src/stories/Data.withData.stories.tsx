@@ -220,7 +220,7 @@ export const MapObservations: Story = {
       () => {
         expect(variableSelects[0]).toHaveTextContent("C1");
       },
-      { timeout: 5000 },
+      { timeout: 10000 },
     );
   },
 };

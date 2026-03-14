@@ -9,6 +9,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     StoredModel,
+    DerivedVariable,
 )
 import numpy as np
 from django.db.models import Q
@@ -383,18 +384,24 @@ class Variable(StoredModel):
                     "PKNonlinearities"
                 ) and myokit_variable.name().endswith("_min"):
                     parent_name = myokit_variable.name()[:-4]
-                    parent_var = model.variables.filter(name=parent_name).first()
-                    if parent_var is not None:
-                        unit = parent_var.unit
-                        unit_per_body_weight = parent_var.unit_per_body_weight
+                    p_var = model.variables.filter(name=parent_name).first()
+                    if p_var is not None:
+                        unit = p_var.unit
+                        unit_per_body_weight = p_var.unit_per_body_weight
                 elif myokit_variable.qname().startswith(
                     "PKNonlinearities"
                 ) and myokit_variable.name().startswith("Km_"):
                     parent_name = myokit_variable.name()[3:]
-                    parent_var = model.variables.filter(name=parent_name).first()
-                    if parent_var is not None:
-                        unit = parent_var.unit
-                        unit_per_body_weight = parent_var.unit_per_body_weight
+                    if parent_name is not None:
+                        derived_variable = DerivedVariable.objects.filter(
+                            pkpd_model=model,
+                            pk_variable__name=parent_name,
+                        ).first()
+                        if derived_variable is not None:
+                            p_var = derived_variable.secondary_variable
+                            if p_var is not None:
+                                unit = p_var.unit
+                                unit_per_body_weight = p_var.unit_per_body_weight
 
             state = myokit_variable.is_state()
             if state:
