@@ -111,11 +111,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
 
   const missingAdministrationIds = dosingRows.some(
     (row) =>
-      !(
-        administrationIdField in row ||
-        row[administrationIdField] === "" ||
-        row[administrationIdField] === "."
-      ),
+      !(administrationIdField in row) ||
+      row[administrationIdField] === "" ||
+      row[administrationIdField] === ".",
   );
   if (amountField && missingAdministrationIds) {
     generateAdministrationIds(dosingRows, "Administration ID", groupIdField);
@@ -161,19 +159,14 @@ const DosingProtocols: FC<IDosingProtocols> = ({
 
     // Check if all administrations have a variable and unit selected
     const allAdministrationsValid = uniqueAdministrationIds.every((id) => {
-      const rows = dosingRows.filter(
+      const firstRow = dosingRows.find(
         (row) => row[administrationIdField] === id,
       );
-      const firstRow = rows[0];
 
       const hasVariable =
-        firstRow &&
-        firstRow[amountVariableField] &&
-        firstRow[amountVariableField] !== "";
+        firstRow?.[amountVariableField] && firstRow[amountVariableField] !== "";
       const hasUnit =
-        firstRow &&
-        firstRow[amountUnitField] &&
-        firstRow[amountUnitField] !== "";
+        firstRow?.[amountUnitField] && firstRow[amountUnitField] !== "";
 
       return hasVariable && hasUnit;
     });
@@ -231,12 +224,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       );
       nextData
         .filter((row) => {
-          if (!uniqueDoseRow) {
-            return row[dosingRowKeyField] === rowKey;
-          }
-          return doseGroupingFields.every(
-            (field) => row[field] === uniqueDoseRow[field],
-          );
+          return uniqueDoseRow
+            ? doseGroupingFields.every(
+                (field) => row[field] === uniqueDoseRow[field],
+              )
+            : row[dosingRowKeyField] === rowKey;
         })
         .forEach((row) => {
           row[amountField] = value;
@@ -304,12 +296,11 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       );
       nextData
         .filter((row) => {
-          if (!uniqueDoseRow) {
-            return row[dosingRowKeyField] === rowKey;
-          }
-          return doseGroupingFields.every(
-            (field) => row[field] === uniqueDoseRow[field],
-          );
+          return uniqueDoseRow
+            ? doseGroupingFields.every(
+                (field) => row[field] === uniqueDoseRow[field],
+              )
+            : row[dosingRowKeyField] === rowKey;
         })
         .forEach((row) => {
           row[field] = value;
@@ -391,8 +382,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
                 const amountUnits = units?.find(
                   (unit) => unit.symbol === "mg",
                 )?.compatible_units;
-                const adminUnit =
-                  amountUnitField && row && row[amountUnitField];
+                const adminUnit = amountUnitField && row?.[amountUnitField];
                 const normalisedAdminUnit = normaliseUnitSymbol(
                   adminUnit || "",
                 );
@@ -498,7 +488,7 @@ function DosingTableRow({
   handleTimeChange,
   handleAdditionalDosesChange,
   handleInterDoseIntervalChange,
-}: DosingTableRowProps) {
+}: Readonly<DosingTableRowProps>) {
   return (
     <TableRow key={rowKey}>
       <TableCell sx={{ width: "5rem" }}>{adminId}</TableCell>

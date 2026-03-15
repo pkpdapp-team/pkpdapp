@@ -14,11 +14,12 @@ export function useUniqueDosingRows(
         doseGroupingFields.every((field) => r[field] === row[field]),
       ) === index,
   );
-  uniqueDosingRows.forEach((row) => {
-    if (!row[dosingRowKeyField]) {
-      row[dosingRowKeyField] = `dosing-row-${nextDosingRowKey.current}`;
-      nextDosingRowKey.current += 1;
+  return uniqueDosingRows.map((row) => {
+    if (row[dosingRowKeyField]) {
+      return row;
     }
+    row[dosingRowKeyField] = `dosing-row-${nextDosingRowKey.current}`;
+    nextDosingRowKey.current += 1;
+    return row;
   });
-  return uniqueDosingRows;
 }

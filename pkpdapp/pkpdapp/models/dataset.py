@@ -244,7 +244,13 @@ class Dataset(models.Model):
 
             group = groups[group_id]
             protocol_key = (group_id, admin_id)
-            protocol = protocol_map.get(protocol_key)
+            try:
+                protocol = protocol_map[protocol_key]
+            except KeyError:
+                raise ValueError(
+                    f"No protocol found for group {group_id} "
+                    f"and administration {admin_id}"
+                )
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1
