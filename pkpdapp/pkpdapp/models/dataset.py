@@ -142,7 +142,7 @@ class Dataset(models.Model):
                 subject.group = group
                 subject.save()
         # create group protocol
-        admin_id_to_protocol = {}
+        protocol_map = {}
         dosing_rows = data.query('AMOUNT_VARIABLE != ""')
         for i, row in (
             dosing_rows[
@@ -187,7 +187,8 @@ class Dataset(models.Model):
                 amount_per_body_weight=amount_per_body_weight,
                 project=self.project,
             )
-            admin_id_to_protocol[admin_id] = protocol
+            protocol_key = (group_id, admin_id)
+            protocol_map[protocol_key] = protocol
             group.protocols.add(protocol)
             group.save()
 
@@ -242,7 +243,14 @@ class Dataset(models.Model):
             event_id = row["EVENT_ID"]
 
             group = groups[group_id]
-            protocol = admin_id_to_protocol[admin_id]
+            protocol_key = (group_id, admin_id)
+            try:
+                protocol = protocol_map[protocol_key]
+            except KeyError:
+                raise ValueError(
+                    f"No protocol found for group {group_id} "
+                    f"and administration {admin_id}"
+                )
 
             try:
                 repeats = int(row["ADDITIONAL_DOSES"]) + 1
