@@ -16,8 +16,20 @@ export default function useSubjectGroups() {
     { skip: !selectedProject },
   );
 
+  // sort groups starting alphabetically, but with those starting with Sim first
+  const sortedGroups = groups ? [...groups].sort((a, b) => {
+    if (a.name.startsWith("Sim") && !b.name.startsWith("Sim")) {
+      return -1;
+    }
+    if (!a.name.startsWith("Sim") && b.name.startsWith("Sim")) {
+      return 1;
+    }
+    return a.name.localeCompare(b.name);
+  }) : [];
+
+
   return {
-    groups,
+    groups: sortedGroups,
     refetchGroups,
     isLoading,
   };
