@@ -532,14 +532,21 @@ class MyokitModelMixin:
         ):
 
             project = self.get_project()
-            protocol = list(dosing_protocols.values())[0]
-            dose = protocol.doses.first()
             myokit_var = model.get("PKNonlinearities.C_Drug")
-            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, myokit_var, protocol.compound, target=None
-            )
-            first_dose_value = dose.amount
-            myokit_var.set_rhs(first_dose_value * amount_conversion_factor)
+            # set C_Drug equal to the sum of the first dose amounts for all protocols
+            # within this group
+            # TODO: later we will get users to select which variable to use for the
+            # dose concentration via the nonlinearities UI interface.
+            dose_sum = 0.0
+            for protocol in dosing_protocols.values():
+                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                    project, protocol, myokit_var, protocol.compound, target=None
+                )
+                dose_sum += protocol.doses.first().amount * amount_conversion_factor
+
+            # C_Drug cannot be zero as it might be raised to a negative power
+            dose_sum = max(dose_sum, 1e-6)
+            myokit_var.set_rhs(dose_sum)
 
     def simulate_model(
         self, outputs=None, variables=None, time_max=None, dosing_protocols=None
