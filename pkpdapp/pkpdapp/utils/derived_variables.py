@@ -195,9 +195,7 @@ def add_area_under_curve(
         initial_value=0,
         unit=myokit_var.unit() * time_var.unit(),
     )
-    auc_var.meta["desc"] = (
-        f'Area under curve for {var_desc}'  # noqa: E501
-    )
+    auc_var.meta["desc"] = f"Area under curve for {var_desc}"  # noqa: E501
     return auc_var
 
 
@@ -859,7 +857,7 @@ def add_power(
     a_d_var = myokit_compartment.add_variable(a_d_var_name)
     a_d_var.meta["desc"] = f"Power Exponent for {var_name}"
     a_d_var.set_unit(myokit.units.dimensionless)
-    a_d_var.set_rhs(myokit.Number(1))
+    a_d_var.set_rhs(myokit.Number(0))
     if is_negative:
         a = myokit.Multiply(myokit.Number(-1), myokit.Name(a_d_var))
     else:
