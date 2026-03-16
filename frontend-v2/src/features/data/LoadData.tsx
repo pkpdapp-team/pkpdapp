@@ -168,6 +168,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   // Helper function to process CSV data (used for both CSV and Excel files)
   const processCsvData = useCallback(
     (rawCsv: string, fileName: string) => {
+      console.log(state.encoding);
       const csvData = Papa.parse(rawCsv.trim(), { header: true });
       const fields = csvData.meta.fields || [];
       const normalisedFields = normaliseFields(fields);
@@ -192,7 +193,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
         .concat(fieldValidation.errors);
       state.groupColumn = groupColumn;
       state.errors = errors;
-      state.warnings = fieldValidation.warnings;
+      state.warnings = [...state.warnings, ...fieldValidation.warnings];
       state.fileName = fileName;
     },
     [state],
@@ -234,8 +235,12 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       } else {
         // Handle CSV files
         readFileAsText(file)
-          .then((rawCsv) => {
-            processCsvData(rawCsv, file.name);
+          .then(({ text, encoding, source }) => {
+            console.info(
+              `Detected file encoding: ${encoding} (source: ${source})`,
+            );
+            state.encoding = encoding;
+            processCsvData(text, file.name);
           })
           .catch((error) => {
             state.errors = [
