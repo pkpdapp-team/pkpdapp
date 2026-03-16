@@ -41,4 +41,5 @@ from .views import (
     ResultsTableView,
     TagView,
     EfficacyExperimentView,
+    ChatbotView,
 )
