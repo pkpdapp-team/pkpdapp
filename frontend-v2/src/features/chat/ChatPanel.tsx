@@ -44,7 +44,9 @@ const ChatPanel: FC = () => {
   const drawerWidth = useSelector(selectChatWidth);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const drawerPaperRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
 
   const { messages, sendMessage, setMessages, status, error, stop } = useChat({
     transport,
@@ -62,11 +64,6 @@ const ChatPanel: FC = () => {
   }, [messages, status]);
 
   const isLoading = status === "submitted" || status === "streaming";
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
@@ -103,6 +100,78 @@ const ChatPanel: FC = () => {
     },
     [drawerWidth, dispatch],
   );
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const scrollToBottom = () => {
+      if (stickToBottomRef.current) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+
+    const observer = new MutationObserver(scrollToBottom);
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Re-pin to bottom whenever the user sends a new message
+  useEffect(() => {
+    if (status === "submitted") {
+      stickToBottomRef.current = true;
+      const el = scrollContainerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+  }, [status]);
+
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0) {
+        stickToBottomRef.current = false;
+      }
+    };
+
+    let lastTouchY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      // finger moving down = scrolling up
+      if (e.touches[0].clientY > lastTouchY) {
+        stickToBottomRef.current = false;
+      }
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: true });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    // Re-engage when the user scrolls back to the bottom
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    if (atBottom) {
+      stickToBottomRef.current = true;
+    }
+  }, []);
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -211,6 +280,8 @@ const ChatPanel: FC = () => {
 
         {/* Messages */}
         <Box
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
           sx={{
             flexGrow: 1,
             overflowY: "auto",
@@ -242,21 +313,35 @@ const ChatPanel: FC = () => {
               </Typography>
             </Stack>
           )}
-          {messages.map((msg) => {
+          {messages.map((msg, idx) => {
             const isUser = msg.role === "user";
+            const isLastAssistant =
+              !isUser &&
+              status === "streaming" &&
+              idx === messages.length - 1;
             return (
               <MessageBubble
                 key={msg.id}
                 parts={msg.parts ?? []}
                 isUser={isUser}
+                isStreaming={isLastAssistant}
               />
             );
           })}
-          {status === "submitted" && (
-            <Box sx={{ mb: 2 }}>
-              <TypingIndicator />
-            </Box>
-          )}
+          {(status === "submitted" || // message submitted, and..
+            // below: if we are waiting for the actual LLM response to arrive...
+            (status === "streaming" &&
+              !messages
+                .filter((m) => m.role === "assistant")
+                .at(-1)
+                ?.parts?.some(
+                  (p) => p.type === "text" && p.text.length > 0,
+                ))) && (
+              // then... show typing indicator
+              <Box sx={{ mb: 2 }}>
+                <TypingIndicator />
+              </Box>
+            )}
           <div ref={messagesEndRef} />
         </Box>
 
