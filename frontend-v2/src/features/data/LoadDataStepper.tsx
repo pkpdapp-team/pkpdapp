@@ -60,6 +60,7 @@ type Data = Row[];
 type Field = string;
 
 export type StepperState = {
+  encoding: string;
   fileName: string;
   fields: Field[];
   normalisedHeaders: Field[];
@@ -110,11 +111,18 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [fileName, setFileName] = useState<string>(
     dataset?.name || "New Dataset",
   );
+  const [encoding, setEncoding] = useState<string>("utf-8");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const onNotificationsOpenChange = () =>
     setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
+    get encoding() {
+      return encoding;
+    },
+    set encoding(newEncoding: string) {
+      setEncoding(newEncoding);
+    },
     get fileName() {
       return fileName;
     },

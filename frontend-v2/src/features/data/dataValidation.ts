@@ -296,6 +296,13 @@ export const validateState = (state: StepperState) => {
   const errors: string[] = [];
   const hasNoDosing = !validateDosingRows(state);
   const newData = state.data.map((row) => ({ ...row })) as Row[];
+  const warnings: string[] = [];
+
+  if (state.encoding !== "utf-8") {
+    warnings.push(
+      `Detected file encoding: ${state.encoding}. If you see garbled characters, please ensure your file is saved with UTF-8 encoding.`,
+    );
+  }
 
   // normalise unit symbols (e.g. mm3, ug, uL→µL, umol→µmol)
   const amountUnitField = fields.find(
@@ -321,7 +328,7 @@ export const validateState = (state: StepperState) => {
     }
   }
 
-  const warnings: string[] = Object.values(validateCatCovariates(state));
+  warnings.push(...Object.values(validateCatCovariates(state)));
 
   const timeField = fields.find(
     (field) => normalisedFields.get(field) === "Time",
