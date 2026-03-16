@@ -21,6 +21,7 @@ import { SimulateResponse } from "./app/backendApi";
 import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
 import { ProjectDescriptionProvider } from "./shared/contexts/ProjectDescriptionContext";
 import { PageName, setPage } from "./features/main/mainSlice";
+import ChatPanel from "./features/chat/ChatPanel";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -75,6 +76,7 @@ function App() {
           <CollapsibleSidebarProvider>
             <ProjectDescriptionProvider>
               <Sidebar />
+              <ChatPanel />
               <ToastContainer />
             </ProjectDescriptionProvider>
           </CollapsibleSidebarProvider>
