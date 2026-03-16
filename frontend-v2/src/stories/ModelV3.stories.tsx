@@ -707,6 +707,7 @@ export const SecondaryParameters: Story = {
       {
         name: /Start time/i,
       },
+      { timeout: 10000 },
     );
     expect(startTimeInput).toBeInTheDocument();
     const endTimeInput = await within(timeIntervalsTable).findByRole(

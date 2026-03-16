@@ -50,7 +50,7 @@ import useSubjectGroups from "../../hooks/useSubjectGroups";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
-import { getYAxisOptions, renameVariable } from "./utils";
+import { filterOutputs, getYAxisOptions, renameVariable } from "./utils";
 
 const EMPTY_MAP: SliderValues = new Map();
 
@@ -327,14 +327,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     }
   }, [handleSubmit, isDirty, submitCount, simulation, updateSimulation]);
 
-  const filterOutputs = model?.is_library_model
-    ? ["environment.t"]
-    : [];
-  const outputs =
-    variables?.filter(
-      (variable) =>
-        !variable.constant && !filterOutputs.includes(variable.qname) && variable.name !== "C_Drug"
-    ) || [];
+  const outputs = filterOutputs(model, variables || []);
   const outputsSorted = outputs.map((variable) => {
     if (variable.name.startsWith("C")) {
       return { ...variable, priority: 3 };

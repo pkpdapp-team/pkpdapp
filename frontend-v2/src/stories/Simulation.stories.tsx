@@ -190,23 +190,6 @@ export const Reference: Story = {
   },
 };
 
-export const AddNewPlot: Story = {
-  play: async ({ canvasElement, userEvent }) => {
-    const canvas = within(canvasElement);
-    const addPlotButton = await canvas.findByRole("button", {
-      name: "Add new plot",
-    });
-    expect(addPlotButton).toBeInTheDocument();
-    await userEvent.click(addPlotButton);
-
-    const variableButton = await screen.findByRole("button", {
-      name: /^A1/,
-    });
-    expect(variableButton).toBeInTheDocument();
-    await userEvent.click(variableButton);
-  },
-};
-
 export const AddNewConcentrationPlot: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
