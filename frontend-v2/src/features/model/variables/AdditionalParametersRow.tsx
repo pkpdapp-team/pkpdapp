@@ -22,6 +22,7 @@ import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
 import { DerivedVariableType, derivedIndex } from "../derivedVariable";
+import { filterOutputs } from "../../simulation/utils";
 
 interface Props {
   project: ProjectRead;
@@ -192,7 +193,7 @@ const AdditionalParametersRow: FC<Props> = ({
   const noDosing = !isAmount;
 
   const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null;
-  const noSecondaryParameters = isDerivedVariable || variable.qname === "PKCompartment.CLimm";
+  const noSecondaryParameters = isDerivedVariable || filterOutputs(model, [variable]).length === 0;
 
   if (noMapToPD && noDerivedVariables && noSecondaryParameters && noDosing) {
     return null;
