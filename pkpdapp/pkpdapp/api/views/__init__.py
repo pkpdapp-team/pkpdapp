@@ -58,3 +58,4 @@ from .user import UserView
 from .variable import VariableView
 from .likelihoods import LogLikelihoodView
 from .tag import TagView
+from .chatbot import ChatbotView
