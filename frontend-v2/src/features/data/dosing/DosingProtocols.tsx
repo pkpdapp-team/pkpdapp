@@ -99,6 +99,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const doseGroupingFields = [
     administrationIdField,
     amountField,
+    groupIdField,
     timeField,
     addlDosesField,
     interDoseField,

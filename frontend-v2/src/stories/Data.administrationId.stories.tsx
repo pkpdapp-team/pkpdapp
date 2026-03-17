@@ -115,7 +115,12 @@ export const UploadFileWithoutAdministrationId: Story = {
 3;2;SC;2;h;;;50;mg
 3;2;SC;4;h;;;50;mg
 3;2;SC;2;h;15;mg/L;;
-3;2;SC;4;h;12;mg/L;;`;
+3;2;SC;4;h;12;mg/L;;
+4;3;SC;0;h;;;150;mg
+4;3;SC;2;h;;;50;mg
+4;3;SC;4;h;;;50;mg
+4;3;SC;2;h;15;mg/L;;
+4;3;SC;4;h;12;mg/L;;`;
 
     const file = new File([csvWithoutAdm], "test_no_adm.csv", {
       type: "text/csv",
@@ -133,9 +138,9 @@ export const UploadFileWithoutAdministrationId: Story = {
     });
     expect(dataTable).toBeInTheDocument();
 
-    // Check that we have the correct number of rows (15 data + 1 header)
+    // Check that we have the correct number of rows (20 data + 1 header)
     const rows = within(dataTable).getAllByRole("row");
-    expect(rows.length).toBe(16);
+    expect(rows.length).toBe(21);
 
     // Verify there's NO ADM column initially in the uploaded data
     const allSelects = within(dataTable).getAllByRole("combobox");
