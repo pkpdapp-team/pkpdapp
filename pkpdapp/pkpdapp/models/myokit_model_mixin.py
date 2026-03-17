@@ -540,7 +540,7 @@ class MyokitModelMixin:
             dose_sum = 0.0
             for protocol in dosing_protocols.values():
                 amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                    project, protocol, myokit_var, protocol.compound, target=None
+                    project, protocol, myokit_var, project.compound, target=None
                 )
                 dose_sum += protocol.doses.first().amount * amount_conversion_factor
 
