@@ -21,36 +21,36 @@ TS0 = 0.1 in [dimensionless]
 
 kmax = 0.05 in [1/h]
 	desc: Maximal kill rate constant
-
+	
 C50 = 1000000 in [pmol/L]
 	desc: Concentration of half-maximal effect
-
+	
 HC = 1 in [dimensionless]
 	desc: Hill coefficient
-
+	
 Mtt = 72 in [h]
-	desc: Average life span
-
+	desc: Average life span 
+	
 tau = Mtt/3 in [h]
  desc: Delay in treatment effect
-
+ 
 C_Drug = 1 in [pmol/L]
-	desc: Dug concentration causing tumor killing
+	desc: Drug concentration causing tumor killing	
 
 Kill = kmax * C_Drug^HC / (C50^HC + C_Drug^HC) in [1/h]
 	desc: Tumor kill rate constant
 
 dot(TS) = -Kill*TS in [dimensionless]
-	desc: Tumor volume/ size (drug-unaffeced tumor cells)
-
+	desc: Tumor volume/ size (drug-unaffeced)
+	
 dot(TS1) = Kill*TS -TS1/tau in [dimensionless]
-	desc: Transit compartment 1 (delay due to cell distribution)
+	desc: Transit compartment 1 (delay due to cell distribution) 
 
 dot(TS2) = (TS1-TS2)/tau in [dimensionless]
 	desc: Transit compartment 2 (delay due to cell distribution)
 
 dot(TS3) = (TS2-TS3)/tau in [dimensionless]
 	desc: Transit compartment 3 (delay due to cell distribution)
-
+	
 TSTotal = TS1 + TS2 + TS3 + TS in [dimensionless]
 	desc: Total tumor volume/ size
