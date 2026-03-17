@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux";
 import { useSubjectGroupListQuery } from "../app/backendApi";
 import { RootState } from "../app/store";
+import { useMemo } from "react";
 
 export default function useSubjectGroups() {
   const selectedProject = useSelector(
@@ -17,7 +18,7 @@ export default function useSubjectGroups() {
   );
 
   // sort groups starting alphabetically, but with those starting with Sim first
-  groups?.sort((a, b) => {
+  const sortedGroups = useMemo(() => groups ? [...groups].sort((a, b) => {
     if (a.name.startsWith("Sim") && !b.name.startsWith("Sim")) {
       return -1;
     }
@@ -25,10 +26,11 @@ export default function useSubjectGroups() {
       return 1;
     }
     return a.name.localeCompare(b.name);
-  });
+  }) : [], [groups]);
+
 
   return {
-    groups,
+    groups: sortedGroups,
     refetchGroups,
     isLoading,
   };
