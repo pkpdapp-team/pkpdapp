@@ -18,33 +18,33 @@ t = 0 in [h] bind time
 
 TS0 = 0.1 in [dimensionless]
 	desc: Initial tumor volume/ size
-
+	
 kKill = 0.00000001 in [1/h*L/pmol]
 	desc: Kill rate constant
-
+	
 Mtt = 72 in [h]
-	desc: Average life span
-
+	desc: Average life span 
+	
 tau = Mtt/3 in [h]
   desc: Delay in treatment effect
-
-C_Drug = 1 in [pmol/L]
+  
+C_Drug = 1 in [pmol/L]	
 	desc: Drug concentration causing tumor killing
 
 Kill = kKill * C_Drug in [1/h]
 	desc: Tumor kill rate constant
 
 dot(TS) = -Kill*TS in [dimensionless]
-	desc: Tumor volume (drug-unaffeced tumor cells)
-
+	desc: Tumor volume (drug-unaffeced)
+	
 dot(TS1) = Kill*TS -TS1/tau in [dimensionless]
-	desc: Transit compartment 1 (delay due to cell distribution)
+	desc: Transit compartment 1 (delay due to cell distribution) 
 
 dot(TS2) = (TS1-TS2)/tau in [dimensionless]
 	desc: Transit compartment 2 (delay due to cell distribution)
 
 dot(TS3) = (TS2-TS3)/tau in [dimensionless]
 	desc: Transit compartment 3 (delay due to cell distribution)
-
+	
 TSTotal = TS1 + TS2 + TS3 + TS in [dimensionless]
 	desc: Total tumor volume/ size

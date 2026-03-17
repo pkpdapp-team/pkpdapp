@@ -1,5 +1,5 @@
 [[model]]
-name: TGI signal distribution model (exp(conc) prop kill)
+name: TGI signal distribution model (conc exp kill)
 author: Michael Gertz, Soledad Castano
 
 
@@ -38,7 +38,7 @@ Kill = kmax * (1 - exp(-log(2)/C50 * C_Drug)) in [1/h]
 	desc: Tumor kill rate constant
 
 dot(TS) = -K3*TS in [dimensionless]
-	desc: Tumor volume/ size
+	desc: Tumor size/ size 
 	
 dot(K1) = (Kill-K1)/tau in [1/h]
 	desc: Transit compartment 1 (delay of killing due to signal distribution) 
