@@ -48,7 +48,7 @@ const ChatButton: FC = () => {
             zIndex: -1,
           },
           "&:hover": {
-            borderColor: "transparent",
+            borderColor: "primary.light",
             color: "white",
             background: isOpen
               ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.main} 100%)`
