@@ -86,12 +86,17 @@ export function filterOutputs(model: CombinedModelRead | undefined, variables: V
     if (model && !model.is_library_model) {
       return variables
     }
-    const isConcentration = variable.qname.startsWith("PKCompartment.C") && !variable.name.startsWith("CLimm");
+    const isConcentration = (
+      variable.qname.startsWith("PKCompartment.C") ||
+      variable.qname.startsWith("Extravascular.Cah") ||
+      variable.qname.startsWith("Extravascular.Cvh") ||
+      (variable.qname.startsWith("EffectCompartment") && variable.name.startsWith("Ce"))
+    ) && !variable.name.startsWith("CLimm");
     const isReceptorOccupancy = variable.qname.startsWith("PKCompartment") && variable.name.includes("RO");
     const isPDEffect = variable.qname.startsWith("PDCompartment.E");
     const isProteinOrPrecursor = variable.qname.startsWith("PDCompartment.P");
     const isTumourSize = variable.qname.startsWith("PDCompartment.TS");
-    const isInhibition = variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
+    const isInhibition = variable.name.startsWith("PerInh") || variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
     return isConcentration || isReceptorOccupancy || isPDEffect || isProteinOrPrecursor || isTumourSize || isInhibition;
   });
 
