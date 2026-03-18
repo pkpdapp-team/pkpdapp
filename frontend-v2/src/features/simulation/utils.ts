@@ -95,7 +95,7 @@ export function filterOutputs(model: CombinedModelRead | undefined, variables: V
     const isPDEffect = variable.qname.startsWith("PDCompartment.E");
     const isProteinOrPrecursor = variable.qname.startsWith("PDCompartment.P");
     const isTumourSize = variable.qname.startsWith("PDCompartment.TS");
-    const isInhibition = variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
+    const isInhibition = variable.name.startsWith("PerInh") || variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
     return isConcentration || isReceptorOccupancy || isPDEffect || isProteinOrPrecursor || isTumourSize || isInhibition;
   });
 
