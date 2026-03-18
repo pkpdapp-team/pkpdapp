@@ -46,13 +46,15 @@ function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
 function useNormalisedVariables(variables: VariableListApiResponse) {
   const units = useUnits();
   return variables.map((variable) => {
-    const variableUnit = units?.find(
+    const displayUnit = units?.find(
       (unit) => unit.id === variable.secondary_unit,
     );
-    const defaultUnit = variableUnit?.compatible_units.find(
-      (u) => u.symbol === "pmol/L",
+    const simulationUnit = displayUnit?.compatible_units.find(
+      (u) => +u.id === variable.unit,
     );
-    const conversionFactor = parseFloat(defaultUnit?.conversion_factor || "1");
+    const conversionFactor = parseFloat(
+      simulationUnit?.conversion_factor || "1",
+    );
     const lower_threshold = variable.lower_threshold
       ? variable.lower_threshold * conversionFactor
       : null;
