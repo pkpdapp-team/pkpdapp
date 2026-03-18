@@ -32,7 +32,7 @@ jobs:
           path: |
             /var/cache/apt/archives
             /var/lib/apt/lists
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/coverage-test.yml') }}
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/unit-test-python-versions.yml') }}
           restore-keys: |
             ${{ runner.os }}-apt-
 
