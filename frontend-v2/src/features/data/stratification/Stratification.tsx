@@ -69,7 +69,12 @@ interface IStratification {
   };
 }
 
-const CAT_COVARIATE_COLUMNS = ["Cat Covariate", "Administration Name", "ID"];
+const CAT_COVARIATE_COLUMNS = [
+  "Cat Covariate",
+  "Administration Name",
+  "ID",
+  "Group ID",
+];
 
 const Stratification: FC<IStratification> = ({
   state,

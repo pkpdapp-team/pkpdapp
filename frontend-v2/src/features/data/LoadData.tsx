@@ -257,6 +257,10 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
+    const groupColumn =
+      state.fields.find(
+        (field) => normalisedFields.get(field) === "Group ID",
+      ) || "Group";
     state.normalisedFields = normalisedFields;
     const { errors, warnings, data } = validateState({
       ...state,
@@ -266,6 +270,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     state.data = data;
     state.errors = errors;
     state.warnings = warnings;
+    state.groupColumn = groupColumn;
   };
 
   return (
