@@ -5,8 +5,6 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/a11y-light.css";
 import type { Components } from "react-markdown";
 import type { UIMessage } from "ai";
-import { useAnimatedText } from "./useAnimatedText";
-
 type MessagePart = UIMessage["parts"][number];
 
 const shimmer = keyframes`
@@ -75,37 +73,25 @@ const mdComponents: Partial<Components> = {
 
 const markdownSx = { fontSize: "0.875rem" };
 
-/**
- * Renders a single text part with word-by-word reveal animation.
- * Extracted as its own component so the hook is called unconditionally.
- */
-const AnimatedTextPart: FC<{
+const TextPart: FC<{
   text: string;
-  isStreaming: boolean;
   showCursor: boolean;
-}> = ({ text, isStreaming, showCursor }) => {
-  const [displayText, isAnimating] = useAnimatedText(text, isStreaming);
-
-  // Show cursor while streaming OR while the reveal animation is still running
-  const cursorVisible = showCursor || isAnimating;
-
-  return (
-    <Box
-      sx={cursorVisible ? {
-        "& > *:last-child::after": {
-          content: '"▋"',
-          ml: "1px",
-          animation: `${cursorBlink} 0.7s step-end infinite`,
-          color: "text.secondary",
-        },
-      } : undefined}
-    >
-      <Markdown components={mdComponents} rehypePlugins={[rehypeHighlight]}>
-        {displayText}
-      </Markdown>
-    </Box>
-  );
-};
+}> = ({ text, showCursor }) => (
+  <Box
+    sx={showCursor ? {
+      "& > *:last-child::after": {
+        content: '"▋"',
+        ml: "1px",
+        animation: `${cursorBlink} 0.7s step-end infinite`,
+        color: "text.secondary",
+      },
+    } : undefined}
+  >
+    <Markdown components={mdComponents} rehypePlugins={[rehypeHighlight]}>
+      {text}
+    </Markdown>
+  </Box>
+);
 
 const MessageBubble: FC<{
   parts: MessagePart[];
@@ -170,10 +156,9 @@ const MessageBubble: FC<{
         {parts.map((part, i) => {
           if (part.type === "text") {
             return (
-              <AnimatedTextPart
+              <TextPart
                 key={i}
                 text={part.text}
-                isStreaming={!!isStreaming}
                 showCursor={i === lastTextIndex}
               />
             );

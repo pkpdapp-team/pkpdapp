@@ -13,7 +13,6 @@
     "@mui/x-data-grid": "^8.28.2",
     "@reduxjs/toolkit": "^2.11.2",
     "ai": "6.0.116",
-    "framer-motion": "^12.37.0",
     "highlight.js": "^11.11.1",
     "papaparse": "^5.5.3",
     "plotly.js-basic-dist-min": "^3.4.0",
