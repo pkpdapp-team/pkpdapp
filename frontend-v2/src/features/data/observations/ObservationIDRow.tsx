@@ -6,16 +6,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Checkbox,
 } from "@mui/material";
-import { FC, useState, ChangeEvent } from "react";
+import { FC, useState } from "react";
 import {
   VariableRead,
   UnitRead,
-  useVariableUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../../app/backendApi";
-import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
 import { useApiQueries } from "./MapObservations";
 import { renameVariable } from "../../simulation/utils";
 
@@ -61,7 +58,6 @@ export const ObservationIDRow: FC<ObservationIDRowProps> = ({
 }) => {
   const { variables, units } = useApiQueries();
   const modelOutputs = useModelOutputs();
-  const [updateVariable] = useVariableUpdateMutation();
   const [variable, setVariable] = useState(obsVariable);
   // refetch single variables, not the whole list.
   const { data: variableRead } = useVariableRetrieveQuery(
@@ -82,9 +78,6 @@ export const ObservationIDRow: FC<ObservationIDRowProps> = ({
       selectedUnitSymbol = "";
     }
   });
-  const hasPerKgUnits = hasPerWeightOption(obsUnit, obsVariable);
-  const selectedPerBodyWeight =
-    hasPerKgUnits && selectedVariable?.unit_per_body_weight;
 
   function onVariableChange(event: SelectChangeEvent) {
     const { value } = event.target;
@@ -96,40 +89,13 @@ export const ObservationIDRow: FC<ObservationIDRowProps> = ({
       setVariable(undefined);
       return;
     }
-    let unit_per_body_weight = nextVariable.unit_per_body_weight || false;
-    if (obsUnit?.symbol.endsWith("/kg")) {
-      const baseUnitSymbol = obsUnit.symbol.replace("/kg", "");
-      handleUnitChange(baseUnitSymbol);
-      unit_per_body_weight = true;
-    }
-    setVariable({
-      ...nextVariable,
-      unit_per_body_weight,
-    });
+    setVariable(nextVariable);
     handleObservationChange(event);
   }
 
   function onUnitChange(event: SelectChangeEvent) {
     const { value } = event.target;
     handleUnitChange(value);
-  }
-
-  function handlePerWeightChange(event: ChangeEvent<HTMLInputElement>) {
-    if (!selectedVariable) {
-      return;
-    }
-    const { checked } = event.target;
-    updateVariable({
-      id: selectedVariable.id,
-      variable: {
-        ...selectedVariable,
-        unit_per_body_weight: checked,
-      },
-    });
-    setVariable({
-      ...selectedVariable,
-      unit_per_body_weight: checked,
-    });
   }
 
   return (
@@ -179,20 +145,6 @@ export const ObservationIDRow: FC<ObservationIDRowProps> = ({
               </MenuItem>
             ))}
           </Select>
-        </FormControl>
-      </TableCell>
-      <TableCell>
-        <FormControl>
-          <Checkbox
-            checked={selectedPerBodyWeight}
-            disabled={!hasPerKgUnits || !selectedVariable}
-            onChange={handlePerWeightChange}
-            slotProps={{
-              input: {
-                "aria-label": `Per Body Weight(kg) for ${selectedVariable?.name}`,
-              },
-            }}
-          />
         </FormControl>
       </TableCell>
     </TableRow>
