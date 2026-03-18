@@ -17,6 +17,23 @@ const cursorBlink = keyframes`
   50% { opacity: 0; }
 `;
 
+const shimmerSx = {
+  display: "inline-block",
+  my: 1,
+  px: 1.5,
+  py: 0.5,
+  borderRadius: 1.5,
+  fontSize: "0.8rem",
+  fontStyle: "italic",
+  color: "transparent",
+  background: (theme: any) =>
+    `linear-gradient(90deg, ${theme.palette.text.secondary} 25%, ${theme.palette.grey[500]} 50%, ${theme.palette.text.secondary} 75%)`,
+  backgroundSize: "200% 100%",
+  backgroundClip: "text",
+  WebkitBackgroundClip: "text",
+  animation: `${shimmer} 1.5s ease-in-out infinite`,
+} as const;
+
 const ToolStatus: FC<{
   toolName: string;
   input: Record<string, unknown> | undefined;
@@ -31,24 +48,7 @@ const ToolStatus: FC<{
   return (
     <Typography
       variant="body2"
-      sx={{
-        display: "inline-block",
-        my: 1,
-        px: 1.5,
-        py: 0.5,
-        borderRadius: 1.5,
-        fontSize: "0.8rem",
-        fontStyle: "italic",
-        color: animate ? "transparent" : "grey.400",
-        ...(animate && {
-          background: (theme: any) =>
-            `linear-gradient(90deg, ${theme.palette.text.secondary} 25%, ${theme.palette.grey[500]} 50%, ${theme.palette.text.secondary} 75%)`,
-          backgroundSize: "200% 100%",
-          backgroundClip: "text",
-          WebkitBackgroundClip: "text",
-          animation: `${shimmer} 1.5s ease-in-out infinite`,
-        }),
-      }}
+      sx={animate ? shimmerSx : { ...shimmerSx, color: "grey.400", background: "none", animation: "none" }}
     >
       {animate ? activeText : doneText}
     </Typography>
@@ -179,25 +179,7 @@ const MessageBubble: FC<{
           return null;
         })}
         {showInterpreting && (
-          <Typography
-            variant="body2"
-            sx={{
-              display: "inline-block",
-              my: 1,
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1.5,
-              fontSize: "0.8rem",
-              fontStyle: "italic",
-              color: "transparent",
-              background: (theme: any) =>
-                `linear-gradient(90deg, ${theme.palette.text.secondary} 25%, ${theme.palette.grey[500]} 50%, ${theme.palette.text.secondary} 75%)`,
-              backgroundSize: "200% 100%",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              animation: `${shimmer} 1.5s ease-in-out infinite`,
-            }}
-          >
+          <Typography variant="body2" sx={shimmerSx}>
             Interpreting…
           </Typography>
         )}
