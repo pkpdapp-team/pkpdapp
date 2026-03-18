@@ -2,6 +2,7 @@ import { FieldArrayWithId } from "react-hook-form";
 import {
   CombinedModelRead,
   CompoundRead,
+  EfficacyExperimentRead,
   SimulateResponse,
   Simulation,
   SimulationYAxis,
@@ -199,7 +200,7 @@ export function ranges(
 export function genIcLines(
   units: UnitRead[],
   plot: FieldArrayWithId<Simulation, "plots", "id">,
-  compound: CompoundRead,
+  exp: EfficacyExperimentRead | undefined,
   concentrationUnit: UnitRead,
 ) {
   let icLines: number[] = [];
@@ -211,9 +212,6 @@ export function genIcLines(
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
-  const exp = compound.efficacy_experiments.find(
-    (exp) => exp.id === compound.use_efficacy,
-  );
   if (yAxisIsConcentration && exp) {
     if (exp.hill_coefficient && exp.c50) {
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);

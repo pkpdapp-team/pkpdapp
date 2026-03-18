@@ -7,6 +7,7 @@ import {
   Simulation,
   UnitRead,
   VariableRead,
+  useEfficacyExperimentRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
 import { Data, Layout, ScatterData } from "plotly.js";
@@ -87,6 +88,11 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   );
   useProtocolListQuery({ projectId: projectId || 0 }, { skip: !projectId });
 
+  const { data: efficiencyExperiment } = useEfficacyExperimentRetrieveQuery(
+    { id: compound.use_efficacy || 0 },
+    { skip: !compound.use_efficacy },
+  );
+
   const { groups } = useSubjectGroups();
   const { subjectBiomarkers } = useDataset(projectId);
   const [open, setOpen] = useState(false);
@@ -133,7 +139,7 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const icLines: number[] = genIcLines(
     units,
     plot,
-    compound,
+    efficiencyExperiment,
     concentrationUnit,
   );
   const convertedTime = data[0].time.map((t) => t * xConversionFactor);
