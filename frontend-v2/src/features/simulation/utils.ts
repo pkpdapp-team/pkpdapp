@@ -89,7 +89,8 @@ export function filterOutputs(model: CombinedModelRead | undefined, variables: V
     const isConcentration = (
       variable.qname.startsWith("PKCompartment.C") ||
       variable.qname.startsWith("Extravascular.Cah") ||
-      variable.qname.startsWith("Extravascular.Cvh")
+      variable.qname.startsWith("Extravascular.Cvh") ||
+      (variable.qname.startsWith("EffectCompartment") && variable.name.startsWith("Ce"))
     ) && !variable.name.startsWith("CLimm");
     const isReceptorOccupancy = variable.qname.startsWith("PKCompartment") && variable.name.includes("RO");
     const isPDEffect = variable.qname.startsWith("PDCompartment.E");
