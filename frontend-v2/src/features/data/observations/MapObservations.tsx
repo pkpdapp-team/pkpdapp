@@ -296,9 +296,6 @@ const MapObservations: FC<IMapObservations> = ({
                 <TableCell>
                   <Typography>Unit</Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography>Per Body Weight(kg)</Typography>
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

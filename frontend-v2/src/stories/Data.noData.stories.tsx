@@ -402,12 +402,6 @@ export const MapObservations: Story = {
     });
     await userEvent.selectOptions(listbox, dimensionlessOption);
     expect(unitSelect).toHaveTextContent("dimensionless");
-    const perKgCheckbox = canvas.getByRole("checkbox", {
-      name: "Per Body Weight(kg) for E",
-    });
-    expect(perKgCheckbox).toBeInTheDocument();
-    expect(perKgCheckbox).not.toBeChecked();
-    expect(perKgCheckbox).toBeDisabled();
   },
 };
 
