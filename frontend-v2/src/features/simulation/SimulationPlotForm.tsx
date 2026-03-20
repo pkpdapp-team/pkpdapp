@@ -10,6 +10,7 @@ import {
   Simulation,
   UnitRead,
   VariableRead,
+  useEfficacyExperimentListQuery,
   useProjectRetrieveQuery,
 } from "../../app/backendApi";
 import {
@@ -57,6 +58,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   const { data: project } = useProjectRetrieveQuery(
     { id: projectId || 0 },
     { skip: !projectId },
+  );
+  const { data: efficacyExperiments } = useEfficacyExperimentListQuery(
+    { compoundId: project?.compound },
+    { skip: !project?.compound },
   );
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -244,7 +249,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     value: string | number;
   }[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
   receptorOccupancyVariableOptions.push({ label: "None", value: "" });
-  const haveEfficacyExp = compound.efficacy_experiments.length > 0;
+  const haveEfficacyExp = efficacyExperiments?.length;
 
   const axisScaleOptions = [
     { label: "Linear", value: "lin" },

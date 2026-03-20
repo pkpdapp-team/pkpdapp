@@ -19,6 +19,7 @@ import {
   EfficacyExperimentRead,
   ProjectRead,
   UnitListApiResponse,
+  useEfficacyExperimentDestroyMutation,
   useEfficacyExperimentUpdateMutation,
 } from "../../app/backendApi";
 import { useForm, useFormState } from "react-hook-form";
@@ -34,8 +35,8 @@ interface Props {
   isSelected: boolean;
   isEditing: boolean;
   disabled: boolean;
-  onSelect: (id: number) => void;
   onDelete: (id: number) => void;
+  onSelect: (id: number) => void;
   onEdit: (id: number) => void;
   onCancel: () => void;
 }
@@ -47,13 +48,14 @@ export function EfficacyExperimentForm({
   isSelected,
   isEditing,
   disabled,
-  onSelect,
   onDelete,
+  onSelect,
   onEdit,
   onCancel,
 }: Props) {
-  const experimentId = efficacyExperiment?.id;
+  const experimentId = efficacyExperiment.id;
   const [updateEfficacyExperiment] = useEfficacyExperimentUpdateMutation();
+  const [destroyEfficacyExperiment] = useEfficacyExperimentDestroyMutation();
   const { reset, handleSubmit, control, getValues } =
     useForm<EfficacyExperimentRead>({
       defaultValues: efficacyExperiment,
@@ -82,6 +84,11 @@ export function EfficacyExperimentForm({
     const submit = handleSubmit(submitForm);
     submit();
   };
+
+  const handleDelete = useCallback(() => {
+    destroyEfficacyExperiment({ id: efficacyExperiment.id });
+    onDelete(efficacyExperiment.id);
+  }, [destroyEfficacyExperiment, efficacyExperiment.id, onDelete]);
 
   const defaultProps = { disabled: isSharedWithMe };
 
@@ -242,10 +249,7 @@ export function EfficacyExperimentForm({
               }
             >
               <span>
-                <IconButton
-                  disabled={disabled}
-                  onClick={() => onDelete(experimentId)}
-                >
+                <IconButton disabled={disabled} onClick={handleDelete}>
                   <Delete titleAccess="Delete" />
                 </IconButton>
               </span>

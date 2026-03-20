@@ -23,7 +23,7 @@ import {
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useEfficacyExperimentCreateMutation,
-  useEfficacyExperimentDestroyMutation,
+  useEfficacyExperimentListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
 } from "../../app/backendApi";
@@ -73,11 +73,16 @@ interface DrugFormProps {
   project: ProjectRead;
   compound: CompoundRead;
   units: UnitListApiResponse;
+  efficacyExperiments: EfficacyExperimentRead[];
 }
-const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
+const DrugForm: FC<DrugFormProps> = ({
+  project,
+  compound,
+  units,
+  efficacyExperiments,
+}) => {
   const [updateCompound] = useCompoundUpdateMutation();
   const [createEfficacyExperiment] = useEfficacyExperimentCreateMutation();
-  const [destroyEfficacyExperiment] = useEfficacyExperimentDestroyMutation();
   const { refetch: refetchCompoundUnits } = useUnitListQuery({
     compoundId: compound.id,
   });
@@ -97,17 +102,6 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   const submitForm = useCallback(
     async (data: Compound) => {
       if (compound?.id && isDirty) {
-        // strange bug in react-hook-form is creating efficancy_experiments with undefined compounds, remove these for now.
-        data.efficacy_experiments = data.efficacy_experiments
-          .filter(
-            (efficacy_experiment) => efficacy_experiment.compound !== undefined,
-          )
-          // make sure experiments are sorted by ID
-          .sort(
-            (a, b) =>
-              (a as EfficacyExperimentRead).id -
-              (b as EfficacyExperimentRead).id,
-          );
         reset(data);
         const result = await updateCompound({
           id: compound.id,
@@ -115,13 +109,7 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
         });
         if (result?.data) {
           try {
-            const sortedEfficacyExperiments = [
-              ...result.data.efficacy_experiments,
-            ].sort((a, b) => a.id - b.id);
-            reset({
-              ...data,
-              efficacy_experiments: sortedEfficacyExperiments,
-            });
+            reset(data);
             refetchCompoundUnits();
           } catch (error) {
             console.error(error);
@@ -149,55 +137,24 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
         compound: compound.id,
       },
     }).unwrap();
-    const newCompound = {
-      ...defaultValues,
-      id: compound.id,
-      efficacy_experiments: [
-        ...(defaultValues?.efficacy_experiments || []),
-        newExperiment,
-      ] as EfficacyExperimentRead[],
-    };
-    reset(newCompound);
     // If this is the first experiment created, select it by default.
-    if (defaultValues?.efficacy_experiments?.length === 0) {
+    if (efficacyExperiments?.length === 0) {
       reset({
-        ...newCompound,
+        ...compound,
         use_efficacy: newExperiment.id,
       });
       updateCompound({
         id: compound.id,
         compound: {
-          ...newCompound,
+          ...compound,
           use_efficacy: newExperiment.id,
         } as CompoundRead,
       });
     }
   };
 
-  const deleteEfficacyExperiment = (id: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to permanently delete this efficacy-safety data?",
-      )
-    ) {
-      destroyEfficacyExperiment({ id });
-      const isSelected = isEfficacySelected(id);
-      const newFormState = {
-        ...defaultValues,
-        efficacy_experiments: defaultValues?.efficacy_experiments?.filter(
-          (efficacy_experiment) =>
-            (efficacy_experiment as EfficacyExperimentRead)?.id !== id,
-        ),
-      };
-      if (isSelected) {
-        newFormState.use_efficacy = null;
-      }
-      reset(newFormState);
-    }
-  };
-
   const isEfficacySelected = (id: number) => {
-    const efficacy_experiment = defaultValues?.efficacy_experiments?.find(
+    const efficacy_experiment = efficacyExperiments?.find(
       (e) => (e as EfficacyExperimentRead).id === id,
     ) as EfficacyExperimentRead;
     if (compound.use_efficacy === null) {
@@ -207,16 +164,13 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
   };
 
   const handleSelectEfficacy = (id: number) => {
-    const efficacy_experiment = defaultValues?.efficacy_experiments?.find(
+    const efficacy_experiment = efficacyExperiments?.find(
       (e) => (e as EfficacyExperimentRead).id === id,
     ) as EfficacyExperimentRead;
     if (efficacy_experiment.id === defaultValues?.use_efficacy) {
       const newCompound = {
         ...defaultValues,
         id: compound.id,
-        efficacy_experiments:
-          (defaultValues?.efficacy_experiments as EfficacyExperimentRead[]) ||
-          [],
         use_efficacy: null,
       };
       reset(newCompound);
@@ -229,6 +183,22 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
         ...defaultValues,
         id: compound.id,
         use_efficacy: efficacy_experiment.id,
+      };
+      reset(newCompound);
+      updateCompound({
+        id: compound.id,
+        compound: newCompound as CompoundRead,
+      });
+    }
+  };
+
+  const onDeleteExperiment = (id: number) => {
+    if (id === defaultValues?.use_efficacy) {
+      setIsEditIndex(null);
+      const newCompound = {
+        ...defaultValues,
+        id: compound.id,
+        use_efficacy: null,
       };
       reset(newCompound);
       updateCompound({
@@ -429,29 +399,25 @@ const DrugForm: FC<DrugFormProps> = ({ project, compound, units }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {defaultValues?.efficacy_experiments?.map(
-              (efficacy_experiment, index) => {
-                const efficacyExperiment =
-                  efficacy_experiment as EfficacyExperimentRead;
-                const experimentId = efficacyExperiment?.id;
-                const isSelected = isEfficacySelected(experimentId);
-                return (
-                  <EfficacyExperimentForm
-                    key={experimentId}
-                    efficacyExperiment={efficacyExperiment}
-                    project={project}
-                    units={units}
-                    isSelected={isSelected}
-                    isEditing={isEditIndex === index}
-                    disabled={isEditIndex !== null && isEditIndex !== index}
-                    onSelect={handleSelectEfficacy}
-                    onDelete={deleteEfficacyExperiment}
-                    onEdit={() => setIsEditIndex(index)}
-                    onCancel={() => setIsEditIndex(null)}
-                  />
-                );
-              },
-            )}
+            {efficacyExperiments?.map((efficacyExperiment, index) => {
+              const experimentId = efficacyExperiment.id;
+              const isSelected = isEfficacySelected(experimentId);
+              return (
+                <EfficacyExperimentForm
+                  key={experimentId}
+                  efficacyExperiment={efficacyExperiment}
+                  project={project}
+                  units={units}
+                  isSelected={isSelected}
+                  isEditing={isEditIndex === index}
+                  disabled={isEditIndex !== null && isEditIndex !== index}
+                  onSelect={handleSelectEfficacy}
+                  onDelete={onDeleteExperiment}
+                  onEdit={() => setIsEditIndex(index)}
+                  onCancel={() => setIsEditIndex(null)}
+                />
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -470,22 +436,39 @@ const Drug: FC = () => {
       { id: project?.compound || 0 },
       { skip: !project?.compound },
     );
+  const { data: efficacyExperiments, isLoading: isLoadingEfficacyExperiments } =
+    useEfficacyExperimentListQuery(
+      {
+        compoundId: project?.compound,
+      },
+      { skip: !project?.compound },
+    );
   const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project?.compound },
   );
 
-  if (isProjectLoading || isCompoundLoading || isLoadingUnits) {
+  if (
+    isProjectLoading ||
+    isCompoundLoading ||
+    isLoadingUnits ||
+    isLoadingEfficacyExperiments
+  ) {
     return <div>Loading...</div>;
   }
 
-  if (!compound || !project || !units) {
+  if (!compound || !project || !units || !efficacyExperiments) {
     return <div>Not found</div>;
   }
 
   return (
     <Box sx={{ paddingTop: "1rem" }}>
-      <DrugForm project={project} compound={compound} units={units} />
+      <DrugForm
+        project={project}
+        compound={compound}
+        units={units}
+        efficacyExperiments={efficacyExperiments}
+      />
     </Box>
   );
 };

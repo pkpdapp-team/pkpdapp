@@ -180,9 +180,7 @@ const ProjectTable: FC = () => {
   }
 
   const projectNames = projects?.map((project) => project.name) || [];
-  const favoritePkTagId = tagsData?.find(
-    (tag) => tag.name === "favorites",
-  )?.id;
+  const favoritePkTagId = tagsData?.find((tag) => tag.name === "favorites")?.id;
   const handleAddRow = (type: "SM" | "LM") => {
     const user_access = [
       { id: user?.id || 0, read_only: false, user: user?.id || 0, project: 0 },
@@ -213,7 +211,6 @@ const ProjectTable: FC = () => {
         name: "untitled",
         description: "",
         compound_type: "SM",
-        efficacy_experiments: [],
         dissociation_constant: 500,
       };
     } else if (type === "LM") {
@@ -221,7 +218,6 @@ const ProjectTable: FC = () => {
         name: "untitled",
         description: "",
         compound_type: "LM",
-        efficacy_experiments: [],
         molecular_mass: 150000,
         fraction_unbound_plasma: 1.0,
         dissociation_constant: 1,

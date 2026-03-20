@@ -1027,6 +1027,12 @@ paths:
   /api/efficacy_experiment/:
     get:
       operationId: efficacy_experiment_list
+      parameters:
+      - in: query
+        name: compound_id
+        schema:
+          type: integer
+        description: Filter results by compound ID
       tags:
       - efficacy_experiment
       security:
@@ -3840,6 +3846,10 @@ components:
         mmt:
           type: string
           readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
+          readOnly: true
         sbml:
           type: string
           readOnly: true
@@ -3926,6 +3936,7 @@ components:
       required:
       - components
       - derived_variables
+      - diffsl
       - id
       - is_library_model
       - mappings
@@ -3953,10 +3964,6 @@ components:
         id:
           type: integer
           readOnly: true
-        efficacy_experiments:
-          type: array
-          items:
-            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -4035,7 +4042,6 @@ components:
           type: integer
           description: unit for dissociation constant
       required:
-      - efficacy_experiments
       - id
       - name
     CompoundTypeEnum:
@@ -4155,6 +4161,28 @@ components:
       - pk_variable
       - pkpd_model
       - type
+    DiffSLOutput:
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: string
+        outputs:
+          type: array
+          items:
+            type: string
+        state_indices:
+          type: object
+          additionalProperties:
+            type: integer
+        code:
+          type: string
+      required:
+      - code
+      - inputs
+      - outputs
+      - state_indices
     Dose:
       type: object
       properties:
@@ -4636,6 +4664,10 @@ components:
         mmt:
           type: string
           readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
+          readOnly: true
         sbml:
           type: string
           readOnly: true
@@ -4725,10 +4757,6 @@ components:
         id:
           type: integer
           readOnly: true
-        efficacy_experiments:
-          type: array
-          items:
-            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -5405,7 +5433,7 @@ components:
         name:
           type: string
           description: name of the tag
-          maxLength: 20
+          maxLength: 50
     PatchedUnit:
       type: object
       properties:
@@ -6308,7 +6336,7 @@ components:
         name:
           type: string
           description: name of the tag
-          maxLength: 20
+          maxLength: 50
       required:
       - id
       - name

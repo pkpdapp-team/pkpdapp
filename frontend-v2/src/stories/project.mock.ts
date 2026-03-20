@@ -935,7 +935,6 @@ export const protocols: ProtocolRead[] = [
 ];
 export const compound: CompoundRead = {
   id: 57,
-  efficacy_experiments: [],
   name: "big molecule",
   description: "",
   molecular_mass: 150000,

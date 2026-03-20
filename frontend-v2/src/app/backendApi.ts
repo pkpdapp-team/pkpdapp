@@ -348,7 +348,12 @@ const injectedRtkApi = api.injectEndpoints({
       EfficacyExperimentListApiResponse,
       EfficacyExperimentListApiArg
     >({
-      query: () => ({ url: `/api/efficacy_experiment/` }),
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/`,
+        params: {
+          compound_id: queryArg.compoundId,
+        },
+      }),
     }),
     efficacyExperimentCreate: build.mutation<
       EfficacyExperimentCreateApiResponse,
@@ -1462,7 +1467,10 @@ export type DoseDestroyApiArg = {
 };
 export type EfficacyExperimentListApiResponse =
   /** status 200  */ EfficacyExperimentRead[];
-export type EfficacyExperimentListApiArg = void;
+export type EfficacyExperimentListApiArg = {
+  /** Filter results by compound ID */
+  compoundId?: number;
+};
 export type EfficacyExperimentCreateApiResponse =
   /** status 201  */ EfficacyExperimentRead;
 export type EfficacyExperimentCreateApiArg = {
@@ -2324,6 +2332,14 @@ export type CombinedModel = {
   /** second PD part of model */
   pd_model2?: number | null;
 };
+export type DiffSlOutput = {
+  inputs: string[];
+  outputs: string[];
+  state_indices: {
+    [key: string]: number;
+  };
+  code: string;
+};
 export type CombinedModelRead = {
   id: number;
   mappings: PkpdMappingRead[];
@@ -2332,6 +2348,7 @@ export type CombinedModelRead = {
   components: string;
   variables: number[];
   mmt: string;
+  diffsl: DiffSlOutput;
   sbml: string;
   time_unit: number;
   is_library_model: boolean;
@@ -2435,6 +2452,7 @@ export type PatchedCombinedModelRead = {
   components?: string;
   variables?: number[];
   mmt?: string;
+  diffsl?: DiffSlOutput;
   sbml?: string;
   time_unit?: number;
   is_library_model?: boolean;
@@ -2498,35 +2516,9 @@ export type Simulate = {
   };
   time_max?: number;
 };
-export type EfficacyExperiment = {
-  /** name of the experiment */
-  name?: string;
-  /** half maximal effective concentration */
-  c50: number;
-  /** Hill coefficient measure of binding */
-  hill_coefficient?: number;
-  /** unit for c50 */
-  c50_unit: number;
-  /** compound for efficacy experiment */
-  compound: number;
-};
-export type EfficacyExperimentRead = {
-  id: number;
-  /** name of the experiment */
-  name?: string;
-  /** half maximal effective concentration */
-  c50: number;
-  /** Hill coefficient measure of binding */
-  hill_coefficient?: number;
-  /** unit for c50 */
-  c50_unit: number;
-  /** compound for efficacy experiment */
-  compound: number;
-};
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
 export type Compound = {
-  efficacy_experiments: EfficacyExperiment[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2569,7 +2561,6 @@ export type Compound = {
 };
 export type CompoundRead = {
   id: number;
-  efficacy_experiments: EfficacyExperimentRead[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2611,7 +2602,6 @@ export type CompoundRead = {
   dissociation_unit?: number;
 };
 export type PatchedCompound = {
-  efficacy_experiments?: EfficacyExperiment[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2654,7 +2644,6 @@ export type PatchedCompound = {
 };
 export type PatchedCompoundRead = {
   id?: number;
-  efficacy_experiments?: EfficacyExperimentRead[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2901,6 +2890,31 @@ export type PatchedDoseRead = {
   datetime?: string | null;
   /** protocol containing this dose */
   protocol?: number | null;
+};
+export type EfficacyExperiment = {
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit: number;
+  /** compound for efficacy experiment */
+  compound: number;
+};
+export type EfficacyExperimentRead = {
+  id: number;
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit: number;
+  /** compound for efficacy experiment */
+  compound: number;
 };
 export type PatchedEfficacyExperiment = {
   /** name of the experiment */
