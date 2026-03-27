@@ -225,24 +225,28 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         myokit_inputs = (
             [myokit_model.get(qname) for qname in inputs]
-            if inputs is not None else None
+            if inputs is not None
+            else None
         )
         myokit_outputs = (
             [myokit_model.get(qname) for qname in outputs]
-            if outputs is not None else None
+            if outputs is not None
+            else None
         )
 
         with tempfile.NamedTemporaryFile(
-            mode='w', suffix='.diffsl', delete=False
+            mode="w", suffix=".diffsl", delete=False
         ) as temp_file:
             temp_path = temp_file.name
 
         try:
             diffsl_exporter.model(
-                temp_path, myokit_model,
-                inputs=myokit_inputs, outputs=myokit_outputs,
+                temp_path,
+                myokit_model,
+                inputs=myokit_inputs,
+                outputs=myokit_outputs,
             )
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 code = f.read()
         finally:
             if os.path.exists(temp_path):
@@ -268,16 +272,19 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             "name": self.name,
             "project": project,
             "pk_model": self.pk_model,
+            "pk_model2": self.pk_model2,
+            "pk_effect_model": self.pk_effect_model,
             "pd_model": self.pd_model,
+            "pd_model2": self.pd_model2,
             "time_max": self.time_max,
             "read_only": self.read_only,
             "has_saturation": self.has_saturation,
+            "has_extravascular": self.has_extravascular,
             "has_effect": self.has_effect,
             "has_lag": self.has_lag,
             "has_bioavailability": self.has_bioavailability,
             "has_hill_coefficient": self.has_hill_coefficient,
             "species": self.species,
-            "pd_model2": self.pd_model2,
             "number_of_effect_compartments": self.number_of_effect_compartments,
             "has_anti_drug_antibodies": self.has_anti_drug_antibodies,
         }
@@ -661,14 +668,16 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                         is_per_kg = defaultVal.get("unit", "").endswith("/kg")
                         if is_per_kg:
                             unit = Unit.objects.filter(
-                                symbol=defaultVal.get("unit", "")[:-3]).first()
+                                symbol=defaultVal.get("unit", "")[:-3]
+                            ).first()
                     value = defaultVal.get("value", None)
                     print(f"setting {v.qname} to default value {value} and unit {unit}")
                     if value is not None:
                         v.default_value = value
                     if unit is not None:
                         v.unit_per_body_weight = is_preclinical and (
-                            is_vol_per_kg or is_vmax)
+                            is_vol_per_kg or is_vmax
+                        )
                         v.unit = unit
                     if not v._state.adding:
                         v.save()

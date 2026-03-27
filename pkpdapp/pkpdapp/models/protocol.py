@@ -163,6 +163,10 @@ class Protocol(StoredModel):
         self.__original_dose_type = self.dose_type
 
     def copy(self, new_project, new_variable):
+        if self.dataset is None:
+            new_dataset = None
+        else:
+            new_dataset = new_project.datasets.first()
         stored_protocol_kwargs = {
             "name": self.name,
             "project": new_project,
@@ -171,8 +175,26 @@ class Protocol(StoredModel):
             "time_unit": self.time_unit,
             "amount_unit": self.amount_unit,
             "variable": new_variable,
+            "dataset": new_dataset,
         }
         stored_protocol = Protocol.objects.create(**stored_protocol_kwargs)
+        print(f"created protocol {stored_protocol.name} with id {stored_protocol.id}")
+        if new_dataset is not None:
+            print(
+                f"linking protocol {stored_protocol.name} to dataset {new_dataset.name}"
+            )
         for dose in self.doses.all():
             dose.copy(stored_protocol)
+        if self.group is not None and self.dataset is not None:
+            # if group does not already exist in the new project,
+            # create a copy of it and link to the new protocol
+            try:
+                new_group = new_dataset.groups.get(name=self.group.name)
+                print(
+                    f"found group {self.group.name} for protocol {stored_protocol.name}"
+                )
+            except SubjectGroup.DoesNotExist:
+                new_group = self.group.copy(stored_protocol, new_project)
+            stored_protocol.group = new_group
+            stored_protocol.save()
         return stored_protocol

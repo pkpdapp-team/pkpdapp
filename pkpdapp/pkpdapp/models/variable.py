@@ -479,7 +479,14 @@ class Variable(StoredModel):
 
         # copy protocols
         for p in variable.protocols.all():
+            print(f"copying protocol {p.name} for variable {self.qname}")
             new_protocol = p.copy(new_project, self)
             new_protocol.save()
+
+        # copy biomarker types
+        for b in variable.biomarker_types.all():
+            print(f"copying biomarker type {b.name} for variable {self.qname}")
+            new_biomarker_type = b.copy(new_project, self)
+            new_biomarker_type.save()
 
         self.save()
