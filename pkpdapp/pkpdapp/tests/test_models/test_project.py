@@ -60,7 +60,6 @@ class TestProject(TestCase):
             project=self.project,
             number_of_effect_compartments=1,
         )
-        aa = pkpd_model.variables.get(qname="Extravascular.Aa")
         c_drug_pd = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
         dataset = Dataset.objects.create(name="my dataset", project=self.project)
         group = SubjectGroup.objects.create(
