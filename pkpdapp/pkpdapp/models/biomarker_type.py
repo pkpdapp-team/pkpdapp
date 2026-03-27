@@ -142,3 +142,24 @@ class BiomarkerType(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+    def copy(self, new_project, new_variable):
+        new_dataset = new_project.datasets.first()
+        new_biomarker_type = BiomarkerType.objects.create(
+            name=self.name,
+            stored_unit=self.stored_unit,
+            description=self.description,
+            dataset=new_dataset,
+            display=self.display,
+            display_unit=self.display_unit,
+            stored_time_unit=self.stored_time_unit,
+            display_time_unit=self.display_time_unit,
+            variable=new_variable,
+        )
+        # copy biomarkers
+        for b in self.biomarkers.all():
+            new_subject = new_dataset.subjects.get(
+                id_in_dataset=b.subject.id_in_dataset
+            )
+            b.copy(new_biomarker_type, new_subject)
+        return new_biomarker_type

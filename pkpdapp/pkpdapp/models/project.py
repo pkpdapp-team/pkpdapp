@@ -110,11 +110,17 @@ class Project(models.Model):
             compound=new_compound,
             created=new_created,
         )
+        new_dataset = self.datasets.first().copy(new_project)
+        new_project.datasets.set([new_dataset])
+        new_project.save()
+        print(f"new project dataset {new_project.datasets.first().name}")
+
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project)
             for variable in model.variables.all():
-                new_variable = new_model.variables.get(name=variable.name)
+                print(f"linking variable {variable.name} to {new_model.name}")
+                new_variable = new_model.variables.get(qname=variable.qname)
                 variable_map[variable] = new_variable
 
         for simulation in self.simulations.all():

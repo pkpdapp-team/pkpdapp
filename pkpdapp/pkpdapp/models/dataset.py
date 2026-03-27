@@ -50,6 +50,19 @@ class Dataset(models.Model):
         help_text='Project that "owns" this model',
     )
 
+    def copy(self, new_project):
+        """
+        Create a copy of this dataset with the same values but a different project.
+        """
+        new_dataset = Dataset.objects.create(
+            name=self.name,
+            datetime=self.datetime,
+            description=self.description,
+            project=new_project,
+        )
+
+        return new_dataset
+
     def __str__(self):
         return self.name
 

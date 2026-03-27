@@ -11,6 +11,8 @@ from rest_framework.test import APIClient
 from pkpdapp.models import (
     CombinedModel,
     PharmacokineticModel,
+    PharmacodynamicModel,
+    PkpdMapping,
     Project,
     Compound,
     Protocol,
@@ -38,25 +40,40 @@ class TestProject(TestCase):
         self.assertEqual(self.project.species_weight_unit.symbol, "kg")
 
     def test_copy(self):
-        pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        pk_model = PharmacokineticModel.objects.get(name="1-compartmental model")
+        pk_model2 = PharmacokineticModel.objects.get(
+            name="First order absorption model"
+        )
+        pd_model = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_production"
+        )
         pkpd_model = CombinedModel.objects.create(
             name="my wonderful model",
             pk_model=pk_model,
+            pk_model2=pk_model2,
+            pd_model=pd_model,
             project=self.project,
             number_of_effect_compartments=1,
         )
-        a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
-        protocol = Protocol.objects.create(name="my protocol", variable=a1)
+        aa = pkpd_model.variables.get(qname="Extravascular.Aa")
+        protocol = Protocol.objects.create(name="my protocol", variable=aa)
         dose = protocol.doses.create(
             amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
         )
         protocol.doses.set([dose])
-        a1.save()
+        aa.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
         c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
+        c_drug_pd = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
         h = Unit.objects.get(symbol="h")
+
+        mapping = PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=c1,
+            pd_variable=c_drug_pd,
+        )
 
         DerivedVariable.objects.create(
             pkpd_model=pkpd_model,
@@ -118,14 +135,27 @@ class TestProject(TestCase):
         self.assertEqual(new_project.pk_models.count(), 1)
         new_model = new_project.pk_models.first()
         self.assertEqual(new_model.name, "my wonderful model")
+        self.assertEqual(new_model.pk_model2, pkpd_model.pk_model2)
+        self.assertEqual(new_model.pd_model, pkpd_model.pd_model)
         self.assertNotEqual(new_model.pk, pkpd_model.pk)
 
+        # check that PK/PD mapping is copied
+        self.assertEqual(new_model.mappings.count(), 1)
+        new_mapping = new_model.mappings.first()
+        self.assertNotEqual(new_mapping.pk, mapping.pk)
+        self.assertEqual(new_mapping.pk_variable.qname, "PKCompartment.C1")
+        self.assertEqual(new_mapping.pd_variable.qname, "PDCompartment.C_Drug")
+
         # check that the protocol is there and has the right name
+        new_aa = new_model.variables.get(qname="Extravascular.Aa")
         new_a1 = new_model.variables.get(qname="PKCompartment.A1")
-        self.assertNotEqual(new_a1.pk, a1.pk)
-        new_protocol = new_a1.protocols.first()
+        self.assertNotEqual(new_aa.pk, aa.pk)
+        self.assertEqual(new_aa.protocols.count(), 1)
+        new_protocol = new_aa.protocols.first()
         self.assertEqual(new_protocol.name, "my protocol")
         self.assertNotEqual(new_protocol.pk, protocol.pk)
+        # check that this is the only protocol for this project
+        self.assertEqual(new_project.protocols.count(), 1)
         self.assertEqual(new_protocol.doses.count(), 1)
         new_dose = new_protocol.doses.first()
         self.assertNotEqual(new_dose.pk, dose.pk)
