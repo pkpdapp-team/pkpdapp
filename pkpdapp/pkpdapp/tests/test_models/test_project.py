@@ -15,6 +15,11 @@ from pkpdapp.models import (
     PkpdMapping,
     Project,
     Compound,
+    Dataset,
+    Subject,
+    SubjectGroup,
+    Biomarker,
+    BiomarkerType,
     Protocol,
     Simulation,
     SimulationPlot,
@@ -56,18 +61,54 @@ class TestProject(TestCase):
             number_of_effect_compartments=1,
         )
         aa = pkpd_model.variables.get(qname="Extravascular.Aa")
-        protocol = Protocol.objects.create(name="my protocol", variable=aa)
+        c_drug_pd = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        dataset = Dataset.objects.create(name="my dataset", project=self.project)
+        group = SubjectGroup.objects.create(
+            name="Group 1",
+            id_in_dataset="1",
+            dataset=dataset,
+            project=self.project,
+        )
+        subject = Subject.objects.create(
+            id_in_dataset=1,
+            dataset=dataset,
+            group=group,
+        )
+
+        protocol = Protocol.objects.create(
+            name="my protocol",
+            variable=c_drug_pd,
+            dataset=dataset,
+            group=group,
+            project=self.project,
+        )
         dose = protocol.doses.create(
             amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
         )
         protocol.doses.set([dose])
-        aa.save()
+        c_drug_pd.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
         c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
-        c_drug_pd = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
         h = Unit.objects.get(symbol="h")
+        mg = Unit.objects.get(symbol="mg")
+
+        biomarker_type = BiomarkerType.objects.create(
+            name="my biomarker type",
+            stored_unit=mg,
+            display_unit=mg,
+            stored_time_unit=h,
+            display_time_unit=h,
+            dataset=dataset,
+            variable=c_drug_pd,
+        )
+        biomarker = Biomarker.objects.create(
+            time=1.0,
+            subject=subject,
+            biomarker_type=biomarker_type,
+            value=42.0,
+        )
 
         mapping = PkpdMapping.objects.create(
             pkpd_model=pkpd_model,
@@ -125,6 +166,33 @@ class TestProject(TestCase):
         # check that the new project has the right name
         self.assertEqual(new_project.name, "Copy of demo")
 
+        # check that dataset entities are copied
+        self.assertEqual(new_project.datasets.count(), 1)
+        new_dataset = new_project.datasets.first()
+        self.assertEqual(new_dataset.name, "my dataset")
+        self.assertNotEqual(new_dataset.pk, dataset.pk)
+
+        self.assertEqual(new_dataset.groups.count(), 1)
+        new_group = new_dataset.groups.first()
+        self.assertEqual(new_group.name, "Group 1")
+        self.assertEqual(new_group.id_in_dataset, "1")
+
+        self.assertEqual(new_dataset.subjects.count(), 1)
+        new_subject = new_dataset.subjects.first()
+        self.assertEqual(new_subject.id_in_dataset, 1)
+        self.assertEqual(new_subject.group, new_group)
+
+        self.assertEqual(new_dataset.biomarker_types.count(), 1)
+        new_biomarker_type = new_dataset.biomarker_types.first()
+        self.assertEqual(new_biomarker_type.name, "my biomarker type")
+        self.assertEqual(new_biomarker_type.variable.qname, "PDCompartment.C_Drug")
+
+        self.assertEqual(new_dataset.biomarker_types.first().biomarkers.count(), 1)
+        new_biomarker = new_dataset.biomarker_types.first().biomarkers.first()
+        self.assertNotEqual(new_biomarker.pk, biomarker.pk)
+        self.assertEqual(new_biomarker.subject, new_subject)
+        self.assertEqual(new_biomarker.value, 42.0)
+
         # check that the compound is there and has the right name
         new_compound = new_project.compound
         self.assertEqual(new_compound.name, "demo")
@@ -147,13 +215,16 @@ class TestProject(TestCase):
         self.assertEqual(new_mapping.pd_variable.qname, "PDCompartment.C_Drug")
 
         # check that the protocol is there and has the right name
-        new_aa = new_model.variables.get(qname="Extravascular.Aa")
+        new_c_drug_pd = new_model.variables.get(qname="PDCompartment.C_Drug")
         new_a1 = new_model.variables.get(qname="PKCompartment.A1")
-        self.assertNotEqual(new_aa.pk, aa.pk)
-        self.assertEqual(new_aa.protocols.count(), 1)
-        new_protocol = new_aa.protocols.first()
+        self.assertNotEqual(new_c_drug_pd.pk, c_drug_pd.pk)
+        self.assertEqual(new_c_drug_pd.protocols.count(), 1)
+        new_protocol = new_c_drug_pd.protocols.first()
         self.assertEqual(new_protocol.name, "my protocol")
         self.assertNotEqual(new_protocol.pk, protocol.pk)
+        self.assertEqual(new_protocol.dataset, new_dataset)
+        self.assertEqual(new_protocol.group, new_group)
+        self.assertEqual(new_protocol.variable.qname, "PDCompartment.C_Drug")
         # check that this is the only protocol for this project
         self.assertEqual(new_project.protocols.count(), 1)
         self.assertEqual(new_protocol.doses.count(), 1)
