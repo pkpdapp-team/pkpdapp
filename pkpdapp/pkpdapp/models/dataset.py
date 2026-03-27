@@ -176,8 +176,14 @@ class Dataset(models.Model):
                     mapped_variable = variables.get(qname=mapped_qname)
                 except Variable.DoesNotExist:
                     mapped_variable = None
+            dataset_name = self.name
+            separator_and_group = "-{}".format(group.name)
+            if len(dataset_name) + len(separator_and_group) > 100:
+                max_name_length = 100 - len(separator_and_group)
+                dataset_name = dataset_name[:max_name_length]
+            protocol_name = "{}{}".format(dataset_name, separator_and_group)
             protocol = Protocol.objects.create(
-                name="{}-{}".format(self.name, group.name),
+                name=protocol_name,
                 time_unit=time_unit,
                 amount_unit=amount_unit,
                 dose_type=route,

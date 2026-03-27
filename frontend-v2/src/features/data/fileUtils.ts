@@ -201,3 +201,17 @@ export async function readExcelFile(file: File): Promise<string> {
     throw new Error("The Excel file appears to be corrupted or invalid");
   }
 }
+
+/**
+ * Truncate a filename to 60 characters by replacing the middle with "..."
+ * @param filename - The filename to truncate
+ * @returns The truncated filename (max 60 characters)
+ */
+export function truncateFileName(filename: string): string {
+  if (filename.length <= 60) {
+    return filename;
+  }
+  const start = filename.substring(0, 28);
+  const end = filename.substring(filename.length - 29);
+  return `${start}...${end}`;
+}
