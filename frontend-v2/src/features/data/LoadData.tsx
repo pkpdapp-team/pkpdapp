@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
-import { isExcelFile, readExcelFile, readFileAsText } from "./fileUtils";
+import { isExcelFile, readExcelFile, readFileAsText, truncateFileName } from "./fileUtils";
 
 export type Row = {
   [key: string]: string;
@@ -194,7 +194,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       state.groupColumn = groupColumn;
       state.errors = errors;
       state.warnings = [...state.warnings, ...fieldValidation.warnings];
-      state.fileName = fileName;
+      state.fileName = truncateFileName(fileName);
     },
     [state],
   );
