@@ -53,24 +53,30 @@ export default ({ mode }) => {
       outDir: "build",
       rollupOptions: {
         output: {
-          manualChunks: {
-            plotly: ["plotly.js-basic-dist-min"],
-            material: [
-              "@mui/material",
-              "@mui/icons-material",
-              "@mui/x-data-grid",
-            ],
-            vendor: [
-              "@reduxjs/toolkit",
-              "@reduxjs/toolkit/query",
-              "papaparse",
-              "react",
-              "react-dom",
-              "react-hook-form",
-              "react-dropzone",
-              "react-redux",
-              "react-toastify",
-            ],
+          manualChunks(id) {
+            if (id.includes("node_modules/plotly.js-basic-dist-min")) {
+              return "plotly";
+            }
+            if (
+              id.includes("node_modules/@mui/material") ||
+              id.includes("node_modules/@mui/icons-material") ||
+              id.includes("node_modules/@mui/x-data-grid")
+            ) {
+              return "material";
+            }
+            if (
+              id.includes("node_modules/@reduxjs/toolkit") ||
+              id.includes("node_modules/@reduxjs/toolkit/query") ||
+              id.includes("node_modules/papaparse") ||
+              id.includes("node_modules/react") ||
+              id.includes("node_modules/react-dom") ||
+              id.includes("node_modules/react-hook-form") ||
+              id.includes("node_modules/react-dropzone") ||
+              id.includes("node_modules/react-redux") ||
+              id.includes("node_modules/react-toastify")
+            ) {
+              return "vendor";
+            }
           },
         },
       },
