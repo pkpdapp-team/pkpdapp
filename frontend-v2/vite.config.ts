@@ -54,12 +54,23 @@ export default ({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes("node_modules")) {
-              // Separate Plotly since it's large and independent
-              if (id.includes("plotly.js")) {
-                return "plotly";
-              }
-              // Everything else goes into vendor to avoid circular dependencies
+            if (id.includes("node_modules/plotly.js")) {
+              return "plotly";
+            }
+            if (
+              id.includes("node_modules/@mui/material") ||
+              id.includes("node_modules/@mui/icons-material") ||
+              id.includes("node_modules/@mui/x-data-grid") ||
+              id.includes("node_modules/@reduxjs/toolkit") ||
+              id.includes("node_modules/@reduxjs/toolkit/query") ||
+              id.includes("node_modules/papaparse") ||
+              id.includes("node_modules/react") ||
+              id.includes("node_modules/react-dom") ||
+              id.includes("node_modules/react-hook-form") ||
+              id.includes("node_modules/react-dropzone") ||
+              id.includes("node_modules/react-redux") ||
+              id.includes("node_modules/react-toastify")
+            ) {
               return "vendor";
             }
           },
