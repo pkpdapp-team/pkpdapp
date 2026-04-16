@@ -76,5 +76,6 @@ urlpatterns = [
     path("api/register/", api.register_view, name="auth-register"),
     path("api/session/", api.SessionView.as_view(), name="auth-session"),
     path("api/whoami/", api.WhoAmIView.as_view(), name="auth-whoami"),
+    path("api/chatbot/", api.ChatbotView.as_view(), name="chatbot"),
     path("api-auth/", include("rest_framework.urls")),
 ]
