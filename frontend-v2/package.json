@@ -20,6 +20,7 @@
     "react-dom": "^19.2.5",
     "react-dropzone": "^14.4.1",
     "react-hook-form": "^7.72.1",
+    "react-markdown": "^10.1.0",
     "react-player": "^2.16.1",
     "react-plotly.js": "^2.6.0",
     "react-redux": "^9.2.0",
