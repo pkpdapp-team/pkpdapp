@@ -143,7 +143,7 @@ dA2/dt = Q * (C1 - C2)
 BASE_URL = os.getenv(
     "CHATBOT_BASE_URL"
 )
-MODEL = os.getenv("CHATBOT_MODEL", "gpt-5.2-2025-12-11")
+MODEL = os.getenv("CHATBOT_MODEL", "gpt-5-nano-2025-08-07")
 
 _client = None
 

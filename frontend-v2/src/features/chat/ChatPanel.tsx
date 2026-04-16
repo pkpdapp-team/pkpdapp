@@ -299,17 +299,10 @@ const ChatPanel: FC = () => {
               <Typography
                 variant="body2"
                 color="text.secondary"
-                component="div"
-                sx={{ textAlign: "left", px: 2 }}
+                sx={{ textAlign: "center", px: 2 }}
               >
                 Ask me about your model, parameters, equations, or library
                 models.
-                <Box sx={{ mt: 1, fontWeight: 500 }}>I have access to:</Box>
-                <Box component="ul" sx={{ mt: 0.5, mb: 0, pl: 2 }}>
-                  <li>Your current project and model configuration</li>
-                  <li>Your parameter values and dosing setup</li>
-                  <li>The full .mmt code for any library model</li>
-                </Box>
               </Typography>
             </Stack>
           )}
