@@ -125,6 +125,8 @@ class Project(models.Model):
 
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
+        for result in self.results.all():
+            result.copy(new_project)
         if user is None:
             for user_access in self.projectaccess_set.all():
                 user_access.copy(new_project)
