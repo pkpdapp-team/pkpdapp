@@ -113,18 +113,18 @@ class Project(models.Model):
         new_dataset = self.datasets.first().copy(new_project)
         new_project.datasets.set([new_dataset])
         new_project.save()
-        print(f"new project dataset {new_project.datasets.first().name}")
 
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project)
             for variable in model.variables.all():
-                print(f"linking variable {variable.name} to {new_model.name}")
                 new_variable = new_model.variables.get(qname=variable.qname)
                 variable_map[variable] = new_variable
 
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
+        for result in self.results.all():
+            result.copy(new_project)
         if user is None:
             for user_access in self.projectaccess_set.all():
                 user_access.copy(new_project)

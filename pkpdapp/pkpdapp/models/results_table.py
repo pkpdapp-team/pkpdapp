@@ -12,39 +12,51 @@ class ResultsTable(models.Model):
     A table of results for a single model.
     """
 
-    name = models.CharField(
-        max_length=100, help_text='name of the table'
-    )
+    name = models.CharField(max_length=100, help_text="name of the table")
 
     class Type(models.TextChoices):
-        PARAMETERS = 'parameters', 'Secondary parameters of the model.'
-        VARIABLES = 'variables', 'Model variables.'
-        GROUPS = 'groups', 'Subject groups.'
-        INTERVALS = 'intervals', 'Time intervals.'
+        PARAMETERS = "parameters", "Secondary parameters of the model."
+        VARIABLES = "variables", "Model variables."
+        GROUPS = "groups", "Subject groups."
+        INTERVALS = "intervals", "Time intervals."
 
     rows = models.CharField(
         max_length=20,
         choices=Type.choices,
-        help_text='parameter to display as table rows'
+        help_text="parameter to display as table rows",
     )
 
     columns = models.CharField(
         max_length=20,
         choices=Type.choices,
-        help_text='parameter to display as table columns'
+        help_text="parameter to display as table columns",
     )
 
     filters: models.JSONField = models.JSONField(
-        blank=True, null=True,
-        help_text='Filters to apply to the table.'
+        blank=True, null=True, help_text="Filters to apply to the table."
     )
 
     project = models.ForeignKey(
-        'Project', on_delete=models.CASCADE,
-        related_name='results',
-        blank=True, null=True,
-        help_text='Project that this table belongs to.'
+        "Project",
+        on_delete=models.CASCADE,
+        related_name="results",
+        blank=True,
+        null=True,
+        help_text="Project that this table belongs to.",
     )
 
     def __str__(self):
         return self.name
+
+    def copy(self, new_project):
+        """
+        Create a copy of this table for a new project.
+        """
+        kwargs = {
+            "name": self.name,
+            "rows": self.rows,
+            "columns": self.columns,
+            "filters": self.filters,
+        }
+        stored_table = ResultsTable.objects.create(project=new_project, **kwargs)
+        return stored_table

@@ -89,7 +89,6 @@ class TestInferenceWizardView(APITestCase):
                 },
             ],
         }
-        print(data)
         response = self.client.post("/api/inference/wizard", data, format="json")
 
         response_data = response.data

@@ -14,10 +14,14 @@ from pkpdapp.tests import create_pd_inference
 
 class TestInferenceMixinPdModel(TestCase):
     def setUp(self):
-        self.inference, self.log_likelihood, self.biomarker_type, \
-            self.covariate_biomarker_type, self.model, \
-            _ = create_pd_inference(
-                sampling=True)
+        (
+            self.inference,
+            self.log_likelihood,
+            self.biomarker_type,
+            self.covariate_biomarker_type,
+            self.model,
+            _,
+        ) = create_pd_inference(sampling=True)
 
     def test_create_pymc3_model(self):
 
@@ -36,16 +40,13 @@ class TestInferenceMixinPdModel(TestCase):
         model.logp({prior_name: 0.3})
 
         # check we can run predictive posteriors
-        model.fastfn([
-            model[self.log_likelihood.name + output.name]
-        ])
+        model.fastfn([model[self.log_likelihood.name + output.name]])
 
     def test_population_model_with_covariate(self):
         output = self.log_likelihood.parents.first()
 
         values, times, subjects = output.get_data()
         n_subjects = len(set(subjects))
-        print('n_subjects', n_subjects)
 
         # first param is sampled from a normal distribution with a mean
         # derived from subject body weight
@@ -61,13 +62,13 @@ class TestInferenceMixinPdModel(TestCase):
         # weight
         mean, sigma = first_param.child.get_noise_log_likelihoods()
         mean.form = LogLikelihood.Form.EQUATION
-        mean.description = '1.0 if arg0 < 20 else 2.0'
+        mean.description = "1.0 if arg0 < 20 else 2.0"
 
         mean.biomarker_type = self.covariate_biomarker_type
         mean.time_independent_data = True
         mean.save()
         body_weight = LogLikelihood.objects.create(
-            name='Body weight',
+            name="Body weight",
             inference=self.inference,
             form=LogLikelihood.Form.FIXED,
             biomarker_type=self.covariate_biomarker_type,
@@ -75,11 +76,11 @@ class TestInferenceMixinPdModel(TestCase):
         )
         body_weight_values, _, subjects = body_weight.get_data()
         LogLikelihoodParameter.objects.create(
-            name='Body weight',
+            name="Body weight",
             parent=mean,
             child=body_weight,
             parent_index=0,
-            length=len(subjects)
+            length=len(subjects),
         )
         sigma.value = 0.01
         sigma.save()
@@ -88,13 +89,14 @@ class TestInferenceMixinPdModel(TestCase):
 
         model.logp({first_param.child.name: [0.3] * n_subjects})
 
-        max_logp = model[first_param.child.name].logp({
-            first_param.child.name: [
-                1.0 if value < 20 else 2.0
-                for value in body_weight_values
-            ]
-        })
-        lower_logp = model[first_param.child.name].logp({
-            first_param.child.name: [1.0] * n_subjects
-        })
+        max_logp = model[first_param.child.name].logp(
+            {
+                first_param.child.name: [
+                    1.0 if value < 20 else 2.0 for value in body_weight_values
+                ]
+            }
+        )
+        lower_logp = model[first_param.child.name].logp(
+            {first_param.child.name: [1.0] * n_subjects}
+        )
         self.assertLess(lower_logp, max_logp)

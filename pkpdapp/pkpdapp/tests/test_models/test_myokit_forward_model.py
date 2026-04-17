@@ -10,7 +10,7 @@ from numpy.testing import assert_almost_equal
 from pkpdapp.models import (
     PharmacodynamicModel,
     MyokitForwardModel,
-    PharmacokineticModel
+    PharmacokineticModel,
 )
 import numpy as np
 
@@ -18,27 +18,24 @@ import numpy as np
 class TestMyokitForwardModelSingleOutput(TestCase):
     def setUp(self):
         m = PharmacodynamicModel.objects.get(
-            name='tumour_growth_gompertz',
+            name="tumour_growth_gompertz",
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
 
         self.parameter_dict = {
-            'PDCompartment.beta': 1,
-            'PDCompartment.TS0': 1,
-            'PDCompartment.TSmax': 1,
+            "PDCompartment.beta": 1,
+            "PDCompartment.TS0": 1,
+            "PDCompartment.TSmax": 1,
         }
 
         all_keys = list(self.parameter_dict.keys())
         self.fixed_dict = {
-            'PDCompartment.TS0': 1,
+            "PDCompartment.TS0": 1,
         }
 
-        variable_keys = (
-            [k for k in all_keys if k not in list(self.fixed_dict.keys())]
-        )
-        self.variable_parameter_values = [self.parameter_dict[v]
-                                          for v in variable_keys]
+        variable_keys = [k for k in all_keys if k not in list(self.fixed_dict.keys())]
+        self.variable_parameter_values = [self.parameter_dict[v] for v in variable_keys]
 
     def test_run_myokit_pints_forward_model(self):
         times = np.linspace(0, 100)
@@ -69,7 +66,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
 
         # try model with different variable parameters and check output differs
         new_fixed_dict = {
-            'PDCompartment.TS0': 2,
+            "PDCompartment.TS0": 2,
         }
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
@@ -99,21 +96,18 @@ class TestMyokitForwardModelSingleOutput(TestCase):
         times = np.linspace(0, 100)
         n_subjects = 7
         subjects = list(range(n_subjects)) * (len(times) // n_subjects + 1)
-        subjects = subjects[:len(times)]
+        subjects = subjects[: len(times)]
         all_keys = list(self.parameter_dict.keys())
 
         fixed_dict = {
-            'PDCompartment.TS0': [1] * n_subjects,
+            "PDCompartment.TS0": [1] * n_subjects,
         }
 
-        variable_keys = (
-            [k for k in all_keys if k not in list(self.fixed_dict.keys())]
-        )
+        variable_keys = [k for k in all_keys if k not in list(self.fixed_dict.keys())]
         variable_parameter_values = [
             [self.parameter_dict[v]] * n_subjects for v in variable_keys
         ]
         variable_parameter_values = np.array(variable_parameter_values)
-        print('variable_parameter_values', variable_parameter_values.shape)
 
         forward_model = MyokitForwardModel(
             myokit_model=self.model,
@@ -134,7 +128,7 @@ class TestMyokitForwardModelSingleOutput(TestCase):
 class TestMyokitPintsForwardModelMultipleOutput(TestCase):
     def setUp(self):
         m = PharmacokineticModel.objects.get(
-            name='three_compartment_preclinical',
+            name="three_compartment_preclinical",
         )
         self.model = m.get_myokit_model()
         self.simulator = m.get_myokit_simulator()
@@ -157,16 +151,16 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
         #    'PKCompartment.Kpu': 1,
         # }
         fixed_dict = {
-            'PKCompartment.tlag': 1,
-            'PKCompartment.CLmax': 1,
-            'PKCompartment.ke0': 1,
+            "PKCompartment.tlag": 1,
+            "PKCompartment.CLmax": 1,
+            "PKCompartment.ke0": 1,
         }
         variable_parameters = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         desired_outputs = [
-            'PKCompartment.A1',
-            'PKCompartment.A2',
-            'PKCompartment.A3',
+            "PKCompartment.A1",
+            "PKCompartment.A2",
+            "PKCompartment.A3",
         ]
 
         conversion_factors = [
@@ -187,7 +181,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             fixed_parameter_dict=fixed_dict,
             outputs=desired_outputs,
             times=times,
-            conversion_factors=conversion_factors
+            conversion_factors=conversion_factors,
         )
 
         z = forward_model.simulate(variable_parameters)
@@ -198,9 +192,9 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
 
         # do another ordering
         desired_outputs = [
-            'PKCompartment.A3',
-            'PKCompartment.A1',
-            'PKCompartment.A2',
+            "PKCompartment.A3",
+            "PKCompartment.A1",
+            "PKCompartment.A2",
         ]
 
         conversion_factors = [
@@ -221,7 +215,7 @@ class TestMyokitPintsForwardModelMultipleOutput(TestCase):
             outputs=desired_outputs,
             times=times,
             fixed_parameter_dict=fixed_dict,
-            conversion_factors=conversion_factors
+            conversion_factors=conversion_factors,
         )
 
         z_new = forward_model.simulate(variable_parameters)

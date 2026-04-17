@@ -132,7 +132,8 @@ class TestDerivedVariables(TestCase):
         # Check that Km has the same unit as secondary variable
         secondary_unit = self.pkpd_model.variables.get(qname="PKCompartment.C1").unit
         secondary_per_kg = self.pkpd_model.variables.get(
-            qname="PKCompartment.C1").unit_per_body_weight
+            qname="PKCompartment.C1"
+        ).unit_per_body_weight
         km_var = self.pkpd_model.variables.get(qname="PKNonlinearities.Km_C_Drug")
         self.assertEqual(km_var.unit, secondary_unit)
         self.assertEqual(km_var.unit_per_body_weight, secondary_per_kg)
@@ -172,7 +173,6 @@ class TestDerivedVariables(TestCase):
             self.assertIn(var, vars)
         self.assertTrue(myokit_model.get("PDCompartment.C_Drug").is_constant())
         self.assertTrue(myokit_model.get("PKNonlinearities.C_Drug_Emax").is_constant())
-        print(myokit_model.get("PKNonlinearities.C_Drug_Emax").rhs().code())
         self.assertEqual(
             str(myokit_model.get("PKNonlinearities.C_Drug_Emax").rhs()),
             "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug / (PKNonlinearities.C_Drug^PKNonlinearities.hll_C_Drug + PKNonlinearities.D50_C_Drug^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
@@ -430,17 +430,11 @@ class TestDerivedVariables(TestCase):
         # Test C1 AUC variable (PK)
         c1_auc_var = myokit_model.get(c1_auc_var_qname)
         self.assertTrue(c1_auc_var.is_state())
-        self.assertEqual(
-            str(c1_auc_var.rhs()),
-            "PKCompartment.C1"
-        )
+        self.assertEqual(str(c1_auc_var.rhs()), "PKCompartment.C1")
         self.assertEqual(float(c1_auc_var.initial_value()), 0.0)
 
         # Test E AUC variable (PD)
         e_auc_var = myokit_model.get(e_auc_var_qname)
         self.assertTrue(e_auc_var.is_state())
-        self.assertEqual(
-            str(e_auc_var.rhs()),
-            "PDCompartment.E"
-        )
+        self.assertEqual(str(e_auc_var.rhs()), "PDCompartment.E")
         self.assertEqual(float(e_auc_var.initial_value()), 0.0)

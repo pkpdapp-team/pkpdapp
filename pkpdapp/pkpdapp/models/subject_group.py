@@ -42,13 +42,11 @@ class SubjectGroup(models.Model):
     def __str__(self):
         return self.name
 
-    def copy(self, new_protocol, new_project):
+    def copy(self, new_protocol, new_project, new_dataset):
         """
         Create a copy of this subject group with the same values but a different
         protocol, project and dataset.
         """
-        print(f"copying group {self.name} for protocol {new_protocol.name}")
-        new_dataset = new_project.datasets.first()
         new_group = SubjectGroup.objects.create(
             name=self.name,
             id_in_dataset=self.id_in_dataset,
