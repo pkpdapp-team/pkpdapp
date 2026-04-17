@@ -181,9 +181,6 @@ class Protocol(StoredModel):
         for dose in self.doses.all():
             dose.copy(stored_protocol)
         if self.group is not None:
-            print(
-                f"copying group {self.group.name} for protocol {stored_protocol.name}"
-            )
             if self.dataset is not None:
                 # if group does not already exist in the new project,
                 # create a copy of it and link to the new protocol
