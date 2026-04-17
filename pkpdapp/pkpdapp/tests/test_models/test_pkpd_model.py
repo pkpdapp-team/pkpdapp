@@ -271,7 +271,6 @@ class TestPkpdModel(TestCase):
         model = combined.get_myokit_model()
         model_vars = [v.qname() for v in model.variables()]
         self.assertCountEqual(model_vars, expected_vars)
-        print("combined model validated", model.code())
 
     def test_ada_cl(self):
         pk_model = PharmacokineticModel.objects.get(name="1-compartmental model")
@@ -283,7 +282,7 @@ class TestPkpdModel(TestCase):
             name="my wonderful model",
             pk_model=pk_model,
             pd_model=pd_model,
-            has_anti_drug_antibodies=False
+            has_anti_drug_antibodies=False,
         )
 
         # Set unit and per_kg on CL variable

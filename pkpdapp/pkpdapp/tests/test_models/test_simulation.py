@@ -29,7 +29,6 @@ class TestSimulation(TestCase):
         true_params = {
             param["qname"]: param["default_value"] for param in possible_params[:2]
         }
-        print(true_params)
         sliders = []
         for param in possible_params[:2]:
             sliders.append(
