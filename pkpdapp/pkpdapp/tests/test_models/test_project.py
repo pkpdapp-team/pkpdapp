@@ -25,6 +25,7 @@ from pkpdapp.models import (
     SimulationPlot,
     SimulationSlider,
     SimulationYAxis,
+    ResultsTable,
     Unit,
     EfficacyExperiment,
     DerivedVariable,
@@ -81,10 +82,19 @@ class TestProject(TestCase):
             group=group,
             project=self.project,
         )
+        protocol_no_dataset = Protocol.objects.create(
+            name="my protocol without dataset",
+            variable=c_drug_pd,
+            project=self.project,
+        )
         dose = protocol.doses.create(
             amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
         )
+        dose_no_dataset = protocol_no_dataset.doses.create(
+            amount=2.0, start_time=0.5, repeats=1, repeat_interval=2.0
+        )
         protocol.doses.set([dose])
+        protocol_no_dataset.doses.set([dose_no_dataset])
         c_drug_pd.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
@@ -146,6 +156,14 @@ class TestProject(TestCase):
             c50=2.0,
             c50_unit=h,
             compound=self.project.compound,
+        )
+
+        results_table = ResultsTable.objects.create(
+            name="my results table",
+            rows=ResultsTable.Type.PARAMETERS,
+            columns=ResultsTable.Type.GROUPS,
+            filters={"dose_type": "IV"},
+            project=self.project,
         )
 
         new_project = self.project.copy()
@@ -217,15 +235,22 @@ class TestProject(TestCase):
         new_c_drug_pd = new_model.variables.get(qname="PDCompartment.C_Drug")
         new_a1 = new_model.variables.get(qname="PKCompartment.A1")
         self.assertNotEqual(new_c_drug_pd.pk, c_drug_pd.pk)
-        self.assertEqual(new_c_drug_pd.protocols.count(), 1)
-        new_protocol = new_c_drug_pd.protocols.first()
+        self.assertEqual(new_c_drug_pd.protocols.count(), 2)
+        new_protocol = new_c_drug_pd.protocols.get(name="my protocol")
+        new_protocol_no_dataset = new_c_drug_pd.protocols.get(
+            name="my protocol without dataset"
+        )
         self.assertEqual(new_protocol.name, "my protocol")
         self.assertNotEqual(new_protocol.pk, protocol.pk)
         self.assertEqual(new_protocol.dataset, new_dataset)
         self.assertEqual(new_protocol.group, new_group)
         self.assertEqual(new_protocol.variable.qname, "PDCompartment.C_Drug")
-        # check that this is the only protocol for this project
-        self.assertEqual(new_project.protocols.count(), 1)
+        self.assertEqual(new_protocol_no_dataset.dataset, None)
+        self.assertEqual(new_protocol_no_dataset.group, None)
+        self.assertEqual(new_protocol_no_dataset.variable.qname, "PDCompartment.C_Drug")
+        self.assertNotEqual(new_protocol_no_dataset.pk, protocol_no_dataset.pk)
+        # check that both protocols are present for this project
+        self.assertEqual(new_project.protocols.count(), 2)
         self.assertEqual(new_protocol.doses.count(), 1)
         new_dose = new_protocol.doses.first()
         self.assertNotEqual(new_dose.pk, dose.pk)
@@ -233,6 +258,22 @@ class TestProject(TestCase):
         self.assertEqual(new_dose.start_time, 0.0)
         self.assertEqual(new_dose.repeats, 2)
         self.assertEqual(new_dose.repeat_interval, 1.1)
+        self.assertEqual(new_protocol_no_dataset.doses.count(), 1)
+        new_dose_no_dataset = new_protocol_no_dataset.doses.first()
+        self.assertNotEqual(new_dose_no_dataset.pk, dose_no_dataset.pk)
+        self.assertEqual(new_dose_no_dataset.amount, 2.0)
+        self.assertEqual(new_dose_no_dataset.start_time, 0.5)
+        self.assertEqual(new_dose_no_dataset.repeats, 1)
+        self.assertEqual(new_dose_no_dataset.repeat_interval, 2.0)
+
+        # check that the results table is copied
+        self.assertEqual(new_project.results.count(), 1)
+        new_results_table = new_project.results.first()
+        self.assertNotEqual(new_results_table.pk, results_table.pk)
+        self.assertEqual(new_results_table.name, "my results table")
+        self.assertEqual(new_results_table.rows, ResultsTable.Type.PARAMETERS)
+        self.assertEqual(new_results_table.columns, ResultsTable.Type.GROUPS)
+        self.assertEqual(new_results_table.filters, {"dose_type": "IV"})
 
         # check that the simulation is there and has the right name
         self.assertEqual(new_project.simulations.count(), 1)
