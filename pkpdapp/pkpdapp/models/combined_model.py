@@ -314,6 +314,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         for time_interval in self.time_intervals.all():
             time_interval.copy(stored_model)
 
+        # update the model variables
+        stored_model.update_model()
         return stored_model
 
     def create_myokit_model(self):
