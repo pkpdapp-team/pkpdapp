@@ -476,6 +476,7 @@ class Variable(StoredModel):
         self.constant = variable.constant
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
+        self.unit_per_body_weight = variable.unit_per_body_weight
 
         # copy protocols
         for p in variable.protocols.all():
