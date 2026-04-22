@@ -174,7 +174,7 @@ const ParameterRow: FC<Props> = ({
     }
   }
   const timeVaryingVariables = variables.filter(
-    (v) => !v.constant && v.qname.startsWith("PK") && !v.qname.endsWith("_MM"),
+    (v) => !v.constant && (v.qname.startsWith("PK") && !v.qname.endsWith("_MM")) || v.qname.startsWith("Extravascular.Aa"),
   );
   const concentrationOptions = timeVaryingVariables.map((variable) => ({
     value: variable.id,
