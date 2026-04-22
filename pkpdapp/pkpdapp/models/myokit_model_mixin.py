@@ -4,10 +4,16 @@
 # copyright notice and full license details.
 #
 
+import hashlib
+import os
+from tempfile import TemporaryDirectory
+import tempfile
+
 import pkpdapp
 import numpy as np
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
+from myokit.formats.diffsl import DiffSLExporter
 import myokit
 import threading
 from django.core.cache import cache
@@ -16,6 +22,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
+
+USE_DIFFSOL = True
+if USE_DIFFSOL:
+    import pydiffsol
 
 
 class MyokitModelMixin:
@@ -31,6 +41,15 @@ class MyokitModelMixin:
             model.get(var_name).set_rhs(float(var_value))
 
         return variables
+
+    def _initialise_diffsol_inputs(self, model, variables):
+        # Convert units
+        inputs = {
+            qname: self._convert_unit_qname(qname, value, model)
+            for qname, value in variables.items()
+        }
+
+        return inputs
 
     @staticmethod
     def _get_protocol_amount_conversion_factor(
@@ -119,8 +138,8 @@ class MyokitModelMixin:
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
 
-    def _get_myokit_simulator_cache_key(self):
-        return "myokit_simulator_{}_{}".format(self._meta.db_table, self.id)
+    def _get_myokit_simulator_cache_key(self, hash=None):
+        return "myokit_simulator_{}_{}_{}".format(self._meta.db_table, self.id, hash)
 
     @staticmethod
     def sbml_string_to_mmt(sbml):
@@ -141,6 +160,52 @@ class MyokitModelMixin:
 
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
+
+    def get_diffsol_ode(
+        self,
+        override_tlag,
+        model,
+        time_max,
+        dosing_protocols,
+        outputs,
+        inputs,
+    ):
+        protocols = self._get_myokit_protocols(
+            model=model,
+            dosing_protocols=dosing_protocols,
+            override_tlag=override_tlag,
+            time_max=time_max,
+        )
+
+        inputs_myokit = [model.get(qname) for qname in inputs]
+        outputs_myokit = [model.get(qname) for qname in outputs]
+
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        try:
+            path = temp.name
+            temp.close()  # important so other code can open it
+            DiffSLExporter().model(
+                path,
+                model,
+                convert_units=False,
+                protocol=protocols,
+                inputs=inputs_myokit,
+                outputs=outputs_myokit,
+                final_time=time_max,
+            )
+            with open(path, "r") as f:
+                content = f.read()
+        finally:
+            os.remove(path)  # cleanup
+
+        key = self._get_myokit_simulator_cache_key(
+            hash=hashlib.sha256(content.encode()).hexdigest()
+        )
+        ode = cache.get(key)
+        if ode is None:
+            ode = pydiffsol.Ode(content)
+            cache.set(key, ode, timeout=None)
+        return ode
 
     def create_myokit_simulator(
         self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
@@ -169,15 +234,6 @@ class MyokitModelMixin:
         with lock:
             sim = myokit.Simulation(model, protocol=protocols)
         return sim
-
-    def get_myokit_simulator(self):
-        key = self._get_myokit_simulator_cache_key()
-        with lock:
-            myokit_simulator = cache.get(key)
-        if myokit_simulator is None:
-            myokit_simulator = self.create_myokit_simulator()
-            cache.set(key, myokit_simulator, timeout=None)
-        return myokit_simulator
 
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
@@ -518,6 +574,25 @@ class MyokitModelMixin:
 
         return result
 
+    def serialize_diffsol_solution(self, soln, myokit_model, outputs):
+        result = {}
+        for i in range(len(outputs)):
+            y = soln.ys[i, :]
+            output_qname = outputs[i]
+            variable = self.variables.get(qname=output_qname)
+            myokit_variable_sbml = myokit_model.get(output_qname)
+
+            if variable.unit is None:
+                conversion_factor = 1.0
+            else:
+                conversion_factor = self._conversion_factor(
+                    variable, myokit_variable_sbml
+                )
+
+            result[variable.id] = (y / conversion_factor).tolist()
+
+        return result
+
     def get_time_max(self):
         return self.time_max
 
@@ -548,6 +623,70 @@ class MyokitModelMixin:
             dose_sum = max(dose_sum, 1e-6)
             myokit_var.set_rhs(dose_sum)
 
+    def _nonlinarities_inputs_diffsol(self, model, dosing_protocols):
+        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
+        # value of the first dose concentration
+        if (
+            self.is_library_model
+            and model.has_variable("PKNonlinearities.C_Drug")
+            and dosing_protocols is not None
+            and len(dosing_protocols) > 0
+        ):
+
+            project = self.get_project()
+            myokit_var = model.get("PKNonlinearities.C_Drug")
+            # set C_Drug equal to the sum of the first dose amounts for all protocols
+            # within this group
+            # TODO: later we will get users to select which variable to use for the
+            # dose concentration via the nonlinearities UI interface.
+            dose_sum = 0.0
+            for protocol in dosing_protocols.values():
+                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                    project, protocol, myokit_var, project.compound, target=None
+                )
+                dose_sum += protocol.doses.first().amount * amount_conversion_factor
+
+            # C_Drug cannot be zero as it might be raised to a negative power
+            dose_sum = max(dose_sum, 1e-6)
+            return {"PKNonlinearities.C_Drug": dose_sum}
+        else:
+            return {}
+
+    def simulate_model_diffsol(
+        self,
+        outputs,
+        variables,
+        time_max,
+        dosing_protocols,
+    ):
+        model = self.get_myokit_model()
+
+        # Convert units
+        inputs = self._initialise_diffsol_inputs(model, variables)
+        time_max = self._convert_bound_unit("time", time_max, model)
+        nonlinearities_inputs = self._nonlinarities_inputs_diffsol(
+            model, dosing_protocols
+        )
+        input_names = []
+        input_values = []
+        for k, v in {**inputs, **nonlinearities_inputs}.items():
+            input_names.append(k)
+            input_values.append(v)
+
+        # get tlag vars
+        override_tlag = self._get_override_tlag(variables)
+
+        ode = self.get_diffsol_ode(
+            override_tlag=override_tlag,
+            model=model,
+            time_max=time_max,
+            dosing_protocols=dosing_protocols,
+            inputs=input_names,
+            outputs=outputs,
+        )
+        soln = ode.solve_hybrid(np.array(input_values), time_max)
+        return self.serialize_diffsol_solution(soln, model, outputs)
+
     def simulate_model(
         self,
         outputs=None,
@@ -564,6 +703,7 @@ class MyokitModelMixin:
 
         # get tlag vars
         override_tlag = self._get_override_tlag(variables)
+
         # create simulator
         sim = self.create_myokit_simulator(
             override_tlag=override_tlag,
@@ -634,15 +774,27 @@ class MyokitModelMixin:
             }
             model_dosing_protocols.append(dosing_protocols)
 
-        result = [
-            self.simulate_model(
-                variables=variables,
-                time_max=time_max,
-                outputs=outputs,
-                dosing_protocols=dosing_protocols,
-            )
-            for dosing_protocols in model_dosing_protocols
-        ]
+        if USE_DIFFSOL:
+            return [
+                self.simulate_model_diffsol(
+                    variables=variables,
+                    time_max=time_max,
+                    outputs=outputs,
+                    dosing_protocols=dosing_protocols,
+                )
+                for dosing_protocols in model_dosing_protocols
+            ]
+        else:
+            return [
+                self.simulate_model(
+                    variables=variables,
+                    time_max=time_max,
+                    outputs=outputs,
+                    dosing_protocols=dosing_protocols,
+                )
+                for dosing_protocols in model_dosing_protocols
+            ]
+
         result[0].update({"group_id": None})
         for r, group in zip(result[1:], groups):
             r.update({"group_id": group.id if group is not None else None})
