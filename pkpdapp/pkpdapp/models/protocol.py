@@ -182,17 +182,17 @@ class Protocol(StoredModel):
             dose.copy(stored_protocol)
         if self.group is not None:
             if self.dataset is not None:
-                # if group does not already exist in the new project,
-                # create a copy of it and link to the new protocol
-                try:
-                    new_group = new_dataset.groups.get(name=self.group.name)
-                except SubjectGroup.DoesNotExist:
-                    new_group = self.group.copy(
-                        stored_protocol, new_project, new_dataset=new_dataset
-                    )
+                groups = new_dataset.groups
             else:
+                groups = new_project.groups
+
+            # if group does not already exist in the dataset/project, then
+            # create a copy of it and link to the new protocol
+            try:
+                new_group = groups.get(name=self.group.name)
+            except SubjectGroup.DoesNotExist:
                 new_group = self.group.copy(
-                    stored_protocol, new_project, new_dataset=None
+                    stored_protocol, new_project, new_dataset=new_dataset
                 )
             stored_protocol.group = new_group
             stored_protocol.save()
