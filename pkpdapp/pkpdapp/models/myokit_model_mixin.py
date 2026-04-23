@@ -775,7 +775,7 @@ class MyokitModelMixin:
             model_dosing_protocols.append(dosing_protocols)
 
         if USE_DIFFSOL:
-            return [
+            result = [
                 self.simulate_model_diffsol(
                     variables=variables,
                     time_max=time_max,
@@ -785,7 +785,7 @@ class MyokitModelMixin:
                 for dosing_protocols in model_dosing_protocols
             ]
         else:
-            return [
+            result = [
                 self.simulate_model(
                     variables=variables,
                     time_max=time_max,
