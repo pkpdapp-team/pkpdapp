@@ -166,10 +166,10 @@ export const Protocols: FC<ProtocolsProps> = ({
   const filteredProtocols = projectProtocols.filter((p) => p.group === null);
 
   const handleAddTab = async () => {
-    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group ")).map((g) => g.name);
+    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group")).map((g) => g.name);
     const existingNames = groups?.map((g) => g.name) || [];
     const newGroupId = (groups?.length || 1) + 1;
-    let nextSimGroupValue = existingSimGroupNames.length + 1;
+    let nextSimGroupValue = existingSimGroupNames.length + 2;
     let newGroupName = `Sim-Group ${nextSimGroupValue}`;
     while (existingNames?.includes(newGroupName)) {
       nextSimGroupValue++;
