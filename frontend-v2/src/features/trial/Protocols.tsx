@@ -166,13 +166,14 @@ export const Protocols: FC<ProtocolsProps> = ({
   const filteredProtocols = projectProtocols.filter((p) => p.group === null);
 
   const handleAddTab = async () => {
-    const newValue = (groups?.length || 1) + 1;
-    const existingNames = groups?.map((g) => g.name);
-    let newGroupId = newValue;
-    let newGroupName = `Sim-Group ${newValue}`;
+    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group")).map((g) => g.name);
+    const existingNames = groups?.map((g) => g.name) || [];
+    const newGroupId = (groups?.length || 1) + 1;
+    let nextSimGroupValue = existingSimGroupNames.length + 2;
+    let newGroupName = `Sim-Group ${nextSimGroupValue}`;
     while (existingNames?.includes(newGroupName)) {
-      newGroupId++;
-      newGroupName = `Sim-Group ${newGroupId}`;
+      nextSimGroupValue++;
+      newGroupName = `Sim-Group ${nextSimGroupValue}`;
     }
     await createSubjectGroup({
       subjectGroup: {
@@ -185,7 +186,7 @@ export const Protocols: FC<ProtocolsProps> = ({
             ...newProtocol,
             dataset: null,
             project,
-            name: `${newProtocol.name} - Group ${newValue}`,
+            name: `${newProtocol.name} - {newGroupName}`,
           };
         }),
       },
