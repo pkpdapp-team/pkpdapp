@@ -2502,6 +2502,7 @@ export type PatchedCombinedModelRead = {
 };
 export type SimulateResponse = {
   time: number[];
+  group?: number | null;
   outputs: {
     [key: string]: number[];
   };

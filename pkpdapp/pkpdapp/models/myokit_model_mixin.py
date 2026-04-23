@@ -549,7 +549,11 @@ class MyokitModelMixin:
             myokit_var.set_rhs(dose_sum)
 
     def simulate_model(
-        self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+        self,
+        outputs=None,
+        variables=None,
+        time_max=None,
+        dosing_protocols=None,
     ):
         model = self.get_myokit_model()
 
@@ -619,13 +623,18 @@ class MyokitModelMixin:
         }
         model_dosing_protocols = [project_dosing_protocols]
 
-        for group in get_subject_groups(project):
+        groups = get_subject_groups(project)
+        # sort groups starting alphabetically, but with those starting with Sim first
+        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
+
+        for group in groups:
+            print("GROUP:", group.name)
             dosing_protocols = {
                 p.variable.qname: p for p in protocols if p.group == group
             }
             model_dosing_protocols.append(dosing_protocols)
 
-        return [
+        result = [
             self.simulate_model(
                 variables=variables,
                 time_max=time_max,
@@ -634,6 +643,10 @@ class MyokitModelMixin:
             )
             for dosing_protocols in model_dosing_protocols
         ]
+        result[0].update({"group_id": None})
+        for r, group in zip(result[1:], groups):
+            r.update({"group_id": group.id if group is not None else None})
+        return result
 
 
 def set_administration(model, drug_amount, direct=True):

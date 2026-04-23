@@ -6060,6 +6060,9 @@ components:
           items:
             type: number
             format: double
+        group:
+          type: integer
+          nullable: true
         outputs:
           type: object
           additionalProperties:

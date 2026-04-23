@@ -373,7 +373,7 @@ const createPlot =
     (data: SimulateResponse, index: number) => {
       const colourIndex = index + colourOffset;
       const colour = plotColours[colourIndex % plotColours.length];
-      const group = groups?.[index - 1];
+      const group = groups?.find((g) => g.id === data.group);
       const style = isReference ? "dot" : "solid";
       return generatePlotData(
         data,
