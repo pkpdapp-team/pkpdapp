@@ -174,6 +174,7 @@ class Protocol(StoredModel):
             "dose_type": self.dose_type,
             "time_unit": self.time_unit,
             "amount_unit": self.amount_unit,
+            "amount_per_body_weight": self.amount_per_body_weight,
             "variable": new_variable,
             "dataset": new_dataset,
         }
