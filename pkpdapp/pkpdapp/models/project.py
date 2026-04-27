@@ -107,6 +107,7 @@ class Project(models.Model):
             name=new_name,
             description=new_description,
             species=self.species,
+            species_weight=self.species_weight,
             compound=new_compound,
             created=new_created,
         )
