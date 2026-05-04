@@ -243,3 +243,89 @@ class TestOptimise(TestCase):
             use_multiplicative_noise=True,
         )
         self.assertEqual(loss, np.inf)
+
+    def test_optimise_pso(self):
+        """Particle Swarm Optimisation method should converge to the true values."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        group_ids = [group.id for group in setup["groups"]]
+        biomarker_type_ids = [setup["biomarker_type"].id]
+
+        prepared_groups = model._prepare_optimise_groups(biomarker_type_ids, group_ids)
+        starting_loss = model._optimise_loss(
+            prepared_groups,
+            setup["inputs"],
+            starting,
+        )
+
+        result = model.optimise(
+            inputs=input_ids,
+            starting=starting,
+            bounds=bounds,
+            biomarker_types=biomarker_type_ids,
+            subject_groups=group_ids,
+            max_iterations=80,
+            method="pso",
+        )
+
+        self.assertTrue(np.isfinite(result["loss"]))
+        self.assertLess(result["loss"], starting_loss)
+        self.assertAlmostEqual(result["optimal"][0], setup["true"][0], delta=0.04)
+        self.assertAlmostEqual(result["optimal"][1], setup["true"][1], delta=0.18)
+
+    def test_optimise_gradient_descent(self):
+        """Gradient descent uses forward sensitivities and should reduce the loss."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        group_ids = [group.id for group in setup["groups"]]
+        biomarker_type_ids = [setup["biomarker_type"].id]
+
+        prepared_groups = model._prepare_optimise_groups(biomarker_type_ids, group_ids)
+        starting_loss = model._optimise_loss(
+            prepared_groups,
+            setup["inputs"],
+            starting,
+        )
+
+        # Verify that sensitivity helper returns correctly shaped arrays.
+        y, y_prime = model._optimise_predict_with_sens(
+            prepared_groups[0],
+            setup["inputs"],
+            starting,
+        )
+        n_times = len(prepared_groups[0]["t_eval"])
+        n_outputs = len(prepared_groups[0]["outputs"])
+        n_params = len(setup["inputs"])
+        self.assertEqual(y.shape, (n_times, n_outputs))
+        self.assertEqual(y_prime.shape, (n_times, n_outputs, n_params))
+        self.assertTrue(np.all(np.isfinite(y)))
+        self.assertTrue(np.all(np.isfinite(y_prime)))
+
+        # Verify that _optimise_loss_gradient returns scalar loss + vector gradient.
+        total_loss, total_gradient = model._optimise_loss_gradient(
+            prepared_groups,
+            setup["inputs"],
+            starting,
+        )
+        self.assertTrue(np.isfinite(total_loss))
+        self.assertEqual(total_gradient.shape, (n_params,))
+        self.assertTrue(np.all(np.isfinite(total_gradient)))
+
+        result = model.optimise(
+            inputs=input_ids,
+            starting=starting,
+            bounds=bounds,
+            biomarker_types=biomarker_type_ids,
+            subject_groups=group_ids,
+            max_iterations=200,
+            method="gradient_descent",
+        )
+
+        self.assertTrue(np.isfinite(result["loss"]))
+        self.assertLess(result["loss"], starting_loss)
