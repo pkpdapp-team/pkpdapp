@@ -800,6 +800,15 @@ class MyokitModelMixin:
             r.update({"group_id": group.id if group is not None else None})
         return result
 
+    _OPTIMISE_METHODS = {
+        "cmaes": "CMAES",
+        "pso": "PSO",
+        "nelder-mead": "NelderMead",
+        "gradient_descent": "GradientDescent",
+        "adam": "Adam",
+        "irprop": "IRPropMinus",
+    }
+
     def optimise(
         self,
         inputs,
@@ -809,6 +818,7 @@ class MyokitModelMixin:
         subject_groups=None,
         max_iterations=None,
         use_multiplicative_noise=True,
+        method="pso",
     ):
         """
         Fits the model against the data indicated
@@ -835,8 +845,11 @@ class MyokitModelMixin:
                   loss
 
         The package Pints is used for the optimisation (https://pints.readthedocs.io/en/stable/optimisers/index.html).
-        For the moment we just use the cmaes algorithm (https://github.com/pints-team/pints/blob/main/examples/optimisation/cmaes.ipynb).
-        We use the starting point and bounds given in the args, and run the given maximum number of iterations.
+        The optimisation method is chosen by the ``method`` argument. Gradient-free methods (cmaes, pso,
+        nelder-mead) only require the loss function. Gradient-based methods (gradient_descent) also require
+        sensitivities, which are computed via forward sensitivity analysis using ``solve_fwd_sens``. The
+        methods ``adam`` and ``irprop`` are provided for future compatibility but require a newer version
+        of pints that exposes ``pints.Adam`` / ``pints.IRPropMinus``.
 
         Arguments
         ---------
@@ -855,6 +868,9 @@ class MyokitModelMixin:
         use_multiplicative_noise: bool (optional)
             if False (default) use additive noise (sum of squares loss), if True,
             use multiplicative noise (log-normal noise)
+        method: str (optional)
+            optimisation method, one of "cmaes", "pso" (default), "nelder-mead",
+            "gradient_descent", "adam", "irprop"
 
         Returns
         -------
@@ -866,6 +882,20 @@ class MyokitModelMixin:
 
         if not USE_DIFFSOL:
             raise RuntimeError("Optimisation requires diffsol support.")
+
+        if method not in self._OPTIMISE_METHODS:
+            raise ValueError(
+                f"Unknown optimisation method '{method}'. "
+                f"Choose from: {list(self._OPTIMISE_METHODS.keys())}"
+            )
+        pints_method_name = self._OPTIMISE_METHODS[method]
+        pints_method = getattr(pints, pints_method_name, None)
+        if pints_method is None:
+            raise RuntimeError(
+                f"Optimisation method '{method}' ({pints_method_name}) is not "
+                f"available in the installed pints version ({pints.__version__}). "
+                "Please upgrade pints."
+            )
 
         if max_iterations is None:
             max_iterations = 100
@@ -891,6 +921,27 @@ class MyokitModelMixin:
                     inner_self.best_values = np.asarray(values, dtype=float).copy()
                 return loss
 
+            def evaluateS1(inner_self, values):
+                try:
+                    total_loss, total_gradient = self._optimise_loss_gradient(
+                        groups,
+                        input_variables,
+                        values,
+                        use_multiplicative_noise=use_multiplicative_noise,
+                    )
+                except Exception:
+                    logger.exception(
+                        "solve_fwd_sens failed during gradient computation."
+                    )
+                    return np.inf, np.zeros(len(input_variables))
+                if not np.isfinite(total_loss):
+                    return np.inf, np.zeros(len(input_variables))
+                loss = float(total_loss)
+                if np.isfinite(loss) and loss < inner_self.best_loss:
+                    inner_self.best_loss = loss
+                    inner_self.best_values = np.asarray(values, dtype=float).copy()
+                return loss, total_gradient
+
         error = OptimiseError()
         error.best_loss = np.inf
         error.best_values = np.asarray(starting, dtype=float).copy()
@@ -902,24 +953,13 @@ class MyokitModelMixin:
             )
 
         optimiser_start = np.asarray(starting, dtype=float)
-        default_start = np.asarray(
-            [variable.get_default_value() for variable in input_variables],
-            dtype=float,
-        )
-        if np.all(default_start >= lower_bounds) and np.all(
-            default_start <= upper_bounds
-        ):
-            default_loss = error(default_start)
-            if np.isfinite(default_loss) and default_loss < starting_loss:
-                optimiser_start = default_start
-                starting_loss = float(default_loss)
 
         boundaries = pints.RectangularBoundaries(lower_bounds, upper_bounds)
         optimiser = pints.OptimisationController(
             error,
             optimiser_start,
             boundaries=boundaries,
-            method=pints.CMAES,
+            method=pints_method,
         )
         optimiser.set_max_iterations(max_iterations)
         optimiser.set_log_to_screen(False)
@@ -991,10 +1031,14 @@ class MyokitModelMixin:
             raise ValueError("Starting values and bounds must be finite.")
 
         if np.any(lower_bounds >= upper_bounds):
-            raise ValueError("Every lower bound must be less than its upper bound.")
+            raise ValueError(
+                f"Every lower bound ({lower_bounds.tolist()}) must be less than its upper bound ({upper_bounds.tolist()})."
+            )
 
         if np.any(starting < lower_bounds) or np.any(starting > upper_bounds):
-            raise ValueError("Starting values must lie within the supplied bounds.")
+            raise ValueError(
+                f"Starting values ({starting.tolist()}) must lie within the supplied bounds ({lower_bounds.tolist()}, {upper_bounds.tolist()})."
+            )
 
         return variables, starting, lower_bounds, upper_bounds
 
@@ -1204,7 +1248,7 @@ class MyokitModelMixin:
         for group in groups:
             try:
                 y = self._optimise_predict(group, input_variables, values)
-            except exception:
+            except Exception:
                 logger.exception("diffsol solve failed during optimisation.")
                 return np.inf
 
@@ -1244,6 +1288,129 @@ class MyokitModelMixin:
             )
 
         return y
+
+    def _optimise_predict_with_sens(self, group, input_variables, values):
+        """
+        Like _optimise_predict but uses solve_fwd_sens to also compute the
+        partial derivatives of the outputs w.r.t. the optimised input variables.
+
+        Arguments
+        ---------
+        group : dict
+            Prepared group dict from _prepare_optimise_group.
+        input_variables : list
+            The optimised Variable objects.
+        values : array-like
+            Current values for the optimised variables.
+
+        Returns
+        -------
+        y : np.ndarray, shape (n_times, n_outputs)
+            Simulated values at the evaluation timepoints.
+        y_prime : np.ndarray, shape (n_times, n_outputs, n_parameters)
+            Derivatives of the simulated outputs with respect to each
+            optimised parameter.
+        """
+        values = np.asarray(values, dtype=float)
+        if not np.all(np.isfinite(values)):
+            raise ValueError("optimisation values must be finite.")
+
+        input_values = np.array(group["input_values"], copy=True)
+        # Conversion factors: solve_fwd_sens gives d(y)/d(converted_param).
+        # Since converted = factor * original, d(y)/d(original) = d(y)/d(converted) * factor.
+        conversion_factors = [
+            self._convert_unit_qname(variable.qname, 1.0, group["model"])
+            for variable in input_variables
+        ]
+        for value, variable in zip(values, input_variables):
+            input_values[group["input_indices"][variable.qname]] = (
+                self._convert_unit_qname(variable.qname, value, group["model"])
+            )
+
+        solution = group["ode"].solve_fwd_sens(input_values, group["t_eval"])
+        y = np.asarray(solution.ys)  # (n_outputs, n_times)
+
+        if y.shape != (len(group["outputs"]), len(group["t_eval"])):
+            raise ValueError(
+                "Unexpected prediction shape: "
+                f"{y.shape}, expected {(len(group['outputs']), len(group['t_eval']))}."
+            )
+
+        n_params = len(input_variables)
+        n_outputs = len(group["outputs"])
+        n_times = len(group["t_eval"])
+
+        y_prime = np.zeros((n_times, n_outputs, n_params), dtype=float)
+        for k, (variable, cf) in enumerate(zip(input_variables, conversion_factors)):
+            param_idx = group["input_indices"][variable.qname]
+            # sens[param_idx] has shape (n_outputs, n_times): d(y)/d(converted_param).
+            # Transpose to (n_times, n_outputs) and scale by conversion factor.
+            y_prime[:, :, k] = np.asarray(solution.sens[param_idx]).T * cf
+
+        # Transpose y to (n_times, n_outputs) for the return value.
+        return y.T, y_prime
+
+    def _optimise_loss_gradient(
+        self,
+        groups,
+        input_variables,
+        values,
+        use_multiplicative_noise=False,
+    ):
+        """
+        Returns the loss and gradient across prepared groups, using
+        forward sensitivities for the requested input variables.
+
+        Arguments
+        ---------
+        groups : list
+            Prepared group dicts from _prepare_optimise_groups.
+        input_variables : list
+            The optimised Variable objects.
+        values : array-like
+            Current values for the optimised variables.
+        use_multiplicative_noise : bool
+            If True, uses the log-normal residual definition.
+
+        Returns
+        -------
+        loss : float
+            Sum-of-squares loss across the requested groups.
+        gradient : np.ndarray, shape (n_parameters,)
+            Gradient of the total loss w.r.t. the optimised parameters.
+        """
+        gradient = np.zeros(len(input_variables), dtype=float)
+        total_loss = 0.0
+
+        for group in groups:
+            y, y_prime = self._optimise_predict_with_sens(
+                group,
+                input_variables,
+                values,
+            )
+
+            for record in group["records"]:
+                i = record["output_index"]
+                t_idx = record["time_index"]
+                prediction = y[t_idx, i]
+                observed = record["value"]
+
+                if use_multiplicative_noise:
+                    if prediction <= 0 or observed <= 0:
+                        return np.inf, np.zeros(len(input_variables))
+                    residual = np.log(prediction) - np.log(observed)
+                    d_residual_dp = y_prime[t_idx, i, :] / prediction
+                else:
+                    residual = prediction - observed
+                    d_residual_dp = y_prime[t_idx, i, :]
+
+                total_loss += residual * residual
+                gradient += 2.0 * residual * d_residual_dp
+
+        if not np.isfinite(total_loss):
+            return np.inf, np.zeros(len(input_variables))
+
+        return float(total_loss), gradient
 
     def _unit_conversion_target(self, qname):
         if self.is_library_model:

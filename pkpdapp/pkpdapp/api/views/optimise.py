@@ -25,7 +25,8 @@ class OptimiseSerializer(serializers.Serializer):
         child=serializers.IntegerField(), required=False, allow_null=True
     )
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
-    use_multiplicative_noise = serializers.BooleanField(required=False, default=False)
+    use_multiplicative_noise = serializers.BooleanField(required=False, default=True)
+    method = serializers.CharField(required=False, default="pso")
 
 
 class OptimiseResponseSerializer(serializers.Serializer):
@@ -70,6 +71,7 @@ class OptimiseBaseView(views.APIView):
                 subject_groups=data.get("subject_groups"),
                 max_iterations=data.get("max_iterations"),
                 use_multiplicative_noise=data.get("use_multiplicative_noise", False),
+                method=data.get("method", "pso"),
             )
         except (RuntimeError, ValueError) as e:
             return Response(
