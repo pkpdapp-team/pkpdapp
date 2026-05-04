@@ -30,3 +30,4 @@ agent_plan
 tmp/
 .claude
 .devcontainer
+pkpdapp/pkpdapp/tests/test_models/optimise_verification_plots
