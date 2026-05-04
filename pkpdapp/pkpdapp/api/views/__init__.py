@@ -50,7 +50,7 @@ from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
 )
-from .optimse import (
+from .optimise import (
     OptimiseCombinedView,
 )
 from .results_table import ResultsTableView

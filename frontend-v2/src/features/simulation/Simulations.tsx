@@ -11,6 +11,7 @@ import { RootState } from "../../app/store";
 import {
   CombinedModelRead,
   CompoundRead,
+  OptimiseResponse,
   ProjectRead,
   Simulation,
   SimulationPlotRead,
@@ -40,6 +41,7 @@ import {
   useState,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
+import useOptimise from "./useOptimise";
 import useSimulation from "./useSimulation";
 import useSimulationInputs from "./useSimulationInputs";
 import useDirty from "../../hooks/useDirty";
@@ -59,6 +61,8 @@ type SliderValues = Map<number, number>;
 interface ErrorObject {
   error: string;
 }
+
+const DEFAULT_SLIDER_RANGE = 10.0;
 
 function addPlotVariableOption(variable: VariableRead) {
   return {
@@ -89,6 +93,26 @@ const getSliderInitialValues = (
     }
   }
   return initialValues;
+};
+
+const getSliderDefaultValue = (variable?: VariableRead): number => {
+  return variable?.default_value !== undefined ? variable.default_value : 1.0;
+};
+
+const getSliderBounds = (variable?: VariableRead): [number, number] => {
+  const defaultValue = getSliderDefaultValue(variable);
+
+  let minValue = variable?.lower_bound;
+  if (minValue === undefined || minValue === null) {
+    minValue = defaultValue / DEFAULT_SLIDER_RANGE;
+  }
+
+  let maxValue = variable?.upper_bound;
+  if (maxValue === undefined || maxValue === null) {
+    maxValue = defaultValue === 0 ? DEFAULT_SLIDER_RANGE : defaultValue * DEFAULT_SLIDER_RANGE;
+  }
+
+  return [minValue, maxValue];
 };
 
 interface UseSimulationDataProps {
@@ -205,6 +229,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const constVariables = useConstVariables();
 
   const [sliderValues, setSliderValues] = useState<SliderValues>(EMPTY_MAP);
+  const [optimiseResult, setOptimiseResult] =
+    useState<OptimiseResponse | null>(null);
+  const [optimiseError, setOptimiseError] = useState<ErrorObject | null>(null);
   const handleChangeSlider = useCallback((variable: number, value: number) => {
     setSliderValues((prevSliderValues) => {
       const newSliderValues = new Map(prevSliderValues);
@@ -216,6 +243,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
+  const { optimiseModel, loadingOptimise } = useOptimise(model);
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -437,6 +465,60 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     }
   };
 
+  const handleOptimise = useCallback(async () => {
+    if (!model) {
+      setOptimiseError({ error: "Model not found" });
+      return;
+    }
+
+    if (orderedSliders.length < 1) {
+      setOptimiseError({ error: "At least one slider is required to optimise." });
+      return;
+    }
+
+    const inputs = orderedSliders.map((slider) => slider.variable);
+    const starting = inputs.map((variableId) => {
+      const variable = variables?.find((item) => item.id === variableId);
+      const defaultValue = getSliderDefaultValue(variable);
+      return sliderValues.get(variableId) ?? defaultValue;
+    });
+    const boundsByVariable = inputs.map((variableId) => {
+      const variable = variables?.find((item) => item.id === variableId);
+      return getSliderBounds(variable);
+    });
+    const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
+    const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
+
+    setOptimiseError(null);
+
+    const response = await optimiseModel({
+      inputs,
+      starting,
+      bounds: [lowerBounds, upperBounds],
+    });
+
+    if (response.error) {
+      setOptimiseError(response.error);
+      return;
+    }
+
+    if (!response.data || response.data.optimal.length !== inputs.length) {
+      setOptimiseError({
+        error: "Optimise response did not match the selected sliders.",
+      });
+      return;
+    }
+
+    setSliderValues((currentSliderValues) => {
+      const nextSliderValues = new Map(currentSliderValues);
+      inputs.forEach((variableId, index) => {
+        nextSliderValues.set(variableId, response.data!.optimal[index]);
+      });
+      return nextSliderValues;
+    });
+    setOptimiseResult(response.data);
+  }, [model, optimiseModel, orderedSliders, sliderValues, variables]);
+
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -510,9 +592,12 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         addSliderOptions={addSliderOptions}
         handleAddSlider={handleAddSlider}
         orderedSliders={orderedSliders}
+        sliderValues={sliderValues}
         handleChangeSlider={handleChangeSlider}
         handleRemoveSlider={handleRemoveSlider}
         handleSaveAllSlider={handleSaveAllSlider}
+        handleOptimise={handleOptimise}
+        loadingOptimise={loadingOptimise}
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}
@@ -587,6 +672,28 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
             <Alert severity="error">
               Error exporting model:{" "}
               {exportSimulateError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
+          <Snackbar
+            open={Boolean(optimiseError)}
+            autoHideDuration={6000}
+            onClose={() => setOptimiseError(null)}
+          >
+            <Alert severity="error" onClose={() => setOptimiseError(null)}>
+              Error optimising model: {optimiseError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
+          <Snackbar
+            open={Boolean(optimiseResult)}
+            autoHideDuration={6000}
+            onClose={() => setOptimiseResult(null)}
+          >
+            <Alert
+              severity="success"
+              onClose={() => setOptimiseResult(null)}
+            >
+              Optimisation complete. Loss: {optimiseResult?.loss.toFixed(4)}. {" "}
+              {optimiseResult?.reason}
             </Alert>
           </Snackbar>
         </Grid>

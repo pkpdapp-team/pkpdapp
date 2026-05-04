@@ -38,6 +38,7 @@ interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
   model: CombinedModelRead;
+  value?: number;
   onChange: (variable: number, value: number) => void;
   onRemove: () => void;
   units: UnitRead[];
@@ -45,6 +46,7 @@ interface SimulationSliderProps {
 
 const SimulationSliderView: FC<SimulationSliderProps> = ({
   slider,
+  value: externalValue,
   onChange,
   model,
   onRemove,
@@ -76,15 +78,22 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   //
   const defaultValue =
     variable?.default_value !== undefined ? variable.default_value : 1.0;
-  const [value, setValue] = useState<number>(defaultValue);
+  const [value, setValue] = useState<number>(externalValue ?? defaultValue);
   const [editing, setEditing] = useState<boolean>(false);
   useEffect(() => {
     // don't set the value of the slider until the variable is loaded
     if (variable) {
-      setValue(defaultValue);
-      onChange(slider.variable, defaultValue);
+      const nextValue = externalValue ?? defaultValue;
+      setValue(nextValue);
+      onChange(slider.variable, nextValue);
     }
-  }, [onChange, defaultValue, variable, slider.variable]);
+  }, [externalValue, onChange, defaultValue, variable, slider.variable]);
+
+  useEffect(() => {
+    if (externalValue !== undefined && !editing) {
+      setValue(externalValue);
+    }
+  }, [editing, externalValue]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,

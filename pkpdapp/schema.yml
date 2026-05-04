@@ -454,6 +454,46 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/combined_model/{id}/optimise:
+    post:
+      operationId: combined_model_optimise_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Optimise'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Optimise'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Optimise'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimiseResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          description: No response body
   /api/combined_model/{id}/set_params_to_defaults/:
     put:
       operationId: combined_model_set_params_to_defaults_update
@@ -4566,6 +4606,64 @@ components:
     NullEnum:
       enum:
       - null
+    Optimise:
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: integer
+        starting:
+          type: array
+          items:
+            type: number
+            format: double
+        bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+          maxItems: 2
+          minItems: 2
+        biomarker_types:
+          type: array
+          items:
+            type: integer
+          nullable: true
+        subject_groups:
+          type: array
+          items:
+            type: integer
+          nullable: true
+        max_iterations:
+          type: integer
+          nullable: true
+        use_multiplicative_noise:
+          type: boolean
+          default: false
+      required:
+      - bounds
+      - inputs
+      - starting
+    OptimiseResponse:
+      type: object
+      properties:
+        optimal:
+          type: array
+          items:
+            type: number
+            format: double
+        loss:
+          type: number
+          format: double
+        reason:
+          type: string
+      required:
+      - loss
+      - optimal
+      - reason
     PatchedAlgorithm:
       type: object
       properties:
