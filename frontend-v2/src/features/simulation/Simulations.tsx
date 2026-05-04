@@ -53,16 +53,11 @@ import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
 import { filterOutputs, getYAxisOptions, renameVariable } from "./utils";
-
-const EMPTY_MAP: SliderValues = new Map();
-
-type SliderValues = Map<number, number>;
+import useSliderSettings from "./useSliderSettings";
 
 interface ErrorObject {
   error: string;
 }
-
-const DEFAULT_SLIDER_RANGE = 10.0;
 
 function addPlotVariableOption(variable: VariableRead) {
   return {
@@ -73,52 +68,12 @@ function addPlotVariableOption(variable: VariableRead) {
   };
 }
 
-const getSliderInitialValues = (
-  simulation?: SimulationRead,
-  existingSliderValues?: SliderValues,
-  variables?: VariableRead[],
-): SliderValues => {
-  const initialValues: SliderValues = new Map();
-  for (const slider of simulation?.sliders || []) {
-    if (existingSliderValues && existingSliderValues.has(slider.variable)) {
-      initialValues.set(
-        slider.variable,
-        existingSliderValues.get(slider.variable)!,
-      );
-    } else {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable?.default_value) {
-        initialValues.set(slider.variable, variable.default_value);
-      }
-    }
-  }
-  return initialValues;
-};
-
-const getSliderDefaultValue = (variable?: VariableRead): number => {
-  return variable?.default_value !== undefined ? variable.default_value : 1.0;
-};
-
-const getSliderBounds = (variable?: VariableRead): [number, number] => {
-  const defaultValue = getSliderDefaultValue(variable);
-
-  let minValue = variable?.lower_bound;
-  if (minValue === undefined || minValue === null) {
-    minValue = defaultValue / DEFAULT_SLIDER_RANGE;
-  }
-
-  let maxValue = variable?.upper_bound;
-  if (maxValue === undefined || maxValue === null) {
-    maxValue = defaultValue === 0 ? DEFAULT_SLIDER_RANGE : defaultValue * DEFAULT_SLIDER_RANGE;
-  }
-
-  return [minValue, maxValue];
-};
 
 interface UseSimulationDataProps {
   model?: CombinedModelRead;
   simulation?: SimulationRead;
-  sliderValues?: SliderValues;
+  sliderValues?: Map<number, number>;
+  getSliderValue?: (variableId: number, variable?: VariableRead) => number;
   variables?: VariableRead[];
   units?: UnitRead[];
   showReference?: boolean;
@@ -128,6 +83,7 @@ function useSimulationData({
   model,
   simulation,
   sliderValues,
+  getSliderValue,
   variables,
   units,
   showReference = false,
@@ -149,6 +105,7 @@ function useSimulationData({
     model,
     simulation,
     sliderValues,
+    getSliderValue,
     variables,
     timeMax,
   );
@@ -168,7 +125,8 @@ function useSimulationData({
   const refSimInputs = useSimulationInputs(
     model,
     simulation,
-    EMPTY_MAP,
+    undefined,
+    undefined,
     variables,
     timeMax,
   );
@@ -235,17 +193,20 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const [updateVariable] = useVariableUpdateMutation();
   const constVariables = useConstVariables();
 
-  const [sliderValues, setSliderValues] = useState<SliderValues>(EMPTY_MAP);
+  const {
+    setSliderValues,
+    handleChangeSlider,
+    addSlider,
+    removeSliderSettings,
+    initialiseSliderSettings,
+    getSliderValue,
+    getSliderBounds,
+    widenSliderRange,
+    narrowSliderRange,
+  } = useSliderSettings();
   const [optimiseResult, setOptimiseResult] =
     useState<OptimiseResponse | null>(null);
   const [optimiseError, setOptimiseError] = useState<ErrorObject | null>(null);
-  const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues((prevSliderValues) => {
-      const newSliderValues = new Map(prevSliderValues);
-      newSliderValues.set(variable, value);
-      return newSliderValues;
-    });
-  }, []);
   const [shouldShowLegend, setShouldShowLegend] = useState(true);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -267,7 +228,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     useSimulationData({
       model,
       simulation,
-      sliderValues,
+      sliderValues: undefined,
+      getSliderValue,
       variables,
       units,
       showReference,
@@ -311,14 +273,16 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
-      setSliderValues((s) => {
-        const initialValues = getSliderInitialValues(simulation, s, variables);
-        return initialValues;
-      });
+      initialiseSliderSettings(simulation, variables);
       //setLoadingSimulate(true);
       reset(simulation);
     }
-  }, [simulation, reset, variables]);
+  }, [
+    initialiseSliderSettings,
+    reset,
+    simulation,
+    variables,
+  ]);
 
   const [exportSimulation, { error: exportSimulateErrorBase }] =
     useExportSimulation({
@@ -449,10 +413,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       variable: variableId,
     };
     addSimulationSlider(defaultSlider);
+
+    const variable = variables.find((item) => item.id === variableId);
+    addSlider(variableId, variable);
   };
 
-  const handleRemoveSlider = (index: number) => () => {
+  const handleRemoveSlider = (index: number, variableId: number) => () => {
     removeSlider(index);
+    removeSliderSettings(variableId);
   };
 
   const handleSaveAllSlider = () => {
@@ -461,10 +429,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       if (!variable) {
         return;
       }
-      const value = sliderValues?.get(slider.variable);
-      if (value === undefined) {
-        return;
-      }
+      const value = getSliderValue(slider.variable, variable);
       updateVariable({
         id: slider.variable,
         variable: { ...variable, default_value: value },
@@ -486,12 +451,11 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     const inputs = orderedSliders.map((slider) => slider.variable);
     const starting = inputs.map((variableId) => {
       const variable = variables?.find((item) => item.id === variableId);
-      const defaultValue = getSliderDefaultValue(variable);
-      return sliderValues.get(variableId) ?? defaultValue;
+      return getSliderValue(variableId, variable);
     });
     const boundsByVariable = inputs.map((variableId) => {
       const variable = variables?.find((item) => item.id === variableId);
-      return getSliderBounds(variable);
+      return getSliderBounds(variableId, variable);
     });
     const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
     const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
@@ -531,7 +495,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     model,
     optimiseModel,
     orderedSliders,
-    sliderValues,
+    getSliderBounds,
+    getSliderValue,
+    setSliderValues,
     variables,
     visibleSubjectGroupIds,
   ]);
@@ -609,8 +575,11 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         addSliderOptions={addSliderOptions}
         handleAddSlider={handleAddSlider}
         orderedSliders={orderedSliders}
-        sliderValues={sliderValues}
+        getSliderValue={getSliderValue}
+        getSliderBounds={getSliderBounds}
         handleChangeSlider={handleChangeSlider}
+        handleWidenSlider={widenSliderRange}
+        handleNarrowSlider={narrowSliderRange}
         handleRemoveSlider={handleRemoveSlider}
         handleSaveAllSlider={handleSaveAllSlider}
         handleOptimise={handleOptimise}

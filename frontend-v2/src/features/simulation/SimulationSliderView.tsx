@@ -10,6 +10,7 @@ import {
   CombinedModelRead,
   SimulationSlider,
   UnitRead,
+  VariableRead,
   useProjectRetrieveQuery,
   useVariableRetrieveQuery,
   useVariableUpdateMutation,
@@ -38,16 +39,22 @@ interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
   model: CombinedModelRead;
-  value?: number;
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
   onChange: (variable: number, value: number) => void;
+  onWiden: (variableId: number) => void;
+  onNarrow: (variableId: number) => void;
   onRemove: () => void;
   units: UnitRead[];
 }
 
 const SimulationSliderView: FC<SimulationSliderProps> = ({
   slider,
-  value: externalValue,
+  getSliderValue,
+  getSliderBounds,
   onChange,
+  onWiden,
+  onNarrow,
   model,
   onRemove,
   units,
@@ -70,52 +77,44 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
 
   const unit = units.find((u) => u.id === variable?.unit);
 
-  const [range, setRange] = useState<number>(10.0);
-
-  const debouncedOnChange = useMemo(() => debounce(onChange, 300), [onChange]);
-
-  // update the slider value if the variable default value changes
-  //
   const defaultValue =
     variable?.default_value !== undefined ? variable.default_value : 1.0;
-  const [value, setValue] = useState<number>(externalValue ?? defaultValue);
+  const value = getSliderValue(slider.variable, variable);
+  const [minValue, maxValue] = getSliderBounds(slider.variable, variable);
+  const [draftValue, setDraftValue] = useState<number>(value);
   const [editing, setEditing] = useState<boolean>(false);
-  useEffect(() => {
-    // don't set the value of the slider until the variable is loaded
-    if (variable) {
-      const nextValue = externalValue ?? defaultValue;
-      setValue(nextValue);
-      onChange(slider.variable, nextValue);
-    }
-  }, [externalValue, onChange, defaultValue, variable, slider.variable]);
+  const debouncedOnChange = useMemo(() => debounce(onChange, 300), [onChange]);
 
   useEffect(() => {
-    if (externalValue !== undefined && !editing) {
-      setValue(externalValue);
+    return () => {
+      debouncedOnChange.clear();
+    };
+  }, [debouncedOnChange]);
+
+  useEffect(() => {
+    if (!editing) {
+      setDraftValue(value);
     }
-  }, [editing, externalValue]);
+  }, [editing, value]);
 
   const handleSliderChange = (
     event: Event | SyntheticEvent<Element, Event>,
     newValue: number | number[],
   ) => {
     if (typeof newValue === "number") {
-      setValue(newValue);
+      setDraftValue(newValue);
     }
   };
 
   const handleReset = () => {
-    if (variable) {
-      setValue(defaultValue);
-      onChange(slider.variable, defaultValue);
-    }
+    onChange(slider.variable, defaultValue);
+    setDraftValue(defaultValue);
   };
 
   const handleSave = () => {
     if (!variable) {
       return;
     }
-    setValue(value);
     updateVariable({
       id: slider.variable,
       variable: {
@@ -130,30 +129,22 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleWider = () => {
-    setRange(range + 10.0);
+    onWiden(slider.variable);
   };
 
   const handleNarrow = () => {
-    setRange(Math.max(range - 10.0, 10.0));
+    onNarrow(slider.variable);
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setEditing(true);
-    setValue(Number(event.target.value));
+    setDraftValue(Number(event.target.value));
   };
 
-  let minValue = variable?.lower_bound;
-  if (minValue === undefined || minValue === null) {
-    minValue = defaultValue / range;
-  }
-  let maxValue = variable?.upper_bound;
-  if (maxValue === undefined || maxValue === null) {
-    maxValue = defaultValue === 0 ? range : defaultValue * range;
-  }
   const stepValue = (maxValue - minValue) / 1000.0;
 
   const commitChanges = () => {
-    commitChangesWithValue(new Event("commit"), value);
+    commitChangesWithValue(new Event("commit"), draftValue);
   };
 
   const commitChangesWithValue = (
@@ -171,7 +162,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     } else if (value > maxValue) {
       truncatedValue = maxValue;
     }
-    setValue(truncatedValue);
+    setDraftValue(truncatedValue);
     debouncedOnChange(slider.variable, truncatedValue);
   };
 
@@ -275,7 +266,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       </Box>
       <Box alignItems="center">
         <Slider
-          value={typeof value === "number" ? value : 0}
+          value={typeof draftValue === "number" ? draftValue : 0}
           min={minValue}
           max={maxValue}
           step={stepValue}
@@ -289,7 +280,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       <Box alignItems="center">
         <Input
           sx={{ width: "100%" }}
-          value={formatNumber(value)}
+          value={formatNumber(draftValue)}
           size="small"
           onChange={handleInputChange}
           onBlur={commitChanges}
