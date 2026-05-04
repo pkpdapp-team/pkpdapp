@@ -7,6 +7,7 @@ import {
 } from "../../app/backendApi";
 
 type SliderValues = Map<number, number>;
+type SliderValueGetter = (variableId: number, variable?: VariableRead) => number;
 
 enum simulationInputMode {
   REQUESTED_OUTPUTS = "REQUESTED",
@@ -17,12 +18,15 @@ enum simulationInputMode {
 const getSimulationInputs = (
   variables?: VariableRead[],
   sliderValues?: SliderValues,
+  getSliderValue?: SliderValueGetter,
 ) => {
   const constantVariables = variables?.filter((v) => v.constant) || [];
   const simulateVariables: { [key: string]: number } = {};
   constantVariables.forEach((v: VariableRead) => {
     const result = { qname: v.qname, value: v.default_value || 0 };
-    if (sliderValues?.has(v.id)) {
+    if (getSliderValue) {
+      result.value = getSliderValue(v.id, v);
+    } else if (sliderValues?.has(v.id)) {
       result.value = sliderValues.get(v.id)!;
     }
     simulateVariables[result.qname] = result.value;
@@ -109,22 +113,23 @@ export default function useSimulationInputs(
   model: CombinedModelRead | undefined,
   simulation: SimulationRead | undefined,
   sliderValues: SliderValues | undefined,
+  getSliderValue: SliderValueGetter | undefined,
   variables: VariableRead[] | undefined,
   timeMax: number | undefined,
 ) {
   const simulateVariables = useMemo(
-    () => getSimulationInputs(variables, sliderValues),
-    [variables, sliderValues],
+    () => getSimulationInputs(variables, sliderValues, getSliderValue),
+    [variables, sliderValues, getSliderValue],
   );
   const outputs = useMemo(
     () =>
       model && simulation
         ? getSimulateOutputs(
-            model,
-            simulation,
-            variables,
-            simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
-          )
+          model,
+          simulation,
+          variables,
+          simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
+        )
         : [],
     [model, simulation, variables],
   );

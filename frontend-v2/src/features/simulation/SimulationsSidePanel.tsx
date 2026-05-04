@@ -32,6 +32,7 @@ import {
   SimulationRead,
   SimulationSlider,
   SubjectGroupRead,
+  VariableRead,
   UnitRead,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
@@ -63,9 +64,12 @@ type SimulationsSidePanelType = {
   }[];
   handleAddSlider: (slider: number) => void;
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
-  sliderValues: Map<number, number>;
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
   handleChangeSlider: (variable: number, value: number) => void;
-  handleRemoveSlider: (index: number) => () => void;
+  handleWidenSlider: (variableId: number) => void;
+  handleNarrowSlider: (variableId: number) => void;
+  handleRemoveSlider: (index: number, variableId: number) => () => void;
   handleSaveAllSlider: () => void;
   handleOptimise: () => void;
   loadingOptimise: boolean;
@@ -175,8 +179,11 @@ export const SimulationsSidePanel = ({
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
-  sliderValues,
+  getSliderValue,
+  getSliderBounds,
   handleChangeSlider,
+  handleWidenSlider,
+  handleNarrowSlider,
   handleRemoveSlider,
   handleSaveAllSlider,
   handleOptimise,
@@ -500,9 +507,15 @@ export const SimulationsSidePanel = ({
                           index={index}
                           slider={slider}
                           model={model}
-                          value={sliderValues.get(slider.variable)}
+                          getSliderValue={getSliderValue}
+                          getSliderBounds={getSliderBounds}
                           onChange={handleChangeSlider}
-                          onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
+                          onWiden={handleWidenSlider}
+                          onNarrow={handleNarrowSlider}
+                          onRemove={handleRemoveSlider(
+                            slider.fieldArrayIndex,
+                            slider.variable,
+                          )}
                           units={units}
                         />
                       ))}
