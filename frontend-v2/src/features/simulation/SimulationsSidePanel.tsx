@@ -23,6 +23,7 @@ import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import useDataset from "../../hooks/useDataset";
 import { PageName } from "../main/mainSlice";
 import {
   CombinedModelRead,
@@ -189,6 +190,11 @@ export const SimulationsSidePanel = ({
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
+  const selectedProject = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { dataset, subjectBiomarkers } = useDataset(selectedProject);
+  const hasData = !!dataset && subjectBiomarkers.some((bm) => bm.length > 0);
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(false);
   const [collapseOptions, setCollapseOptions] = useState(false);
@@ -515,10 +521,10 @@ export const SimulationsSidePanel = ({
                         sx={{ marginTop: ".5rem" }}
                       >
                         <Button
-                          variant="contained"
+                          variant="outlined"
                           sx={{ width: "12rem" }}
                           onClick={handleOptimise}
-                          disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1}
+                          disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1 || !hasData}
                           data-cy="optimise-parameters"
                         >
                           Optimise
