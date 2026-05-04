@@ -7,6 +7,7 @@ import {
   Checkbox,
   Button,
   Collapse,
+  CircularProgress,
   Stack,
   Badge,
 } from "@mui/material";
@@ -61,9 +62,12 @@ type SimulationsSidePanelType = {
   }[];
   handleAddSlider: (slider: number) => void;
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
+  sliderValues: Map<number, number>;
   handleChangeSlider: (variable: number, value: number) => void;
   handleRemoveSlider: (index: number) => () => void;
   handleSaveAllSlider: () => void;
+  handleOptimise: () => void;
+  loadingOptimise: boolean;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
@@ -170,9 +174,12 @@ export const SimulationsSidePanel = ({
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
+  sliderValues,
   handleChangeSlider,
   handleRemoveSlider,
   handleSaveAllSlider,
+  handleOptimise,
+  loadingOptimise,
   exportSimulation,
   showReference,
   setShowReference,
@@ -487,6 +494,7 @@ export const SimulationsSidePanel = ({
                           index={index}
                           slider={slider}
                           model={model}
+                          value={sliderValues.get(slider.variable)}
                           onChange={handleChangeSlider}
                           onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
                           units={units}
@@ -500,6 +508,25 @@ export const SimulationsSidePanel = ({
                       >
                         Save All Sliders
                       </Button>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ marginTop: ".5rem" }}
+                      >
+                        <Button
+                          variant="contained"
+                          sx={{ width: "12rem" }}
+                          onClick={handleOptimise}
+                          disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1}
+                          data-cy="optimise-parameters"
+                        >
+                          Optimise
+                        </Button>
+                        {loadingOptimise && (
+                          <CircularProgress size={20} aria-label="Optimising" />
+                        )}
+                      </Stack>
                     </Collapse>
                   </Box>
                 </Box>

@@ -92,19 +92,20 @@ class TestOptimiseView(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
-    def test_optimise_400_for_single_input(self):
-        # CMA-ES requires at least two inputs
+    def test_optimise_accepts_single_input(self):
         data = {
             "inputs": [self.k_var.id],
             "starting": [0.27],
             "bounds": [[0.16], [0.3]],
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
-            "max_iterations": 1,
+            "max_iterations": 25,
         }
         response = self._post_optimise(data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("optimal", response.data)
+        self.assertEqual(len(response.data["optimal"]), 1)
+        self.assertTrue(np.isfinite(response.data["loss"]))
 
     def test_optimise_400_for_invalid_bounds(self):
         # lower >= upper should be rejected

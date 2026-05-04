@@ -943,8 +943,8 @@ class MyokitModelMixin:
     def _validate_optimise_inputs(self, inputs, starting, bounds):
         from pkpdapp.models import Variable
 
-        if len(inputs) < 2:
-            raise ValueError("CMA-ES optimisation requires at least two inputs.")
+        if len(inputs) < 1:
+            raise ValueError("Optimisation requires at least one input.")
 
         if len(set(inputs)) != len(inputs):
             raise ValueError("Optimisation inputs must be unique.")

@@ -182,15 +182,16 @@ class TestOptimise(TestCase):
         model = setup["model"]
         input_ids = [variable.id for variable in setup["inputs"]]
 
-        with self.assertRaises(ValueError):
-            model.optimise(
-                inputs=input_ids[:1],
-                starting=[0.2],
-                bounds=([0.1], [0.3]),
-                biomarker_types=[setup["biomarker_type"].id],
-                subject_groups=[setup["groups"][0].id],
-                max_iterations=1,
-            )
+        result = model.optimise(
+            inputs=input_ids[:1],
+            starting=[0.2],
+            bounds=([0.1], [0.3]),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[setup["groups"][0].id],
+            max_iterations=25,
+        )
+        self.assertEqual(len(result["optimal"]), 1)
+        self.assertTrue(np.isfinite(result["loss"]))
 
         with self.assertRaises(ValueError):
             model.optimise(
