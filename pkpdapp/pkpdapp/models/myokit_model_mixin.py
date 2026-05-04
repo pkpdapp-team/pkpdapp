@@ -730,9 +730,11 @@ class MyokitModelMixin:
 
         Returns
         -------
-        output: myokit.DataLog
-            a DataLog containing the solution, which is effectivly a dict
-            mapping output names to arrays of values
+        output: dict
+            a dict with the following key, values:
+                - "group_id": id of the subject group, None if no subject group
+                - <variable id>: list of time-series values
+            There is a <variable id> for all the requested outputs, including time
         """
 
         if time_max is None:
@@ -768,7 +770,6 @@ class MyokitModelMixin:
         groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
 
         for group in groups:
-            print("GROUP:", group.name)
             dosing_protocols = {
                 p.variable.qname: p for p in protocols if p.group == group
             }
@@ -795,10 +796,78 @@ class MyokitModelMixin:
                 for dosing_protocols in model_dosing_protocols
             ]
 
+        # set group id for matching on plots
         result[0].update({"group_id": None})
         for r, group in zip(result[1:], groups):
             r.update({"group_id": group.id if group is not None else None})
         return result
+
+    def optimise(
+        self,
+        inputs,
+        starting,
+        bounds,
+        biomarker_types=None,
+        subject_groups=None,
+        max_iterations=None,
+    ):
+        """
+        Fits the model against the data indicated
+
+        two different noise models are supported, gaussian additive (i.e. sum of squares)
+        and log-normal multiplicative.
+
+        The fitting is performed across all subject groups indicated, for each subject group:
+            1. all the variable outputs mapped to the biomarker types are found, these will be
+               the requested outputs for the simulation for that subject group
+            2. the data is gathered from all the biomarkers for that subject group and those
+               biomarker types, this is collected in a (a) list of time points and
+               (b) 2D array where columns are timepoints and the rows arre outputs
+               (same order as the requested outputs in 1.).
+            3. a diffsol Ode model is contructed using the outputs from 1.
+
+        Then the fitting is performed. The loss function for each iteration of the fitting has the
+        following structure:
+            - total loss initialised to zero
+            - loop through each subject group:
+                - a simulation is performed using the Ode model for that subject group, using
+                  the solve_dense method on Ode, passing in the timepoints collected in 2. above
+                - the loss function for that subject group is calculated and added to the total
+                  loss
+
+        The package Pints is used for the optimisation (https://pints.readthedocs.io/en/stable/optimisers/index.html).
+        For the moment we just use the cmaes algorithm (https://github.com/pints-team/pints/blob/main/examples/optimisation/cmaes.ipynb).
+        We use the starting point and bounds given in the args, and run the given maximum number of iterations.
+
+        Arguments
+        ---------
+        inputs: list
+            list of input variables (ids) to optimise against
+        starting: list
+            initial values for the opimisation (same order as inputs)
+        lower_bounds: list
+            lower bound for the opimisation (same order as inputs)
+        upper_bounds: list
+            upper bound for the opimisation (same order as inputs)
+        biomarker_types: list (optional)
+            list of biomarker_types (ids) to optimise against, None for all
+        subject_groups: list (optional)
+            list of subject groups (ids) to optimise against, None for all
+        max_iterations: int (optional)
+            maximum number of iterations of the opimisation algorithm (default 500)
+        use_multiplicative_noise: bool (optional)
+            if False (default) use additive noise (sum of squares loss), if True,
+            use multiplicative noise (log-normal noise)
+
+        Returns
+        -------
+        result: dict
+            - "optimal": (list) optimal input values (same order as inputs)
+            - "loss": (float) value of loss function at optimal
+            - "reason": (str) stopping reason
+        """
+
+        raise NotImplementedError("Optimisation is not yet implemented.")
 
 
 def set_administration(model, drug_amount, direct=True):
