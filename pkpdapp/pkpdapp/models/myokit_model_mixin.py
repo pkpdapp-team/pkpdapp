@@ -18,6 +18,9 @@ import myokit
 import threading
 from django.core.cache import cache
 import logging
+import pints
+
+from pkpdapp.models import Biomarker, BiomarkerType, SubjectGroup
 
 logger = logging.getLogger(__name__)
 
@@ -90,12 +93,7 @@ class MyokitModelMixin:
             if qname in override_tlag:
                 tlag_value = override_tlag[qname]
 
-            target = None
-            if self.is_library_model:
-                if "CT1" in qname or "AT1" in qname:
-                    target = 1
-                elif "CT2" in qname or "AT2" in qname:
-                    target = 2
+            target = self._unit_conversion_target(qname)
 
             amount_conversion_factor = self._get_protocol_amount_conversion_factor(
                 project, protocol, amount_var, compound, target
@@ -684,7 +682,7 @@ class MyokitModelMixin:
             inputs=input_names,
             outputs=outputs,
         )
-        soln = ode.solve_hybrid(np.array(input_values), time_max)
+        soln = ode.solve(np.array(input_values), time_max)
         return self.serialize_diffsol_solution(soln, model, outputs)
 
     def simulate_model(
@@ -810,6 +808,7 @@ class MyokitModelMixin:
         biomarker_types=None,
         subject_groups=None,
         max_iterations=None,
+        use_multiplicative_noise=False,
     ):
         """
         Fits the model against the data indicated
@@ -845,10 +844,8 @@ class MyokitModelMixin:
             list of input variables (ids) to optimise against
         starting: list
             initial values for the opimisation (same order as inputs)
-        lower_bounds: list
-            lower bound for the opimisation (same order as inputs)
-        upper_bounds: list
-            upper bound for the opimisation (same order as inputs)
+        bounds: (list, list)
+            lower and upper bounds for the opimisation (same order as inputs)
         biomarker_types: list (optional)
             list of biomarker_types (ids) to optimise against, None for all
         subject_groups: list (optional)
@@ -867,7 +864,394 @@ class MyokitModelMixin:
             - "reason": (str) stopping reason
         """
 
-        raise NotImplementedError("Optimisation is not yet implemented.")
+        if not USE_DIFFSOL:
+            raise RuntimeError("Optimisation requires diffsol support.")
+
+        if max_iterations is None:
+            max_iterations = 500
+
+        input_variables, starting, lower_bounds, upper_bounds = (
+            self._validate_optimise_inputs(inputs, starting, bounds)
+        )
+        groups = self._prepare_optimise_groups(biomarker_types, subject_groups)
+
+        class OptimiseError(pints.ErrorMeasure):
+            def n_parameters(inner_self):
+                return len(input_variables)
+
+            def __call__(inner_self, values):
+                loss = self._optimise_loss(
+                    groups,
+                    input_variables,
+                    values,
+                    use_multiplicative_noise=use_multiplicative_noise,
+                )
+                if np.isfinite(loss) and loss < inner_self.best_loss:
+                    inner_self.best_loss = float(loss)
+                    inner_self.best_values = np.asarray(values, dtype=float).copy()
+                return loss
+
+        error = OptimiseError()
+        error.best_loss = np.inf
+        error.best_values = np.asarray(starting, dtype=float).copy()
+        starting_loss = error(starting)
+        if not np.isfinite(starting_loss):
+            raise RuntimeError(
+                "Initial optimisation loss is not finite. Check that the solver "
+                "returns all requested dense output times and that data are valid."
+            )
+
+        optimiser_start = np.asarray(starting, dtype=float)
+        default_start = np.asarray(
+            [variable.get_default_value() for variable in input_variables],
+            dtype=float,
+        )
+        if np.all(default_start >= lower_bounds) and np.all(
+            default_start <= upper_bounds
+        ):
+            default_loss = error(default_start)
+            if np.isfinite(default_loss) and default_loss < starting_loss:
+                optimiser_start = default_start
+                starting_loss = float(default_loss)
+
+        boundaries = pints.RectangularBoundaries(lower_bounds, upper_bounds)
+        optimiser = pints.OptimisationController(
+            error,
+            optimiser_start,
+            boundaries=boundaries,
+            method=pints.CMAES,
+        )
+        optimiser.set_max_iterations(max_iterations)
+        optimiser.set_log_to_screen(False)
+
+        optimal, loss = optimiser.run()
+        # CMA-ES reports the final candidate, which may be worse than previously
+        # explored points. Return the best point evaluated during the run.
+        if np.isfinite(error.best_loss) and error.best_loss < float(loss):
+            optimal = error.best_values
+            loss = error.best_loss
+        reason = optimiser.optimiser().stop()
+        if reason is None:
+            reason = f"Stopped after {optimiser.iterations()} iterations."
+
+        return {
+            "optimal": np.asarray(optimal, dtype=float).tolist(),
+            "loss": float(loss),
+            "reason": str(reason),
+        }
+
+    def _validate_optimise_inputs(self, inputs, starting, bounds):
+        from pkpdapp.models import Variable
+
+        if len(inputs) < 2:
+            raise ValueError("CMA-ES optimisation requires at least two inputs.")
+
+        if len(set(inputs)) != len(inputs):
+            raise ValueError("Optimisation inputs must be unique.")
+
+        if len(starting) != len(inputs):
+            raise ValueError("Starting values must have the same length as inputs.")
+
+        if len(bounds) != 2:
+            raise ValueError("Bounds must be a pair of lower and upper bound lists.")
+
+        lower_bounds, upper_bounds = bounds
+        if len(lower_bounds) != len(inputs) or len(upper_bounds) != len(inputs):
+            raise ValueError("Bounds must have the same length as inputs.")
+
+        variables_by_id = {
+            variable.id: variable for variable in self.variables.filter(id__in=inputs)
+        }
+        missing = [input_id for input_id in inputs if input_id not in variables_by_id]
+        if missing:
+            raise Variable.DoesNotExist(
+                f"Optimisation input variables do not exist: {missing}"
+            )
+
+        variables = [variables_by_id[input_id] for input_id in inputs]
+        for variable in variables:
+            if not variable.constant:
+                raise ValueError(
+                    f"Optimisation input {variable.qname} must be a constant variable."
+                )
+            if variable.qname.endswith("_tlag_ud"):
+                raise ValueError(
+                    "Optimising tlag variables is not supported by this method."
+                )
+
+        starting = np.asarray(starting, dtype=float)
+        lower_bounds = np.asarray(lower_bounds, dtype=float)
+        upper_bounds = np.asarray(upper_bounds, dtype=float)
+
+        if not (
+            np.all(np.isfinite(starting))
+            and np.all(np.isfinite(lower_bounds))
+            and np.all(np.isfinite(upper_bounds))
+        ):
+            raise ValueError("Starting values and bounds must be finite.")
+
+        if np.any(lower_bounds >= upper_bounds):
+            raise ValueError("Every lower bound must be less than its upper bound.")
+
+        if np.any(starting < lower_bounds) or np.any(starting > upper_bounds):
+            raise ValueError("Starting values must lie within the supplied bounds.")
+
+        return variables, starting, lower_bounds, upper_bounds
+
+    def _prepare_optimise_groups(self, biomarker_types, subject_groups):
+
+        project = self.get_project()
+        if project is None:
+            raise ValueError("Optimisation requires the model to belong to a project.")
+
+        model_variable_qnames = set(self.variables.values_list("qname", flat=True))
+        biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=project)
+
+        if biomarker_types is None:
+            biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
+        else:
+            biomarker_type_qs = biomarker_type_qs.filter(id__in=biomarker_types)
+            found_ids = set(biomarker_type_qs.values_list("id", flat=True))
+            missing_ids = set(biomarker_types) - found_ids
+            if missing_ids:
+                raise BiomarkerType.DoesNotExist(
+                    f"Biomarker types do not exist in this project: {missing_ids}"
+                )
+
+        biomarker_type_list = list(
+            biomarker_type_qs.select_related(
+                "variable",
+                "stored_unit",
+                "stored_time_unit",
+            ).order_by("id")
+        )
+        unmapped = [bt.id for bt in biomarker_type_list if bt.variable is None]
+        if unmapped:
+            raise ValueError(f"Biomarker types are not mapped to variables: {unmapped}")
+
+        invalid = [
+            bt.variable.qname
+            for bt in biomarker_type_list
+            if bt.variable.qname not in model_variable_qnames
+        ]
+        if invalid:
+            raise ValueError(
+                f"Biomarker types map to variables outside this model: {invalid}"
+            )
+
+        if not biomarker_type_list:
+            raise ValueError("No mapped biomarker types were found for optimisation.")
+
+        biomarkers = Biomarker.objects.filter(
+            biomarker_type__in=biomarker_type_list,
+            subject__dataset__project=project,
+        ).select_related(
+            "biomarker_type",
+            "biomarker_type__variable",
+            "biomarker_type__stored_unit",
+            "biomarker_type__stored_time_unit",
+            "subject",
+            "subject__group",
+        )
+
+        if subject_groups is not None:
+            found_group_ids = set(
+                SubjectGroup.objects.filter(
+                    id__in=subject_groups,
+                ).values_list("id", flat=True)
+            )
+            missing_group_ids = set(subject_groups) - found_group_ids
+            if missing_group_ids:
+                raise SubjectGroup.DoesNotExist(
+                    f"Subject groups do not exist: {missing_group_ids}"
+                )
+            biomarkers = biomarkers.filter(subject__group_id__in=subject_groups)
+
+        group_ids = list(
+            biomarkers.order_by("subject__group_id")
+            .values_list("subject__group_id", flat=True)
+            .distinct()
+        )
+        if len(group_ids) == 0:
+            raise ValueError("No biomarker data were found for optimisation.")
+
+        groups = []
+        for group_id in group_ids:
+            if group_id is None:
+                group_biomarkers = biomarkers.filter(subject__group__isnull=True)
+                group = None
+            else:
+                group_biomarkers = biomarkers.filter(subject__group_id=group_id)
+                group = group_biomarkers[0].subject.group
+            groups.append(self._prepare_optimise_group(group, group_biomarkers))
+
+        return groups
+
+    def _prepare_optimise_group(self, group, biomarkers):
+        project = self.get_project()
+        model = self.create_myokit_model()
+        time_var = model.binding("time")
+
+        output_qnames = []
+        output_indices = {}
+        records = []
+        times = []
+
+        for biomarker in biomarkers.order_by("time", "id"):
+            biomarker_type = biomarker.biomarker_type
+            qname = biomarker_type.variable.qname
+            if qname not in output_indices:
+                output_indices[qname] = len(output_qnames)
+                output_qnames.append(qname)
+
+            myokit_variable = model.get(qname)
+            target = self._unit_conversion_target(qname)
+            compound = project.compound if project is not None else None
+            value_conversion_factor = biomarker_type.stored_unit.convert_to(
+                myokit_variable.unit(),
+                compound=compound,
+                target=target,
+            )
+            time_conversion_factor = biomarker_type.stored_time_unit.convert_to(
+                time_var.unit(),
+                compound=compound,
+            )
+
+            time_value = float(biomarker.time) * time_conversion_factor
+            data_value = float(biomarker.value) * value_conversion_factor
+            times.append(time_value)
+            records.append(
+                {
+                    "output_index": output_indices[qname],
+                    "time": time_value,
+                    "value": data_value,
+                }
+            )
+
+        t_eval = np.asarray(sorted(set(times)), dtype=float)
+        time_lookup = {time: i for i, time in enumerate(t_eval)}
+        for record in records:
+            record["time_index"] = time_lookup[record["time"]]
+
+        protocols = project.protocols.all()
+        if group is None:
+            dosing_protocols = {
+                p.variable.qname: p
+                for p in protocols
+                if p.group is None and p.variable is not None
+            }
+        else:
+            dosing_protocols = {
+                p.variable.qname: p
+                for p in protocols
+                if p.group == group and p.variable is not None
+            }
+
+        default_variables = {
+            v.qname: v.get_default_value()
+            for v in self.variables.filter(constant=True).order_by("id")
+        }
+        inputs = self._initialise_diffsol_inputs(model, default_variables)
+        inputs.update(self._nonlinarities_inputs_diffsol(model, dosing_protocols))
+
+        input_names = list(inputs.keys())
+        input_values = np.asarray([inputs[name] for name in input_names], dtype=float)
+        input_indices = {name: i for i, name in enumerate(input_names)}
+        missing_inputs = [
+            qname
+            for qname in self.variables.filter(constant=True)
+            .order_by("id")
+            .values_list("qname", flat=True)
+            if qname not in input_indices
+        ]
+        if missing_inputs:
+            raise ValueError(
+                f"Optimisation inputs are missing from DiffSL inputs: {missing_inputs}"
+            )
+
+        ode = self.get_diffsol_ode(
+            override_tlag={},
+            model=model,
+            time_max=t_eval[-1],
+            dosing_protocols=dosing_protocols,
+            inputs=input_names,
+            outputs=output_qnames,
+        )
+
+        return {
+            "model": model,
+            "ode": ode,
+            "input_names": input_names,
+            "input_values": input_values,
+            "input_indices": input_indices,
+            "outputs": output_qnames,
+            "t_eval": t_eval,
+            "records": records,
+        }
+
+    def _optimise_loss(
+        self,
+        groups,
+        input_variables,
+        values,
+        use_multiplicative_noise=False,
+    ):
+        values = np.asarray(values, dtype=float)
+        if not np.all(np.isfinite(values)):
+            return np.inf
+
+        total = 0.0
+        for group in groups:
+            try:
+                y = self._optimise_predict(group, input_variables, values)
+            except exception:
+                logger.exception("diffsol solve failed during optimisation.")
+                return np.inf
+
+            for record in group["records"]:
+                prediction = y[record["output_index"], record["time_index"]]
+                observed = record["value"]
+                if use_multiplicative_noise:
+                    if prediction <= 0 or observed <= 0:
+                        return np.inf
+                    residual = np.log(prediction) - np.log(observed)
+                else:
+                    residual = prediction - observed
+                total += residual * residual
+
+        if not np.isfinite(total):
+            return np.inf
+        return float(total)
+
+    def _optimise_predict(self, group, input_variables, values):
+        values = np.asarray(values, dtype=float)
+        if not np.all(np.isfinite(values)):
+            raise ValueError("optimisation values must be finite.")
+
+        input_values = np.array(group["input_values"], copy=True)
+        for value, variable in zip(values, input_variables):
+            input_values[group["input_indices"][variable.qname]] = (
+                self._convert_unit_qname(variable.qname, value, group["model"])
+            )
+
+        solution = group["ode"].solve_dense(input_values, group["t_eval"])
+        y = solution.ys
+
+        if y.shape != (len(group["outputs"]), len(group["t_eval"])):
+            raise ValueError(
+                "Unexpected prediction shape: "
+                f"{y.shape}, expected {(len(group['outputs']), len(group['t_eval']))}."
+            )
+
+        return y
+
+    def _unit_conversion_target(self, qname):
+        if self.is_library_model:
+            if "CT1" in qname or "AT1" in qname:
+                return 1
+            if "CT2" in qname or "AT2" in qname:
+                return 2
+        return None
 
 
 def set_administration(model, drug_amount, direct=True):
