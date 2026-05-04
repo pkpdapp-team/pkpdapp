@@ -212,6 +212,13 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const visibleGroups = Object.keys(groupVisibility).filter(
     (key: string) => groupVisibility[key],
   );
+  const visibleSubjectGroupIds = useMemo(
+    () =>
+      groups
+        .filter((group) => visibleGroups.includes(group.name))
+        .map((group) => group.id),
+    [groups, visibleGroups],
+  );
   const [showReference, setShowReference] = useState<boolean>(false);
   useEffect(() => {
     setGroupVisibility((prevState) => {
@@ -491,11 +498,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
 
     setOptimiseError(null);
 
-    const response = await optimiseModel({
-      inputs,
-      starting,
-      bounds: [lowerBounds, upperBounds],
-    });
+    const response = await optimiseModel(
+      {
+        inputs,
+        starting,
+        bounds: [lowerBounds, upperBounds],
+      },
+      visibleSubjectGroupIds,
+    );
 
     if (response.error) {
       setOptimiseError(response.error);
@@ -517,7 +527,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       return nextSliderValues;
     });
     setOptimiseResult(response.data);
-  }, [model, optimiseModel, orderedSliders, sliderValues, variables]);
+  }, [
+    model,
+    optimiseModel,
+    orderedSliders,
+    sliderValues,
+    variables,
+    visibleSubjectGroupIds,
+  ]);
 
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,

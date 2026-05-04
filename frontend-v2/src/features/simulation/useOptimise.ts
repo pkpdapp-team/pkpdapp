@@ -33,14 +33,20 @@ export default function useOptimise(model: CombinedModelRead | undefined) {
     useCombinedModelOptimiseCreateMutation();
 
   const optimiseModel = useCallback(
-    async (optimiseInputs: Optimise) => {
+    async (
+      optimiseInputs: Omit<Optimise, "subject_groups">,
+      subjectGroupIds: number[],
+    ) => {
       if (!model) {
         return { error: { error: "Model not found" } };
       }
 
       const response = await optimise({
         id: model.id,
-        optimise: optimiseInputs,
+        optimise: {
+          ...optimiseInputs,
+          subject_groups: subjectGroupIds,
+        },
       });
 
       if ("data" in response) {

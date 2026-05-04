@@ -808,7 +808,7 @@ class MyokitModelMixin:
         biomarker_types=None,
         subject_groups=None,
         max_iterations=None,
-        use_multiplicative_noise=False,
+        use_multiplicative_noise=True,
     ):
         """
         Fits the model against the data indicated
@@ -851,7 +851,7 @@ class MyokitModelMixin:
         subject_groups: list (optional)
             list of subject groups (ids) to optimise against, None for all
         max_iterations: int (optional)
-            maximum number of iterations of the opimisation algorithm (default 500)
+            maximum number of iterations of the opimisation algorithm (default 100)
         use_multiplicative_noise: bool (optional)
             if False (default) use additive noise (sum of squares loss), if True,
             use multiplicative noise (log-normal noise)
@@ -868,7 +868,7 @@ class MyokitModelMixin:
             raise RuntimeError("Optimisation requires diffsol support.")
 
         if max_iterations is None:
-            max_iterations = 500
+            max_iterations = 100
 
         input_variables, starting, lower_bounds, upper_bounds = (
             self._validate_optimise_inputs(inputs, starting, bounds)
