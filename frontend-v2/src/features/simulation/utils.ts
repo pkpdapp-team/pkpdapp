@@ -3,8 +3,10 @@ import {
   CombinedModelRead,
   CompoundRead,
   EfficacyExperimentRead,
+  Optimise,
   SimulateResponse,
   Simulation,
+  SimulationSlider,
   SimulationYAxis,
   SubjectGroupRead,
   UnitListApiResponse,
@@ -16,6 +18,38 @@ import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
+
+type GetDefaultOptimiseInputsProps = {
+  orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
+  variables: VariableRead[];
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
+};
+
+export function getDefaultOptimiseInputs({
+  orderedSliders,
+  variables,
+  getSliderValue,
+  getSliderBounds,
+}: GetDefaultOptimiseInputsProps): Omit<Optimise, "subject_groups"> {
+  const inputs = orderedSliders.map((slider) => slider.variable);
+  const starting = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderValue(variableId, variable);
+  });
+  const boundsByVariable = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderBounds(variableId, variable);
+  });
+  const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
+  const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
+
+  return {
+    inputs,
+    starting,
+    bounds: [lowerBounds, upperBounds],
+  };
+}
 
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
 export const plotColours = [

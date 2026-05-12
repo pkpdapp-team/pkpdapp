@@ -2532,6 +2532,7 @@ export type Optimise = {
   subject_groups?: number[] | null;
   max_iterations?: number | null;
   use_multiplicative_noise?: boolean;
+  method?: string;
 };
 export type SimulateResponse = {
   time: number[];
