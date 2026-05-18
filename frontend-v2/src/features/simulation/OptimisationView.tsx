@@ -34,6 +34,20 @@ type OptimisationViewProps = {
   plots: SimulationPlot[];
 };
 
+function formatNum(x: number): string {
+  const abs = Math.abs(x);
+  if (abs === 0) return "0";
+  const e = Math.floor(Math.log10(abs));
+  return e > 4 || e < -4 ? x.toExponential(3) : String(parseFloat(x.toPrecision(4)));
+}
+
+function isNearBound(optimal: number, lower: number, upper: number): boolean {
+  const range = upper - lower;
+  if (range === 0) return false;
+  const frac = (optimal - lower) / range;
+  return frac < 0.001 || frac > 0.999;
+}
+
 function conditionNumberColour(cn: number): string {
   if (cn < 100) return "success.main";
   if (cn < 1000) return "warning.main";
@@ -81,12 +95,8 @@ const OptimisationView = ({
             {/* Summary */}
             <Stack spacing={0.5}>
               <Typography variant="subtitle1" fontWeight="bold">Summary</Typography>
-              <Typography>Loss: {optimiseResult.loss.toFixed(4)}</Typography>
+              <Typography>Loss: {formatNum(optimiseResult.loss)}</Typography>
               <Typography>Reason: {optimiseResult.reason}</Typography>
-              <Typography>
-                Optimal values:{" "}
-                {optimiseResult.optimal.map((v) => v.toExponential(4)).join(", ")}
-              </Typography>
             </Stack>
 
             <Divider />
@@ -114,10 +124,12 @@ const OptimisationView = ({
                     return (
                       <TableRow key={varId}>
                         <TableCell>{label}</TableCell>
-                        <TableCell>{optimiseResult.starting[i]?.toExponential(3) ?? "—"}</TableCell>
-                        <TableCell>{optimiseResult.bounds[i]?.[0]?.toExponential(3) ?? "—"}</TableCell>
-                        <TableCell>{optimiseResult.bounds[i]?.[1]?.toExponential(3) ?? "—"}</TableCell>
-                        <TableCell><strong>{optimiseResult.optimal[i]?.toExponential(4) ?? "—"}</strong></TableCell>
+                        <TableCell>{formatNum(optimiseResult.starting[i])}</TableCell>
+                        <TableCell>{formatNum(optimiseResult.bounds[0][i])}</TableCell>
+                        <TableCell>{formatNum(optimiseResult.bounds[1][i])}</TableCell>
+                        <TableCell sx={isNearBound(optimiseResult.optimal[i], optimiseResult.bounds[0][i], optimiseResult.bounds[1][i]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                          {formatNum(optimiseResult.optimal[i])}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
