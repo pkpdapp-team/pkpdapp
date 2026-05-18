@@ -2528,6 +2528,18 @@ export type OptimiseResponse = {
   max_iterations?: number | null;
   use_multiplicative_noise: boolean;
   method: string;
+  predictions:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  residuals:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  covariance: number[][] | null;
+  condition_number: number | null;
 };
 export type ErrorResponse = {
   error: string;
