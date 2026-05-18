@@ -18,6 +18,7 @@ import threading
 from django.core.cache import cache
 import logging
 import pints
+from scipy.linalg import svd
 
 from pkpdapp.models import Biomarker, BiomarkerType, SubjectGroup
 
@@ -873,6 +874,23 @@ class MyokitModelMixin:
             - "optimal": (list) optimal input values (same order as inputs)
             - "loss": (float) value of loss function at optimal
             - "reason": (str) stopping reason
+            - "predictions": (list of dicts) simulated values at the optimal
+              parameters, one dict per subject group. Each dict has the same
+              format as the dicts returned by ``simulate``: keys are
+              ``"group_id"`` and integer variable ids, values are lists of
+              floats. The time variable is included.
+            - "residuals": (list of dicts) residuals at observed data points,
+              one dict per subject group. Same format as ``predictions`` but
+              only contains time-points for which observations exist.
+              Residuals are ``prediction - observed`` (additive noise) or
+              ``log(prediction) - log(observed)`` (multiplicative noise).
+            - "covariance": (list of lists or None) estimated covariance matrix
+              of the optimal parameters (n_params x n_params), scaled by the
+              residual variance ``RSS / (n_obs - n_params)``. ``None`` if the
+              matrix could not be computed (e.g. insufficient observations).
+            - "condition_number": (float or None) condition number of the
+              covariance matrix computed from its singular values. ``None`` if
+              the covariance matrix is not available.
         """
 
         if not USE_DIFFSOL:
@@ -969,10 +987,161 @@ class MyokitModelMixin:
         if reason is None:
             reason = f"Stopped after {optimiser.iterations()} iterations."
 
+        diagnostics = self._optimise_diagnostics(
+            groups=groups,
+            input_variables=input_variables,
+            optimal=np.asarray(optimal, dtype=float),
+            use_multiplicative_noise=use_multiplicative_noise,
+        )
+
         return {
             "optimal": np.asarray(optimal, dtype=float).tolist(),
             "loss": float(loss),
             "reason": str(reason),
+            **diagnostics,
+        }
+
+    def _optimise_diagnostics(
+        self, groups, input_variables, optimal, use_multiplicative_noise
+    ):
+        """
+        Compute diagnostic information at the optimal parameter values.
+
+        Returns a dict containing:
+          - "predictions": list of dicts (same format as simulate) with predicted
+            values at the optimal parameters for each group.
+          - "residuals": list of dicts (same format as simulate) with residuals
+            for each observation. Residual = prediction - observed (additive) or
+            log(prediction) - log(observed) (multiplicative). Only time-points
+            that have observed data are included.
+          - "covariance": covariance matrix (n_params x n_params) estimated from
+            the Jacobian, scaled by the residual variance.
+          - "condition_number": condition number of the covariance matrix (ratio
+            of largest to smallest singular value).
+        """
+        n_params = len(input_variables)
+
+        # Collect per-group predictions, residuals, and Jacobian rows.
+        predictions_list = []
+        residuals_list = []
+        jacobian_rows = []  # each row: shape (n_params,)
+        residual_values = []  # scalar residuals (for variance scaling)
+
+        for group in groups:
+            try:
+                y, y_prime = self._optimise_predict_with_sens(
+                    group, input_variables, optimal
+                )
+            except Exception:
+                logger.exception("diffsol sensitivity solve failed during diagnostics.")
+                return {
+                    "predictions": None,
+                    "residuals": None,
+                    "covariance": None,
+                    "condition_number": None,
+                }
+
+            # y: (n_times, n_outputs), y_prime: (n_times, n_outputs, n_params)
+            output_qnames = group["outputs"]
+            t_eval = group["t_eval"]
+
+            # Build variable objects for outputs (to get .id for serialisation).
+            output_variables = [
+                self.variables.get(qname=qname) for qname in output_qnames
+            ]
+            time_variable = self.variables.get(
+                qname=group["model"].binding("time").qname()
+            )
+
+            # --- predictions dict (same format as simulate) ---
+            pred_dict = {"group_id": group.get("group_id")}
+            pred_dict[time_variable.id] = t_eval.tolist()
+            for i, var in enumerate(output_variables):
+                pred_dict[var.id] = y[:, i].tolist()
+            predictions_list.append(pred_dict)
+
+            # --- residuals dict (only at observed time-points) ---
+            # We want one entry per (time, output) pair that has observations.
+            # Collect observed times per output.
+            # Build a parallel structure: for each output variable, a list of
+            # (time_value, residual_value) pairs.
+            obs_times_per_output = {i: [] for i in range(len(output_qnames))}
+            obs_residuals_per_output = {i: [] for i in range(len(output_qnames))}
+
+            for record in group["records"]:
+                t_idx = record["time_index"]
+                o_idx = record["output_index"]
+                prediction = y[t_idx, o_idx]
+                observed = record["value"]
+
+                if use_multiplicative_noise:
+                    if prediction <= 0 or observed <= 0:
+                        residual = np.nan
+                        jac_row = np.full(n_params, np.nan)
+                    else:
+                        residual = np.log(prediction) - np.log(observed)
+                        jac_row = y_prime[t_idx, o_idx, :] / prediction
+                else:
+                    residual = prediction - observed
+                    jac_row = y_prime[t_idx, o_idx, :]
+
+                obs_times_per_output[o_idx].append(record["time"])
+                obs_residuals_per_output[o_idx].append(float(residual))
+                jacobian_rows.append(jac_row)
+                residual_values.append(float(residual))
+
+            resid_dict = {"group_id": group.get("group_id")}
+            # Include time as union of all observed times, sorted.
+            all_obs_times = sorted(set(r["time"] for r in group["records"]))
+            resid_dict[time_variable.id] = all_obs_times
+            for i, var in enumerate(output_variables):
+                resid_dict[var.id] = obs_residuals_per_output[i]
+            residuals_list.append(resid_dict)
+
+        # --- Covariance matrix ---
+        J = np.array(jacobian_rows)  # (n_obs, n_params)
+        residual_arr = np.array(residual_values)  # (n_obs,)
+
+        valid_mask = np.isfinite(residual_arr) & np.all(np.isfinite(J), axis=1)
+        J_valid = J[valid_mask]
+        resid_valid = residual_arr[valid_mask]
+        n_valid = len(resid_valid)
+
+        if n_valid <= n_params:
+            return {
+                "predictions": predictions_list,
+                "residuals": residuals_list,
+                "covariance": None,
+                "condition_number": None,
+            }
+
+        # Residual variance estimate: RSS / (n - p)
+        rss = float(np.dot(resid_valid, resid_valid))
+        sigma2 = rss / (n_valid - n_params)
+
+        # Covariance = sigma^2 * (J^T J)^{-1}  (pseudoinverse for robustness)
+        JtJ = J_valid.T @ J_valid
+        try:
+            cov = sigma2 * np.linalg.pinv(JtJ)
+        except np.linalg.LinAlgError:
+            cov = None
+
+        # Condition number via SVD
+        condition_number = None
+        if cov is not None:
+            try:
+                singular_values = svd(cov, compute_uv=False)
+                s_max = singular_values[0]
+                s_min = singular_values[-1]
+                condition_number = float(s_max / s_min) if s_min != 0 else np.inf
+            except Exception:
+                pass
+
+        return {
+            "predictions": predictions_list,
+            "residuals": residuals_list,
+            "covariance": cov.tolist() if cov is not None else None,
+            "condition_number": condition_number,
         }
 
     def _validate_optimise_inputs(self, inputs, starting, bounds):
@@ -1226,6 +1395,7 @@ class MyokitModelMixin:
             "outputs": output_qnames,
             "t_eval": t_eval,
             "records": records,
+            "group_id": group.id if group is not None else None,
         }
 
     def _optimise_loss(

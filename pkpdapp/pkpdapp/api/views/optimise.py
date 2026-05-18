@@ -47,6 +47,17 @@ class OptimiseResponseSerializer(serializers.Serializer):
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
     use_multiplicative_noise = serializers.BooleanField()
     method = serializers.CharField()
+    predictions = serializers.ListField(
+        child=serializers.DictField(), allow_null=True
+    )
+    residuals = serializers.ListField(
+        child=serializers.DictField(), allow_null=True
+    )
+    covariance = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField()),
+        allow_null=True,
+    )
+    condition_number = serializers.FloatField(allow_null=True)
 
 
 class ErrorResponseSerializer(serializers.Serializer):
