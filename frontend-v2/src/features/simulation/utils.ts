@@ -27,6 +27,7 @@ type GetDefaultOptimiseInputsProps = {
   getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
   plots: { y_axes: SimulationYAxis[] }[];
   biomarkerTypes: BiomarkerTypeRead[];
+  subjectGroups: number[];
 };
 
 export function getDefaultOptimiseInputs({
@@ -36,7 +37,8 @@ export function getDefaultOptimiseInputs({
   getSliderBounds,
   plots,
   biomarkerTypes,
-}: GetDefaultOptimiseInputsProps): Omit<Optimise, "subject_groups"> {
+  subjectGroups,
+}: GetDefaultOptimiseInputsProps): Optimise {
   const inputs = orderedSliders.map((slider) => slider.variable);
   const starting = inputs.map((variableId) => {
     const variable = variables.find((item) => item.id === variableId);
@@ -54,17 +56,16 @@ export function getDefaultOptimiseInputs({
   const plottedVariableIds = new Set(
     plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
   );
-  const matchedBiomarkerTypeIds = biomarkerTypes
+  const biomarker_types = biomarkerTypes
     .filter((bt) => bt.variable != null && plottedVariableIds.has(bt.variable))
     .map((bt) => bt.id);
-  const biomarker_types =
-    matchedBiomarkerTypeIds.length > 0 ? matchedBiomarkerTypeIds : undefined;
 
   return {
     inputs,
     starting,
     bounds: [lowerBounds, upperBounds],
-    ...(biomarker_types !== undefined && { biomarker_types }),
+    biomarker_types,
+    subject_groups: subjectGroups,
   };
 }
 

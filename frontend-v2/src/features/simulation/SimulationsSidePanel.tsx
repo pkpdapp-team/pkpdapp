@@ -81,9 +81,8 @@ type SimulationsSidePanelType = {
   handleRemoveSlider: (index: number, variableId: number) => () => void;
   handleSaveAllSlider: () => void;
   handleOptimise: () => void;
-  handleOptimiseWithInputs: (
-    optimiseInputs: Omit<Optimise, "subject_groups">,
-  ) => void;
+  handleOptimiseWithInputs: (optimiseInputs: Optimise) => void;
+  visibleSubjectGroupIds: number[];
   loadingOptimise: boolean;
   optimiseResult: OptimiseResponse | null;
   exportSimulation: () => void;
@@ -203,6 +202,7 @@ export const SimulationsSidePanel = ({
   handleSaveAllSlider,
   handleOptimise,
   handleOptimiseWithInputs,
+  visibleSubjectGroupIds,
   loadingOptimise,
   optimiseResult,
   exportSimulation,
@@ -625,6 +625,8 @@ export const SimulationsSidePanel = ({
             loadingOptimise={loadingOptimise}
             plots={plots}
             biomarkerTypes={biomarkerTypes}
+            groups={groups ?? []}
+            visibleSubjectGroupIds={visibleSubjectGroupIds}
           />
           <OptimisationView
             open={optimiseViewOpen}

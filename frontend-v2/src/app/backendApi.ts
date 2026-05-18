@@ -2520,6 +2520,14 @@ export type OptimiseResponse = {
   optimal: number[];
   loss: number;
   reason: string;
+  inputs: number[];
+  starting: number[];
+  bounds: number[][];
+  biomarker_types?: number[] | null;
+  subject_groups?: number[] | null;
+  max_iterations?: number | null;
+  use_multiplicative_noise: boolean;
+  method: string;
 };
 export type ErrorResponse = {
   error: string;

@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
   FormControl,
+  FormControlLabel,
+  FormGroup,
   InputLabel,
   MenuItem,
   Select,
@@ -20,6 +23,7 @@ import {
   Optimise,
   SimulationSlider,
   SimulationYAxis,
+  SubjectGroupRead,
   VariableRead,
 } from "../../app/backendApi";
 import { getDefaultOptimiseInputs } from "./utils";
@@ -42,10 +46,12 @@ type OptimisationSettingsProps = {
   variables: VariableRead[];
   getSliderValue: (variableId: number, variable?: VariableRead) => number;
   getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
-  onOptimise: (optimiseInputs: Omit<Optimise, "subject_groups">) => void;
+  onOptimise: (optimiseInputs: Omit<Optimise, "subject_groups"> & { subject_groups: number[] }) => void;
   loadingOptimise: boolean;
   plots: { y_axes: SimulationYAxis[] }[];
   biomarkerTypes: BiomarkerTypeRead[];
+  groups: SubjectGroupRead[];
+  visibleSubjectGroupIds: number[];
 };
 
 const OptimisationSettings = ({
@@ -59,6 +65,8 @@ const OptimisationSettings = ({
   loadingOptimise,
   plots,
   biomarkerTypes,
+  groups,
+  visibleSubjectGroupIds,
 }: OptimisationSettingsProps) => {
   const [customStarting, setCustomStarting] = useState<number[]>([]);
   const [customLowerBounds, setCustomLowerBounds] = useState<number[]>([]);
@@ -70,6 +78,8 @@ const OptimisationSettings = ({
     "multiplicative",
   );
   const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
+  const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
+  const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (!open) {
@@ -83,6 +93,7 @@ const OptimisationSettings = ({
       getSliderBounds,
       plots,
       biomarkerTypes,
+      subjectGroups: [],
     });
 
     setCustomStarting(defaultOptimiseInputs.starting);
@@ -91,7 +102,21 @@ const OptimisationSettings = ({
     setMaxIterations(String(DEFAULT_MAX_ITERATIONS));
     setNoiseModel("multiplicative");
     setMethod(DEFAULT_OPTIMISE_METHOD);
-  }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes]);
+    setSelectedSubjectGroupIds(visibleSubjectGroupIds);
+    setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
+  }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
+
+  const handleToggleGroup = (id: number) => {
+    setSelectedSubjectGroupIds((prev) =>
+      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
+    );
+  };
+
+  const handleToggleBiomarkerType = (id: number) => {
+    setSelectedBiomarkerTypeIds((prev) =>
+      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id],
+    );
+  };
 
   const handleCustomOptimise = () => {
     const inputs = orderedSliders.map((slider) => slider.variable);
@@ -106,6 +131,8 @@ const OptimisationSettings = ({
       max_iterations: Number(maxIterations),
       use_multiplicative_noise: noiseModel === "multiplicative",
       method,
+      biomarker_types: selectedBiomarkerTypeIds,
+      subject_groups: selectedSubjectGroupIds,
     });
     onClose();
   };
@@ -176,6 +203,65 @@ const OptimisationSettings = ({
               </Box>
             );
           })}
+          <Divider />
+          <Stack direction="row" spacing={4}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
+                Subject Groups
+              </Typography>
+              <FormGroup>
+                {groups.map((group) => (
+                  <FormControlLabel
+                    key={group.id}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={selectedSubjectGroupIds.includes(group.id)}
+                        onChange={() => handleToggleGroup(group.id)}
+                      />
+                    }
+                    label={group.name}
+                  />
+                ))}
+                {groups.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No subject groups
+                  </Typography>
+                )}
+              </FormGroup>
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
+                Biomarker Types
+              </Typography>
+              <FormGroup>
+                {biomarkerTypes.map((bt) => {
+                  const variable = variables.find((v) => v.id === bt.variable);
+                  const label = variable?.description
+                    ? `${variable.name} (${variable.description})`
+                    : variable?.name || bt.name;
+                  return (
+                    <FormControlLabel
+                      key={bt.id}
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={selectedBiomarkerTypeIds.includes(bt.id)}
+                          onChange={() => handleToggleBiomarkerType(bt.id)}
+                        />
+                      }
+                      label={label}
+                    />
+                  );
+                })}
+                {biomarkerTypes.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No biomarker types
+                  </Typography>
+                )}
+              </FormGroup>
+            </Box>
+          </Stack>
           <Divider />
           <Stack direction="row" spacing={2}>
             <FormControl fullWidth size="small">

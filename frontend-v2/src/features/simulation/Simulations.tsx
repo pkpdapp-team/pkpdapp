@@ -180,7 +180,10 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const visibleSubjectGroupIds = useMemo(
     () =>
       groups
-        .filter((group) => visibleGroups.includes(group.name))
+        .filter(
+          (group) =>
+            visibleGroups.includes(group.name) && group.dataset != null,
+        )
         .map((group) => group.id),
     [groups, visibleGroups],
   );
@@ -221,6 +224,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   );
   const { optimiseModel, loadingOptimise } = useOptimise(model);
   const { biomarkerTypes } = useDataset(project.id);
+  console.log("biomarkerTypes", biomarkerTypes);
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -459,10 +463,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
 
     setOptimiseError(null);
 
-    const response = await optimiseModel({
-      ...optimiseInputs,
-      subject_groups: visibleSubjectGroupIds,
-    });
+    const response = await optimiseModel(optimiseInputs);
 
     if (response.error) {
       setOptimiseError(response.error);
@@ -501,6 +502,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         getSliderBounds,
         plots,
         biomarkerTypes,
+        subjectGroups: visibleSubjectGroupIds,
       }),
     );
   }, [
@@ -510,6 +512,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     getSliderBounds,
     plots,
     biomarkerTypes,
+    visibleSubjectGroupIds,
     handleOptimiseWithInputs,
   ]);
 
@@ -595,6 +598,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         handleSaveAllSlider={handleSaveAllSlider}
         handleOptimise={handleOptimise}
         handleOptimiseWithInputs={handleOptimiseWithInputs}
+        visibleSubjectGroupIds={visibleSubjectGroupIds}
         loadingOptimise={loadingOptimise}
         optimiseResult={optimiseResult}
         exportSimulation={exportSimulation}

@@ -33,6 +33,20 @@ class OptimiseResponseSerializer(serializers.Serializer):
     optimal = serializers.ListField(child=serializers.FloatField())
     loss = serializers.FloatField()
     reason = serializers.CharField()
+    inputs = serializers.ListField(child=serializers.IntegerField())
+    starting = serializers.ListField(child=serializers.FloatField())
+    bounds = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField())
+    )
+    biomarker_types = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_null=True
+    )
+    subject_groups = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_null=True
+    )
+    max_iterations = serializers.IntegerField(required=False, allow_null=True)
+    use_multiplicative_noise = serializers.BooleanField()
+    method = serializers.CharField()
 
 
 class ErrorResponseSerializer(serializers.Serializer):
@@ -79,7 +93,17 @@ class OptimiseBaseView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serialized_result = OptimiseResponseSerializer(result)
+        serialized_result = OptimiseResponseSerializer({
+            **result,
+            "inputs": data["inputs"],
+            "starting": data["starting"],
+            "bounds": data["bounds"],
+            "biomarker_types": data.get("biomarker_types"),
+            "subject_groups": data.get("subject_groups"),
+            "max_iterations": data.get("max_iterations"),
+            "use_multiplicative_noise": data.get("use_multiplicative_noise", False),
+            "method": data.get("method", "pso"),
+        })
         return Response(serialized_result.data)
 
 
