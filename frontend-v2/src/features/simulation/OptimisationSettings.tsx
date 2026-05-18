@@ -16,8 +16,10 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  BiomarkerTypeRead,
   Optimise,
   SimulationSlider,
+  SimulationYAxis,
   VariableRead,
 } from "../../app/backendApi";
 import { getDefaultOptimiseInputs } from "./utils";
@@ -42,6 +44,8 @@ type OptimisationSettingsProps = {
   getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
   onOptimise: (optimiseInputs: Omit<Optimise, "subject_groups">) => void;
   loadingOptimise: boolean;
+  plots: { y_axes: SimulationYAxis[] }[];
+  biomarkerTypes: BiomarkerTypeRead[];
 };
 
 const OptimisationSettings = ({
@@ -53,6 +57,8 @@ const OptimisationSettings = ({
   getSliderBounds,
   onOptimise,
   loadingOptimise,
+  plots,
+  biomarkerTypes,
 }: OptimisationSettingsProps) => {
   const [customStarting, setCustomStarting] = useState<number[]>([]);
   const [customLowerBounds, setCustomLowerBounds] = useState<number[]>([]);
@@ -75,6 +81,8 @@ const OptimisationSettings = ({
       variables,
       getSliderValue,
       getSliderBounds,
+      plots,
+      biomarkerTypes,
     });
 
     setCustomStarting(defaultOptimiseInputs.starting);
@@ -83,7 +91,7 @@ const OptimisationSettings = ({
     setMaxIterations(String(DEFAULT_MAX_ITERATIONS));
     setNoiseModel("multiplicative");
     setMethod(DEFAULT_OPTIMISE_METHOD);
-  }, [open, orderedSliders, variables, getSliderBounds, getSliderValue]);
+  }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes]);
 
   const handleCustomOptimise = () => {
     const inputs = orderedSliders.map((slider) => slider.variable);

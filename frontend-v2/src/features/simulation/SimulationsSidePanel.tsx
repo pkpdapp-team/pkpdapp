@@ -31,6 +31,7 @@ import useDataset from "../../hooks/useDataset";
 import { PageName } from "../main/mainSlice";
 import {
   CombinedModelRead,
+  BiomarkerTypeRead,
   Simulation,
   SimulationPlot,
   SimulationRead,
@@ -91,6 +92,7 @@ type SimulationsSidePanelType = {
   shouldShowLegend: boolean;
   setShouldShowLegend: (value: boolean) => void;
   variables: VariableRead[];
+  biomarkerTypes: BiomarkerTypeRead[];
 };
 
 const ButtonSx = {
@@ -209,6 +211,7 @@ export const SimulationsSidePanel = ({
   shouldShowLegend,
   setShouldShowLegend,
   variables,
+  biomarkerTypes,
 }: SimulationsSidePanelType) => {
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
@@ -620,6 +623,8 @@ export const SimulationsSidePanel = ({
             getSliderBounds={getSliderBounds}
             onOptimise={handleOptimiseWithInputs}
             loadingOptimise={loadingOptimise}
+            plots={plots}
+            biomarkerTypes={biomarkerTypes}
           />
           <OptimisationView
             open={optimiseViewOpen}

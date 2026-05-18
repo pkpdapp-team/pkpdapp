@@ -138,6 +138,7 @@ export default function useDataset(selectedProject: number | null) {
   return {
     dataset,
     groups: subjectGroups,
+    biomarkerTypes,
     subjectBiomarkers: subjectBiomarkers,
     addDataset,
     updateDataset,

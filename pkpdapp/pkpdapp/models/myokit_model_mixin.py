@@ -6,7 +6,6 @@
 
 import hashlib
 import os
-from tempfile import TemporaryDirectory
 import tempfile
 
 import pkpdapp
@@ -324,8 +323,7 @@ class MyokitModelMixin:
                 )
             else:
                 logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, state = {v.state}"
+                    f"{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}"
                 )
 
         logger.debug("ALL OLD VARIABLES")
@@ -337,8 +335,7 @@ class MyokitModelMixin:
                 )
             else:
                 logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, state = {v.state}"
+                    f"{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}"
                 )
 
         # delete all variables that are not in new
@@ -603,7 +600,6 @@ class MyokitModelMixin:
             and dosing_protocols is not None
             and len(dosing_protocols) > 0
         ):
-
             project = self.get_project()
             myokit_var = model.get("PKNonlinearities.C_Drug")
             # set C_Drug equal to the sum of the first dose amounts for all protocols
@@ -630,7 +626,6 @@ class MyokitModelMixin:
             and dosing_protocols is not None
             and len(dosing_protocols) > 0
         ):
-
             project = self.get_project()
             myokit_var = model.get("PKNonlinearities.C_Drug")
             # set C_Drug equal to the sum of the first dose amounts for all protocols
@@ -1502,7 +1497,7 @@ def get_protocol(events):
 
 
 def _get_pacing_label(variable):
-    return f'pace_{variable.qname().replace(".", "_")}'
+    return f"pace_{variable.qname().replace('.', '_')}"
 
 
 def _add_dose_rate(drug_amount, time_unit):

@@ -50,6 +50,7 @@ import paramPriority from "../model/parameters/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+import useDataset from "../../hooks/useDataset";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
@@ -219,6 +220,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     selectIsProjectShared(state, project),
   );
   const { optimiseModel, loadingOptimise } = useOptimise(model);
+  const { biomarkerTypes } = useDataset(project.id);
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -497,6 +499,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         variables,
         getSliderValue,
         getSliderBounds,
+        plots,
+        biomarkerTypes,
       }),
     );
   }, [
@@ -504,6 +508,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     variables,
     getSliderValue,
     getSliderBounds,
+    plots,
+    biomarkerTypes,
     handleOptimiseWithInputs,
   ]);
 
@@ -597,6 +603,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         shouldShowLegend={shouldShowLegend}
         setShouldShowLegend={setShouldShowLegend}
         variables={variables}
+        biomarkerTypes={biomarkerTypes}
       />
       <Box
         sx={{

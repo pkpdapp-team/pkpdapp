@@ -1,5 +1,6 @@
 import { FieldArrayWithId } from "react-hook-form";
 import {
+  BiomarkerTypeRead,
   CombinedModelRead,
   CompoundRead,
   EfficacyExperimentRead,
@@ -24,6 +25,8 @@ type GetDefaultOptimiseInputsProps = {
   variables: VariableRead[];
   getSliderValue: (variableId: number, variable?: VariableRead) => number;
   getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
+  plots: { y_axes: SimulationYAxis[] }[];
+  biomarkerTypes: BiomarkerTypeRead[];
 };
 
 export function getDefaultOptimiseInputs({
@@ -31,6 +34,8 @@ export function getDefaultOptimiseInputs({
   variables,
   getSliderValue,
   getSliderBounds,
+  plots,
+  biomarkerTypes,
 }: GetDefaultOptimiseInputsProps): Omit<Optimise, "subject_groups"> {
   const inputs = orderedSliders.map((slider) => slider.variable);
   const starting = inputs.map((variableId) => {
@@ -44,10 +49,22 @@ export function getDefaultOptimiseInputs({
   const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
   const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
 
+  // Determine which biomarker types are shown in the simulation plots
+  // by matching plot y-axis variable IDs to biomarker type variable IDs
+  const plottedVariableIds = new Set(
+    plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
+  );
+  const matchedBiomarkerTypeIds = biomarkerTypes
+    .filter((bt) => bt.variable != null && plottedVariableIds.has(bt.variable))
+    .map((bt) => bt.id);
+  const biomarker_types =
+    matchedBiomarkerTypeIds.length > 0 ? matchedBiomarkerTypeIds : undefined;
+
   return {
     inputs,
     starting,
     bounds: [lowerBounds, upperBounds],
+    ...(biomarker_types !== undefined && { biomarker_types }),
   };
 }
 
