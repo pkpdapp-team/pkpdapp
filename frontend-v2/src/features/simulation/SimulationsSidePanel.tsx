@@ -32,6 +32,7 @@ import { PageName } from "../main/mainSlice";
 import {
   CombinedModelRead,
   BiomarkerTypeRead,
+  CompoundRead,
   Simulation,
   SimulationPlot,
   SimulationRead,
@@ -64,6 +65,7 @@ type SimulationsSidePanelType = {
   units: UnitRead[];
   simulation: SimulationRead;
   model: CombinedModelRead;
+  compound: CompoundRead;
   groups?: SubjectGroupRead[];
   visibleGroups: string[];
   handleVisibleGroups: (group: ChangeEvent<HTMLInputElement>) => void;
@@ -190,6 +192,7 @@ export const SimulationsSidePanel = ({
   visibleGroups,
   handleVisibleGroups,
   model,
+  compound,
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
@@ -632,6 +635,15 @@ export const SimulationsSidePanel = ({
             open={optimiseViewOpen}
             onClose={() => setOptimiseViewOpen(false)}
             optimiseResult={optimiseResult}
+            variables={variables}
+            units={units}
+            groups={groups}
+            biomarkerTypes={biomarkerTypes}
+            subjectBiomarkers={subjectBiomarkers}
+            model={model}
+            compound={compound}
+            visibleGroups={visibleGroups}
+            plots={plots}
           />
         </Box>,
         portalRoot,

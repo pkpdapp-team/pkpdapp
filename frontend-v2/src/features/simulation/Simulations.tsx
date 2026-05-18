@@ -575,6 +575,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         addPlotOptions={addPlotOptions}
         handleAddPlot={handleAddPlot}
         model={model}
+        compound={compound}
         isSharedWithMe={isSharedWithMe}
         layoutOptions={layoutOptions}
         layout={layout}

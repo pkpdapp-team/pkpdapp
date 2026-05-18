@@ -865,3 +865,33 @@ export const generateScatterPlots: (
       }),
     );
   };
+
+/**
+ * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
+ * SimulateResponse[] so they can be consumed by the same plotting utilities.
+ *
+ * The backend returns each entry as a plain dict keyed by integer variable id
+ * (plus a "group_id" key).  SimulateResponse expects:
+ *   { time: number[], group?: number|null, outputs: { [varId: string]: number[] } }
+ */
+export function optimisePredictionsToSimulateResponses(
+  predictions: { [key: string]: unknown }[],
+  variables: VariableRead[],
+): SimulateResponse[] {
+  const timeVariable = variables.find((v) => v.binding === "time");
+  return predictions.map((pred) => {
+    const groupId = pred["group_id"] as number | null | undefined;
+    const time = timeVariable
+      ? (pred[String(timeVariable.id)] as number[] | undefined) ?? []
+      : [];
+    const outputs: { [key: string]: number[] } = {};
+    for (const [key, values] of Object.entries(pred)) {
+      if (key === "group_id") continue;
+      if (key === String(timeVariable?.id)) continue;
+      if (Array.isArray(values)) {
+        outputs[key] = values as number[];
+      }
+    }
+    return { time, group: groupId ?? null, outputs };
+  });
+}
