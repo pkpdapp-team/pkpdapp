@@ -1,5 +1,5 @@
 gunicorn
-Django==3.2.25
+Django~=4.2.0
 setuptools<=65.5.1
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5
@@ -13,7 +13,7 @@ django-extensions>=3.1.1
 jsonfield>=3.1.0
 djangorestframework>=3.12.4
 djoser>=2.1.0
-python-memcached>=1.16,<=1.59
+pymemcache>=3.5.0
 psycopg2-binary>=2.9.1
 dj-database-url>=0.5.0
 django-polymorphic>=3.1.0

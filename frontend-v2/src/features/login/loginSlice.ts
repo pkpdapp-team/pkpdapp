@@ -10,8 +10,14 @@ export const fetchCsrf = createAsyncThunk<string, undefined>(
       method: "GET",
       credentials: "include",
     }).then((response) => response.json());
-    localStorage.setItem("csrf", csrfResponse["X-CSRFToken"]);
-    return csrfResponse["X-CSRFToken"];
+
+    const csrf = csrfResponse["X-CSRFToken"];
+    if (csrf) {
+      localStorage.setItem("csrf", csrf);
+      return csrf;
+    }
+
+    return "";
   },
 );
 
