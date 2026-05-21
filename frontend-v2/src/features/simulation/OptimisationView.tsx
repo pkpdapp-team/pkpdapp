@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -212,12 +213,14 @@ const OptimisationView = ({
                     Diagonal: %RSE (green &lt;20%, amber 20–50%, red &gt;50%).
                     Off-diagonal: correlation (green &lt;0.5, amber 0.5–0.9, red &gt;0.9).
                   </Typography>
-                  <OptimisationCovarianceTable
-                    covariance={optimiseResult.covariance}
-                    optimal={optimiseResult.optimal}
-                    inputVariableIds={optimiseResult.inputs}
-                    variables={variables}
-                  />
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <OptimisationCovarianceTable
+                      covariance={optimiseResult.covariance}
+                      optimal={optimiseResult.optimal}
+                      inputVariableIds={optimiseResult.inputs}
+                      variables={variables}
+                    />
+                  </Box>
                 </Stack>
               </>
             )}

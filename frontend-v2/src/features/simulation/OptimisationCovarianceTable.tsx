@@ -48,6 +48,8 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
   variables,
 }) => {
   const n = covariance.length;
+  const cellSize = 80; // px — drives 1:1 aspect ratio
+  const tableWidth = cellSize * (n + 1);
 
   const paramNames = inputVariableIds.map((id) => {
     const v = variables.find((v) => v.id === id);
@@ -58,15 +60,15 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
   const se = covariance.map((row, i) => Math.sqrt(Math.max(0, row[i])));
 
   return (
-    <Table size="small" sx={{ tableLayout: "fixed" }}>
+    <Table size="small" sx={{ tableLayout: "fixed", width: tableWidth }}>
       <TableHead>
         <TableRow>
-          <TableCell sx={{ fontWeight: "bold", width: 120 }} />
+          <TableCell sx={{ fontWeight: "bold", width: cellSize }} />
           {paramNames.map((name, i) => (
             <TableCell
               key={i}
               align="center"
-              sx={{ fontWeight: "bold", fontSize: "0.75rem", wordBreak: "break-word" }}
+              sx={{ fontWeight: "bold", fontSize: "0.75rem", wordBreak: "break-word", width: cellSize }}
             >
               {name}
             </TableCell>
@@ -76,7 +78,7 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
       <TableBody>
         {covariance.map((row, i) => (
           <TableRow key={i}>
-            <TableCell sx={{ fontWeight: "bold", fontSize: "0.75rem", wordBreak: "break-word" }}>
+            <TableCell sx={{ fontWeight: "bold", fontSize: "0.75rem", wordBreak: "break-word", width: cellSize }}>
               {paramNames[i]}
             </TableCell>
             {row.map((cellValue, j) => {
@@ -86,8 +88,7 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
 
               if (isDiagonal) {
                 const pi = optimal[i];
-                displayValue =
-                  pi !== 0 ? (100 * se[i]) / Math.abs(pi) : NaN;
+                displayValue = pi !== 0 ? (100 * se[i]) / Math.abs(pi) : NaN;
                 tooltipText = `%RSE = 100 × SE / |p| = 100 × ${se[i].toExponential(3)} / ${Math.abs(pi).toExponential(3)}`;
               } else {
                 const denom = se[i] * se[j];
@@ -104,7 +105,9 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
                     sx={{
                       backgroundColor: bg,
                       fontSize: "0.75rem",
-                      padding: "4px 8px",
+                      padding: 0,
+                      width: cellSize,
+                      height: cellSize,
                       cursor: "default",
                     }}
                   >
