@@ -95,6 +95,17 @@ class TestSimulateView(APITestCase):
                 ],
             )
 
+        legacy_data = {**data, "use_diffsol": False}
+        response = self.client.post(url, legacy_data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        invalid_data = {**data, "use_diffsol": "not-a-bool"}
+        response = self.client.post(url, invalid_data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("use_diffsol", response.data.get("error", ""))
+
         url = reverse("simulate-combined-model", args=(123,))
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

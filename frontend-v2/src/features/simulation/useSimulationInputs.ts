@@ -116,6 +116,7 @@ export default function useSimulationInputs(
   getSliderValue: SliderValueGetter | undefined,
   variables: VariableRead[] | undefined,
   timeMax: number | undefined,
+  useLegacySolver: boolean = false,
 ) {
   const simulateVariables = useMemo(
     () => getSimulationInputs(variables, sliderValues, getSliderValue),
@@ -138,8 +139,9 @@ export default function useSimulationInputs(
       variables: simulateVariables,
       outputs,
       time_max: timeMax || undefined,
+      use_diffsol: !useLegacySolver,
     }),
-    [simulateVariables, outputs, timeMax],
+    [simulateVariables, outputs, timeMax, useLegacySolver],
   );
   return simInputs as Simulate;
 }

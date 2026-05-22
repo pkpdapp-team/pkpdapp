@@ -26,9 +26,7 @@ logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
 
-USE_DIFFSOL = True
-if USE_DIFFSOL:
-    import pydiffsol
+import pydiffsol
 
 
 class MyokitModelMixin:
@@ -202,6 +200,9 @@ class MyokitModelMixin:
         ode = cache.get(key)
         if ode is None:
             ode = pydiffsol.Ode(content)
+            ode.ode_solver = pydiffsol.esdirk34
+            ode.atol = 1e-6
+            ode.rtol = 1e-4
             cache.set(key, ode, timeout=None)
         return ode
 
@@ -711,7 +712,7 @@ class MyokitModelMixin:
         datalog = sim.run(time_max, log=outputs)
         return self.serialize_datalog(datalog, model)
 
-    def simulate(self, outputs=None, variables=None, time_max=None):
+    def simulate(self, outputs=None, variables=None, time_max=None, use_diffsol=True):
         """
         Arguments
         ---------
@@ -721,6 +722,8 @@ class MyokitModelMixin:
             dict mapping variable names to values for model parameters
         time_max: float
             maximum time to simulate to
+        use_diffsol: bool
+            if True use diffsol, otherwise use the legacy Myokit solver
 
         Returns
         -------
@@ -769,7 +772,7 @@ class MyokitModelMixin:
             }
             model_dosing_protocols.append(dosing_protocols)
 
-        if USE_DIFFSOL:
+        if use_diffsol:
             result = [
                 self.simulate_model_diffsol(
                     variables=variables,
@@ -892,9 +895,6 @@ class MyokitModelMixin:
               covariance matrix computed from its singular values. ``None`` if
               the covariance matrix is not available.
         """
-
-        if not USE_DIFFSOL:
-            raise RuntimeError("Optimisation requires diffsol support.")
 
         if method not in self._OPTIMISE_METHODS:
             raise ValueError(

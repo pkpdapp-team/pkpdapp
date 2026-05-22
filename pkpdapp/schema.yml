@@ -6216,6 +6216,9 @@ components:
         time_max:
           type: number
           format: double
+        use_diffsol:
+          type: boolean
+          default: true
       required:
       - outputs
       - variables

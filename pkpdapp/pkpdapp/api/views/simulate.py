@@ -15,6 +15,7 @@ class SimulateSerializer(serializers.Serializer):
     outputs = serializers.ListField(child=serializers.CharField())
     variables = serializers.DictField(child=serializers.FloatField())
     time_max = serializers.FloatField(required=False)
+    use_diffsol = serializers.BooleanField(required=False, default=True)
 
 
 class SimulateResponseSerializer(serializers.Serializer):
@@ -61,12 +62,23 @@ class SimulateBaseView(views.APIView):
             m = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get("outputs", None)
-        variables = request.data.get("variables", None)
-        time_max = request.data.get("time_max", None)
+
+        serializer = SimulateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"error": str(serializer.errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = serializer.validated_data
         try:
-            result = m.simulate(outputs, variables, time_max)
-        except (myokit.MyokitError, RuntimeError) as e:
+            result = m.simulate(
+                data["outputs"],
+                data["variables"],
+                data.get("time_max"),
+                use_diffsol=data.get("use_diffsol", True),
+            )
+        except (myokit.MyokitError, RuntimeError, ValueError) as e:
             serialized_result = ErrorResponseSerializer({"error": str(e)})
             return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
         serialized_result = SimulateResponseSerializer(result, many=True)

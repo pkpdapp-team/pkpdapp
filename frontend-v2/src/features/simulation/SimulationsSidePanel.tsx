@@ -90,6 +90,8 @@ type SimulationsSidePanelType = {
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
+  useLegacySolver: boolean;
+  setUseLegacySolver: (useLegacySolver: boolean) => void;
   shouldShowLegend: boolean;
   setShouldShowLegend: (value: boolean) => void;
   variables: VariableRead[];
@@ -211,6 +213,8 @@ export const SimulationsSidePanel = ({
   exportSimulation,
   showReference,
   setShowReference,
+  useLegacySolver,
+  setUseLegacySolver,
   shouldShowLegend,
   setShouldShowLegend,
   variables,
@@ -375,6 +379,17 @@ export const SimulationsSidePanel = ({
                               selectProps={{
                                 disabled: isSharedWithMe,
                               }}
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={useLegacySolver}
+                                  onChange={(event) =>
+                                    setUseLegacySolver(event.target.checked)
+                                  }
+                                />
+                              }
+                              label="Use legacy solver"
                             />
                           </Stack>
                         </>

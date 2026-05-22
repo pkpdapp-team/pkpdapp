@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # start-server.sh
+(memcached -l 127.0.0.1 -p 11211 -m "${MEMCACHED_MEMORY_MB:-64}" -U 0) &
 (python manage.py migrate --no-input)
 (python update_models.py)
 (python update_units.py)

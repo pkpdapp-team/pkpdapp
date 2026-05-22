@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 from pkpdapp.models import CombinedModel
+import myokit
 
 
 class OptimiseSerializer(serializers.Serializer):
@@ -47,12 +48,8 @@ class OptimiseResponseSerializer(serializers.Serializer):
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
     use_multiplicative_noise = serializers.BooleanField()
     method = serializers.CharField()
-    predictions = serializers.ListField(
-        child=serializers.DictField(), allow_null=True
-    )
-    residuals = serializers.ListField(
-        child=serializers.DictField(), allow_null=True
-    )
+    predictions = serializers.ListField(child=serializers.DictField(), allow_null=True)
+    residuals = serializers.ListField(child=serializers.DictField(), allow_null=True)
     covariance = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,
@@ -98,23 +95,23 @@ class OptimiseBaseView(views.APIView):
                 use_multiplicative_noise=data.get("use_multiplicative_noise", False),
                 method=data.get("method", "pso"),
             )
-        except (RuntimeError, ValueError) as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        except (myokit.MyokitError, RuntimeError, ValueError) as e:
+            serialized_result = ErrorResponseSerializer({"error": str(e)})
+            return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
 
-        serialized_result = OptimiseResponseSerializer({
-            **result,
-            "inputs": data["inputs"],
-            "starting": data["starting"],
-            "bounds": data["bounds"],
-            "biomarker_types": data.get("biomarker_types"),
-            "subject_groups": data.get("subject_groups"),
-            "max_iterations": data.get("max_iterations"),
-            "use_multiplicative_noise": data.get("use_multiplicative_noise", False),
-            "method": data.get("method", "pso"),
-        })
+        serialized_result = OptimiseResponseSerializer(
+            {
+                **result,
+                "inputs": data["inputs"],
+                "starting": data["starting"],
+                "bounds": data["bounds"],
+                "biomarker_types": data.get("biomarker_types"),
+                "subject_groups": data.get("subject_groups"),
+                "max_iterations": data.get("max_iterations"),
+                "use_multiplicative_noise": data.get("use_multiplicative_noise", False),
+                "method": data.get("method", "pso"),
+            }
+        )
         return Response(serialized_result.data)
 
 

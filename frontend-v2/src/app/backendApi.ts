@@ -2567,6 +2567,7 @@ export type Simulate = {
     [key: string]: number;
   };
   time_max?: number;
+  use_diffsol?: boolean;
 };
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";

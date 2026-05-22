@@ -84,6 +84,7 @@ interface UseSimulationDataProps {
   variables?: VariableRead[];
   units?: UnitRead[];
   showReference?: boolean;
+  useLegacySolver?: boolean;
 }
 
 function useSimulationData({
@@ -94,6 +95,7 @@ function useSimulationData({
   variables,
   units,
   showReference = false,
+  useLegacySolver = false,
 }: UseSimulationDataProps) {
   // generate a simulation if slider values change
   const getTimeMax = (sim: SimulationRead): number => {
@@ -115,6 +117,7 @@ function useSimulationData({
     getSliderValue,
     variables,
     timeMax,
+    useLegacySolver,
   );
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
@@ -136,6 +139,7 @@ function useSimulationData({
     undefined,
     variables,
     timeMax,
+    useLegacySolver,
   );
   const { data: dataReference } = useSimulation(
     refSimInputs,
@@ -188,6 +192,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     [groups, visibleGroups],
   );
   const [showReference, setShowReference] = useState<boolean>(false);
+  const [useLegacySolver, setUseLegacySolver] = useState<boolean>(false);
   useEffect(() => {
     setGroupVisibility((prevState) => {
       const newState: Record<string, boolean> = {};
@@ -246,6 +251,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       variables,
       units,
       showReference,
+      useLegacySolver,
     });
 
   const {
@@ -605,6 +611,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}
+        useLegacySolver={useLegacySolver}
+        setUseLegacySolver={setUseLegacySolver}
         shouldShowLegend={shouldShowLegend}
         setShouldShowLegend={setShouldShowLegend}
         variables={variables}
