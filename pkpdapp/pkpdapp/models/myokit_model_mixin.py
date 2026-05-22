@@ -917,6 +917,7 @@ class MyokitModelMixin:
             self._validate_optimise_inputs(inputs, starting, bounds)
         )
         groups = self._prepare_optimise_groups(biomarker_types, subject_groups)
+        self._prepare_optimise_input_variables(input_variables, groups[0]["model"])
 
         class OptimiseError(pints.ErrorMeasure):
             def n_parameters(inner_self):
@@ -1164,7 +1165,8 @@ class MyokitModelMixin:
             raise ValueError("Bounds must have the same length as inputs.")
 
         variables_by_id = {
-            variable.id: variable for variable in self.variables.filter(id__in=inputs)
+            variable.id: variable
+            for variable in self.variables.filter(id__in=inputs).select_related("unit")
         }
         missing = [input_id for input_id in inputs if input_id not in variables_by_id]
         if missing:
@@ -1205,6 +1207,22 @@ class MyokitModelMixin:
             )
 
         return variables, starting, lower_bounds, upper_bounds
+
+    def _prepare_optimise_input_variables(self, input_variables, model):
+        for variable in input_variables:
+            myokit_variable = model.get(variable.qname)
+            variable._optimise_conversion_factor = self._conversion_factor(
+                variable,
+                myokit_variable,
+            )
+        return input_variables
+
+    def _get_optimise_conversion_factor(self, variable, model):
+        conversion_factor = getattr(variable, "_optimise_conversion_factor", None)
+        if conversion_factor is None:
+            self._prepare_optimise_input_variables([variable], model)
+            conversion_factor = variable._optimise_conversion_factor
+        return conversion_factor
 
     def _prepare_optimise_groups(self, biomarker_types, subject_groups):
 
@@ -1438,9 +1456,15 @@ class MyokitModelMixin:
             raise ValueError("optimisation values must be finite.")
 
         input_values = np.array(group["input_values"], copy=True)
-        for value, variable in zip(values, input_variables):
+        conversion_factors = [
+            self._get_optimise_conversion_factor(variable, group["model"])
+            for variable in input_variables
+        ]
+        for value, variable, conversion_factor in zip(
+            values, input_variables, conversion_factors
+        ):
             input_values[group["input_indices"][variable.qname]] = (
-                self._convert_unit_qname(variable.qname, value, group["model"])
+                value * conversion_factor
             )
 
         solution = group["ode"].solve_dense(input_values, group["t_eval"])
@@ -1484,12 +1508,14 @@ class MyokitModelMixin:
         # Conversion factors: solve_fwd_sens gives d(y)/d(converted_param).
         # Since converted = factor * original, d(y)/d(original) = d(y)/d(converted) * factor.
         conversion_factors = [
-            self._convert_unit_qname(variable.qname, 1.0, group["model"])
+            self._get_optimise_conversion_factor(variable, group["model"])
             for variable in input_variables
         ]
-        for value, variable in zip(values, input_variables):
+        for value, variable, conversion_factor in zip(
+            values, input_variables, conversion_factors
+        ):
             input_values[group["input_indices"][variable.qname]] = (
-                self._convert_unit_qname(variable.qname, value, group["model"])
+                value * conversion_factor
             )
 
         solution = group["ode"].solve_fwd_sens(input_values, group["t_eval"])
