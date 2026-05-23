@@ -740,6 +740,8 @@ class MyokitModelMixin:
         if outputs is None:
             outputs = []
 
+        # TODO, we query self.variables a lot in the methods below (often deeply nested), would it be
+        # more efficient to get all variables once here and pass them in as an argument to the methods below?
         default_variables = {
             v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
         }
