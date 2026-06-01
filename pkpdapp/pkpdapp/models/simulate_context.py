@@ -32,16 +32,6 @@ class VariableContext:
 
 
 @dataclass(frozen=True)
-class OptimisationInputContext:
-    id: int
-    qname: str
-    name: str
-    starting: float
-    lower_bound: float
-    upper_bound: float
-
-
-@dataclass(frozen=True)
 class OutputContext:
     id: int
     qname: str
@@ -76,32 +66,13 @@ class DosingProtocolContext:
         return f"pace_{self.variable_qname.replace('.', '_')}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SimulationGroupContext:
     group_id: int | None
     group_name: str | None
     dosing_protocols: tuple[DosingProtocolContext, ...]
     nonlinear_inputs: dict[str, float] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class OptimisationRecordContext:
-    output_index: int
-    time_index: int
-    time: float
-    value: float
-
-
-@dataclass(frozen=True)
-class OptimisationGroupContext:
-    group_id: int | None
-    group_name: str | None
-    dosing_protocols: tuple[DosingProtocolContext, ...]
-    outputs: tuple[OutputContext, ...]
-    t_eval: tuple[float, ...]
-    records: tuple[OptimisationRecordContext, ...]
-    input_values: dict[str, float]
-    nonlinear_inputs: dict[str, float] = field(default_factory=dict)
+    diffsol_ode: Any | None = None
 
 
 class SimulateContext:
@@ -122,16 +93,15 @@ class SimulateContext:
         model: Any,
         outputs: list[str] | None = None,
         variables: dict[str, float] | None = None,
+        use_diffsol: bool = False,
         time_max: float | None = None,
-        optimise_inputs: list[int] | None = None,
-        starting: list[float] | None = None,
-        bounds: tuple[list[float], list[float]] | list[list[float]] | None = None,
-        biomarker_types: list[int] | None = None,
-        subject_groups: list[int] | None = None,
+        build_simulation_groups: bool = True,
+        discard_database_state: bool = True,
     ):
         self.model_id = model.id
         self.model_table = model._meta.db_table
         self.model_class = model.__class__.__name__
+        self.use_diffsol = use_diffsol
         self._project = self._load_project(model)
         self.project_id = self._project.id if self._project is not None else None
         self.is_library_model = bool(getattr(model, "is_library_model", False))
@@ -147,25 +117,17 @@ class SimulateContext:
         self._variable_contexts_by_qname = self._build_variable_contexts()
         self.variable_values = self._build_variable_values(variables)
         self.inputs = self._build_inputs()
+        self._input_index_by_variable_id = self._build_input_index_by_variable_id()
+        self._set_base_input_rhs()
         self.time_max = self._build_time_max(model, time_max)
 
         self.outputs = self._build_outputs(outputs or [])
         self._protocols = self._load_protocols()
-        self.simulation_groups = self._build_simulation_groups()
-
-        self.optimise_inputs = ()
-        self.optimisation_groups = ()
-        if optimise_inputs is not None:
-            self.optimise_inputs = self._build_optimise_inputs(
-                optimise_inputs,
-                starting,
-                bounds,
-            )
-            self.optimisation_groups = self._build_optimisation_groups(
-                biomarker_types,
-                subject_groups,
-            )
-        self._discard_database_state()
+        self.simulation_groups: tuple[SimulationGroupContext, ...] = (
+            self._build_simulation_groups() if build_simulation_groups else ()
+        )
+        if discard_database_state:
+            self._discard_database_state()
 
     def _discard_database_state(self):
         del self._project
@@ -181,8 +143,16 @@ class SimulateContext:
         inputs = self._simulation_inputs(simulation_group)
         outputs = [output.qname for output in self.outputs]
 
-        for input_context in inputs:
-            model.get(input_context.name).set_rhs(float(input_context.value))
+        for qname, value in simulation_group.nonlinear_inputs.items():
+            self._myokit_model.get(qname).set_rhs(float(value))
+
+        if simulation_group.diffsol_ode is not None:
+            input_values = np.asarray(
+                [input_context.value for input_context in inputs],
+                dtype=float,
+            )
+            solution = simulation_group.diffsol_ode.solve(input_values, self.time_max)
+            return self.serialize_diffsol_solution(solution, model, outputs)
 
         sim = myokit.Simulation(
             model,
@@ -191,44 +161,6 @@ class SimulateContext:
         sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
         datalog = sim.run(self.time_max, log=outputs)
         return self.serialize_datalog(datalog, model)
-
-    def simulate_model_diffsol(
-        self,
-        simulation_group: SimulationGroupContext,
-    ) -> dict[int, list[float]]:
-        model = self._myokit_model
-        inputs = self._simulation_inputs(simulation_group)
-        input_values = np.asarray(
-            [input_context.value for input_context in inputs],
-            dtype=float,
-        )
-        outputs = [output.qname for output in self.outputs]
-        protocols = self._myokit_protocols(model, simulation_group)
-        input_variables = [model.get(input_context.name) for input_context in inputs]
-        output_variables = [model.get(output.qname) for output in self.outputs]
-
-        path = ""
-        temp = tempfile.NamedTemporaryFile(delete=False)
-        try:
-            path = temp.name
-            temp.close()
-            DiffSLExporter().model(
-                path,
-                model,
-                convert_units=False,
-                protocol=protocols,
-                inputs=input_variables,
-                outputs=output_variables,
-                final_time=self.time_max,
-            )
-            with open(path, "r") as exported_file:
-                content = exported_file.read()
-        finally:
-            os.remove(path)
-
-        ode = self._get_cached_diffsol_ode(content)
-        solution = ode.solve(input_values, self.time_max)
-        return self.serialize_diffsol_solution(solution, model, outputs)
 
     def serialize_datalog(self, datalog, myokit_model) -> dict[int, list[float]]:
         result = {}
@@ -278,6 +210,18 @@ class SimulateContext:
             InputContext(name=qname, value=context.value)
             for qname, context in self.variable_values.items()
         )
+
+    def _build_input_index_by_variable_id(self) -> dict[int, int]:
+        return {
+            self._variables_by_qname[input_context.name].id: index
+            for index, input_context in enumerate(self.inputs)
+        }
+
+    def _set_base_input_rhs(self):
+        for input_context in self.inputs:
+            self._myokit_model.get(input_context.name).set_rhs(
+                float(input_context.value)
+            )
 
     def _simulation_inputs(
         self,
@@ -442,12 +386,58 @@ class SimulateContext:
             self._dosing_protocol_context(protocol) for protocol in protocols
         )
         nonlinear_inputs = self._build_nonlinear_inputs(protocols)
-        return SimulationGroupContext(
+        simulation_group = SimulationGroupContext(
             group_id=group_id,
             group_name=group_name,
             dosing_protocols=dosing_protocols,
             nonlinear_inputs=nonlinear_inputs,
         )
+
+        if self.use_diffsol:
+            return SimulationGroupContext(
+                group_id=group_id,
+                group_name=group_name,
+                dosing_protocols=dosing_protocols,
+                nonlinear_inputs=nonlinear_inputs,
+                diffsol_ode=self._build_diffsol_ode(simulation_group),
+            )
+
+        return simulation_group
+
+    def _build_diffsol_ode(
+        self,
+        simulation_group: SimulationGroupContext,
+        outputs: list[str] | None = None,
+    ):
+        model = self._myokit_model
+        inputs = self._simulation_inputs(simulation_group)
+        protocols = self._myokit_protocols(model, simulation_group)
+        input_variables = [model.get(input_context.name) for input_context in inputs]
+        output_variables = [
+            model.get(output_qname)
+            for output_qname in (outputs or [output.qname for output in self.outputs])
+        ]
+
+        path = ""
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        try:
+            path = temp.name
+            temp.close()
+            DiffSLExporter().model(
+                path,
+                model,
+                convert_units=False,
+                protocol=protocols,
+                inputs=input_variables,
+                outputs=output_variables,
+                final_time=self.time_max,
+            )
+            with open(path, "r") as exported_file:
+                content = exported_file.read()
+        finally:
+            os.remove(path)
+
+        return self._get_cached_diffsol_ode(content)
 
     def _dosing_protocol_context(self, protocol) -> DosingProtocolContext:
         qname = protocol.variable.qname
@@ -502,268 +492,6 @@ class SimulateContext:
             dose_sum += doses[0].amount * amount_conversion_factor
 
         return {qname: max(dose_sum, 1e-6)}
-
-    def _build_optimise_inputs(
-        self,
-        input_ids: list[int],
-        starting: list[float] | None,
-        bounds: tuple[list[float], list[float]] | list[list[float]] | None,
-    ) -> tuple[OptimisationInputContext, ...]:
-        if len(input_ids) < 1:
-            raise ValueError("Optimisation requires at least one input.")
-        if len(set(input_ids)) != len(input_ids):
-            raise ValueError("Optimisation inputs must be unique.")
-        if starting is None or len(starting) != len(input_ids):
-            raise ValueError("Starting values must have the same length as inputs.")
-        if bounds is None or len(bounds) != 2:
-            raise ValueError("Bounds must be a pair of lower and upper bound lists.")
-
-        lower_bounds, upper_bounds = bounds
-        if len(lower_bounds) != len(input_ids) or len(upper_bounds) != len(input_ids):
-            raise ValueError("Bounds must have the same length as inputs.")
-
-        contexts = []
-        for input_id, start, lower, upper in zip(
-            input_ids,
-            starting,
-            lower_bounds,
-            upper_bounds,
-        ):
-            variable = self._variables_by_id.get(input_id)
-            if variable is None:
-                from pkpdapp.models import Variable
-
-                raise Variable.DoesNotExist(
-                    f"Optimisation input variables do not exist: {[input_id]}"
-                )
-            if not variable.constant:
-                raise ValueError(
-                    f"Optimisation input {variable.qname} must be a constant variable."
-                )
-            if variable.qname.endswith("_tlag_ud"):
-                raise ValueError(
-                    "Optimising tlag variables is not supported by this method."
-                )
-
-            converted_start = self._convert_variable_value(variable, start)
-            converted_lower = self._convert_variable_value(variable, lower)
-            converted_upper = self._convert_variable_value(variable, upper)
-            if converted_lower >= converted_upper:
-                raise ValueError(
-                    f"Lower bound for {variable.qname} must be less than upper bound."
-                )
-            if converted_start < converted_lower or converted_start > converted_upper:
-                raise ValueError(
-                    f"Starting value for {variable.qname} must lie within bounds."
-                )
-
-            contexts.append(
-                OptimisationInputContext(
-                    id=variable.id,
-                    qname=variable.qname,
-                    name=variable.name,
-                    starting=converted_start,
-                    lower_bound=converted_lower,
-                    upper_bound=converted_upper,
-                )
-            )
-        return tuple(contexts)
-
-    def _build_optimisation_groups(
-        self,
-        biomarker_types: list[int] | None,
-        subject_groups: list[int] | None,
-    ) -> tuple[OptimisationGroupContext, ...]:
-        if self._project is None:
-            raise ValueError("Optimisation requires the model to belong to a project.")
-
-        biomarker_type_list = self._load_biomarker_types(biomarker_types)
-        biomarkers = self._load_biomarkers(biomarker_type_list, subject_groups)
-        group_ids = list(
-            biomarkers.order_by("subject__group_id")
-            .values_list("subject__group_id", flat=True)
-            .distinct()
-        )
-        if len(group_ids) == 0:
-            raise ValueError("No biomarker data were found for optimisation.")
-
-        groups = []
-        for group_id in group_ids:
-            if group_id is None:
-                group_biomarkers = biomarkers.filter(subject__group__isnull=True)
-                group_name = None
-            else:
-                group_biomarkers = biomarkers.filter(subject__group_id=group_id)
-                group_name = group_biomarkers[0].subject.group.name
-            groups.append(
-                self._optimisation_group_context(
-                    group_id,
-                    group_name,
-                    group_biomarkers,
-                )
-            )
-        return tuple(groups)
-
-    def _load_biomarker_types(self, biomarker_type_ids: list[int] | None):
-        from pkpdapp.models import BiomarkerType
-
-        model_variable_qnames = set(self._variables_by_qname)
-        biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=self._project)
-
-        if biomarker_type_ids is None:
-            biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
-        else:
-            biomarker_type_qs = biomarker_type_qs.filter(id__in=biomarker_type_ids)
-            found_ids = set(biomarker_type_qs.values_list("id", flat=True))
-            missing_ids = set(biomarker_type_ids) - found_ids
-            if missing_ids:
-                raise BiomarkerType.DoesNotExist(
-                    f"Biomarker types do not exist in this project: {missing_ids}"
-                )
-
-        biomarker_type_list = list(
-            biomarker_type_qs.select_related(
-                "variable",
-                "stored_unit",
-                "stored_time_unit",
-            ).order_by("id")
-        )
-        unmapped = [bt.id for bt in biomarker_type_list if bt.variable is None]
-        if unmapped:
-            raise ValueError(f"Biomarker types are not mapped to variables: {unmapped}")
-
-        invalid = [
-            bt.variable.qname
-            for bt in biomarker_type_list
-            if bt.variable.qname not in model_variable_qnames
-        ]
-        if invalid:
-            raise ValueError(
-                f"Biomarker types map to variables outside this model: {invalid}"
-            )
-        if not biomarker_type_list:
-            raise ValueError("No mapped biomarker types were found for optimisation.")
-
-        return biomarker_type_list
-
-    def _load_biomarkers(self, biomarker_type_list, subject_group_ids):
-        from pkpdapp.models import Biomarker, SubjectGroup
-
-        biomarkers = Biomarker.objects.filter(
-            biomarker_type__in=biomarker_type_list,
-            subject__dataset__project=self._project,
-        ).select_related(
-            "biomarker_type",
-            "biomarker_type__variable",
-            "biomarker_type__stored_unit",
-            "biomarker_type__stored_time_unit",
-            "subject",
-            "subject__group",
-        )
-
-        if subject_group_ids is not None:
-            found_group_ids = set(
-                SubjectGroup.objects.filter(id__in=subject_group_ids).values_list(
-                    "id",
-                    flat=True,
-                )
-            )
-            missing_group_ids = set(subject_group_ids) - found_group_ids
-            if missing_group_ids:
-                raise SubjectGroup.DoesNotExist(
-                    f"Subject groups do not exist: {missing_group_ids}"
-                )
-            biomarkers = biomarkers.filter(subject__group_id__in=subject_group_ids)
-
-        return biomarkers
-
-    def _optimisation_group_context(
-        self,
-        group_id: int | None,
-        group_name: str | None,
-        biomarkers,
-    ) -> OptimisationGroupContext:
-        output_qnames = []
-        output_indices = {}
-        records = []
-        times = []
-
-        for biomarker in biomarkers.order_by("time", "id"):
-            biomarker_type = biomarker.biomarker_type
-            qname = biomarker_type.variable.qname
-            if qname not in output_indices:
-                output_indices[qname] = len(output_qnames)
-                output_qnames.append(qname)
-
-            myokit_variable = self._myokit_model.get(qname)
-            target = self._unit_conversion_target(qname)
-            value_conversion_factor = biomarker_type.stored_unit.convert_to(
-                myokit_variable.unit(),
-                compound=self._compound,
-                target=target,
-            )
-            time_conversion_factor = biomarker_type.stored_time_unit.convert_to(
-                self._myokit_model.binding("time").unit(),
-                compound=self._compound,
-            )
-
-            time_value = float(biomarker.time) * time_conversion_factor
-            data_value = float(biomarker.value) * value_conversion_factor
-            times.append(time_value)
-            records.append(
-                {
-                    "output_index": output_indices[qname],
-                    "time": time_value,
-                    "value": data_value,
-                }
-            )
-
-        t_eval = tuple(sorted(set(times)))
-        time_lookup = {time: i for i, time in enumerate(t_eval)}
-        record_contexts = tuple(
-            OptimisationRecordContext(
-                output_index=record["output_index"],
-                time_index=time_lookup[record["time"]],
-                time=record["time"],
-                value=record["value"],
-            )
-            for record in records
-        )
-
-        protocols = self._protocols_for_group(group_id)
-        dosing_protocols = tuple(
-            self._dosing_protocol_context(protocol) for protocol in protocols
-        )
-        nonlinear_inputs = self._build_nonlinear_inputs(protocols)
-        input_values = {
-            qname: variable.value
-            for qname, variable in self.variable_values.items()
-            if variable.constant
-        }
-        input_values.update(nonlinear_inputs)
-        missing_inputs = [
-            input_context.qname
-            for input_context in self.optimise_inputs
-            if input_context.qname not in input_values
-        ]
-        if missing_inputs:
-            raise ValueError(
-                f"Optimisation inputs are missing from DiffSL inputs: {missing_inputs}"
-            )
-
-        return OptimisationGroupContext(
-            group_id=group_id,
-            group_name=group_name,
-            dosing_protocols=dosing_protocols,
-            outputs=tuple(
-                self._output_context(self._get_variable_by_qname(qname))
-                for qname in output_qnames
-            ),
-            t_eval=t_eval,
-            records=record_contexts,
-            input_values=input_values,
-            nonlinear_inputs=nonlinear_inputs,
-        )
 
     def _variable_context(self, variable, value: float) -> VariableContext:
         return VariableContext(

@@ -20,6 +20,7 @@ from .biomarker import Biomarker
 from .categorical_biomarker import CategoricalBiomarker
 from .myokit_model_mixin import MyokitModelMixin
 from .simulate_context import SimulateContext
+from .optimise_context import OptimiseContext
 from .mechanistic_model import MechanisticModel
 from .pharmacodynamic_model import (
     PharmacodynamicModel,
