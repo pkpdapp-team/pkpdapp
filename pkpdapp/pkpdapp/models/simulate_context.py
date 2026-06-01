@@ -5,10 +5,12 @@
 #
 
 from dataclasses import dataclass, field
+import hashlib
 import os
 import tempfile
 from typing import Any
 
+from django.core.cache import cache
 from myokit.formats.diffsl import DiffSLExporter
 import numpy as np
 import myokit
@@ -224,10 +226,7 @@ class SimulateContext:
         finally:
             os.remove(path)
 
-        ode = pydiffsol.Ode(content)
-        ode.ode_solver = pydiffsol.esdirk34
-        ode.atol = 1e-6
-        ode.rtol = 1e-4
+        ode = self._get_cached_diffsol_ode(content)
         solution = ode.solve(input_values, self.time_max)
         return self.serialize_diffsol_solution(solution, model, outputs)
 
@@ -255,6 +254,24 @@ class SimulateContext:
 
     def _simulation_variable_values(self) -> dict[str, float]:
         return {qname: context.value for qname, context in self.variable_values.items()}
+
+    def _get_cached_diffsol_ode(self, content: str):
+        cache_key = self._diffsol_ode_cache_key(content)
+        ode = cache.get(cache_key)
+        if ode is None:
+            ode = pydiffsol.Ode(content)
+            ode.ode_solver = pydiffsol.esdirk34
+            ode.atol = 1e-6
+            ode.rtol = 1e-4
+            cache.set(cache_key, ode, timeout=None)
+        return ode
+
+    def _diffsol_ode_cache_key(self, content: str) -> str:
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        return (
+            f"simulate_context_diffsol_ode_"
+            f"{self.model_table}_{self.model_id}_{content_hash}"
+        )
 
     def _build_inputs(self) -> tuple[InputContext, ...]:
         return tuple(
