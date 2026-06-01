@@ -14,7 +14,7 @@ import time
 
 
 def _profiling_enabled():
-    return os.environ.get("PKPDAPP_PROFILE_ENDPOINTS", "1").lower() not in {
+    return os.environ.get("PKPDAPP_PROFILE_ENDPOINTS", "0").lower() not in {
         "0",
         "false",
         "no",
@@ -49,9 +49,7 @@ def profile_endpoint(name, **metadata):
             "cumulative"
         ).print_stats(_profile_limit())
 
-        metadata_string = " ".join(
-            f"{key}={value}" for key, value in metadata.items()
-        )
+        metadata_string = " ".join(f"{key}={value}" for key, value in metadata.items())
         print(
             f"[profile] endpoint={name} elapsed_seconds={elapsed:.6f} "
             f"{metadata_string}\n{stream.getvalue()}",
