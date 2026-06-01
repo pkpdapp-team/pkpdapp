@@ -178,9 +178,8 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == ResultsTable:
                     queryset = project.results.all()
                 elif queryset.model == Variable:
-                    queryset = queryset.filter(
-                        Q(pd_model__project=project)
-                        | Q(dosed_pk_model__project=project)
+                    queryset = Variable.objects.filter(
+                        Q(dosed_pk_model__project=project)
                     )
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)

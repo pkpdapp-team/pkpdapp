@@ -9,7 +9,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     StoredModel,
-    Protocol,
+    DerivedVariable,
 )
 import numpy as np
 from django.db.models import Q
@@ -40,13 +40,13 @@ class Variable(StoredModel):
     upper_threshold = models.FloatField(
         blank=True, null=True, help_text="upper threshold for this variable"
     )
-    threshold_unit = models.ForeignKey(
+    secondary_unit = models.ForeignKey(
         Unit,
         on_delete=models.PROTECT,
         blank=True,
         null=True,
-        related_name="thresholds",
-        help_text="unit for the threshold values",
+        related_name="secondary_parameters",
+        help_text="display unit for secondary parameters",
     )
 
     is_log = models.BooleanField(
@@ -79,6 +79,10 @@ class Variable(StoredModel):
             "(note this might be different from the unit "
             "in the stored sbml)"
         ),
+    )
+
+    unit_per_body_weight = models.BooleanField(
+        default=False, help_text="whether the unit is per body weight"
     )
 
     unit_symbol = models.CharField(
@@ -149,15 +153,6 @@ class Variable(StoredModel):
         on_delete=models.CASCADE,
         related_name="variables",
         help_text="dosed pharmacokinetic model",
-    )
-
-    protocol = models.ForeignKey(
-        Protocol,
-        on_delete=models.SET_NULL,
-        related_name="variables",
-        blank=True,
-        null=True,
-        help_text="dosing protocol",
     )
 
     class Meta:
@@ -343,10 +338,16 @@ class Variable(StoredModel):
             # lower and upper bounds for library models
             lower = None
             upper = None
+            unit = Unit.get_unit_from_variable(myokit_variable)
+            unit_per_body_weight = False
             if model.is_library_model:
                 if myokit_variable.qname() == "PDCompartment.Imax":
                     upper = 1.0
                 elif myokit_variable.qname() == "PKCompartment.F":
+                    upper = 1.0
+                elif myokit_variable.qname() == "PKCompartment.Frcy":
+                    upper = 1.0
+                elif myokit_variable.qname() == "Extravascular.Fa2":
                     upper = 1.0
                 elif myokit_variable.qname() == "PDCompartment.FE":
                     upper = 1.0
@@ -356,11 +357,51 @@ class Variable(StoredModel):
                     lower = 0.0
                 elif myokit_variable.qname() == "PKCompartment.CLmax":
                     lower = 0.0
+                elif myokit_variable.qname() == "PKCompartment.CLada":
+                    lower = 0.0
+                    parent_var = model.variables.filter(name="CL").first()
+                    if parent_var is not None:
+                        unit = parent_var.unit
+                        unit_per_body_weight = parent_var.unit_per_body_weight
+                elif myokit_variable.qname().startswith("PKNonlinearities") and (
+                    myokit_variable.name().startswith("D50_")
+                    or myokit_variable.name().startswith("Ref_D_")
+                ):
+                    # D50 and Ref_D should inherit unit from first dose in
+                    # first protocol
+                    project = model.get_project()
+                    if project is not None:
+                        protocol = project.protocols.first()
+                        if protocol is not None and protocol.amount_unit is not None:
+                            unit = protocol.amount_unit
+                            unit_per_body_weight = protocol.amount_per_body_weight
                 elif (
                     myokit_variable.qname().startswith("PKCompartment")
                     and "_tlag_" in myokit_variable.name()
                 ):
                     lower = 0.0
+                elif myokit_variable.qname().startswith(
+                    "PKNonlinearities"
+                ) and myokit_variable.name().endswith("_min"):
+                    parent_name = myokit_variable.name()[:-4]
+                    p_var = model.variables.filter(name=parent_name).first()
+                    if p_var is not None:
+                        unit = p_var.unit
+                        unit_per_body_weight = p_var.unit_per_body_weight
+                elif myokit_variable.qname().startswith(
+                    "PKNonlinearities"
+                ) and myokit_variable.name().startswith("Km_"):
+                    parent_name = myokit_variable.name()[3:]
+                    if parent_name is not None:
+                        derived_variable = DerivedVariable.objects.filter(
+                            pkpd_model=model,
+                            pk_variable__name=parent_name,
+                        ).first()
+                        if derived_variable is not None:
+                            p_var = derived_variable.secondary_variable
+                            if p_var is not None:
+                                unit = p_var.unit
+                                unit_per_body_weight = p_var.unit_per_body_weight
 
             state = myokit_variable.is_state()
             if state:
@@ -378,7 +419,8 @@ class Variable(StoredModel):
                 lower_bound=lower,
                 upper_bound=upper,
                 state=state,
-                unit=Unit.get_unit_from_variable(myokit_variable),
+                unit=unit,
+                unit_per_body_weight=unit_per_body_weight,
                 dosed_pk_model=model,
                 color=num_variables,
                 display=myokit_variable.name() != "time",
@@ -402,15 +444,20 @@ class Variable(StoredModel):
                 "create_variable got unexpected model type {}".format(type(model)),
             )
 
+    def refs_by(self):
+        model = self.get_model()
+        myokit_model = model.get_myokit_model()
+        try:
+            variable = myokit_model.get(self.qname)
+            variables = [self.get_variable(model, v) for v in variable.refs_by()]
+        except KeyError:
+            variables = []
+        return variables
+
     # copy a variable to self. the qnames must match
     def copy(self, variable, new_project):
         if self.qname != variable.qname:
             raise RuntimeError("cannot copy variable with different qname")
-
-        if variable.protocol is None:
-            new_protocol = None
-        else:
-            new_protocol = variable.protocol.copy(new_project)
 
         self.name = variable.name
         self.description = variable.description
@@ -427,7 +474,18 @@ class Variable(StoredModel):
         self.state = variable.state
         self.unit_symbol = variable.unit_symbol
         self.constant = variable.constant
-        self.protocol = new_protocol
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
+        self.unit_per_body_weight = variable.unit_per_body_weight
+
+        # copy protocols
+        for p in variable.protocols.all():
+            new_protocol = p.copy(new_project, self)
+            new_protocol.save()
+
+        # copy biomarker types
+        for b in variable.biomarker_types.all():
+            new_biomarker_type = b.copy(new_project, self)
+            new_biomarker_type.save()
+
         self.save()

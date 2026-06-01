@@ -46,13 +46,15 @@ function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
 function useNormalisedVariables(variables: VariableListApiResponse) {
   const units = useUnits();
   return variables.map((variable) => {
-    const variableUnit = units?.find(
-      (unit) => unit.id === variable.threshold_unit,
+    const displayUnit = units?.find(
+      (unit) => unit.id === variable.secondary_unit,
     );
-    const defaultUnit = variableUnit?.compatible_units.find(
-      (u) => u.symbol === "pmol/L",
+    const simulationUnit = displayUnit?.compatible_units.find(
+      (u) => +u.id === variable.unit,
     );
-    const conversionFactor = parseFloat(defaultUnit?.conversion_factor || "1");
+    const conversionFactor = parseFloat(
+      simulationUnit?.conversion_factor || "1",
+    );
     const lower_threshold = variable.lower_threshold
       ? variable.lower_threshold * conversionFactor
       : null;
@@ -100,8 +102,11 @@ function variableConversionFactor(
 ) {
   const modelUnit = units?.find((unit) => unit.id === variable.unit);
   const displayUnit = modelUnit?.compatible_units.find(
-    (u) => +u.id === variable.threshold_unit,
+    (u) => +u.id === variable.secondary_unit,
   );
+  if (!displayUnit) {
+    return 1.0;
+  }
   const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
   return conversionFactor;
 }
@@ -231,18 +236,16 @@ export function useParameters() {
         simulation: SimulateResponse,
         variable: VariableRead,
       ) {
+        const [compartmentName, name] = variable.qname.split(".");
         const aucVariable = variables?.find(
-          (v) => v.name === `calc_${variable.name}_AUC`,
+          (v) => v.qname === `${compartmentName}.calc_${name}_AUC`,
         );
         const [auc] = aucVariable
           ? variablePerInterval(intervals, aucVariable, simulation, interval)
           : [];
         const difference = auc ? auc[auc.length - 1] - auc[0] : 0;
-        return formattedNumber(
-          difference *
-            variableConversionFactor(variable, units) *
-            timeConversionFactor(interval, units),
-        );
+        const conversionFactor = variableConversionFactor(aucVariable!, units);
+        return formattedNumber(difference * conversionFactor);
       },
     },
     {

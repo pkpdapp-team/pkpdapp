@@ -16,15 +16,22 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import {
+  CombinedModelRead,
   UnitRead,
   useCombinedModelListQuery,
+  useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
+  useVariableRetrieveQuery,
   useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
+import { renameVariable } from "../../simulation/utils";
+import { getYAxisOptions } from "../../simulation/utils";
+import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
+import { getAucVariable, getCompositeAucUnit } from "./utils";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -94,18 +101,82 @@ function useVariables() {
   return variables;
 }
 
+function useCompound() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
+  const { data: project } = useProjectRetrieveQuery(
+    { id: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const { data: compound } = useCompoundRetrieveQuery(
+    { id: project?.compound || 0 },
+    { skip: !project || !project.compound },
+  );
+  return compound;
+}
+
 function VariableRow({
-  variable,
+  variable_id,
+  variableName,
   unit,
+  timeUnit,
 }: {
-  variable: VariableRead;
-  unit: UnitRead | undefined;
+  variable_id: number;
+  variableName: string;
+  unit?: UnitRead;
+  timeUnit?: UnitRead;
 }) {
   const units = useUnits();
+  const variables = useVariables();
+  const compound = useCompound();
+  const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
+  if (!variable_read || !compound || !units) {
+    return "Loading...";
+  }
+  const unitList = units;
+  const variable = variable_read as VariableRead;
+  const aucVariable = variables
+    ? getAucVariable(variable, variables)
+    : undefined;
+  const { unit: defaultUnitId } = getYAxisOptions(compound, variable, unitList);
+  if (defaultUnitId) {
+    const newThresholdUnit = unitList.find((u) => u.id === defaultUnitId);
+    const aucUnit = getCompositeAucUnit(
+      timeUnit,
+      variable,
+      unitList,
+      newThresholdUnit,
+    );
+    if (newThresholdUnit && !variable.secondary_unit) {
+      setUnitSymbol(newThresholdUnit.symbol);
+      updateVariable({
+        id: variable.id,
+        variable: {
+          ...variable,
+          secondary_unit: defaultUnitId,
+        },
+      });
+    }
+    if (aucVariable && aucUnit && !aucVariable.secondary_unit) {
+      updateVariable({
+        id: aucVariable.id,
+        variable: {
+          ...aucVariable,
+          secondary_unit: aucUnit.id,
+        },
+      });
+    }
+  }
+
+  const selectedUnit = units.find((u) => u.symbol === unitSymbol);
+  const compatibleUnits = selectedUnit?.compatible_units || [];
+
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
     if (!isNaN(newValue)) {
@@ -132,13 +203,23 @@ function VariableRow({
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
-    const unit = units?.find((unit) => unit.symbol === event.target.value);
+    const unit = unitList.find((unit) => unit.symbol === event.target.value);
+    const aucUnit = getCompositeAucUnit(timeUnit, variable, unitList, unit);
     if (unit) {
       updateVariable({
         id: variable.id,
         variable: {
           ...variable,
-          threshold_unit: unit.id,
+          secondary_unit: unit.id,
+        },
+      });
+    }
+    if (aucVariable && aucUnit) {
+      updateVariable({
+        id: aucVariable.id,
+        variable: {
+          ...aucVariable,
+          secondary_unit: aucUnit.id,
         },
       });
     }
@@ -147,8 +228,8 @@ function VariableRow({
   return (
     <TableRow>
       <TableCell sx={{ width: "5rem" }}>
-        <Tooltip title={`${variable.name}: ${variable.description}`}>
-          <span>{variable.name}</span>
+        <Tooltip title={`${variableName}: ${variable.description}`}>
+          <span>{variableName}</span>
         </Tooltip>
       </TableCell>
       <TableCell sx={{ width: "20rem" }}>
@@ -183,7 +264,7 @@ function VariableRow({
           size="small"
           inputProps={{ "aria-label": `Unit: ${variable.name}` }}
         >
-          {unit?.compatible_units?.map((unit) => (
+          {compatibleUnits.map((unit) => (
             <MenuItem key={unit.id} value={unit.symbol}>
               {unit.symbol}
             </MenuItem>
@@ -198,12 +279,16 @@ const ThresholdsTable: FC<TableProps> = (props) => {
   const units = useUnits();
   const variables = useVariables();
   const model = useModel();
+  const [intervals] = useModelTimeIntervals();
 
   const concentrationVariables = variables?.filter((variable) =>
     model?.derived_variables?.find(
       (dv) => dv.pk_variable === variable.id && dv.type === "AUC",
     ),
   );
+  const defaultTimeUnit = units?.find((unit) => unit.symbol === "h");
+  const timeUnitId = intervals[0]?.unit || defaultTimeUnit?.id;
+  const timeUnit = units?.find((unit) => unit.id === timeUnitId);
 
   return (
     <TableContainer
@@ -213,22 +298,28 @@ const ThresholdsTable: FC<TableProps> = (props) => {
     >
       <Table {...props} stickyHeader>
         <TableHead>
-          <TableCell>Variable</TableCell>
-          <TableCell>Lower Threshold</TableCell>
-          <TableCell>Upper Threshold</TableCell>
-          <TableCell>Unit</TableCell>
+          <TableRow>
+            <TableCell>Variable</TableCell>
+            <TableCell>Lower Threshold</TableCell>
+            <TableCell>Upper Threshold</TableCell>
+            <TableCell>Unit</TableCell>
+          </TableRow>
         </TableHead>
         <TableBody>
-          {concentrationVariables?.map((variable) => (
-            <VariableRow
-              key={variable.id}
-              variable={variable}
-              unit={units?.find(
-                (unit) =>
-                  unit.id === (variable.threshold_unit || variable.unit),
-              )}
-            />
-          ))}
+          {concentrationVariables
+            ?.map((v) => renameVariable(v, model as CombinedModelRead))
+            .sort((a, b) => (a.name > b.name ? 1 : -1))
+            .map((variable) => (
+              <VariableRow
+                key={variable.id}
+                variable_id={variable.id}
+                variableName={variable.name}
+                unit={units?.find(
+                  (unit) => unit.id === variable.secondary_unit,
+                )}
+                timeUnit={timeUnit}
+              />
+            ))}
         </TableBody>
       </Table>
     </TableContainer>

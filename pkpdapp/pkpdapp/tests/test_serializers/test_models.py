@@ -117,3 +117,30 @@ class TestCombinedModelSerializer(TestCase):
         )
         self.assertTrue(serializer.is_valid())
         serializer.save()
+
+    def test_combined_model_diffsl_output(self):
+        """Test that the diffsl field returns valid DiffSL output"""
+        pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        pd_model = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_production"
+        )
+        pkpd_model = CombinedModel.objects.create(
+            name="test diffsl model",
+            pk_model=pk_model,
+            pd_model=pd_model,
+            project=self.project,
+        )
+        serializer = CombinedModelSerializer(pkpd_model)
+        diffsl = serializer.data['diffsl']
+
+        self.assertIn("inputs", diffsl)
+        self.assertIn("outputs", diffsl)
+        self.assertIn("state_indices", diffsl)
+        self.assertIn("code", diffsl)
+        self.assertIsInstance(diffsl["inputs"], list)
+        self.assertIsInstance(diffsl["outputs"], list)
+        self.assertIsInstance(diffsl["state_indices"], dict)
+        self.assertTrue(len(diffsl["state_indices"]) > 0)
+        self.assertNotIn("Error converting", diffsl["code"])
+        self.assertIn("u_i {", diffsl["code"])
+        self.assertIn("F_i {", diffsl["code"])

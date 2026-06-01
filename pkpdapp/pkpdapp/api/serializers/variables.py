@@ -10,6 +10,8 @@ from pkpdapp.models import (
 
 
 class VariableSerializer(serializers.ModelSerializer):
+    protocols = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Variable
         fields = "__all__"

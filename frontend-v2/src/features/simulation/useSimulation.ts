@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import useProtocols from "./useProtocols";
 import { SimulationContext } from "../../contexts/SimulationContext";
 
@@ -17,6 +17,22 @@ interface ErrorObject {
 
 const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 
+function useFetchSimulations() {
+  const [simulate, { error: simulateErrorBase }] =
+    useCombinedModelSimulateCreateMutation();
+  const fetchSimulation = useCallback(
+    (model: CombinedModelRead, simInputs: Simulate) =>
+      simulate({
+        id: model.id,
+        simulate: simInputs,
+      }),
+    [simulate],
+  );
+  return { fetchSimulation, simulateErrorBase };
+}
+
+const simulationCache = new Map<string, SimulateResponse[]>();
+
 export default function useSimulation(
   simInputs: Simulate,
   model: CombinedModelRead | undefined,
@@ -26,8 +42,7 @@ export default function useSimulation(
   const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
   const [data, setData] = useState<SimulateResponse[]>([]);
-  const [simulate, { error: simulateErrorBase }] =
-    useCombinedModelSimulateCreateMutation();
+  const { fetchSimulation, simulateErrorBase } = useFetchSimulations();
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase
       ? (simulateErrorBase.data as ErrorObject)
@@ -38,34 +53,54 @@ export default function useSimulation(
 
   useEffect(() => {
     let ignore = false;
-    const simInputs = JSON.parse(serialisedInputs);
-    const simulateModel = async () => {
-      if (
-        runSimulation &&
-        simInputs.outputs?.length > 1 &&
-        simInputs.time_max &&
-        model &&
-        protocols &&
-        compound &&
-        SIMULATION_PAGES.includes(page)
-      ) {
-        setLoadingSimulate(true);
-        const response = await simulate({
-          id: model.id,
-          simulate: simInputs,
-        });
-        if (!ignore) {
-          setLoadingSimulate(false);
-          if ("data" in response) {
-            const responseData = response.data as SimulateResponse[];
-            setData(responseData);
-            setSimulations(responseData);
-          }
+
+    const simulateModel = async (
+      model: CombinedModelRead,
+      simInputs: Simulate,
+      cacheKey: string,
+    ) => {
+      setLoadingSimulate(true);
+      const response = await fetchSimulation(model, simInputs);
+      if (!ignore) {
+        if ("data" in response) {
+          const responseData = response.data as SimulateResponse[];
+          setData(responseData);
+          setSimulations(responseData);
+          simulationCache.set(cacheKey, responseData);
         }
       }
+      setLoadingSimulate(false);
     };
-    console.log("Simulating with params", simInputs.variables);
-    simulateModel();
+
+    const simInputs = JSON.parse(serialisedInputs);
+    if (
+      runSimulation &&
+      simInputs.outputs?.length > 1 &&
+      simInputs.time_max &&
+      model &&
+      protocols &&
+      compound
+    ) {
+      const cacheKey = `${model.id}-${serialisedInputs}`;
+      /**
+       * Clear the cache on any tab except Simulation or Results.
+       * This prevents stale data being used after changes to the model or protocols.
+       */
+      if (SIMULATION_PAGES.includes(page)) {
+        console.log("Simulating with inputs", simInputs.variables);
+        if (simulationCache.has(cacheKey)) {
+          const cachedData = simulationCache.get(cacheKey);
+          console.log("Using cached simulation data");
+          setData(cachedData || []);
+          setSimulations(cachedData || []);
+        } else {
+          simulateModel(model, simInputs, cacheKey);
+        }
+      } else {
+        console.log("Clearing simulation cache");
+        simulationCache.clear();
+      }
+    }
     return () => {
       ignore = true;
     };
@@ -73,7 +108,7 @@ export default function useSimulation(
     compound,
     model,
     protocols,
-    simulate,
+    fetchSimulation,
     serialisedInputs,
     page,
     runSimulation,

@@ -5,13 +5,83 @@ export const api = backendApi.enhanceEndpoints({
     "Project",
     "Compound",
     "Dataset",
+    "SubjectGroup",
     "CombinedModel",
     "Variable",
     "Simulation",
     "Protocol",
     "Unit",
+    "Dose",
+    "BiomarkerType",
+    "EfficacyExperiment",
   ],
   endpoints: {
+    // EfficacyExperiment
+    efficacyExperimentList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "EfficacyExperiment" as const,
+                id,
+              })),
+              { type: "EfficacyExperiment", id: "LIST" },
+            ]
+          : [{ type: "EfficacyExperiment", id: "LIST" }],
+    },
+    efficacyExperimentRetrieve: {
+      providesTags: (result, error, { id }) => [
+        { type: "EfficacyExperiment", id },
+      ],
+    },
+    efficacyExperimentUpdate: {
+      invalidatesTags: (result, error, { id, efficacyExperiment }) => [
+        { type: "EfficacyExperiment", id },
+        { type: "EfficacyExperiment", id: "LIST" },
+        { type: "Compound", id: efficacyExperiment.compound },
+      ],
+    },
+    efficacyExperimentCreate: {
+      invalidatesTags: [{ type: "EfficacyExperiment", id: "LIST" }],
+    },
+    efficacyExperimentDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "EfficacyExperiment", id },
+        { type: "EfficacyExperiment", id: "LIST" },
+      ],
+    },
+    // BiomarkerType
+    biomarkerTypeList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "BiomarkerType" as const,
+                id,
+              })),
+              { type: "BiomarkerType", id: "LIST" },
+            ]
+          : [{ type: "BiomarkerType", id: "LIST" }],
+    },
+    // Doses
+    doseList: {
+      providesTags: (result) => [{ type: "Dose", id: "LIST" }],
+    },
+    doseRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: "Dose", id }],
+    },
+    doseUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "Dose", id }],
+    },
+    doseCreate: {
+      invalidatesTags: [{ type: "Dose", id: "LIST" }],
+    },
+    doseDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Dose", id },
+        { type: "Dose", id: "LIST" },
+      ],
+    },
     // Projects
     projectList: {
       providesTags: (result) =>
@@ -32,6 +102,24 @@ export const api = backendApi.enhanceEndpoints({
     },
     projectUpdate: {
       invalidatesTags: (result, error, { id }) => [{ type: "Project", id }],
+      onQueryStarted: async ({ id, project }, { dispatch, queryFulfilled }) => {
+        // Optimistically update the project retrieve cache with the updated project.
+        const patchProjectRetrieve = dispatch(
+          api.util.updateQueryData(
+            "projectRetrieve",
+            { id },
+            (draftProject) => {
+              Object.assign(draftProject, project);
+            },
+          ),
+        );
+        try {
+          const response = await queryFulfilled;
+        } catch {
+          // If the update fails, roll back the project retrieve.
+          patchProjectRetrieve.undo();
+        }
+      },
     },
     projectCreate: {
       invalidatesTags: [{ type: "Project", id: "LIST" }],
@@ -107,11 +195,22 @@ export const api = backendApi.enhanceEndpoints({
         { type: "Dataset", id: "LIST" },
       ],
     },
+    // SubjectGroup
+    subjectGroupList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "SubjectGroup" as const,
+                id,
+              })),
+              { type: "SubjectGroup", id: "LIST" },
+            ]
+          : [{ type: "SubjectGroup", id: "LIST" }],
+    },
     // CombinedModel
     combinedModelSetParamsToDefaultsUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Variable", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Variable" }],
     },
     combinedModelList: {
       providesTags: (result) =>
@@ -131,8 +230,12 @@ export const api = backendApi.enhanceEndpoints({
     combinedModelUpdate: {
       invalidatesTags: (result, error, { id }) => [
         { type: "CombinedModel", id },
+        { type: "CombinedModel", id: "LIST" },
         { type: "Variable", id: "LIST" },
+        { type: "Simulation", id: "LIST" },
         { type: "Protocol", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
+        { type: "BiomarkerType", id: "LIST" },
       ],
     },
     combinedModelCreate: {
@@ -149,22 +252,77 @@ export const api = backendApi.enhanceEndpoints({
       ],
     },
     variableList: {
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Variable" as const, id })),
-              { type: "Variable", id: "LIST" },
-            ]
-          : [{ type: "Variable", id: "LIST" }],
+      providesTags: (result) => [{ type: "Variable", id: "LIST" }],
     },
     variableRetrieve: {
       providesTags: (result, error, { id }) => [{ type: "Variable", id }],
     },
     variableUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Variable", id },
-        { type: "Protocol", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Variable", id }],
+      onQueryStarted: async (
+        { id, variable },
+        { dispatch, queryFulfilled },
+      ) => {
+        const dosedPkModelId = variable.dosed_pk_model || 0;
+        // Optimistically update the variable retrieve cache with the updated variable.
+        const patchVariableRetrieve = dispatch(
+          api.util.updateQueryData(
+            "variableRetrieve",
+            { id },
+            (draftVariable) => {
+              Object.assign(draftVariable, variable);
+            },
+          ),
+        );
+        // Optimistically update the variable list cache with the updated variable.
+        const patchVariableList = dispatch(
+          api.util.updateQueryData(
+            "variableList",
+            { dosedPkModelId },
+            (draftVariables) => {
+              const index = draftVariables.findIndex((v) => v.id === id);
+              if (index !== -1) {
+                draftVariables[index] = {
+                  ...draftVariables[index],
+                  ...variable,
+                };
+              }
+            },
+            true,
+          ),
+        );
+        try {
+          const response = await queryFulfilled;
+          // Apply the updated variable from the backend.
+          dispatch(
+            api.util.updateQueryData(
+              "variableList",
+              { dosedPkModelId },
+              (draftVariables) => {
+                const index = draftVariables.findIndex((v) => v.id === id);
+                if (index !== -1) {
+                  draftVariables[index] = response.data;
+                }
+              },
+              true,
+            ),
+          );
+          dispatch(
+            api.util.updateQueryData(
+              "variableRetrieve",
+              { id },
+              (draftVariable) => {
+                Object.assign(draftVariable, response.data);
+              },
+            ),
+          );
+        } catch {
+          // If the update fails, roll back the variable list.
+          patchVariableList.undo();
+          // Mark the retrieved variable as stale.
+          api.util.invalidateTags([{ type: "Variable", id }]);
+        }
+      },
     },
     variableCreate: {
       invalidatesTags: [{ type: "Variable", id: "LIST" }],
@@ -173,6 +331,7 @@ export const api = backendApi.enhanceEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: "Variable", id },
         { type: "Variable", id: "LIST" },
+        { type: "Protocol", id: "LIST" },
       ],
     },
     simulationList: {
@@ -219,7 +378,6 @@ export const api = backendApi.enhanceEndpoints({
     },
     protocolDestroy: {
       invalidatesTags: (result, error, { id }) => [
-        { type: "Protocol", id },
         { type: "Protocol", id: "LIST" },
       ],
     },

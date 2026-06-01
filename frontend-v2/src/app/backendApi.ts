@@ -143,6 +143,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/combined_model/${queryArg.id}/`,
         method: "PUT",
         body: queryArg.combinedModel,
+        params: {
+          delete_protocols: queryArg.deleteProtocols,
+        },
       }),
     }),
     combinedModelPartialUpdate: build.mutation<
@@ -345,7 +348,12 @@ const injectedRtkApi = api.injectEndpoints({
       EfficacyExperimentListApiResponse,
       EfficacyExperimentListApiArg
     >({
-      query: () => ({ url: `/api/efficacy_experiment/` }),
+      query: (queryArg) => ({
+        url: `/api/efficacy_experiment/`,
+        params: {
+          compound_id: queryArg.compoundId,
+        },
+      }),
     }),
     efficacyExperimentCreate: build.mutation<
       EfficacyExperimentCreateApiResponse,
@@ -1055,6 +1063,42 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    tagList: build.query<TagListApiResponse, TagListApiArg>({
+      query: () => ({ url: `/api/tag/` }),
+    }),
+    tagCreate: build.mutation<TagCreateApiResponse, TagCreateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/`,
+        method: "POST",
+        body: queryArg.tag,
+      }),
+    }),
+    tagRetrieve: build.query<TagRetrieveApiResponse, TagRetrieveApiArg>({
+      query: (queryArg) => ({ url: `/api/tag/${queryArg.id}/` }),
+    }),
+    tagUpdate: build.mutation<TagUpdateApiResponse, TagUpdateApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.tag,
+      }),
+    }),
+    tagPartialUpdate: build.mutation<
+      TagPartialUpdateApiResponse,
+      TagPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedTag,
+      }),
+    }),
+    tagDestroy: build.mutation<TagDestroyApiResponse, TagDestroyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/tag/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     unitList: build.query<UnitListApiResponse, UnitListApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/`,
@@ -1290,6 +1334,8 @@ export type CombinedModelRetrieveApiArg = {
 export type CombinedModelUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
 export type CombinedModelUpdateApiArg = {
+  /** Delete linked protocols and dosing variables. */
+  deleteProtocols?: boolean;
   /** A unique integer value identifying this combined model. */
   id: number;
   combinedModel: CombinedModel;
@@ -1421,7 +1467,10 @@ export type DoseDestroyApiArg = {
 };
 export type EfficacyExperimentListApiResponse =
   /** status 200  */ EfficacyExperimentRead[];
-export type EfficacyExperimentListApiArg = void;
+export type EfficacyExperimentListApiArg = {
+  /** Filter results by compound ID */
+  compoundId?: number;
+};
 export type EfficacyExperimentCreateApiResponse =
   /** status 201  */ EfficacyExperimentRead;
 export type EfficacyExperimentCreateApiArg = {
@@ -1856,6 +1905,34 @@ export type SubjectGroupDestroyApiArg = {
   /** A unique integer value identifying this subject group. */
   id: number;
 };
+export type TagListApiResponse = /** status 200  */ TagRead[];
+export type TagListApiArg = void;
+export type TagCreateApiResponse = /** status 201  */ TagRead;
+export type TagCreateApiArg = {
+  tag: Tag;
+};
+export type TagRetrieveApiResponse = /** status 200  */ TagRead;
+export type TagRetrieveApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+};
+export type TagUpdateApiResponse = /** status 200  */ TagRead;
+export type TagUpdateApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+  tag: Tag;
+};
+export type TagPartialUpdateApiResponse = /** status 200  */ TagRead;
+export type TagPartialUpdateApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+  patchedTag: PatchedTag;
+};
+export type TagDestroyApiResponse = unknown;
+export type TagDestroyApiArg = {
+  /** A unique integer value identifying this tag. */
+  id: number;
+};
 export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
   /** Enable conversions based on compound information */
@@ -1990,8 +2067,6 @@ export type BiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2002,6 +2077,8 @@ export type BiomarkerType = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type BiomarkerTypeRead = {
   id: number;
@@ -2020,8 +2097,6 @@ export type BiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit: number;
   /** dataset containing this biomarker measurement */
@@ -2032,6 +2107,8 @@ export type BiomarkerTypeRead = {
   stored_time_unit: number;
   /** unit to use when sending or displaying time values */
   display_time_unit: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerType = {
   /** name of the biomarker type */
@@ -2044,8 +2121,6 @@ export type PatchedBiomarkerType = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2056,6 +2131,8 @@ export type PatchedBiomarkerType = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PatchedBiomarkerTypeRead = {
   id?: number;
@@ -2074,8 +2151,6 @@ export type PatchedBiomarkerTypeRead = {
   color?: number;
   /** True/False if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** qname of the mapped model variable */
-  mapped_qname?: string;
   /** unit for the value stored in :model:`pkpdapp.Biomarker` */
   stored_unit?: number;
   /** dataset containing this biomarker measurement */
@@ -2086,6 +2161,8 @@ export type PatchedBiomarkerTypeRead = {
   stored_time_unit?: number;
   /** unit to use when sending or displaying time values */
   display_time_unit?: number;
+  /** mapped variable */
+  variable?: number | null;
 };
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */
@@ -2106,7 +2183,20 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
+export type TypeEnum =
+  | "AUC"
+  | "RO"
+  | "FUP"
+  | "BPR"
+  | "TLG"
+  | "MM"
+  | "EMM"
+  | "EMX"
+  | "IMX"
+  | "POW"
+  | "NPW"
+  | "TDI"
+  | "IND";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -2116,14 +2206,24 @@ export type DerivedVariable = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
-    * `TLG` - dosing lag time */
+    * `TLG` - dosing lag time
+    * `MM` - Michaelis-Menten
+    * `EMM` - Extended Michaelis-Menten
+    * `EMX` - Emax
+    * `IMX` - Imax
+    * `POW` - Power
+    * `NPW` - Negative Power
+    * `TDI` - Exponential Decay
+    * `IND` - Exponential Increase */
   type: TypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
-  /** base variable in PK part of model */
+  /** base variable */
   pk_variable: number;
+  /** secondary variable */
+  secondary_variable?: number | null;
 };
 export type DerivedVariableRead = {
   id: number;
@@ -2135,14 +2235,24 @@ export type DerivedVariableRead = {
     
     * `AUC` - area under curve
     * `RO` - receptor occupancy
-    * `FUP` - faction unbound plasma
+    * `FUP` - fraction unbound plasma
     * `BPR` - blood plasma ratio
-    * `TLG` - dosing lag time */
+    * `TLG` - dosing lag time
+    * `MM` - Michaelis-Menten
+    * `EMM` - Extended Michaelis-Menten
+    * `EMX` - Emax
+    * `IMX` - Imax
+    * `POW` - Power
+    * `NPW` - Negative Power
+    * `TDI` - Exponential Decay
+    * `IND` - Exponential Increase */
   type: TypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
-  /** base variable in PK part of model */
+  /** base variable */
   pk_variable: number;
+  /** secondary variable */
+  secondary_variable?: number | null;
 };
 export type TimeInterval = {
   /** true if object has been stored */
@@ -2193,10 +2303,16 @@ export type CombinedModel = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2207,10 +2323,22 @@ export type CombinedModel = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
   pd_model2?: number | null;
+};
+export type DiffSlOutput = {
+  inputs: string[];
+  outputs: string[];
+  state_indices: {
+    [key: string]: number;
+  };
+  code: string;
 };
 export type CombinedModelRead = {
   id: number;
@@ -2220,6 +2348,7 @@ export type CombinedModelRead = {
   components: string;
   variables: number[];
   mmt: string;
+  diffsl: DiffSlOutput;
   sbml: string;
   time_unit: number;
   is_library_model: boolean;
@@ -2238,10 +2367,16 @@ export type CombinedModelRead = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2252,6 +2387,10 @@ export type CombinedModelRead = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2276,10 +2415,16 @@ export type PatchedCombinedModel = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2290,6 +2435,10 @@ export type PatchedCombinedModel = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2303,6 +2452,7 @@ export type PatchedCombinedModelRead = {
   components?: string;
   variables?: number[];
   mmt?: string;
+  diffsl?: DiffSlOutput;
   sbml?: string;
   time_unit?: number;
   is_library_model?: boolean;
@@ -2321,10 +2471,16 @@ export type PatchedCombinedModelRead = {
   species?: CombinedModelSpeciesEnum;
   /** whether the pk model has saturation */
   has_saturation?: boolean;
+  /** whether the pk model has extravascular model */
+  has_extravascular?: boolean;
   /** whether the pk model has effect compartment */
   has_effect?: boolean;
+  /** number of effect compartments */
+  number_of_effect_compartments?: number;
   /** whether the pk model has lag */
   has_lag?: boolean;
+  /** whether the pk model has anti-drug antibodies */
+  has_anti_drug_antibodies?: boolean;
   /** whether the pk model has bioavailability */
   has_bioavailability?: boolean;
   /** whether the pd model has hill coefficient */
@@ -2335,6 +2491,10 @@ export type PatchedCombinedModelRead = {
   project?: number | null;
   /** model */
   pk_model?: number | null;
+  /** extravascular model */
+  pk_model2?: number | null;
+  /** effect compartment model */
+  pk_effect_model?: number;
   /** PD part of model */
   pd_model?: number | null;
   /** second PD part of model */
@@ -2342,6 +2502,7 @@ export type PatchedCombinedModelRead = {
 };
 export type SimulateResponse = {
   time: number[];
+  group?: number | null;
   outputs: {
     [key: string]: number[];
   };
@@ -2356,35 +2517,9 @@ export type Simulate = {
   };
   time_max?: number;
 };
-export type EfficacyExperiment = {
-  /** name of the experiment */
-  name?: string;
-  /** half maximal effective concentration */
-  c50: number;
-  /** Hill coefficient measure of binding */
-  hill_coefficient?: number;
-  /** unit for c50 */
-  c50_unit: number;
-  /** compound for efficacy experiment */
-  compound: number;
-};
-export type EfficacyExperimentRead = {
-  id: number;
-  /** name of the experiment */
-  name?: string;
-  /** half maximal effective concentration */
-  c50: number;
-  /** Hill coefficient measure of binding */
-  hill_coefficient?: number;
-  /** unit for c50 */
-  c50_unit: number;
-  /** compound for efficacy experiment */
-  compound: number;
-};
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
 export type Compound = {
-  efficacy_experiments: EfficacyExperiment[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2403,6 +2538,8 @@ export type Compound = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2416,6 +2553,8 @@ export type Compound = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2423,7 +2562,6 @@ export type Compound = {
 };
 export type CompoundRead = {
   id: number;
-  efficacy_experiments: EfficacyExperimentRead[];
   /** name of the compound */
   name: string;
   /** short description of the compound */
@@ -2442,6 +2580,8 @@ export type CompoundRead = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2455,13 +2595,14 @@ export type CompoundRead = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
   dissociation_unit?: number;
 };
 export type PatchedCompound = {
-  efficacy_experiments?: EfficacyExperiment[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2480,6 +2621,8 @@ export type PatchedCompound = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2493,6 +2636,8 @@ export type PatchedCompound = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2500,7 +2645,6 @@ export type PatchedCompound = {
 };
 export type PatchedCompoundRead = {
   id?: number;
-  efficacy_experiments?: EfficacyExperimentRead[];
   /** name of the compound */
   name?: string;
   /** short description of the compound */
@@ -2519,6 +2663,8 @@ export type PatchedCompoundRead = {
   fraction_unbound_including_cells?: number | null;
   /** molecular mass for target for conversion from mol to grams */
   target_molecular_mass?: number;
+  /** molecular mass for target 2 for conversion from mol to grams */
+  target2_molecular_mass?: number;
   /** target concentration */
   target_concentration?: number | null;
   /** dissociation constant */
@@ -2532,6 +2678,8 @@ export type PatchedCompoundRead = {
   intrinsic_clearance_unit?: number;
   /** unit for target molecular mass (e.g. g/mol) */
   target_molecular_mass_unit?: number;
+  /** unit for target 2 molecular mass (e.g. g/mol) */
+  target2_molecular_mass_unit?: number;
   /** unit for target concentration */
   target_concentration_unit?: number;
   /** unit for dissociation constant */
@@ -2594,8 +2742,8 @@ export type Protocol = {
   /** name of the protocol */
   name: string;
   dose_type?: DoseTypeEnum;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2606,13 +2754,14 @@ export type Protocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type ProtocolRead = {
   id: number;
   doses: DoseRead[];
-  variables: number[];
   subjects: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -2621,8 +2770,8 @@ export type ProtocolRead = {
   /** name of the protocol */
   name: string;
   dose_type?: DoseTypeEnum;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -2633,6 +2782,8 @@ export type ProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -2740,6 +2891,31 @@ export type PatchedDoseRead = {
   datetime?: string | null;
   /** protocol containing this dose */
   protocol?: number | null;
+};
+export type EfficacyExperiment = {
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit: number;
+  /** compound for efficacy experiment */
+  compound: number;
+};
+export type EfficacyExperimentRead = {
+  id: number;
+  /** name of the experiment */
+  name?: string;
+  /** half maximal effective concentration */
+  c50: number;
+  /** Hill coefficient measure of binding */
+  hill_coefficient?: number;
+  /** unit for c50 */
+  c50_unit: number;
+  /** compound for efficacy experiment */
+  compound: number;
 };
 export type PatchedEfficacyExperiment = {
   /** name of the experiment */
@@ -3000,6 +3176,9 @@ export type PatchedInferenceChainRead = {
   /** inference for this chain */
   inference?: number;
 };
+export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
+export type BlankEnum = "";
+export type NullEnum = null;
 export type Pharmacodynamic = {
   mmt?: string;
   /** true if object has been stored */
@@ -3014,8 +3193,19 @@ export type Pharmacodynamic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacodynamicRead = {
   id: number;
@@ -3034,8 +3224,19 @@ export type PharmacodynamicRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacodynamic = {
   mmt?: string;
@@ -3051,8 +3252,19 @@ export type PatchedPharmacodynamic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacodynamicRead = {
   id?: number;
@@ -3071,8 +3283,19 @@ export type PatchedPharmacodynamicRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
   /** Project that "owns" this model */
   project?: number | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacodynamicSbml = {};
 export type PharmacodynamicSbmlWrite = {
@@ -3093,6 +3316,17 @@ export type Pharmacokinetic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PharmacokineticRead = {
   id: number;
@@ -3110,6 +3344,17 @@ export type PharmacokineticRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacokinetic = {
   /** true if object has been stored */
@@ -3126,6 +3371,17 @@ export type PatchedPharmacokinetic = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type PatchedPharmacokineticRead = {
   id?: number;
@@ -3143,6 +3399,17 @@ export type PatchedPharmacokineticRead = {
   time_max?: number;
   /** whether this model is a library model (i.e. it is not an uploaded user model) */
   is_library_model?: boolean;
+  /** type of model
+    
+    * `PK` - PK-Model
+    * `PKEF` - PK-Effect-Compartment
+    * `PKEX` - PK-Extravascular
+    * `PD` - PD-Model
+    * `TG` - Tumor-Growth
+    * `TGI` - Tumor-Growth-Inhibition */
+  model_type?: (ModelTypeEnum | BlankEnum | NullEnum) | null;
+  /** tags for the model */
+  tags?: number[];
 };
 export type ProjectAccess = {
   /** True if user has read access only */
@@ -3163,6 +3430,8 @@ export type Project = {
   name: string;
   /** short description of the project */
   description?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3171,7 +3440,15 @@ export type Project = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
+  version?: number;
   compound: number;
+  species_weight_unit?: number;
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type ProjectRead = {
   id: number;
@@ -3183,6 +3460,8 @@ export type ProjectRead = {
   /** short description of the project */
   description?: string;
   created: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3191,9 +3470,17 @@ export type ProjectRead = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
+  version?: number;
   compound: number;
+  species_weight_unit?: number;
   /** users with access to this project */
   users: number[];
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type PatchedProject = {
   user_access?: ProjectAccess[];
@@ -3201,6 +3488,8 @@ export type PatchedProject = {
   name?: string;
   /** short description of the project */
   description?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3209,7 +3498,15 @@ export type PatchedProject = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
+  version?: number;
   compound?: number;
+  species_weight_unit?: number;
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type PatchedProjectRead = {
   id?: number;
@@ -3221,6 +3518,8 @@ export type PatchedProjectRead = {
   /** short description of the project */
   description?: string;
   created?: string;
+  /** comma separated list of tags for this project */
+  tags?: string;
   /** subject species
     
     * `M` - Mouse
@@ -3229,9 +3528,17 @@ export type PatchedProjectRead = {
     * `K` - Monkey
     * `O` - Other */
   species?: ProjectSpeciesEnum;
+  /** species weight */
+  species_weight?: number;
+  version?: number;
   compound?: number;
+  species_weight_unit?: number;
   /** users with access to this project */
   users?: number[];
+  /** saved PK model tags for this project */
+  pk_tags?: number[];
+  /** saved PD model tags for this project */
+  pd_tags?: number[];
 };
 export type Monolix = {};
 export type MonolixRead = {
@@ -3265,8 +3572,8 @@ export type PatchedProtocol = {
   /** name of the protocol */
   name?: string;
   dose_type?: DoseTypeEnum;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3277,13 +3584,14 @@ export type PatchedProtocol = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
 export type PatchedProtocolRead = {
   id?: number;
   doses?: DoseRead[];
-  variables?: number[];
   subjects?: number[];
   /** true if object has been stored */
   read_only?: boolean;
@@ -3292,8 +3600,8 @@ export type PatchedProtocolRead = {
   /** name of the protocol */
   name?: string;
   dose_type?: DoseTypeEnum;
-  /** qname of the mapped dosing compartment for each dose */
-  mapped_qname?: string | null;
+  /** whether the amount is per body weight */
+  amount_per_body_weight?: boolean;
   /** Dataset that uses this protocol. */
   dataset?: number | null;
   /** Project that "owns" this protocol. */
@@ -3304,6 +3612,8 @@ export type PatchedProtocolRead = {
   time_unit?: number | null;
   /** unit for the amount value stored in each dose */
   amount_unit?: number | null;
+  /** dosing variable */
+  variable?: number | null;
   /** Group that uses this protocol */
   group?: number | null;
 };
@@ -3690,6 +4000,24 @@ export type PatchedSubjectGroupRead = {
   /** Project that this group belongs to. */
   project?: number | null;
 };
+export type Tag = {
+  /** name of the tag */
+  name: string;
+};
+export type TagRead = {
+  id: number;
+  /** name of the tag */
+  name: string;
+};
+export type PatchedTag = {
+  /** name of the tag */
+  name?: string;
+};
+export type PatchedTagRead = {
+  id?: number;
+  /** name of the tag */
+  name?: string;
+};
 export type Unit = {
   /** symbol for unit display */
   symbol: string;
@@ -3845,6 +4173,8 @@ export type Variable = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -3857,8 +4187,8 @@ export type Variable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3867,11 +4197,10 @@ export type Variable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type VariableRead = {
   id: number;
+  protocols: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3897,6 +4226,8 @@ export type VariableRead = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -3909,8 +4240,8 @@ export type VariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3919,8 +4250,6 @@ export type VariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariable = {
   /** true if object has been stored */
@@ -3948,6 +4277,8 @@ export type PatchedVariable = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname?: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -3960,8 +4291,8 @@ export type PatchedVariable = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -3970,11 +4301,10 @@ export type PatchedVariable = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export type PatchedVariableRead = {
   id?: number;
+  protocols?: number[];
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4000,6 +4330,8 @@ export type PatchedVariableRead = {
   binding?: string | null;
   /** fully qualitifed name of the variable */
   qname?: string;
+  /** whether the unit is per body weight */
+  unit_per_body_weight?: boolean;
   /** if unit is None then this is the unit of this variable as a string */
   unit_symbol?: string | null;
   /** True for a constant variable of the model, i.e. a parameter. False if non-constant, i.e. an output of the model (default is True) */
@@ -4012,8 +4344,8 @@ export type PatchedVariableRead = {
   display?: boolean;
   /** False/True if biomarker type displayed on LHS/RHS axis */
   axis?: boolean;
-  /** unit for the threshold values */
-  threshold_unit?: number | null;
+  /** display unit for secondary parameters */
+  secondary_unit?: number | null;
   /** variable values are in this unit (note this might be different from the unit in the stored sbml) */
   unit?: number | null;
   /** pharmacodynamic model */
@@ -4022,8 +4354,6 @@ export type PatchedVariableRead = {
   pk_model?: number | null;
   /** dosed pharmacokinetic model */
   dosed_pk_model?: number | null;
-  /** dosing protocol */
-  protocol?: number | null;
 };
 export const {
   useAlgorithmListQuery,
@@ -4149,6 +4479,12 @@ export const {
   useSubjectGroupUpdateMutation,
   useSubjectGroupPartialUpdateMutation,
   useSubjectGroupDestroyMutation,
+  useTagListQuery,
+  useTagCreateMutation,
+  useTagRetrieveQuery,
+  useTagUpdateMutation,
+  useTagPartialUpdateMutation,
+  useTagDestroyMutation,
   useUnitListQuery,
   useUnitCreateMutation,
   useUnitRetrieveQuery,

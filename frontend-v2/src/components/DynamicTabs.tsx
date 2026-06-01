@@ -50,7 +50,12 @@ export const TabPanel: FC<PropsWithChildren<TabPanelProps>> = ({
 }) => {
   const { currentTab } = useContext(TabContext);
 
-  return <Box hidden={currentTab !== index}>{children}</Box>;
+  // Use CSS display instead of HTML hidden attribute to avoid breaking table structure
+  return (
+    <Box sx={{ display: currentTab !== index ? "none" : "block" }}>
+      {children}
+    </Box>
+  );
 };
 
 export const DynamicTabs: FC<PropsWithChildren<DynamicTabsProps>> = ({

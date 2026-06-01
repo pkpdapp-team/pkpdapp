@@ -8,9 +8,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 import myokit
-from pkpdapp.models import (
-    CombinedModel, PharmacodynamicModel, Variable
-)
+from pkpdapp.models import CombinedModel, PharmacodynamicModel, Variable
 
 
 class SimulateSerializer(serializers.Serializer):
@@ -21,20 +19,27 @@ class SimulateSerializer(serializers.Serializer):
 
 class SimulateResponseSerializer(serializers.Serializer):
     time = serializers.ListField(child=serializers.FloatField())
+    group = serializers.IntegerField(required=False, allow_null=True)
     outputs = serializers.DictField(
-        child=serializers.ListField(child=serializers.FloatField()))
+        child=serializers.ListField(child=serializers.FloatField())
+    )
 
     def to_representation(self, instance):
         outputs = {}
         times = []
+        group = None
         for var_id, values in instance.items():
+            if var_id == "group_id":
+                group = values
+                continue
             variable = Variable.objects.get(pk=var_id)
-            if variable.name == 'time' or variable.name == 't':
+            if variable.name == "time" or variable.name == "t":
                 times = values
             outputs[var_id] = values
         return {
-            'outputs': outputs,
-            'time': times,
+            "outputs": outputs,
+            "time": times,
+            "group": group,
         }
 
 
@@ -49,7 +54,6 @@ class ErrorResponseSerializer(serializers.Serializer):
         400: ErrorResponseSerializer,
         404: None,
     },
-
 )
 class SimulateBaseView(views.APIView):
     def post(self, request, pk, format=None):
@@ -57,16 +61,14 @@ class SimulateBaseView(views.APIView):
             m = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get('outputs', None)
-        variables = request.data.get('variables', None)
-        time_max = request.data.get('time_max', None)
+        outputs = request.data.get("outputs", None)
+        variables = request.data.get("variables", None)
+        time_max = request.data.get("time_max", None)
         try:
             result = m.simulate(outputs, variables, time_max)
         except myokit.MyokitError as e:
-            serialized_result = ErrorResponseSerializer({'error': str(e)})
-            return Response(
-                serialized_result.data, status=status.HTTP_400_BAD_REQUEST
-            )
+            serialized_result = ErrorResponseSerializer({"error": str(e)})
+            return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
         serialized_result = SimulateResponseSerializer(result, many=True)
         return Response(serialized_result.data)
 

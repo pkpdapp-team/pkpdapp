@@ -1,12 +1,22 @@
-import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from "react";
 import {
+  ChangeEvent,
+  FC,
+  SyntheticEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  CombinedModelRead,
   SimulationSlider,
   UnitRead,
   useProjectRetrieveQuery,
   useVariableRetrieveQuery,
+  useVariableUpdateMutation,
 } from "../../app/backendApi";
 import {
   Box,
+  debounce,
   IconButton,
   Input,
   Slider,
@@ -22,12 +32,13 @@ import Save from "@mui/icons-material/Save";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
+import parameterDisplayName from "../model/parameters/parameterDisplayName";
 
 interface SimulationSliderProps {
   index: number;
   slider: SimulationSlider;
+  model: CombinedModelRead;
   onChange: (variable: number, value: number) => void;
-  onSave: (value: number) => void;
   onRemove: () => void;
   units: UnitRead[];
 }
@@ -35,8 +46,8 @@ interface SimulationSliderProps {
 const SimulationSliderView: FC<SimulationSliderProps> = ({
   slider,
   onChange,
+  model,
   onRemove,
-  onSave,
   units,
 }) => {
   const projectId = useSelector(
@@ -53,13 +64,18 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   const { data: variable, isLoading } = useVariableRetrieveQuery({
     id: slider.variable,
   });
+  const [updateVariable] = useVariableUpdateMutation();
 
   const unit = units.find((u) => u.id === variable?.unit);
 
   const [range, setRange] = useState<number>(10.0);
 
+  const debouncedOnChange = useMemo(() => debounce(onChange, 300), [onChange]);
+
   // update the slider value if the variable default value changes
-  const defaultValue = variable?.default_value || 1.0;
+  //
+  const defaultValue =
+    variable?.default_value !== undefined ? variable.default_value : 1.0;
   const [value, setValue] = useState<number>(defaultValue);
   const [editing, setEditing] = useState<boolean>(false);
   useEffect(() => {
@@ -87,8 +103,17 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   };
 
   const handleSave = () => {
+    if (!variable) {
+      return;
+    }
     setValue(value);
-    onSave(value);
+    updateVariable({
+      id: slider.variable,
+      variable: {
+        ...variable,
+        default_value: value,
+      },
+    });
   };
 
   const handleDelete = () => {
@@ -108,14 +133,13 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     setValue(Number(event.target.value));
   };
 
-  const baseValue = variable?.default_value || 1.0;
   let minValue = variable?.lower_bound;
   if (minValue === undefined || minValue === null) {
-    minValue = baseValue / range;
+    minValue = defaultValue / range;
   }
   let maxValue = variable?.upper_bound;
   if (maxValue === undefined || maxValue === null) {
-    maxValue = baseValue * range;
+    maxValue = defaultValue === 0 ? range : defaultValue * range;
   }
   const stepValue = (maxValue - minValue) / 1000.0;
 
@@ -139,7 +163,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
       truncatedValue = maxValue;
     }
     setValue(truncatedValue);
-    onChange(slider.variable, truncatedValue);
+    debouncedOnChange(slider.variable, truncatedValue);
   };
 
   const formatNumber = (value: number) => {
@@ -164,6 +188,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
     return <div>Variable not found</div>;
   }
 
+  const variable_name = parameterDisplayName(variable, model);
+
   return (
     <div
       data-cy={`parameter-slider-${variable.name}`}
@@ -184,8 +210,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             sx={{ flexGrow: 1, fontWeight: "bold" }}
           >
             {unit?.symbol
-              ? `${variable.name} [${unit?.symbol}]`
-              : variable.name}
+              ? `${variable_name} [${unit?.symbol}]`
+              : variable_name}
           </Typography>
         </Tooltip>
       </Stack>

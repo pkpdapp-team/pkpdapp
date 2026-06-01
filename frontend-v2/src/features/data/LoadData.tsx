@@ -4,7 +4,8 @@ import { FC, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
-  normaliseHeader,
+  normalisedFieldsFromData,
+  normaliseFields,
   validateDosingRows,
   validateState,
 } from "./dataValidation";
@@ -15,12 +16,20 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
+import { isExcelFile, readExcelFile, readFileAsText, truncateFileName } from "./fileUtils";
 
-export type Row = { [key: string]: string };
+export type Row = {
+  [key: string]: string;
+};
 export type Data = Row[];
 export type Field = string;
 
-const ALLOWED_TYPES = ["text/csv", "text/plain"];
+const ALLOWED_TYPES = [
+  "text/csv",
+  "text/plain",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel", // .xls
+];
 
 const style = {
   dropArea: {
@@ -53,9 +62,11 @@ interface ILoadDataProps {
 
 function updateDataAndResetFields(state: StepperState, data: Data) {
   if (data.length > 0) {
-    const newFields = Object.keys(data[0]);
     state.data = data;
-    const normalisedFields = new Map(newFields.map(normaliseHeader));
+    const normalisedFields = normalisedFieldsFromData(
+      data,
+      state.normalisedFields,
+    );
     state.normalisedFields = normalisedFields;
   }
 }
@@ -126,10 +137,17 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
   useEffect(() => {
-    if (!normalisedHeaders.includes("ID")) {
+    // Check if ID column exists in the actual data, not just in normalisedHeaders
+    // This prevents re-creating ID column when user manually changes other mappings
+    const hasIDInData = state.data.length > 0 && "ID" in state.data[0];
+    if (!normalisedHeaders.includes("ID") && !hasIDInData) {
       createDefaultSubjects(state);
     }
-    if (!normalisedHeaders.includes("Cat Covariate")) {
+
+    // Check if Group column exists in the actual data
+    // This prevents re-creating Group column when user manually changes other mappings
+    const hasGroupInData = state.data.length > 0 && "Group" in state.data[0];
+    if (!normalisedHeaders.includes("Cat Covariate") && !hasGroupInData) {
       createDefaultSubjectGroup(state);
     }
 
@@ -147,57 +165,91 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     }
   }, [normalisedHeaders, state]);
 
+  // Helper function to process CSV data (used for both CSV and Excel files)
+  const processCsvData = useCallback(
+    (rawCsv: string, fileName: string) => {
+      console.log(state.encoding);
+      const csvData = Papa.parse(rawCsv.trim(), { header: true });
+      const fields = csvData.meta.fields || [];
+      const normalisedFields = normaliseFields(fields);
+      state.normalisedFields = normalisedFields;
+      // Make a copy of the new state that we can pass to validators.
+      const csvState = {
+        ...state,
+        data: csvData.data as Data,
+        fields,
+        normalisedFields,
+        normalisedHeaders: [...normalisedFields.values()],
+      };
+      const fieldValidation = validateState(csvState);
+      state.hasDosingRows = validateDosingRows(csvState);
+      state.data = fieldValidation.data as Data;
+      const groupColumn =
+        fields.find(
+          (field) => normalisedFields.get(field) === "Cat Covariate",
+        ) || "Group";
+      const errors = csvData.errors
+        .map((e) => e.message)
+        .concat(fieldValidation.errors);
+      state.groupColumn = groupColumn;
+      state.errors = errors;
+      state.warnings = [...state.warnings, ...fieldValidation.warnings];
+      state.fileName = truncateFileName(fileName);
+    },
+    [state],
+  );
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       state.timeUnit = "";
       state.amountUnit = "";
       state.errors = [];
       state.warnings = [];
-      acceptedFiles.forEach((file) => {
-        const reader = new FileReader();
 
-        reader.onabort = () => (state.errors = ["file reading was aborted"]);
-        reader.onerror = () => (state.errors = ["file reading has failed"]);
-        reader.onload = () => {
-          if (!ALLOWED_TYPES.includes(file.type)) {
+      // Process only the first file (dropzone typically handles one file at a time for this use case)
+      const file = acceptedFiles[0];
+      if (!file) return;
+
+      // Validate file type upfront
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        state.errors = [
+          "File type not supported. Please upload CSV or Excel (.xlsx) files.",
+        ];
+        return;
+      }
+
+      // Check if file is Excel format
+      if (isExcelFile(file.name)) {
+        // Handle Excel files
+        readExcelFile(file)
+          .then((csvString) => {
+            processCsvData(csvString, file.name);
+          })
+          .catch((error) => {
             state.errors = [
-              "Only CSV files are supported. Please upload a CSV file.",
+              error instanceof Error
+                ? error.message
+                : "Failed to parse Excel file",
             ];
-            return;
-          }
-          state.fileName = file.name;
-          // Parse the CSV data
-          const rawCsv = reader.result as string;
-          const csvData = Papa.parse(rawCsv.trim(), { header: true });
-          const fields = csvData.meta.fields || [];
-          const normalisedFields = new Map(fields.map(normaliseHeader));
-          state.data = csvData.data as Data;
-          state.normalisedFields = normalisedFields;
-          // Make a copy of the new state that we can pass to validators.
-          const csvState = {
-            ...state,
-            data: csvData.data as Data,
-            fields,
-            normalisedFields,
-            normalisedHeaders: [...normalisedFields.values()],
-          };
-          const fieldValidation = validateState(csvState);
-          state.hasDosingRows = validateDosingRows(csvState);
-          const groupColumn =
-            fields.find(
-              (field) => normalisedFields.get(field) === "Cat Covariate",
-            ) || "Group";
-          const errors = csvData.errors
-            .map((e) => e.message)
-            .concat(fieldValidation.errors);
-          state.groupColumn = groupColumn;
-          state.errors = errors;
-          state.warnings = fieldValidation.warnings;
-        };
-        reader.readAsText(file);
-      });
+          });
+      } else {
+        // Handle CSV files
+        readFileAsText(file)
+          .then(({ text, encoding, source }) => {
+            console.info(
+              `Detected file encoding: ${encoding} (source: ${source})`,
+            );
+            state.encoding = encoding;
+            processCsvData(text, file.name);
+          })
+          .catch((error) => {
+            state.errors = [
+              error instanceof Error ? error.message : "Failed to read file",
+            ];
+          });
+      }
     },
-    [state],
+    [state, processCsvData],
   );
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
@@ -205,14 +257,20 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
+    const groupColumn =
+      state.fields.find(
+        (field) => normalisedFields.get(field) === "Group ID",
+      ) || "Group";
     state.normalisedFields = normalisedFields;
-    const { errors, warnings } = validateState({
+    const { errors, warnings, data } = validateState({
       ...state,
       normalisedFields,
       normalisedHeaders: [...normalisedFields.values()],
     });
+    state.data = data;
     state.errors = errors;
     state.warnings = warnings;
+    state.groupColumn = groupColumn;
   };
 
   return (
@@ -228,7 +286,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       {!showData && (
         <Box style={style.dropAreaContainer}>
           <Box {...getRootProps({ style: style.dropArea })}>
-            <input aria-label="Upload CSV" {...getInputProps()} />
+            <input aria-label="Upload CSV or Excel" {...getInputProps()} />
             <Typography
               style={{
                 display: "flex",
@@ -236,7 +294,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
                 alignItems: "center",
               }}
             >
-              Drag &amp; drop some files here, or click to select files
+              Drag &amp; drop CSV or Excel files here, or click to select files
               <Button
                 variant="outlined"
                 startIcon={<FileDownloadOutlinedIcon />}

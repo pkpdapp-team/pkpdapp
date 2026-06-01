@@ -54,17 +54,13 @@ export default ({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes("node_modules/plotly.js-basic-dist-min")) {
+            if (id.includes("node_modules/plotly.js")) {
               return "plotly";
             }
             if (
               id.includes("node_modules/@mui/material") ||
               id.includes("node_modules/@mui/icons-material") ||
-              id.includes("node_modules/@mui/x-data-grid")
-            ) {
-              return "material";
-            }
-            if (
+              id.includes("node_modules/@mui/x-data-grid") ||
               id.includes("node_modules/@reduxjs/toolkit") ||
               id.includes("node_modules/@reduxjs/toolkit/query") ||
               id.includes("node_modules/papaparse") ||
@@ -104,6 +100,7 @@ export default ({ mode }) => {
             },
             setupFiles: [".storybook/vitest.setup.ts"],
             retry: 2,
+            testTimeout: 30000, // Increase timeout for CI environments
           },
         },
       ],

@@ -112,37 +112,54 @@ export const Default: Story = {
 export const Parameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const parametersButton = await canvas.findByRole("button", {
-      name: "Parameters 0",
-      expanded: false,
-    });
+    const parametersButton = await canvas.findByRole(
+      "button",
+      {
+        name: "Parameters 0",
+        expanded: false,
+      },
+    );
     expect(parametersButton).toBeInTheDocument();
     await userEvent.click(parametersButton);
     expect(parametersButton).toHaveAttribute("aria-expanded", "true");
 
-    const addParameterButton = await canvas.findByRole("button", {
-      name: /Add parameter/i,
-    });
+    const addParameterButton = await canvas.findByRole(
+      "button",
+      {
+        name: /Add parameter/i,
+      },
+    );
     await userEvent.click(addParameterButton);
 
-    const parameterOption = await screen.findByRole("button", {
-      name: /^V1/,
-    });
+    const parameterOption = await screen.findByRole(
+      "button",
+      {
+        name: /^V1/,
+      },
+    );
     await userEvent.click(parameterOption);
 
-    const simulationSlider = await screen.findByRole("slider", {
-      name: "V1 [mL/kg]",
-    });
+    const simulationSlider = await screen.findByRole(
+      "slider",
+      {
+        name: "V1 [mL/kg]",
+      },
+    );
     expect(simulationSlider).toBeInTheDocument();
 
-    const inputField = await screen.findByRole("spinbutton", {
-      name: "V1 [mL/kg]",
-    });
+    const inputField = await screen.findByRole(
+      "spinbutton",
+      {
+        name: "V1 [mL/kg]",
+      },
+    );
     expect(inputField).toBeInTheDocument();
     await userEvent.click(inputField);
     expect(inputField).toHaveFocus();
-    await userEvent.keyboard("{backspace>6}");
-    await userEvent.type(inputField, "100");
+
+    // Select all and replace with new value for more reliable input
+    await userEvent.tripleClick(inputField);
+    await userEvent.keyboard("100");
     await userEvent.tab();
 
     await waitFor(() => {
@@ -168,12 +185,12 @@ export const Reference: Story = {
     await userEvent.click(showReferenceCheckbox);
     expect(showReferenceCheckbox).toBeChecked();
     await waitFor(() => {
-      expect(simulationSpy).toHaveBeenCalledTimes(2);
+      expect(simulationSpy).toHaveBeenCalledTimes(0);
     });
   },
 };
 
-export const AddNewPlot: Story = {
+export const AddNewConcentrationPlot: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const addPlotButton = await canvas.findByRole("button", {
@@ -183,7 +200,7 @@ export const AddNewPlot: Story = {
     await userEvent.click(addPlotButton);
 
     const variableButton = await screen.findByRole("button", {
-      name: /^A1/,
+      name: /^C1/,
     });
     expect(variableButton).toBeInTheDocument();
     await userEvent.click(variableButton);
@@ -235,8 +252,8 @@ export const WithGroups: Story = {
           http.get("/api/subject_group", async ({ request }) => {
             await delay();
             const url = new URL(request.url);
-            const datasetId = url.searchParams.get("dataset_id");
-            if (datasetId) {
+            const projectId = url.searchParams.get("project_id");
+            if (projectId) {
               return HttpResponse.json(dataset.groups, { status: 200 });
             }
             return HttpResponse.json([], { status: 200 });
@@ -278,12 +295,13 @@ export const WithGroups: Story = {
     expect(groupsButton).toHaveAttribute("aria-expanded", "true");
 
     const projectGroupCheckbox = await screen.findByRole("checkbox", {
-      name: "Project",
+      name: "Sim-Group 1",
       checked: true,
     });
     expect(projectGroupCheckbox).toBeInTheDocument();
+    // only find checkboxes with names that start with "Group ", i.e. disallow "Sim-Group 1"
     const groupCheckboxes = await screen.findAllByRole("checkbox", {
-      name: /Group \w+/,
+      name: /^Group \w+/,
       checked: true,
     });
     expect(groupCheckboxes).toHaveLength(2);

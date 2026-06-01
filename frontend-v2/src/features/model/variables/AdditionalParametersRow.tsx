@@ -16,18 +16,20 @@ import {
   UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
-import { FormData } from "../Model";
+import { ModelFormData } from "../modelFormState";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
+import { DerivedVariableType, derivedIndex } from "../derivedVariable";
+import { filterOutputs } from "../../simulation/utils";
 
 interface Props {
   project: ProjectRead;
   compound: CompoundRead;
   model: CombinedModelRead;
   variable: VariableRead;
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   effectVariable: VariableRead | undefined;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
@@ -35,13 +37,10 @@ interface Props {
   updateLinksToPd: (key: number, value: boolean) => void;
   isAnyLinkToPdSelected: boolean;
   updateLagTimes: (key: number, value: boolean) => void;
-  isAnyLagTimeSelected: boolean;
   onChange: () => void;
 }
 
-type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
-
-const derivedVariableRegex = /calc_.*_(f|bl|RO)/;
+const derivedVariableRegex = /calc_.*_(f|bl|RO|AUC)/;
 
 const AdditionalParametersRow: FC<Props> = ({
   project,
@@ -56,7 +55,6 @@ const AdditionalParametersRow: FC<Props> = ({
   updateLinksToPd,
   isAnyLinkToPdSelected,
   updateLagTimes,
-  isAnyLagTimeSelected,
   onChange,
 }) => {
   const {
@@ -72,7 +70,7 @@ const AdditionalParametersRow: FC<Props> = ({
     project,
     timeVariable,
     units,
-    variable,
+    variable_from_list: variable,
   });
 
   const isSharedWithMe = useSelector((state: RootState) =>
@@ -83,26 +81,15 @@ const AdditionalParametersRow: FC<Props> = ({
   const linkToPD = isPD
     ? false
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
-      undefined;
+    undefined;
 
   const onClickDerived = (type: DerivedVariableType) => () => {
-    const index = derivedIndex(type);
-    if (index >= 0) {
-      removeDerived(index);
-    } else {
-      addDerived(type);
-    }
-    onChange();
-  };
-
-  const derivedIndex = (type: DerivedVariableType) => {
-    return derivedVariables.findIndex(
-      (ro) => ro.pk_variable === variable.id && ro.type === type,
-    );
+    const index = derivedIndex(type, derivedVariables, variable);
+    return index >= 0 ? removeDerived(index) : addDerived(type);
   };
 
   const isLinkedTo = (type: DerivedVariableType) => {
-    return derivedIndex(type) >= 0;
+    return derivedIndex(type, derivedVariables, variable) >= 0;
   };
 
   useEffect(() => {
@@ -113,7 +100,7 @@ const AdditionalParametersRow: FC<Props> = ({
     updateLinksToPd(variable.id, linkToPD);
   }, [variable.id, linkToPD, updateLinksToPd]);
 
-  const isLinkedToTLG = derivedIndex("TLG") >= 0;
+  const isLinkedToTLG = derivedIndex("TLG", derivedVariables, variable) >= 0;
   useEffect(() => {
     updateLagTimes(variable.id, isLinkedToTLG);
   }, [variable.id, isLinkedToTLG, updateLagTimes]);
@@ -206,43 +193,33 @@ const AdditionalParametersRow: FC<Props> = ({
   const noDosing = !isAmount;
 
   const isDerivedVariable = variable.name.match(derivedVariableRegex) !== null;
+  const noSecondaryParameters = isDerivedVariable || filterOutputs(model, [variable]).length === 0;
 
-  if (noMapToPD && noDerivedVariables && noDosing) {
+  if (noMapToPD && noDerivedVariables && noSecondaryParameters && noDosing) {
     return null;
   }
 
-  const modelHaveTLag = model.has_lag;
+  let variable_name = variable.name;
+  if (
+    model.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable.qname.startsWith("Effect")
+  ) {
+    const compartment_name = variable.qname.split(".")[0];
+    const compartment_number = compartment_name.slice(
+      17,
+      compartment_name.length,
+    );
+    variable_name = `${variable.name}${compartment_number}`;
+  }
 
-  return !modelHaveTLag && noMapToPD && noDerivedVariables ? null : (
+  return (
     <TableRow>
       <TableCell size="small" width="5rem">
         <Tooltip title={variable.description}>
-          <Typography>{variable.name}</Typography>
+          <Typography>{variable_name}</Typography>
         </Tooltip>
       </TableCell>
-      {modelHaveTLag && (
-        <TableCell size="small" sx={{ width: "5rem" }}>
-          {!noDosing && (
-            <FormControlLabel
-              control={
-                <MuiCheckbox
-                  sx={{
-                    "& .MuiSvgIcon-root": {
-                      color: isAnyLagTimeSelected ? "inherit" : "red",
-                    },
-                  }}
-                  checked={isLinkedTo("TLG")}
-                  onClick={onClickDerived("TLG")}
-                  data-cy={`checkbox-tlag-${variable.name}`}
-                  disabled={isSharedWithMe}
-                  aria-label={`Lag time: ${variable.name}`}
-                />
-              }
-              label=""
-            />
-          )}
-        </TableCell>
-      )}
       {model.pd_model && (
         <TableCell size="small" sx={{ width: "8rem" }}>
           {!noMapToPD && (
@@ -269,7 +246,7 @@ const AdditionalParametersRow: FC<Props> = ({
         </TableCell>
       )}
       <TableCell size="small" sx={{ width: "15rem" }}>
-        {!noDerivedVariables && (
+        {!noSecondaryParameters && (
           <FormControlLabel
             disabled={disableAuc || isSharedWithMe}
             control={

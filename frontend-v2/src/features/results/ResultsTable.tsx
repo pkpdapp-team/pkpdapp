@@ -122,11 +122,11 @@ export const ResultsTable: FC<ResultsTableProps> = ({
           ? concentrationVariables.map((variable) => variable.name)
           : intervalIndex === "columns"
             ? intervals.map(
-                (interval) => `${interval.start_time} – ${interval.end_time}`,
-              )
+              (interval) => `${interval.start_time} – ${interval.end_time}`,
+            )
             : groupIndex === "columns"
               ? groups
-                ? [{ name: "Project" }, ...groups].map((group) => group.name)
+                ? [{ name: "Sim-Group 1" }, ...groups].map((group) => group.name)
                 : []
               : [];
 

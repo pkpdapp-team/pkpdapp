@@ -27,20 +27,33 @@ class Biomarker(models.Model):
     Note for categorical covariates the :model:`pkpdapp.CategoricalBiomarker`
     is used instead.
     """
-    time = models.FloatField(
-        help_text='time point of measurement, in hours.'
-    )
+
+    time = models.FloatField(help_text="time point of measurement, in hours.")
     subject = models.ForeignKey(
-        Subject, on_delete=models.CASCADE,
-        related_name='biomarkers',
-        help_text='subject associated with this biomarker'
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="biomarkers",
+        help_text="subject associated with this biomarker",
     )
     biomarker_type = models.ForeignKey(
-        BiomarkerType, on_delete=models.CASCADE,
-        related_name='biomarkers',
-        help_text='biomarker type, for example "concentration in mg"'
+        BiomarkerType,
+        on_delete=models.CASCADE,
+        related_name="biomarkers",
+        help_text='biomarker type, for example "concentration in mg"',
     )
-    value = models.FloatField(help_text='value of the measurement')
+    value = models.FloatField(help_text="value of the measurement")
 
     def get_project(self):
         return self.biomarker_type.get_project()
+
+    def copy(self, new_biomarker_type, new_subject):
+        """
+        Create a copy of this biomarker with the same values but a different
+        biomarker type and subject.
+        """
+        return Biomarker.objects.create(
+            time=self.time,
+            subject=new_subject,
+            biomarker_type=new_biomarker_type,
+            value=self.value,
+        )

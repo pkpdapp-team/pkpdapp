@@ -32,9 +32,30 @@ class MyokitModelMixin:
 
         return variables
 
+    @staticmethod
+    def _get_protocol_amount_conversion_factor(
+        project, protocol, amount_var, compound, target
+    ):
+        # if the amount unit is in per kg, use species weight to convert
+        # to per animal
+        additional_conversion_factor = 1.0
+        if (
+            project is not None
+            and project.version > 2
+            and protocol.amount_per_body_weight
+        ):
+            additional_conversion_factor = project.species_weight
+
+        amount_conversion_factor = (
+            protocol.amount_unit.convert_to(
+                amount_var.unit(), compound=compound, target=target
+            )
+            * additional_conversion_factor
+        )
+        return amount_conversion_factor
+
     def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
         protocols = {}
-        is_target = False
         time_var = model.binding("time")
         project = self.get_project()
         if project is None:
@@ -50,11 +71,15 @@ class MyokitModelMixin:
             if qname in override_tlag:
                 tlag_value = override_tlag[qname]
 
+            target = None
             if self.is_library_model:
-                is_target = "CT1" in qname or "AT1" in qname
+                if "CT1" in qname or "AT1" in qname:
+                    target = 1
+                elif "CT2" in qname or "AT2" in qname:
+                    target = 2
 
-            amount_conversion_factor = protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, is_target=is_target
+            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                project, protocol, amount_var, compound, target
             )
 
             time_conversion_factor = protocol.time_unit.convert_to(
@@ -129,12 +154,10 @@ class MyokitModelMixin:
         if dosing_protocols is None:
             # add a dose_rate variable to the model for each
             # dosed variable
-            dosing_variables = [
-                v for v in self.variables.filter(state=True) if v.protocol
-            ]
             dosing_protocols = {}
-            for v in dosing_variables:
-                dosing_protocols[v.qname] = v.protocol
+            for v in self.variables.filter(state=True):
+                for p in v.protocols.all():
+                    dosing_protocols[v.qname] = p
 
         protocols = self._get_myokit_protocols(
             model=model,
@@ -189,28 +212,7 @@ class MyokitModelMixin:
         # update the variables of the model
         from pkpdapp.models import Variable
 
-        removed_variables = []
-        if self.is_library_model:
-            removed_variables += [
-                "PKCompartment.b_term",
-                "PKCompartment.c_term",
-            ]
-            if not getattr(self, "has_saturation", True):
-                removed_variables += ["PKCompartment.Km", "PKCompartment.CLmax"]
-            if not getattr(self, "has_effect", True):
-                removed_variables += [
-                    "PKCompartment.Ce",
-                    "PKCompartment.AUCe",
-                    "PKCompartment.ke0",
-                    "PKCompartment.Kpu",
-                    "PKCompartment.Kp",
-                ]
-            if not getattr(self, "has_hill_coefficient", True):
-                removed_variables += ["PDCompartment.HC"]
-            # tlag now on per variable basis
-            removed_variables += ["PKCompartment.tlag"]
-            if not getattr(self, "has_bioavailability", True):
-                removed_variables += ["PKCompartment.F"]
+        removed_variables = self.calculate_removed_variables()
 
         model = self.get_myokit_model()
         new_variables = []
@@ -302,9 +304,63 @@ class MyokitModelMixin:
                 species = project.species
                 compound_type = project.compound.compound_type
                 self.reset_params_to_defaults(species, compound_type, new_variables)
+                # loop through all new variables
+                # and set units for concentration variables
+                for v in all_new_variables:
+                    if v.unit is not None:
+                        compatible_units = v.unit.get_compatible_units(
+                            compound=project.compound
+                        )
+                        default_unit_symbol = None
+                        if v.name == "calc_C1_f":
+                            default_unit_symbol = "ng/mL"
+                        elif v.name.startswith("C"):
+                            if v.name.startswith("CT"):
+                                default_unit_symbol = "pg/mL"
+                            elif compound_type == "SM":
+                                default_unit_symbol = "ng/mL"
+                            elif compound_type == "LM":
+                                default_unit_symbol = "µg/mL"
+                        if default_unit_symbol is not None:
+                            for cu in compatible_units:
+                                if cu.symbol == default_unit_symbol:
+                                    v.unit = cu
+                                    break
 
         # save all new variables
         Variable.objects.bulk_create(all_new_variables)
+
+    def calculate_removed_variables(self):
+        removed_variables = []
+        if self.is_library_model:
+            removed_variables += [
+                "PKCompartment.b_term",
+                "PKCompartment.c_term",
+                "PKCompartment.RateAbs",
+            ]
+            if not getattr(self, "has_saturation", True):
+                removed_variables += ["PKCompartment.CLmax"]
+            if not getattr(self, "has_effect", True):
+                removed_variables += [
+                    "PKCompartment.Ce",
+                    "PKCompartment.AUCe",
+                    "PKCompartment.ke0",
+                    "PKCompartment.Kpu",
+                    "PKCompartment.Kp",
+                ]
+            if not getattr(self, "has_hill_coefficient", True):
+                removed_variables += [
+                    "PDCompartment.HC",
+                    "PDCompartment.HC1st",
+                    "PDCompartment.HC2nd",
+                ]
+            # tlag now on per variable basis
+            removed_variables += ["PKCompartment.tlag"]
+            if not getattr(self, "has_bioavailability", True):
+                removed_variables += ["PKCompartment.F"]
+            if not getattr(self, "has_anti_drug_antibodies", True):
+                removed_variables += ["PKCompartment.CLada", "PKCompartment.tada"]
+        return removed_variables
 
     def set_variables_from_inference(self, inference):
         results_for_mle = inference.get_maximum_likelihood()
@@ -401,10 +457,13 @@ class MyokitModelMixin:
         variables = model.variables(const=True, sort=True)
         return [self._serialise_variable(v) for v in variables]
 
-    def _convert_unit(self, variable, myokit_variable_sbml, value):
-        is_target = False
+    def _conversion_factor(self, variable, myokit_variable_sbml):
+        target = None
         if self.is_library_model:
-            is_target = "CT1" in variable.qname or "AT1" in variable.qname
+            if "CT1" in variable.qname or "AT1" in variable.qname:
+                target = 1
+            elif "CT2" in variable.qname or "AT2" in variable.qname:
+                target = 2
         if variable.unit is None:
             conversion_factor = 1.0
         else:
@@ -413,13 +472,26 @@ class MyokitModelMixin:
             if project is not None:
                 compound = project.compound
             conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound, is_target=is_target
+                myokit_variable_sbml.unit(), compound=compound, target=target
             )
+            if (
+                project is not None
+                and project.version > 2
+                and variable.unit_per_body_weight
+            ):
+                conversion_factor *= project.species_weight
+        return conversion_factor
+
+    def _convert_unit(self, variable, myokit_variable_sbml, value):
+        conversion_factor = self._conversion_factor(variable, myokit_variable_sbml)
 
         return conversion_factor * value
 
     def _convert_unit_qname(self, qname, value, myokit_model):
-        variable = self.variables.get(qname=qname)
+        try:
+            variable = self.variables.get(qname=qname)
+        except pkpdapp.models.Variable.DoesNotExist:
+            raise ValueError(f"Variable with qname {qname} does not exist in model.")
         myokit_variable_sbml = myokit_model.get(qname)
         new_value = self._convert_unit(variable, myokit_variable_sbml, value)
         return new_value
@@ -438,24 +510,58 @@ class MyokitModelMixin:
             if variable.unit is None:
                 conversion_factor = 1.0
             else:
-                conversion_factor = myokit.Unit.conversion_factor(
-                    myokit_variable_sbml.unit(), variable.unit.get_myokit_unit()
-                ).value()
+                conversion_factor = self._conversion_factor(
+                    variable, myokit_variable_sbml
+                )
 
-            result[variable.id] = (conversion_factor * np.frombuffer(v)).tolist()
+            result[variable.id] = (np.frombuffer(v) / conversion_factor).tolist()
 
         return result
 
     def get_time_max(self):
         return self.time_max
 
+    def _handle_nonlinarities(self, model, dosing_protocols):
+        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
+        # value of the first dose concentration
+        if (
+            self.is_library_model
+            and model.has_variable("PKNonlinearities.C_Drug")
+            and dosing_protocols is not None
+            and len(dosing_protocols) > 0
+        ):
+
+            project = self.get_project()
+            myokit_var = model.get("PKNonlinearities.C_Drug")
+            # set C_Drug equal to the sum of the first dose amounts for all protocols
+            # within this group
+            # TODO: later we will get users to select which variable to use for the
+            # dose concentration via the nonlinearities UI interface.
+            dose_sum = 0.0
+            for protocol in dosing_protocols.values():
+                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
+                    project, protocol, myokit_var, project.compound, target=None
+                )
+                dose_sum += protocol.doses.first().amount * amount_conversion_factor
+
+            # C_Drug cannot be zero as it might be raised to a negative power
+            dose_sum = max(dose_sum, 1e-6)
+            myokit_var.set_rhs(dose_sum)
+
     def simulate_model(
-        self, outputs=None, variables=None, time_max=None, dosing_protocols=None
+        self,
+        outputs=None,
+        variables=None,
+        time_max=None,
+        dosing_protocols=None,
     ):
         model = self.get_myokit_model()
+
         # Convert units
         variables = self._initialise_variables(model, variables)
         time_max = self._convert_bound_unit("time", time_max, model)
+        self._handle_nonlinarities(model, dosing_protocols)
+
         # get tlag vars
         override_tlag = self._get_override_tlag(variables)
         # create simulator
@@ -466,7 +572,7 @@ class MyokitModelMixin:
             dosing_protocols=dosing_protocols,
         )
         # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-06, rel_tol=1e-08)
+        sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
         # Simulate, logging only state variables given by `outputs`
         datalog = sim.run(time_max, log=outputs)
         return self.serialize_datalog(datalog, model)
@@ -508,19 +614,27 @@ class MyokitModelMixin:
 
         # add a dose_rate variable to the model for each
         # dosed variable
-        dosing_variables = [v for v in self.variables.filter(state=True) if v.protocol]
-        project_dosing_protocols = {v.qname: v.protocol for v in dosing_variables}
+        project = self.get_project()
+        protocols = project.protocols.all()
+        project_dosing_protocols = {
+            p.variable.qname: p
+            for p in protocols
+            if p.group is None and p.variable is not None
+        }
         model_dosing_protocols = [project_dosing_protocols]
 
-        project = self.get_project()
-        for group in get_subject_groups(project):
-            protocols = group.protocols.all()
+        groups = get_subject_groups(project)
+        # sort groups starting alphabetically, but with those starting with Sim first
+        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
+
+        for group in groups:
+            print("GROUP:", group.name)
             dosing_protocols = {
-                protocol.mapped_qname: protocol for protocol in protocols
+                p.variable.qname: p for p in protocols if p.group == group
             }
             model_dosing_protocols.append(dosing_protocols)
 
-        return [
+        result = [
             self.simulate_model(
                 variables=variables,
                 time_max=time_max,
@@ -529,6 +643,10 @@ class MyokitModelMixin:
             )
             for dosing_protocols in model_dosing_protocols
         ]
+        result[0].update({"group_id": None})
+        for r, group in zip(result[1:], groups):
+            r.update({"group_id": group.id if group is not None else None})
+        return result
 
 
 def set_administration(model, drug_amount, direct=True):

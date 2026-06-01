@@ -9,19 +9,18 @@ import {
   Protocol,
   UnitRead,
   useDoseDestroyMutation,
-  useDoseRetrieveQuery,
   useDoseUpdateMutation,
 } from "../../app/backendApi";
 import { Control, useForm, useFormState } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
+import Checkbox from "../../components/Checkbox";
 
 type Props = {
   baseUnit?: UnitRead;
   control: Control<Protocol>;
   disabled: boolean;
-  doseId: number;
+  dose: DoseRead;
   index: number;
-  isPreclinical: boolean;
   minStartTime: number;
   onChange: () => void;
   selectedAmountLabel: string;
@@ -32,18 +31,13 @@ const DoseRow: FC<Props> = ({
   baseUnit,
   control,
   disabled,
-  doseId,
+  dose,
   index,
-  isPreclinical,
   minStartTime,
   onChange,
   selectedAmountLabel,
   timeUnit,
 }) => {
-  const { data: dose, refetch: refetchDose } = useDoseRetrieveQuery(
-    { id: doseId },
-    { skip: !doseId },
-  );
   const {
     control: doseControl,
     handleSubmit,
@@ -62,16 +56,16 @@ const DoseRow: FC<Props> = ({
     async (data: DoseRead) => {
       if (JSON.stringify(data) !== JSON.stringify(dose)) {
         reset(data);
-        await updateDose({ id: doseId, dose: data });
-        refetchDose();
+        await updateDose({ id: dose.id, dose: data });
         onChange();
       }
     },
-    [dose, doseId, refetchDose, updateDose, onChange, reset],
+    [dose, updateDose, reset, onChange],
   );
 
   useEffect(() => {
     if (isDirty && !isSubmitting) {
+      console.log("Saving dose changes...", isDirty, isSubmitting);
       const handleSave = handleSubmit(handleFormData);
       handleSave();
     }
@@ -82,7 +76,7 @@ const DoseRow: FC<Props> = ({
   };
 
   const handleDeleteRow = async () => {
-    await destroyDose({ id: doseId });
+    await destroyDose({ id: dose.id });
     onChange();
   };
 
@@ -110,12 +104,22 @@ const DoseRow: FC<Props> = ({
             name={`amount_unit`}
             control={control}
             baseUnit={baseUnit}
-            isPreclinicalPerKg={isPreclinical}
             selectProps={defaultProps}
           />
         ) : (
           <Typography>{selectedAmountLabel}</Typography>
         )}
+      </TableCell>
+      <TableCell>
+        <Checkbox
+          label=""
+          name={`amount_per_body_weight`}
+          control={control}
+          checkboxFieldProps={{
+            ...defaultProps,
+            disabled: index !== 0 || disabled,
+          }}
+        />
       </TableCell>
       <TableCell>
         <IntegerField

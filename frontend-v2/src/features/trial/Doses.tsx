@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC, useCallback, useEffect } from "react";
 import {
   TableCell,
   TableRow,
@@ -16,13 +16,14 @@ import {
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
-import { useForm } from "react-hook-form";
+import { useForm, useFormState } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import DoseRow from "./DoseRow";
+import useDirty from "../../hooks/useDirty";
 
 interface Props {
   onChange: () => void;
@@ -34,14 +35,35 @@ interface Props {
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const { data: variable, isLoading: isVariableLoading } =
     useVariableRetrieveQuery(
-      { id: protocol.variables[0] || 0 },
-      { skip: !protocol.variables.length },
+      { id: protocol.variable || 0 },
+      { skip: !protocol.variable },
     );
-  const mappedVariable = protocol.mapped_qname || variable?.qname || "";
-  const { control } = useForm<Protocol>({
+  const mappedVariable = variable?.qname || "";
+  const { control, reset, handleSubmit } = useForm<Protocol>({
     defaultValues: protocol,
   });
+  const { isDirty, isSubmitting } = useFormState({ control: control });
+  useDirty(isDirty);
   const [updateProtocol] = useProtocolUpdateMutation();
+
+  const handleFormData = useCallback(
+    async (data: Protocol) => {
+      if (JSON.stringify(data) !== JSON.stringify(protocol)) {
+        reset(data);
+        await updateProtocol({ id: protocol.id, protocol: data });
+        onChange();
+      }
+    },
+    [protocol, updateProtocol, reset, onChange],
+  );
+
+  useEffect(() => {
+    if (isDirty && !isSubmitting) {
+      const handleSave = handleSubmit(handleFormData);
+      handleSave();
+    }
+  }, [handleSubmit, handleFormData, isDirty, isSubmitting]);
+
   const [createDose] = useDoseCreateMutation();
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -50,24 +72,30 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
   const sortedDoses = [...protocol.doses].sort((a, b) => a.id - b.id);
 
   const isPreclinical = project.species !== "H";
+  const version_greater_than_2 = project.version ? project.version >= 3 : false;
   const defaultSymbol = isPreclinical ? "mg/kg" : "mg";
   const defaultUnit = units.find((u) => u.symbol === defaultSymbol);
-  const baseUnit = units.find((u) => u.id === protocol.amount_unit);
+  const baseUnit = version_greater_than_2
+    ? units.find((u) => u.symbol === "mg")
+    : units.find((u) => u.id === protocol.amount_unit);
 
   useEffect(() => {
     // set default amount unit to mg/kg or mg, if not set already.
     async function setDefaultAmountUnit() {
       const newProtocol = { ...protocol, amount_unit: defaultUnit?.id };
       await updateProtocol({ id: protocol.id, protocol: newProtocol });
-      onChange();
     }
     if (defaultUnit?.id && baseUnit?.symbol === "") {
       setDefaultAmountUnit();
     }
-  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol, onChange]);
+  }, [defaultUnit?.id, baseUnit?.symbol, protocol, updateProtocol]);
 
   if (isVariableLoading) {
-    return <div>Loading...</div>;
+    return (
+      <TableRow>
+        <TableCell colSpan={8}>Loading...</TableCell>
+      </TableRow>
+    );
   }
 
   const handleAddRow = async () => {
@@ -161,9 +189,8 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
           index={index}
           baseUnit={baseUnit}
           disabled={isSharedWithMe}
-          doseId={dose.id}
+          dose={dose}
           control={control}
-          isPreclinical={isPreclinical}
           minStartTime={
             sortedDoses[index - 1]?.start_time + 1e4 * Number.EPSILON || 0
           }

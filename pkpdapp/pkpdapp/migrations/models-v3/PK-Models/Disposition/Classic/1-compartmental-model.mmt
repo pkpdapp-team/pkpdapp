@@ -1,0 +1,43 @@
+[[model]]
+name: 1-compartmental model
+author: Michael Gertz
+
+
+# Initial values:
+PKCompartment.A1 = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+F = 1 in [dimensionless]
+  desc: Fraction absorbed / bioavailability 
+	
+V1 = 1 in [L]
+  desc: Volume of the central compartment		
+	
+CL = 1 in [L/h]
+  desc: Linear clearance from central compartment 
+  
+CLada = 0 in [L/h]
+  desc: ADA-mediated clearance 
+
+tada = 240 in [h]
+  desc: Time at which ADA-mediated clearance first occurs
+
+CLimm = if(environment.t < tada , 
+	0 , 
+	CLada) in [L/h]
+
+	
+C1 = A1/V1 in [pmol/L]
+  desc: Concentration of drug in the central compartment
+  
+RateAbs = 0 in [pmol/h] 
+  desc: Absorption rate
+  
+
+dot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]
+  desc: Amount of drug in the central compartment

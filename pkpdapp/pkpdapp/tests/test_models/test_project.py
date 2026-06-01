@@ -11,15 +11,24 @@ from rest_framework.test import APIClient
 from pkpdapp.models import (
     CombinedModel,
     PharmacokineticModel,
+    PharmacodynamicModel,
+    PkpdMapping,
     Project,
     Compound,
+    Dataset,
+    Subject,
+    SubjectGroup,
+    Biomarker,
+    BiomarkerType,
     Protocol,
     Simulation,
     SimulationPlot,
     SimulationSlider,
     SimulationYAxis,
+    ResultsTable,
     Unit,
     EfficacyExperiment,
+    DerivedVariable,
 )
 
 
@@ -32,25 +41,96 @@ class TestProject(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
+    def test_project_weight_unit_default(self):
+        # weight unit should be set to default (g)
+        self.assertEqual(self.project.species_weight_unit.symbol, "kg")
+
     def test_copy(self):
-        pk_model = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        pk_model = PharmacokineticModel.objects.get(name="1-compartmental model")
+        pk_model2 = PharmacokineticModel.objects.get(
+            name="First order absorption model"
+        )
+        pd_model = PharmacodynamicModel.objects.get(
+            name="indirect_effects_stimulation_production"
+        )
         pkpd_model = CombinedModel.objects.create(
             name="my wonderful model",
             pk_model=pk_model,
+            pk_model2=pk_model2,
+            pd_model=pd_model,
+            project=self.project,
+            number_of_effect_compartments=1,
+        )
+        c_drug_pd = pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        dataset = Dataset.objects.create(name="my dataset", project=self.project)
+        group = SubjectGroup.objects.create(
+            name="Group 1",
+            id_in_dataset="1",
+            dataset=dataset,
             project=self.project,
         )
-        protocol = Protocol.objects.create(name="my protocol")
+        subject = Subject.objects.create(
+            id_in_dataset=1,
+            dataset=dataset,
+            group=group,
+        )
+
+        protocol = Protocol.objects.create(
+            name="my protocol",
+            variable=c_drug_pd,
+            dataset=dataset,
+            group=group,
+            project=self.project,
+        )
+        protocol_no_dataset = Protocol.objects.create(
+            name="my protocol without dataset",
+            variable=c_drug_pd,
+            project=self.project,
+        )
         dose = protocol.doses.create(
             amount=1.0, start_time=0.0, repeats=2, repeat_interval=1.1
         )
+        dose_no_dataset = protocol_no_dataset.doses.create(
+            amount=2.0, start_time=0.5, repeats=1, repeat_interval=2.0
+        )
         protocol.doses.set([dose])
-        a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
-        a1.protocol = protocol
-        a1.save()
+        protocol_no_dataset.doses.set([dose_no_dataset])
+        c_drug_pd.save()
 
         a1 = pkpd_model.variables.get(qname="PKCompartment.A1")
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
+        c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
         h = Unit.objects.get(symbol="h")
+        mg = Unit.objects.get(symbol="mg")
+
+        biomarker_type = BiomarkerType.objects.create(
+            name="my biomarker type",
+            stored_unit=mg,
+            display_unit=mg,
+            stored_time_unit=h,
+            display_time_unit=h,
+            dataset=dataset,
+            variable=c_drug_pd,
+        )
+        biomarker = Biomarker.objects.create(
+            time=1.0,
+            subject=subject,
+            biomarker_type=biomarker_type,
+            value=42.0,
+        )
+
+        mapping = PkpdMapping.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=c1,
+            pd_variable=c_drug_pd,
+        )
+
+        DerivedVariable.objects.create(
+            pkpd_model=pkpd_model,
+            pk_variable=cl,
+            secondary_variable=c1,
+            type=DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN,
+        )
 
         sim = Simulation.objects.create(
             project=self.project,
@@ -78,10 +158,57 @@ class TestProject(TestCase):
             compound=self.project.compound,
         )
 
+        results_table = ResultsTable.objects.create(
+            name="my results table",
+            rows=ResultsTable.Type.PARAMETERS,
+            columns=ResultsTable.Type.GROUPS,
+            filters={"dose_type": "IV"},
+            project=self.project,
+        )
+
         new_project = self.project.copy()
+
+        # check that EffectCompartment1.Kp exists
+        kp = new_project.pk_models.first().variables.filter(
+            qname="EffectCompartment1.Kp"
+        )
+        self.assertEqual(kp.count(), 1)
+
+        # check that the derived variable exists
+        new_dv = new_project.pk_models.first().derived_variables.first()
+        self.assertEqual(new_dv.pk_variable.qname, "PKCompartment.CL")
+        self.assertEqual(new_dv.secondary_variable.qname, "PKCompartment.C1")
+        self.assertEqual(new_dv.type, DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN)
 
         # check that the new project has the right name
         self.assertEqual(new_project.name, "Copy of demo")
+
+        # check that dataset entities are copied
+        self.assertEqual(new_project.datasets.count(), 1)
+        new_dataset = new_project.datasets.first()
+        self.assertEqual(new_dataset.name, "my dataset")
+        self.assertNotEqual(new_dataset.pk, dataset.pk)
+
+        self.assertEqual(new_dataset.groups.count(), 1)
+        new_group = new_dataset.groups.first()
+        self.assertEqual(new_group.name, "Group 1")
+        self.assertEqual(new_group.id_in_dataset, "1")
+
+        self.assertEqual(new_dataset.subjects.count(), 1)
+        new_subject = new_dataset.subjects.first()
+        self.assertEqual(new_subject.id_in_dataset, 1)
+        self.assertEqual(new_subject.group, new_group)
+
+        self.assertEqual(new_dataset.biomarker_types.count(), 1)
+        new_biomarker_type = new_dataset.biomarker_types.first()
+        self.assertEqual(new_biomarker_type.name, "my biomarker type")
+        self.assertEqual(new_biomarker_type.variable.qname, "PDCompartment.C_Drug")
+
+        self.assertEqual(new_dataset.biomarker_types.first().biomarkers.count(), 1)
+        new_biomarker = new_dataset.biomarker_types.first().biomarkers.first()
+        self.assertNotEqual(new_biomarker.pk, biomarker.pk)
+        self.assertEqual(new_biomarker.subject, new_subject)
+        self.assertEqual(new_biomarker.value, 42.0)
 
         # check that the compound is there and has the right name
         new_compound = new_project.compound
@@ -93,14 +220,37 @@ class TestProject(TestCase):
         self.assertEqual(new_project.pk_models.count(), 1)
         new_model = new_project.pk_models.first()
         self.assertEqual(new_model.name, "my wonderful model")
+        self.assertEqual(new_model.pk_model2, pkpd_model.pk_model2)
+        self.assertEqual(new_model.pd_model, pkpd_model.pd_model)
         self.assertNotEqual(new_model.pk, pkpd_model.pk)
 
+        # check that PK/PD mapping is copied
+        self.assertEqual(new_model.mappings.count(), 1)
+        new_mapping = new_model.mappings.first()
+        self.assertNotEqual(new_mapping.pk, mapping.pk)
+        self.assertEqual(new_mapping.pk_variable.qname, "PKCompartment.C1")
+        self.assertEqual(new_mapping.pd_variable.qname, "PDCompartment.C_Drug")
+
         # check that the protocol is there and has the right name
+        new_c_drug_pd = new_model.variables.get(qname="PDCompartment.C_Drug")
         new_a1 = new_model.variables.get(qname="PKCompartment.A1")
-        self.assertNotEqual(new_a1.pk, a1.pk)
-        new_protocol = new_a1.protocol
+        self.assertNotEqual(new_c_drug_pd.pk, c_drug_pd.pk)
+        self.assertEqual(new_c_drug_pd.protocols.count(), 2)
+        new_protocol = new_c_drug_pd.protocols.get(name="my protocol")
+        new_protocol_no_dataset = new_c_drug_pd.protocols.get(
+            name="my protocol without dataset"
+        )
         self.assertEqual(new_protocol.name, "my protocol")
         self.assertNotEqual(new_protocol.pk, protocol.pk)
+        self.assertEqual(new_protocol.dataset, new_dataset)
+        self.assertEqual(new_protocol.group, new_group)
+        self.assertEqual(new_protocol.variable.qname, "PDCompartment.C_Drug")
+        self.assertEqual(new_protocol_no_dataset.dataset, None)
+        self.assertEqual(new_protocol_no_dataset.group, None)
+        self.assertEqual(new_protocol_no_dataset.variable.qname, "PDCompartment.C_Drug")
+        self.assertNotEqual(new_protocol_no_dataset.pk, protocol_no_dataset.pk)
+        # check that both protocols are present for this project
+        self.assertEqual(new_project.protocols.count(), 2)
         self.assertEqual(new_protocol.doses.count(), 1)
         new_dose = new_protocol.doses.first()
         self.assertNotEqual(new_dose.pk, dose.pk)
@@ -108,6 +258,22 @@ class TestProject(TestCase):
         self.assertEqual(new_dose.start_time, 0.0)
         self.assertEqual(new_dose.repeats, 2)
         self.assertEqual(new_dose.repeat_interval, 1.1)
+        self.assertEqual(new_protocol_no_dataset.doses.count(), 1)
+        new_dose_no_dataset = new_protocol_no_dataset.doses.first()
+        self.assertNotEqual(new_dose_no_dataset.pk, dose_no_dataset.pk)
+        self.assertEqual(new_dose_no_dataset.amount, 2.0)
+        self.assertEqual(new_dose_no_dataset.start_time, 0.5)
+        self.assertEqual(new_dose_no_dataset.repeats, 1)
+        self.assertEqual(new_dose_no_dataset.repeat_interval, 2.0)
+
+        # check that the results table is copied
+        self.assertEqual(new_project.results.count(), 1)
+        new_results_table = new_project.results.first()
+        self.assertNotEqual(new_results_table.pk, results_table.pk)
+        self.assertEqual(new_results_table.name, "my results table")
+        self.assertEqual(new_results_table.rows, ResultsTable.Type.PARAMETERS)
+        self.assertEqual(new_results_table.columns, ResultsTable.Type.GROUPS)
+        self.assertEqual(new_results_table.filters, {"dose_type": "IV"})
 
         # check that the simulation is there and has the right name
         self.assertEqual(new_project.simulations.count(), 1)

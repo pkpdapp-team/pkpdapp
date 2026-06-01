@@ -3,11 +3,20 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
+from pkpdapp.models import (
+    Unit,
+)
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+
+
+def get_species_weight_unit():
+    try:
+        return Unit.objects.get(symbol="kg")
+    except Unit.DoesNotExist:
+        return None
 
 
 class Project(models.Model):
@@ -31,6 +40,26 @@ class Project(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
 
+    tags = models.TextField(
+        help_text="comma separated list of tags for this project",
+        default="",
+        blank=True,
+    )
+
+    pk_tags = models.ManyToManyField(
+        "Tag",
+        related_name="pk_projects",
+        blank=True,
+        help_text="saved PK model tags for this project",
+    )
+
+    pd_tags = models.ManyToManyField(
+        "Tag",
+        related_name="pd_projects",
+        blank=True,
+        help_text="saved PD model tags for this project",
+    )
+
     # species is a enum field
     class Species(models.TextChoices):
         MOUSE = "M", "Mouse"
@@ -45,6 +74,20 @@ class Project(models.Model):
         default=Species.OTHER,
         help_text="subject species",
     )
+
+    species_weight = models.FloatField(
+        default=1.0,
+        help_text="species weight",
+    )
+
+    species_weight_unit = models.ForeignKey(
+        Unit,
+        on_delete=models.PROTECT,
+        related_name="species_weight_units",
+        default=get_species_weight_unit,
+    )
+
+    version = models.IntegerField(default=3)
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})
@@ -64,18 +107,25 @@ class Project(models.Model):
             name=new_name,
             description=new_description,
             species=self.species,
+            species_weight=self.species_weight,
             compound=new_compound,
             created=new_created,
         )
+        new_dataset = self.datasets.first().copy(new_project)
+        new_project.datasets.set([new_dataset])
+        new_project.save()
+
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project)
             for variable in model.variables.all():
-                new_variable = new_model.variables.get(name=variable.name)
+                new_variable = new_model.variables.get(qname=variable.qname)
                 variable_map[variable] = new_variable
 
         for simulation in self.simulations.all():
             simulation.copy(new_project, variable_map)
+        for result in self.results.all():
+            result.copy(new_project)
         if user is None:
             for user_access in self.projectaccess_set.all():
                 user_access.copy(new_project)

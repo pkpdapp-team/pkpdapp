@@ -1,47 +1,37 @@
-import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import {
-  useProjectRetrieveQuery,
-  useSubjectGroupListQuery,
-} from "../app/backendApi";
+import { useSubjectGroupListQuery } from "../app/backendApi";
 import { RootState } from "../app/store";
+import { useMemo } from "react";
 
 export default function useSubjectGroups() {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
   const selectedProjectOrZero = selectedProject || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: selectedProjectOrZero },
+  const {
+    data: groups,
+    refetch: refetchGroups,
+    isLoading,
+  } = useSubjectGroupListQuery(
+    { projectId: selectedProjectOrZero },
     { skip: !selectedProject },
   );
-  const { data: datasetGroups, refetch: refetchDatasetGroups } =
-    useSubjectGroupListQuery(
-      { datasetId: project?.datasets[0] || 0 },
-      { skip: !project },
-    );
-  const { data: projectGroups, refetch: refetchProjectGroups } =
-    useSubjectGroupListQuery(
-      { projectId: selectedProjectOrZero },
-      { skip: !selectedProject },
-    );
-  const groups = useMemo(
-    () =>
-      datasetGroups?.concat(projectGroups || []).sort((a, b) => a.id - b.id),
-    [datasetGroups, projectGroups],
-  );
 
-  function refetchGroups() {
-    refetchDatasetGroups();
-    refetchProjectGroups();
-  }
+  // sort groups starting alphabetically, but with those starting with Sim first
+  const sortedGroups = useMemo(() => groups ? [...groups].sort((a, b) => {
+    if (a.name.startsWith("Sim") && !b.name.startsWith("Sim")) {
+      return -1;
+    }
+    if (!a.name.startsWith("Sim") && b.name.startsWith("Sim")) {
+      return 1;
+    }
+    return a.name.localeCompare(b.name);
+  }) : [], [groups]);
+
 
   return {
-    groups,
-    datasetGroups,
-    projectGroups,
+    groups: sortedGroups,
     refetchGroups,
-    refetchDatasetGroups,
-    refetchProjectGroups,
+    isLoading,
   };
 }

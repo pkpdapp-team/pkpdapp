@@ -1,12 +1,15 @@
-import { useState } from "react";
 import {
   CompoundRead,
   Dose,
   ProjectRead,
+  Protocol,
   UnitRead,
   VariableRead,
   useProtocolCreateMutation,
   useProtocolDestroyMutation,
+  useProtocolListQuery,
+  useProtocolUpdateMutation,
+  useSubjectGroupListQuery,
 } from "../../../app/backendApi";
 
 interface EditProtocolProps {
@@ -15,7 +18,6 @@ interface EditProtocolProps {
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
   variable: VariableRead;
-  watchProtocolId: number | null | undefined;
 }
 
 type DefaultDose = Omit<Dose, "id" | "protocol">;
@@ -26,21 +28,28 @@ export default function useEditProtocol({
   units,
   timeVariable,
   variable,
-  watchProtocolId,
 }: EditProtocolProps) {
-  const [hasProtocol, setHasProtocol] = useState<boolean>(
-    watchProtocolId !== null,
-  );
-  const variableUnit = units.find((unit) => unit.id === variable.unit);
   const defaultTimeUnit = timeVariable
     ? units?.find((u) => u.id === timeVariable.unit)
     : units?.find((unit) => unit.symbol === "h");
   const [createProtocol] = useProtocolCreateMutation();
   const [destroyProtocol] = useProtocolDestroyMutation();
+  const [updateProtocol] = useProtocolUpdateMutation();
+  const { data: protocols } = useProtocolListQuery({
+    projectId: project.id,
+  });
+  const { data: groups } = useSubjectGroupListQuery({
+    projectId: project.id,
+  });
+  const hasProtocol = protocols
+    ? protocols.some((protocol) => protocol.variable === variable.id && !protocol.dataset)
+    : false;
 
-  const addProtocol = () => {
-    const isPerKg = variableUnit?.g !== 0;
-    const doseAmountUnitSymbol = isPerKg ? "mg/kg" : "mg";
+  async function addProtocol() {
+    const isHuman = project.species === "H";
+    const isAvhOrAah = variable.name == "Avh" || variable.name == "Aah";
+    const isPerKg = !isHuman && !isAvhOrAah;
+    const doseAmountUnitSymbol = "mg";
     const doseAmountUnit = units.find(
       (unit) => unit.symbol === doseAmountUnitSymbol,
     );
@@ -52,24 +61,40 @@ export default function useEditProtocol({
       repeats: 1,
       duration: 0.0833,
     };
-    setHasProtocol(true);
-    return createProtocol({
-      protocol: {
-        doses: [defaultDose],
-        amount_unit: doseAmountUnit?.id || variable.unit,
-        time_unit: defaultTimeUnit?.id || undefined,
-        name: variable.name,
-        project: project.id,
-        mapped_qname: variable.qname,
-      },
+    const defaultProtocol: Protocol = {
+      doses: [defaultDose],
+      amount_unit: doseAmountUnit?.id || variable.unit,
+      amount_per_body_weight: isPerKg,
+      time_unit: defaultTimeUnit?.id || undefined,
+      name: variable.name,
+      project: project.id,
+      variable: variable.id,
+    }
+    await createProtocol({
+      protocol: defaultProtocol,
     });
-  };
-
-  const removeProtocol = () => {
-    if (hasProtocol && watchProtocolId) {
-      setHasProtocol(false);
-      return destroyProtocol({ id: watchProtocolId });
+    // also add protocol to each group that isn't linked to a dataset
+    for (const group of groups || []) {
+      if (!group.dataset) {
+        await createProtocol({
+          protocol: {
+            ...defaultProtocol,
+            name: `${variable.name} - ${group.name}`,
+            group: group.id,
+          },
+        });
+      }
     }
   };
-  return { addProtocol, removeProtocol, hasProtocol };
+
+  async function removeProtocol() {
+    // remove all protocols associated with this variable except
+    // for those linked to datasets
+    for (const protocol of protocols || []) {
+      if (protocol.variable !== variable.id) continue;
+      if (protocol.dataset) continue;
+      await destroyProtocol({ id: protocol.id });
+    }
+  }
+  return { addProtocol, removeProtocol, hasProtocol, updateProtocol };
 }

@@ -11,14 +11,31 @@ from pkpdapp.models import (
     PharmacodynamicModel,
     PharmacokineticModel,
     Unit,
+    DerivedVariable,
 )
 import myokit
+import os
+import tempfile
+from myokit.formats.diffsl import DiffSLExporter
 from django.db import models
 from django.urls import reverse
 import logging
 from pkpdapp.utils.default_params import defaults
+from pkpdapp.utils.derived_variables import (
+    add_pk_variable,
+    add_pd_variable,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def get_default_effect_model():
+    try:
+        return PharmacokineticModel.objects.get(
+            name="Effect compartment model (ke0 & Kp)"
+        )
+    except PharmacokineticModel.DoesNotExist:
+        return None
 
 
 class CombinedModel(MyokitModelMixin, StoredModel):
@@ -57,14 +74,41 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         help_text="model",
     )
 
+    pk_model2 = models.ForeignKey(
+        PharmacokineticModel,
+        related_name="pkpd_models2",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        help_text="extravascular model",
+    )
+
+    pk_effect_model = models.ForeignKey(
+        PharmacokineticModel,
+        related_name="pkpd_effect_models",
+        on_delete=models.PROTECT,
+        help_text="effect compartment model",
+        default=get_default_effect_model,
+    )
+
     has_saturation = models.BooleanField(
         default=False, help_text="whether the pk model has saturation"
+    )
+    has_extravascular = models.BooleanField(
+        default=False, help_text="whether the pk model has extravascular model"
     )
     has_effect = models.BooleanField(
         default=False, help_text="whether the pk model has effect compartment"
     )
+    number_of_effect_compartments = models.IntegerField(
+        default=0, help_text="number of effect compartments"
+    )
     has_lag = models.BooleanField(
         default=False, help_text="whether the pk model has lag"
+    )
+
+    has_anti_drug_antibodies = models.BooleanField(
+        default=False, help_text="whether the pk model has anti-drug antibodies"
     )
 
     has_bioavailability = models.BooleanField(
@@ -101,6 +145,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         ),
     )
     __original_pk_model = None
+    __original_pk_model2 = None
+    __original_pk_effect_model = None
     __original_pd_model = None
     __original_pd_model2 = None
     __original_has_saturation = None
@@ -108,6 +154,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     __original_has_lag = None
     __original_has_hill_coefficient = None
     __original_has_bioavailability = None
+    __original_number_of_effect_compartments = None
+    __original_has_anti_drug_antibodies = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,6 +166,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         # fix for infinite recursion when deleting project
         if "pk_model_id" in field_names:
             instance.__original_pk_model = instance.pk_model
+        if "pk_model2_id" in field_names:
+            instance.__original_pk_model2 = instance.pk_model2
+        if "pk_effect_model_id" in field_names:
+            instance.__original_pk_effect_model = instance.pk_effect_model
         if "pd_model_id" in field_names:
             instance.__original_pd_model = instance.pd_model
         if "pd_model2_id" in field_names:
@@ -132,6 +184,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             instance.__original_has_bioavailability = instance.has_bioavailability
         if "has_hill_coefficient" in field_names:
             instance.__original_has_hill_coefficient = instance.has_hill_coefficient
+        if "number_of_effect_compartments" in field_names:
+            instance.__original_number_of_effect_compartments = (
+                instance.number_of_effect_compartments
+            )
         return instance
 
     def get_project(self):
@@ -163,6 +219,47 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         myokit_model = self.get_myokit_model()
         return myokit_model.code()
 
+    def get_diffsl(self, inputs=None, outputs=None, states=None):
+        myokit_model = self.get_myokit_model()
+        diffsl_exporter = DiffSLExporter()
+
+        myokit_inputs = (
+            [myokit_model.get(qname) for qname in inputs]
+            if inputs is not None
+            else None
+        )
+        myokit_outputs = (
+            [myokit_model.get(qname) for qname in outputs]
+            if outputs is not None
+            else None
+        )
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".diffsl", delete=False
+        ) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            diffsl_exporter.model(
+                temp_path,
+                myokit_model,
+                inputs=myokit_inputs,
+                outputs=myokit_outputs,
+            )
+            with open(temp_path, "r") as f:
+                code = f.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+        state_indices = {}
+        if states is not None:
+            for qname in states:
+                myokit_var = myokit_model.get(qname)
+                state_indices[qname] = diffsl_exporter.get_state_index(myokit_var)
+
+        return {"code": code, "state_indices": state_indices}
+
     def get_sbml(self):
         sbml_model = myokit.formats.sbml.Model.from_myokit_model(
             self.get_myokit_model()
@@ -175,16 +272,21 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             "name": self.name,
             "project": project,
             "pk_model": self.pk_model,
+            "pk_model2": self.pk_model2,
+            "pk_effect_model": self.pk_effect_model,
             "pd_model": self.pd_model,
+            "pd_model2": self.pd_model2,
             "time_max": self.time_max,
             "read_only": self.read_only,
             "has_saturation": self.has_saturation,
+            "has_extravascular": self.has_extravascular,
             "has_effect": self.has_effect,
             "has_lag": self.has_lag,
             "has_bioavailability": self.has_bioavailability,
             "has_hill_coefficient": self.has_hill_coefficient,
             "species": self.species,
-            "pd_model2": self.pd_model2,
+            "number_of_effect_compartments": self.number_of_effect_compartments,
+            "has_anti_drug_antibodies": self.has_anti_drug_antibodies,
         }
         stored_model = CombinedModel.objects.create(**stored_model_kwargs)
 
@@ -212,6 +314,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         for time_interval in self.time_intervals.all():
             time_interval.copy(stored_model)
 
+        # update the model variables
+        stored_model.update_model()
         return stored_model
 
     def create_myokit_model(self):
@@ -219,6 +323,10 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pk_model = myokit.Model()
         else:
             pk_model = self.pk_model.create_myokit_model()
+        if self.pk_model2 is None or self.pk_model is None:
+            pk_model2 = myokit.Model()
+        else:
+            pk_model2 = self.pk_model2.create_myokit_model()
         if self.pd_model is None:
             pd_model = myokit.Model()
         else:
@@ -227,6 +335,57 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             pd_model2 = myokit.Model()
         else:
             pd_model2 = self.pd_model2.create_myokit_model()
+
+        # combined both pk models
+        if self.pk_model2 is not None and self.pk_model is not None:
+            pk_model.import_component(
+                pk_model2.get("PKCompartment"), new_name="Extravascular"
+            )
+            # link RateAbs from Extravascular to PKCompartment
+            pk_rate_abs = pk_model.get("PKCompartment.RateAbs")
+            e_rate_abs = pk_model.get("Extravascular.RateAbs")
+            pk_rate_abs.set_rhs(myokit.Name(e_rate_abs))
+
+        # add effect compartments
+        if self.number_of_effect_compartments > 0:
+            ec_myokit = self.pk_effect_model.create_myokit_model()
+            for i in range(self.number_of_effect_compartments):
+                pk_model.import_component(
+                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                )
+
+        # do derived variables for pk model first
+        calc_C1_f_exists = False
+        for derived_variable in self.derived_variables.all():
+            var_name = derived_variable.pk_variable.name
+
+            if (
+                derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA
+            ):  # noqa: E501
+                if var_name == "C1":
+                    calc_C1_f_exists = True
+
+            add_pk_variable(
+                derived_variable=derived_variable,
+                pk_model=pk_model,
+                project=self.project,
+            )
+
+        # add effect compartment equations
+        if self.number_of_effect_compartments > 0:
+            tags = list(self.pk_model.tags.all().values_list("name", flat=True))
+            if "TMDD" in tags:
+                c1_variable_name = "PKCompartment.C1_f"
+            else:
+                c1_variable_name = (
+                    "PKCompartment.calc_C1_f"
+                    if calc_C1_f_exists
+                    else "PKCompartment.C1"
+                )
+            c1_variable = pk_model.get(c1_variable_name)
+            for i in range(self.number_of_effect_compartments):
+                c_drug = pk_model.get(f"EffectCompartment{i+1}.C_Drug")
+                c_drug.set_rhs(myokit.Name(c1_variable))
 
         have_both_models = self.pk_model is not None and self.pd_model is not None
         have_no_models = self.pk_model is None and self.pd_model is None
@@ -318,182 +477,14 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 new_name=pd_names,
             )
 
-        # do derived variables
+        # now do any derived variables that are based on pd (or both)
         for derived_variable in self.derived_variables.all():
-            try:
-                myokit_var = pkpd_model.get(derived_variable.pk_variable.qname)
-            except KeyError:
-                continue
-            myokit_compartment = myokit_var.parent()
-            var_name = derived_variable.pk_variable.name
-            if (
-                derived_variable.type == DerivedVariable.Type.AREA_UNDER_CURVE
-            ):  # noqa: E501
-                new_names = [f"calc_{var_name}_AUC"]
-                has_name = any(
-                    [
-                        myokit_compartment.has_variable(new_name)
-                        for new_name in new_names
-                    ]
-                )
-                if has_name:
-                    continue
-                time_var = pkpd_model.binding("time")
-                var = myokit_compartment.add_variable(
-                    new_names[0],
-                    rhs=myokit.Name(myokit_var),
-                    initial_value=0,
-                    unit=myokit_var.unit() * time_var.unit(),
-                )
-                var.meta["desc"] = (
-                    f'Area under curve for {myokit_var.meta["desc"]}'  # noqa: E501
-                )
-            elif (
-                derived_variable.type == DerivedVariable.Type.RECEPTOR_OCCUPANCY
-            ):  # noqa: E501
-                new_names = [f"calc_{var_name}_RO"]
-                has_name = any(
-                    [
-                        myokit_compartment.has_variable(new_name)
-                        for new_name in new_names
-                    ]
-                )  # noqa: E501
-                if has_name:
-                    continue
-                var = myokit_compartment.add_variable(new_names[0])
-                var.meta["desc"] = (
-                    f'Receptor occupancy for {myokit_var.meta["desc"]}'  # noqa: E501
-                )
-                kd_name = "KD_ud"
-                if myokit_compartment.has_variable(kd_name):
-                    kd = myokit_compartment.get(kd_name)
-                else:
-                    kd = myokit_compartment.add_variable(kd_name)
-                    kd.meta["desc"] = (
-                        "User-defined Dissociation Constant used to calculate Receptor occupancy"  # noqa: E501
-                    )
-                target_conc_name = "CT1_0_ud"
-                if myokit_compartment.has_variable(target_conc_name):
-                    target_conc = myokit_compartment.get(target_conc_name)
-                else:
-                    target_conc = myokit_compartment.add_variable(target_conc_name)
-                    target_conc.meta["desc"] = (
-                        "User-defined Target Concentration used to calculate Receptor occupancy"  # noqa: E501
-                    )
-                var.set_unit(myokit.Unit())
-                kd_unit = myokit_var.unit()
-                compound = self.project.compound
-                kd_unit_conversion_factor = compound.dissociation_unit.convert_to(
-                    kd_unit, compound=compound
-                )
-                kd.set_rhs(compound.dissociation_constant * kd_unit_conversion_factor)
-                kd.set_unit(kd_unit)
-                target_conc_unit = myokit_var.unit()
-                target_conc_unit_conversion_factor = (
-                    compound.target_concentration_unit.convert_to(
-                        target_conc_unit, compound=compound, is_target=True
-                    )
-                )
-                target_conc.set_rhs(
-                    compound.target_concentration * target_conc_unit_conversion_factor
-                )
-                target_conc.set_unit(target_conc_unit)
-
-                b = var.add_variable("b")
-                b.set_rhs(
-                    myokit.Plus(
-                        myokit.Plus(myokit.Name(kd), myokit.Name(target_conc)),
-                        myokit.Name(myokit_var),
-                    )
-                )
-                c = var.add_variable("c")
-                c.set_rhs(
-                    myokit.Multiply(
-                        myokit.Multiply(myokit.Number(4), myokit.Name(target_conc)),
-                        myokit.Name(myokit_var),
-                    )
-                )
-
-                var.set_rhs(
-                    myokit.Multiply(
-                        myokit.Number(100),
-                        myokit.Divide(
-                            myokit.Minus(
-                                myokit.Name(b),
-                                myokit.Sqrt(
-                                    myokit.Minus(
-                                        myokit.Power(myokit.Name(b), myokit.Number(2)),
-                                        myokit.Name(c),
-                                    )
-                                ),
-                            ),
-                            myokit.Multiply(myokit.Number(2), myokit.Name(target_conc)),
-                        ),
-                    )
-                )
-            elif (
-                derived_variable.type == DerivedVariable.Type.FRACTION_UNBOUND_PLASMA
-            ):  # noqa: E501
-                new_names = [f"calc_{var_name}_f", "FUP_ud"]
-                has_name = any(
-                    [
-                        myokit_compartment.has_variable(new_name)
-                        for new_name in new_names
-                    ]
-                )  # noqa: E501
-                if has_name:
-                    continue
-                var = myokit_compartment.add_variable(new_names[0])
-                var.meta["desc"] = (
-                    f'Unbound Concentration for {myokit_var.meta["desc"]}'  # noqa: E501
-                )
-                fup = myokit_compartment.add_variable(new_names[1])
-                fup.meta["desc"] = "User-defined Fraction Unbound Plasma"  # noqa: E501
-                var.set_unit(myokit_var.unit())
-                fup.set_rhs(self.project.compound.fraction_unbound_plasma)
-                fup.set_unit(myokit.units.dimensionless)
-                var.set_rhs(myokit.Multiply(myokit.Name(fup), myokit.Name(myokit_var)))
-            elif (
-                derived_variable.type == DerivedVariable.Type.BLOOD_PLASMA_RATIO
-            ):  # noqa: E501
-                new_names = [f"calc_{var_name}_bl", "BP_ud"]
-                has_name = any(
-                    [
-                        myokit_compartment.has_variable(new_name)
-                        for new_name in new_names
-                    ]
-                )  # noqa: E501
-                if has_name:
-                    continue
-                var = myokit_compartment.add_variable(new_names[0])
-                bpr = myokit_compartment.add_variable(new_names[1])
-                bpr.meta["desc"] = "User-defined Blood to Plasma Ratio"  # noqa: E501
-                var.meta["desc"] = f'Blood Concentration for {myokit_var.meta["desc"]}'
-                var.set_unit(myokit_var.unit())
-                bpr.set_rhs(self.project.compound.blood_to_plasma_ratio)
-                bpr.set_unit(myokit.units.dimensionless)
-                var.set_rhs(myokit.Multiply(myokit.Name(bpr), myokit.Name(myokit_var)))
-            elif derived_variable.type == DerivedVariable.Type.TLAG:  # noqa: E501
-                new_names = [f"{var_name}_tlag_ud"]
-                has_name = any(
-                    [
-                        myokit_compartment.has_variable(new_name)
-                        for new_name in new_names
-                    ]
-                )  # noqa: E501
-                if has_name:
-                    continue
-                var = myokit_compartment.add_variable(new_names[0])
-                var.meta["desc"] = (
-                    "User-defined absorption lag time from specified compartment"
-                )
-                time_var = pkpd_model.binding("time")
-                var.set_unit(time_var.unit())
-                var.set_rhs(myokit.Number(0))
-            else:
-                raise ValueError(
-                    f"Unknown derived variable type {derived_variable.type}"
-                )
+            add_pd_variable(
+                derived_variable=derived_variable,
+                pk_model=pk_model,
+                pkpd_model=pkpd_model,
+                project=self.project,
+            )
 
         # do mappings
         for mapping in self.mappings.all():
@@ -550,17 +541,20 @@ class CombinedModel(MyokitModelMixin, StoredModel):
 
         # if the pk or pd models have changed then remove the mappings and
         # derived variables
-        if (
-            self.pk_model != self.__original_pk_model
-            or self.pd_model != self.__original_pd_model
-            or self.pd_model2 != self.__original_pd_model2
-        ):
-            self.mappings.all().delete()
-            self.derived_variables.all().delete()
+        # if (
+        #    self.pk_model != self.__original_pk_model
+        #    or self.pk_model2 != self.__original_pk_model2
+        #    or self.pd_model != self.__original_pd_model
+        #    or self.pd_model2 != self.__original_pd_model2
+        # ):
+        #    self.mappings.all().delete()
+        #    self.derived_variables.all().delete()
 
         if (
             created
             or self.pk_model != self.__original_pk_model
+            or self.pk_model2 != self.__original_pk_model2
+            or self.pk_effect_model != self.__original_pk_effect_model
             or self.pd_model != self.__original_pd_model
             or self.pd_model2 != self.__original_pd_model2
             or self.has_saturation != self.__original_has_saturation
@@ -568,20 +562,37 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             or self.has_lag != self.__original_has_lag
             or self.has_bioavailability != self.__original_has_bioavailability
             or self.has_hill_coefficient != self.__original_has_hill_coefficient
+            or self.number_of_effect_compartments
+            != self.__original_number_of_effect_compartments
+            or self.has_anti_drug_antibodies != self.__original_has_anti_drug_antibodies
         ):
             self.update_model()
 
         self.__original_pd_model = self.pd_model
         self.__original_pd_model2 = self.pd_model2
         self.__original_pk_model = self.pk_model
+        self.__original_pk_model2 = self.pk_model2
+        self.__original_pk_effect_model = self.pk_effect_model
         self.__original_has_saturation = self.has_saturation
         self.__original_has_effect = self.has_effect
         self.__original_has_lag = self.has_lag
         self.__original_has_hill_coefficient = self.has_hill_coefficient
         self.__original_has_bioavailability = self.has_bioavailability
+        self.__original_number_of_effect_compartments = (
+            self.number_of_effect_compartments
+        )
+        self.__original_has_anti_drug_antibodies = self.has_anti_drug_antibodies
 
     def reset_params_to_defaults(self, species, compoundType, variables=None):
         if self.is_library_model:
+            project = self.project
+            if project is None:
+                is_preclinical = False
+            else:
+                is_preclinical = project.species != Project.Species.HUMAN
+
+            # old models did not have tags so get the model name from the
+            # existing name
             model_name = (
                 self.pk_model.name.replace("_clinical", "")
                 .replace("_preclinical", "")
@@ -592,35 +603,86 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 .replace("production", "")
                 .replace("elimination", "")
             )
+            # new models use tags to define the model type
+            tags = list(self.pk_model.tags.all().values_list("name", flat=True))
+            if "TMDD" in tags:
+                if "1-compartment" in tags:
+                    model_name = "one_compartment_tmdd"
+                elif "2-compartment" in tags:
+                    model_name = "two_compartment_tmdd"
+            else:
+                if "1-compartment" in tags:
+                    model_name = "one_compartment"
+                elif "2-compartment" in tags:
+                    model_name = "two_compartment"
+                elif "3-compartment" in tags:
+                    model_name = "three_compartment"
+
+            # the ophtha extravascular model also has some defaults
+            model2_name = None
+            if self.pk_model2 is not None:
+                if "Ocular" in self.pk_model2.name:
+                    model2_name = "ophtha"
             print(
                 "resetting params to defaults",
                 model_name,
                 species,
                 compoundType,
                 self.pk_model.name,
+                is_preclinical,
+                model2_name,
             )
             if variables is None:
                 variables = self.variables.all()
             for v in variables:
-                varName = v.name
-                defaultVal = (
-                    defaults.get(model_name, {})
-                    .get(varName, {})
-                    .get(species, {})
-                    .get(compoundType, None)
-                )
-                if defaultVal is None:
-                    continue
-                if defaultVal.get("unit", "") == "dimensionless":
-                    defaultVal["unit"] = ""
-                unit = Unit.objects.filter(symbol=defaultVal.get("unit", "")).first()
-                value = defaultVal.get("value", None)
-                if value is None or unit is None:
-                    continue
-                v.default_value = value
-                v.unit = unit
-                if not v._state.adding:
-                    v.save()
+                for mn in [model_name, model2_name]:
+                    if mn is None:
+                        continue
+                    varName = v.name
+                    defaultVal = (
+                        defaults.get(mn, {})
+                        .get(varName, {})
+                        .get(species, {})
+                        .get(compoundType, None)
+                    )
+                    if defaultVal is None:
+                        continue
+                    if defaultVal.get("unit", "") == "dimensionless":
+                        defaultVal["unit"] = ""
+                    unit = Unit.objects.filter(
+                        symbol=defaultVal.get("unit", "")
+                    ).first()
+                    # TODO: previously only the vol_per_kg units were per body weight
+                    # but now vmax can also be per body weight
+                    # in the future might want to swap to just enumerating some
+                    # names...?
+                    is_vol_per_kg = False
+                    is_vmax = v.name in ["Vmax"]
+                    if unit is not None:
+                        is_vol_per_kg = unit.m == 3 and unit.g == -1
+                        if is_vol_per_kg:
+                            unit = Unit.objects.filter(
+                                symbol=defaultVal.get("unit", "")[:-3]
+                            ).first()
+                    # vmax is a special case that might be in units of amount/time
+                    # or amount/(time*kg)
+                    if is_vmax:
+                        is_per_kg = defaultVal.get("unit", "").endswith("/kg")
+                        if is_per_kg:
+                            unit = Unit.objects.filter(
+                                symbol=defaultVal.get("unit", "")[:-3]
+                            ).first()
+                    value = defaultVal.get("value", None)
+                    print(f"setting {v.qname} to default value {value} and unit {unit}")
+                    if value is not None:
+                        v.default_value = value
+                    if unit is not None:
+                        v.unit_per_body_weight = is_preclinical and (
+                            is_vol_per_kg or is_vmax
+                        )
+                        v.unit = unit
+                    if not v._state.adding:
+                        v.save()
 
 
 class PkpdMapping(StoredModel):
@@ -685,68 +747,6 @@ class PkpdMapping(StoredModel):
             "read_only": self.read_only,
         }
         stored_mapping = PkpdMapping.objects.create(**stored_kwargs)
-        return stored_mapping
-
-
-class DerivedVariable(StoredModel):
-    pkpd_model = models.ForeignKey(
-        CombinedModel,
-        on_delete=models.CASCADE,
-        related_name="derived_variables",
-        help_text="PKPD model that this derived variable is for",
-    )
-    pk_variable = models.ForeignKey(
-        "Variable",
-        on_delete=models.CASCADE,
-        related_name="derived_variables",
-        help_text="base variable in PK part of model",
-    )
-
-    class Type(models.TextChoices):
-        AREA_UNDER_CURVE = "AUC", "area under curve"
-        RECEPTOR_OCCUPANCY = "RO", "receptor occupancy"
-        FRACTION_UNBOUND_PLASMA = "FUP", "faction unbound plasma"
-        BLOOD_PLASMA_RATIO = "BPR", "blood plasma ratio"
-        TLAG = "TLG", "dosing lag time"
-
-    type = models.CharField(
-        max_length=3, choices=Type.choices, help_text="type of derived variable"
-    )
-
-    __original_pk_variable = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__original_pk_variable = self.pk_variable
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        created = not self.pk
-
-        super().save(force_insert, force_update, *args, **kwargs)
-
-        # don't update a stored model
-        if self.read_only:
-            return
-
-        if created or self.pk_variable != self.__original_pk_variable:
-            self.pkpd_model.update_model()
-
-        self.__original_pk_variable = self.pk_variable
-
-    def delete(self):
-        pkpd_model = self.pkpd_model
-        super().delete()
-        pkpd_model.update_model()
-
-    def copy(self, new_pkpd_model, new_variables):
-        new_pk_variable = new_variables[self.pk_variable.qname]
-        stored_kwargs = {
-            "pkpd_model": new_pkpd_model,
-            "pk_variable": new_pk_variable,
-            "read_only": self.read_only,
-            "type": self.type,
-        }
-        stored_mapping = DerivedVariable.objects.create(**stored_kwargs)
         return stored_mapping
 
 

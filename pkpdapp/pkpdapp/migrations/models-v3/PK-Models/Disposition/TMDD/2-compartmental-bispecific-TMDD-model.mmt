@@ -1,0 +1,163 @@
+[[model]]
+name: 2-compartmental bispecific TMDD model
+author: Michael Gertz
+
+
+# Initial values:
+PKCompartment.A1_f = 0
+PKCompartment.A2_f = 0
+PKCompartment.AT1_f = PKCompartment.CT1_0*PKCompartment.V1
+PKCompartment.AT2_f = PKCompartment.CT2_0*PKCompartment.V1
+PKCompartment.ADT1  = 0
+PKCompartment.ADT2  = 0
+PKCompartment.ADT1T2  = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+F = 1 in [dimensionless]
+  desc: Fraction absorbed / bioavailability 
+	
+V1 = 1 in [L]
+  desc: Volume of the central compartment	
+  
+V2 = 1 in [L]
+  desc: Volume of the peripheral compartment  
+	
+CL = 1 in [L/h]
+  desc: Linear clearance from central compartment
+
+Q1 = 1 in [L/h]
+  desc: Intercompartmental clearance between central and peripheral compartment	
+
+CT1_0 = 1 in [pmol/L]
+	desc: Baseline concentration of target 1 in the central compartment
+	
+CT2_0 = 1 in [pmol/L]
+	desc: Baseline concentration of target 2 in the central compartment	
+
+KD1 = 1 in [pmol/L]
+	desc: Dissociation constant of the interaction with the first target 
+	
+KD2 = 1 in [pmol/L]
+	desc: Dissociation constant of the interaction with the second target	
+
+koff1 = 1 in [1/h]
+	desc: Dissociation rate constant of the first drug-target complex
+	
+koff2 = 1 in [1/h]
+	desc: Dissociation rate constant of the second drug-target complex	
+	
+kdegT1 = 1 in [1/h]
+	desc: Target 1 degradation rate constant
+	
+kdegT2 = 1 in [1/h]
+	desc: Target 2 degradation rate constant	
+	
+kint1 = 1 in [1/h]
+	desc: Complex 1 internalization rate constant
+
+kint2 = 1 in [1/h]
+	desc: Complex 2 internalization rate constant	
+	
+kint3 = 1 in [1/h]
+	desc: Ternary complex internalization rate constant	
+	
+kon1 = koff1/KD1 in [1/h*L/pmol]
+	desc: Secondary parameter: association rate constant of the interaction with the first target (2nd order)
+
+kon2 = koff2/KD2 in [1/h*L/pmol]
+	desc: Secondary parameter: association rate constant of the interaction with the second target (2nd order)	
+	
+FAvid = 1 in [dimensionless]
+    desc: Avidity factor (0 = only one target can be bound by the antibody, > 0 but < 1 = reduced binding affinity of 2nd partner, 1 = binding of 2nd partner unaffected by first binding event, > 1 = 2nd partner binds with increased avidity) 	
+  
+CLada = 0 in [L/h]
+  desc: ADA-mediated clearance 
+
+tada = 240 in [h]
+  desc: Time at which ADA-mediated clearance first occurs
+
+CLimm = if(environment.t < tada , 
+	0 , 
+	CLada) in [L/h]
+	
+	
+C1_f = A1_f/V1 in [pmol/L]
+  desc: Concentration of FREE drug in the central compartment (Mw drug)
+  
+C1_b = (ADT1 + ADT2 + ADT1T2)/V1 in [pmol/L]
+  desc: Concentration of BOUND drug in the central compartment (Mw drug)
+	
+C1_t = (A1_f + ADT1 + ADT2 + ADT1T2)/V1 in [pmol/L]
+  desc: Concentration of TOTAL drug in the central compartment (Mw drug)
+  
+C2_f = A2_f/V2 in [pmol/L]
+  desc: Concentration of FREE drug in the peripheral compartment (Mw drug) 
+	
+CT1_f = AT1_f/V1 in [pmol/L]
+  desc: Concentration of FREE target 1 in the central compartment (Mw T1)
+  
+CT2_f = AT2_f/V1 in [pmol/L]
+  desc: Concentration of FREE target 2 in the central compartment (Mw T2)
+	
+CT1_b = (ADT1 + ADT1T2)/V1 in [pmol/L]	
+  desc: Concentration of BOUND target 1 in the central compartment (Mw T1)
+  
+CT2_b = (ADT2 + ADT1T2)/V1 in [pmol/L]	
+  desc: Concentration of BOUND target 2 in the central compartment (Mw T2)
+	
+CT1_t = (AT1_f + ADT1 + ADT1T2)/V1 in [pmol/L]	
+  desc: Concentration of TOTAL target 1 in the central compartment (Mw T1)
+  
+CT2_t = (AT2_f + ADT2 + ADT1T2)/V1 in [pmol/L]	
+  desc: Concentration of TOTAL target 2 in the central compartment (Mw T2)
+
+CDT1T2_b = ADT1T2/V1 in [pmol/L]	
+  desc: Concentration of TERNARY complexe in the central compartment (Mw drug)
+	
+RO_T1_Model = CT1_b/CT1_t*100 in [dimensionless]
+  desc: Receptor (Target) occupancy
+  
+RO_T2_Model = CT2_b/CT2_t*100 in [dimensionless]
+  desc: Receptor (Target) occupancy
+	
+PerInh1 = (1-CT1_f/CT1_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 1
+  
+PerInh2 = (1-CT2_f/CT2_t)*100 in [dimensionless]
+  desc: Percent inhbition relative to TOTAL target 2
+	
+PerInh_Baseline1 = (1-CT1_f/CT1_0)*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 1
+  
+PerInh_Baseline2 = (1-CT2_f/CT2_0)*100 in [dimensionless]	
+  desc: Percent inhibition relative to the initial steady-state concentration of target 2 
+  
+RateAbs = 0 in [pmol/h] 
+  desc: Absorption rate   
+
+	
+dot(A1_f) = RateAbs*F - CL*C1_f - Q1*(C1_f - C2_f) - kon1*C1_f*CT1_f*V1 + koff1*ADT1 - kon2*C1_f*CT2_f*V1 + koff2*ADT2 - CLimm*C1_f in [pmol]
+  desc: Amount of FREE drug in the central compartment 
+  
+dot(A2_f) = Q1*(C1_f - C2_f) - CLimm*C2_f*V2/V1 in [pmol]
+  desc: Amount of drug in the peripheral compartment  
+  
+dot(AT1_f) = kdegT1*V1*(CT1_0 - CT1_f) - kon1*C1_f*CT1_f*V1 + koff1*ADT1 -kon1*FAvid*ADT2*CT1_f +koff1*ADT1T2 in [pmol]
+  desc: Amount of FREE target 1 in the central compartment
+  
+dot(AT2_f) = kdegT2*V1*(CT2_0 - CT2_f) - kon2*C1_f*CT2_f*V1 + koff2*ADT2 -kon2*FAvid*ADT1*CT2_f +koff2*ADT1T2 in [pmol]
+  desc: Amount of FREE target 2 in the central compartment 
+
+dot(ADT1) = kon1*C1_f*CT1_f*V1 - (koff1+kint1)*ADT1 -kon2*FAvid*ADT1*CT2_f +koff2*ADT1T2 - CLimm*ADT1/V1 in [pmol]
+  desc: Amount of BOUND drug/ target 1 in the central compartment
+  
+dot(ADT2) = kon2*C1_f*CT2_f*V1 - (koff2+kint2)*ADT2 -kon1*FAvid*ADT2*CT1_f +koff1*ADT1T2 - CLimm*ADT2/V1 in [pmol]
+  desc: Amount of BOUND drug/ target 2 in the central compartment 
+  
+dot(ADT1T2) = kon2*FAvid*ADT1*CT2_f +kon1*FAvid*ADT2*CT1_f -(koff1+koff2+kint3)*ADT1T2 - CLimm*CDT1T2_b in [pmol]
+  desc: Amount of ternary complexes between drug, T1 and T2 in the central compartment

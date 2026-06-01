@@ -27,6 +27,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # setup automatic pk column for models
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+DEBUG = int(os.environ.get("DEBUG", default=0))
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -71,7 +73,6 @@ LOGGING = {
 
 SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
 
 ALLOWED_HOSTS = [os.environ.get("HOST_NAME", "localhost"), "127.0.0.1"]
 
@@ -112,6 +113,12 @@ if use_predi:
     )
     AUTH_PREDILOGIN_BASE_URL = os.environ.get(
         "AUTH_PREDILOGIN_BASE_URL", "https://api.predilogin.com"
+    )
+    AUTH_PREDILOGIN_USER_GROUP = os.environ.get(
+        "AUTH_PREDILOGIN_USER_GROUP", "pkpdapp-users"
+    )
+    AUTH_PREDILOGIN_ADMIN_GROUP = os.environ.get(
+        "AUTH_PREDILOGIN_ADMIN_GROUP", "pkpdapp-admins"
     )
     AUTHENTICATION_BACKENDS = [
         "pkpdapp.predilogin.PrediBackend",
@@ -263,7 +270,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "user_visit.middleware.UserVisitMiddleware",
+    # "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
+
+# DJANGO_CPROFILE_MIDDLEWARE_REQUIRE_STAFF = False
 
 CORS_ALLOWED_ORIGINS = [
     f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",

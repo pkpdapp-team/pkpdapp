@@ -12,3 +12,9 @@ from .monolix_model_parser import MonolixModelParser
 from .monolix_project_parser import MonolixProjectParser
 from .data_parser import DataParser
 from .monolix_importer import monolix_import
+from .derived_variables import (
+    pd_model_var_types,
+    pk_model_var_types,
+    add_pd_variable,
+    add_pk_variable,
+)

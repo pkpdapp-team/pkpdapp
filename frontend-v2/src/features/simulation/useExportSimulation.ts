@@ -50,9 +50,9 @@ export default function useExportSimulation({
   model,
   project,
 }: iExportSimulation): [
-  () => void,
-  { error: FetchBaseQueryError | SerializedError | undefined },
-] {
+    () => void,
+    { error: FetchBaseQueryError | SerializedError | undefined },
+  ] {
   const { groups } = useSubjectGroups();
   const { compound, protocols } = useProtocols();
   const { data: variables } = useVariableListQuery(
@@ -112,7 +112,7 @@ export default function useExportSimulation({
             ...response.data.flatMap((data, index) => {
               const label =
                 index === 0
-                  ? "Project"
+                  ? "Sim-Group 1"
                   : groups[index - 1].id_in_dataset || groups[index - 1].name;
               return parseResponse(data, timeCol, label);
             }),

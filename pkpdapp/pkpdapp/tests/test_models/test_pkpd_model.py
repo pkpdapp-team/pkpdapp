@@ -42,7 +42,6 @@ class TestPkpdModel(TestCase):
             pd_model=pd_model,
             project=self.project,
             has_saturation=True,
-
         )
         cl = pkpd_model.variables.get(qname="PKCompartment.CL")
         c1 = pkpd_model.variables.get(qname="PKCompartment.C1")
@@ -60,10 +59,7 @@ class TestPkpdModel(TestCase):
         )
         hour_unit = Unit.objects.get(symbol="h")
         time_interval = TimeInterval.objects.create(
-            pkpd_model=pkpd_model,
-            start_time=0,
-            end_time=168,
-            unit=hour_unit
+            pkpd_model=pkpd_model, start_time=0, end_time=168, unit=hour_unit
         )
         new_compound = Compound.objects.create(name="new compound")
         new_project = Project.objects.create(name="new project", compound=new_compound)
@@ -275,4 +271,34 @@ class TestPkpdModel(TestCase):
         model = combined.get_myokit_model()
         model_vars = [v.qname() for v in model.variables()]
         self.assertCountEqual(model_vars, expected_vars)
-        print("combined model validated", model.code())
+
+    def test_ada_cl(self):
+        pk_model = PharmacokineticModel.objects.get(name="1-compartmental model")
+        pd_model = PharmacodynamicModel.objects.get(
+            name="Indirect effect model (stimulation of production)"
+        )
+        # Create model without anti-drug antibodies
+        pkpd_model = CombinedModel.objects.create(
+            name="my wonderful model",
+            pk_model=pk_model,
+            pd_model=pd_model,
+            has_anti_drug_antibodies=False,
+        )
+
+        # Set unit and per_kg on CL variable
+        cl_var = pkpd_model.variables.get(qname="PKCompartment.CL")
+        test_unit = Unit.objects.get(symbol="mL")
+        cl_var.unit = test_unit
+        cl_var.unit_per_body_weight = True
+        cl_var.save()
+
+        # Turn on anti-drug antibodies
+        pkpd_model.has_anti_drug_antibodies = True
+        pkpd_model.save()
+
+        # Get the CLada variable (should be created now)
+        clada_var = pkpd_model.variables.get(qname="PKCompartment.CLada")
+
+        # Verify that CLada inherits unit and unit_per_body_weight from CL
+        self.assertEqual(clada_var.unit, test_unit)
+        self.assertEqual(clada_var.unit_per_body_weight, True)

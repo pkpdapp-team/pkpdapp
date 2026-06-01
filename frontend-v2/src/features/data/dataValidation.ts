@@ -1,5 +1,6 @@
-import { Field } from "./LoadData";
+import { Row } from "./LoadData";
 import { StepperState } from "./LoadDataStepper";
+import { normaliseUnitSymbol } from "./unitUtils";
 
 const normalisation = {
   Ignore: ["ignore"],
@@ -21,6 +22,14 @@ const normalisation = {
     "dose_unit",
     "unit dose",
     "unit_dose",
+    "doseu",
+  ],
+  "Per Body Weight(kg)": [
+    "per body weight(kg)",
+    "per body weight",
+    "per_body_weight",
+    "per kg",
+    "per_kg",
   ],
   "Amount Variable": ["amount variable", "amount_var", "amt_var"],
   "Cat Covariate": [
@@ -37,10 +46,18 @@ const normalisation = {
     "analyte",
   ],
   Censoring: ["cens", "blq", "lloq"],
-  "Cont Covariate": ["cont covariate", "weight", "wt", "bw", "age", "dose"],
+  "Cont Covariate": [
+    "cont covariate",
+    "weight",
+    "wt",
+    "bw",
+    "age",
+    "dose",
+    "dosea",
+  ],
   "Event ID": ["event id", "evid"],
   "Group ID": ["group id"],
-  ID: ["id", "subject", "animal number", "subject_id", "subjid"],
+  ID: ["id", "subject", "animal number", "subject_id", "subjid", "usubjid"],
   "Ignored Observation": ["ignored observation", "mdv"],
   "Infusion Duration": [
     "infusion time",
@@ -60,6 +77,7 @@ const normalisation = {
     "cobs",
     "obs",
     "concentration",
+    "aval",
   ],
   "Observation Unit": [
     "observation unit",
@@ -79,12 +97,13 @@ const normalisation = {
     "concentration_unit",
     "unit concentration",
     "unit_concentration",
+    "avalu",
   ],
   "Observation ID": ["observation id", "observation_id", "ytype", "dvid"],
   "Observation Variable": ["observation variable", "observation_var"],
   Occasion: ["occasion", "occ"],
   Regressor: ["x", "regressor"],
-  Time: ["time", "t", "ivar", "hour_actual"],
+  Time: ["time", "t", "ivar", "hour_actual", "afrlt"],
   "Time Unit": [
     "time unit",
     "time_unit",
@@ -93,6 +112,7 @@ const normalisation = {
     "tunit",
     "units_time",
     "unit_time",
+    "rrltu",
   ],
 };
 
@@ -106,6 +126,7 @@ export const groupedHeaders = {
     "Observation Unit",
     "Amount",
     "Amount Unit",
+    "Per Body Weight(kg)",
   ],
   Dosing: [
     "Administration ID",
@@ -130,6 +151,9 @@ export const groupedHeaders = {
 export const manditoryHeaders = ["Time", "Observation"];
 
 export const normalisedHeaders = Object.keys(normalisation);
+
+const validTime = (time: number) => !isNaN(time) && time >= 0;
+const invalidTime = (time: number) => isNaN(time) || time < 0;
 
 export const validateDataRow = (
   row: Record<string, string>,
@@ -173,7 +197,7 @@ export const validateDataRow = (
     return false;
   }
   const time = parseFloat(row[timeField]);
-  if (isNaN(time)) {
+  if (invalidTime(time)) {
     return false;
   }
   return true;
@@ -271,6 +295,32 @@ export const validateState = (state: StepperState) => {
   const { fields, normalisedFields, normalisedHeaders } = state;
   const errors: string[] = [];
   const hasNoDosing = !validateDosingRows(state);
+  const newData = state.data.map((row) => ({ ...row })) as Row[];
+  const warnings: string[] = [];
+
+  if (state.encoding !== "utf-8") {
+    warnings.push(
+      `Detected file encoding: ${state.encoding}. If you see garbled characters, please ensure your file is saved with UTF-8 encoding.`,
+    );
+  }
+
+  // normalise unit symbols (e.g. mm3, ug, uL→µL, umol→µmol)
+  const amountUnitField = fields.find(
+    (field) => normalisedFields.get(field) === "Amount Unit",
+  );
+  const observationUnitField = fields.find(
+    (field) => normalisedFields.get(field) === "Observation Unit",
+  );
+  newData.forEach((row) => {
+    if (amountUnitField) {
+      const amountUnit = row[amountUnitField];
+      row[amountUnitField] = normaliseUnitSymbol(amountUnit);
+    }
+    if (observationUnitField) {
+      const observationUnit = row[observationUnitField];
+      row[observationUnitField] = normaliseUnitSymbol(observationUnit);
+    }
+  });
   // check for mandatory fields
   for (const field of manditoryHeaders) {
     if (!normalisedHeaders.includes(field)) {
@@ -278,7 +328,7 @@ export const validateState = (state: StepperState) => {
     }
   }
 
-  const warnings: string[] = Object.values(validateCatCovariates(state));
+  warnings.push(...Object.values(validateCatCovariates(state)));
 
   const timeField = fields.find(
     (field) => normalisedFields.get(field) === "Time",
@@ -286,11 +336,11 @@ export const validateState = (state: StepperState) => {
   const timeValues = timeField
     ? state.data.map((row) => parseFloat(row[timeField]))
     : [];
-  const timeIsValid = timeValues.every((time) => !isNaN(time));
-  const invalidTimes = timeValues.filter((time) => isNaN(time));
+  const timeIsValid = timeValues.every(validTime);
+  const invalidTimes = timeValues.filter(invalidTime);
   if (!timeIsValid) {
     warnings.push(
-      `CSV contains empty or invalid time values. ${invalidTimes.length} rows will be ignored`,
+      `CSV contains empty or negative time values. ${invalidTimes.length} rows will be ignored`,
     );
   }
 
@@ -320,26 +370,161 @@ export const validateState = (state: StepperState) => {
       );
     } else {
       warnings.push(
-        "Amount units have not been defined in the dataset and need to be defined manually.",
+        "Amount units have not been defined in the dataset and need to be defined under Map Dosing.",
       );
     }
   }
+
+  // Check if Dose or DOSEA continuous covariate is present
+  const doseCovariateField = fields.find(
+    (field) =>
+      (field.toLowerCase() === "dose" || field.toLowerCase() === "dosea") &&
+      normalisedFields.get(field) === "Cont Covariate",
+  );
+  if (doseCovariateField && hasNoDosing) {
+    warnings.push(
+      "Dose or DOSEA continuous covariate found, using this value for dosing amount.",
+    );
+  }
+
   if (
     normalisedHeaders.includes("Observation") &&
     !normalisedHeaders.includes("Observation Unit")
   ) {
     warnings.push(
-      "Observation units have not been defined in the dataset and need to be defined manually.",
+      "Observation units have not been defined in the dataset and need to be defined under Map Observations.",
     );
   }
-  return { errors, warnings };
+  return { errors, warnings, data: newData };
 };
 
-export function normaliseHeader(header: string): [Field, string] {
-  for (const [key, value] of Object.entries(normalisation)) {
-    if (value.includes(header.toLowerCase())) {
-      return [header, key];
+export function parsePerKgDoses(state: StepperState): void {
+  const { data, fields, normalisedFields } = state;
+  const amountUnitField =
+    fields.find((field) => normalisedFields.get(field) === "Amount Unit") ||
+    "Amount Unit";
+  const hasPerKgDosing = data.some((row) => {
+    const amountUnit = row[amountUnitField];
+    return amountUnit?.endsWith("/kg");
+  });
+  if (!hasPerKgDosing) {
+    return;
+  }
+  const perKgField =
+    fields.find(
+      (field) => normalisedFields.get(field) === "Per Body Weight(kg)",
+    ) || "Per Body Weight(kg)";
+  const newData = data.map((row) => {
+    const newRow = { ...row };
+    const amountUnit = newRow[amountUnitField];
+    newRow[perKgField] = "0";
+    if (amountUnit?.endsWith("/kg")) {
+      newRow[amountUnitField] = amountUnit.replace("/kg", "");
+      newRow[perKgField] = "1";
+    }
+    return newRow;
+  });
+  const newNormalisedFields = normalisedFieldsFromData(
+    newData,
+    normalisedFields,
+  );
+  state.data = newData;
+  state.normalisedFields = newNormalisedFields;
+}
+
+/**
+ * Extract a list of unique field names from all rows in a CSV dataset.
+ * @param data CSV dataset
+ * @returns Array of field names
+ */
+export function csvFieldsFromData(data: Row[]): string[] {
+  const fieldSet = new Set<string>(data.map((row) => Object.keys(row)).flat());
+  return Array.from(fieldSet);
+}
+
+/**
+ * Generate a new normalised fields mapping based on the provided data and existing normalised fields.
+ * @param data CSV dataset
+ * @param normalisedFields Current normalised fields mapping
+ * @returns Updated normalised fields mapping
+ */
+export function normalisedFieldsFromData(
+  data: Row[],
+  normalisedFields: Map<string, string> = new Map<string, string>(),
+): Map<string, string> {
+  const fields = csvFieldsFromData(data);
+  return normaliseFields(fields, normalisedFields);
+}
+
+/**
+ *  Normalise the headers for an uploaded CSV dataset
+ * @param fields Original fields from the uploaded data
+ * @param normalisedFields Optional map of existing normalised headers.
+ * @returns
+ */
+export function normaliseFields(
+  fields: string[],
+  normalisedFields: Map<string, string> = new Map<string, string>(),
+): Map<string, string> {
+  const newNormalisedFields = new Map<string, string>();
+  fields.forEach((field) => {
+    if (normalisedFields.has(field)) {
+      newNormalisedFields.set(field, normalisedFields.get(field) as string);
+    }
+  });
+  const lowerFields = fields.map((field) => field.toLowerCase());
+  const prefixCounts: Record<string, number> = {};
+  for (const prefixes of Object.values(normalisation)) {
+    for (const prefix of prefixes) {
+      prefixCounts[prefix] = lowerFields.filter((f) =>
+        f.startsWith(`${prefix}_`),
+      ).length;
     }
   }
-  return [header, "Ignore"];
+
+  const hasUniquePrefixMatch = (lowerField: string, prefix: string) => {
+    if (!lowerField.startsWith(`${prefix}_`)) {
+      return false;
+    }
+    const matchingFieldsCount = prefixCounts[prefix] || 0;
+    return matchingFieldsCount === 1;
+  };
+
+  const findNormalisedHeader = (lowerField: string) => {
+    // First, perform an exact-match pass across all normalised headers.
+    for (const [header, prefixes] of Object.entries(normalisation)) {
+      if (prefixes.includes(lowerField)) {
+        return header;
+      }
+    }
+
+    // Then, among all prefix matches, choose the most specific (longest) prefix.
+    let bestMatchHeader: string | null = null;
+    let bestMatchPrefixLength = -1;
+    for (const [header, prefixes] of Object.entries(normalisation)) {
+      for (const prefix of prefixes) {
+        if (hasUniquePrefixMatch(lowerField, prefix)) {
+          if (prefix.length > bestMatchPrefixLength) {
+            bestMatchPrefixLength = prefix.length;
+            bestMatchHeader = header;
+          }
+        }
+      }
+    }
+    if (bestMatchHeader !== null) {
+      return bestMatchHeader;
+    }
+
+    return "Ignore";
+  };
+
+  fields.forEach((field, index) => {
+    if (normalisedFields.has(field)) {
+      return;
+    }
+    const lowerField = lowerFields[index];
+    newNormalisedFields.set(field, findNormalisedHeader(lowerField));
+  });
+
+  return newNormalisedFields;
 }

@@ -16,18 +16,19 @@ import {
   UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
-import { FormData } from "../Model";
+import { ModelFormData } from "../modelFormState";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import { useFormData, useVariableFormState } from "./variableUtils";
+import { derivedIndex } from "../derivedVariable";
 
 interface Props {
   project: ProjectRead;
   compound: CompoundRead;
   model: CombinedModelRead;
   variable: VariableRead;
-  control: Control<FormData>;
+  control: Control<ModelFormData>;
   effectVariable: VariableRead | undefined;
   units: UnitRead[];
   timeVariable: VariableRead | undefined;
@@ -35,13 +36,13 @@ interface Props {
   isAnyDosingSelected: boolean;
   updateLinksToPd: (key: number, value: boolean) => void;
   updateLagTimes: (key: number, value: boolean) => void;
+  isAnyLagTimeSelected: boolean;
 }
-
-type DerivedVariableType = "AUC" | "RO" | "FUP" | "BPR" | "TLG";
 
 const VariableRow: FC<Props> = ({
   project,
   compound,
+  model,
   variable,
   control,
   effectVariable,
@@ -51,33 +52,45 @@ const VariableRow: FC<Props> = ({
   isAnyDosingSelected,
   updateLinksToPd,
   updateLagTimes,
+  isAnyLagTimeSelected,
 }) => {
-  const { mappings, derivedVariables } = useFormData({ control });
-  const { addProtocol, removeProtocol, setValue, updateVariable, hasProtocol } =
-    useVariableFormState({
-      compound,
-      project,
-      timeVariable,
-      units,
-      variable,
+  const {
+    mappings,
+    derivedVariables,
+    derivedVariablesAppend,
+    derivedVariablesRemove,
+  } = useFormData({ control });
+  const { addProtocol, removeProtocol, hasProtocol } = useVariableFormState({
+    compound,
+    project,
+    timeVariable,
+    units,
+    variable_from_list: variable,
+  });
+
+  const addTLG = () => {
+    derivedVariablesAppend({
+      pk_variable: variable.id,
+      pkpd_model: model.id,
+      type: "TLG",
     });
+  };
+
+  const tlgIndex = derivedIndex("TLG", derivedVariables, variable);
+
+  const removeTLG = () => {
+    derivedVariablesRemove(tlgIndex);
+  };
+
+  const onClickTLG = () => {
+    return tlgIndex >= 0 ? removeTLG() : addTLG();
+  };
 
   async function onAddProtocol() {
-    const value = await addProtocol();
-    if (value?.data) {
-      setValue("protocol", value.data.id);
-      updateVariable({
-        id: variable.id,
-        variable: { ...variable, protocol: value.data.id },
-      });
-    }
+    addProtocol();
   }
+
   async function onRemoveProtocol() {
-    setValue("protocol", null);
-    updateVariable({
-      id: variable.id,
-      variable: { ...variable, protocol: null },
-    });
     removeProtocol();
   }
 
@@ -91,12 +104,6 @@ const VariableRow: FC<Props> = ({
     : mappings.find((mapping) => mapping.pk_variable === variable.id) !==
       undefined;
 
-  const derivedIndex = (type: DerivedVariableType) => {
-    return derivedVariables.findIndex(
-      (ro) => ro.pk_variable === variable.id && ro.type === type,
-    );
-  };
-
   useEffect(() => {
     updateDosings(variable.id, hasProtocol);
   }, [variable.id, hasProtocol, updateDosings]);
@@ -105,7 +112,7 @@ const VariableRow: FC<Props> = ({
     updateLinksToPd(variable.id, linkToPD);
   }, [variable.id, linkToPD, updateLinksToPd]);
 
-  const isLinkedToTLG = derivedIndex("TLG") >= 0;
+  const isLinkedToTLG = derivedIndex("TLG", derivedVariables, variable) >= 0;
   useEffect(() => {
     updateLagTimes(variable.id, isLinkedToTLG);
   }, [variable.id, isLinkedToTLG, updateLagTimes]);
@@ -120,9 +127,10 @@ const VariableRow: FC<Props> = ({
 
   const concentrationUnit = units.find((unit) => unit.symbol === "pmol/L");
   const isClinical = project.species === "H";
-  const amountUnit = units.find(
-    (unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"),
-  );
+  const version_greater_than_2 = project.version ? project.version >= 3 : false;
+  const amountUnit = version_greater_than_2
+    ? units.find((unit) => unit.symbol === "pmol")
+    : units.find((unit) => unit.symbol === (isClinical ? "pmol" : "pmol/kg"));
   const variableUnit = units.find((unit) => unit.id === variable.unit);
   if (concentrationUnit === undefined || amountUnit === undefined) {
     return <>No concentration or amount unit found</>;
@@ -137,20 +145,28 @@ const VariableRow: FC<Props> = ({
     amountUnit?.compatible_units.find(
       (unit) => parseInt(unit.id) === variable.unit,
     ) !== undefined;
+  const isT1Amount = isAmount && variable.name.includes("T1");
+  const isT2Amount = isAmount && variable.name.includes("T2");
+  const isDrugAmount = isAmount && variable.name.includes("D");
+  // is a complex amount if two or more of T1, T2, D are in the name
+  const isComplexAmount =
+    (isT1Amount ? 1 : 0) + (isT2Amount ? 1 : 0) + (isDrugAmount ? 1 : 0) >= 2;
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
-  const noDosing = !isAmount;
+  const noDosing = !isAmount || isComplexAmount;
 
   if (noMapToPD && noDerivedVariables && noDosing) {
     return null;
   }
 
+  const variable_name = variable.name;
+
   return noDosing ? null : (
     <TableRow>
       <TableCell size="small" width="5rem">
         <Tooltip title={variable.description}>
-          <Typography>{variable.name}</Typography>
+          <Typography>{variable_name}</Typography>
         </Tooltip>
       </TableCell>
       <TableCell size="small" width="5rem">
@@ -159,6 +175,27 @@ const VariableRow: FC<Props> = ({
       <TableCell size="small" width="5rem">
         {isPD ? "PD" : "PK"}
       </TableCell>
+      {model.has_lag && (
+        <TableCell size="small" sx={{ width: "5rem" }}>
+          <FormControlLabel
+            control={
+              <MuiCheckbox
+                sx={{
+                  "& .MuiSvgIcon-root": {
+                    color: isAnyLagTimeSelected ? "inherit" : "red",
+                  },
+                }}
+                checked={isLinkedToTLG}
+                onClick={onClickTLG}
+                data-cy={`checkbox-tlag-${variable.name}`}
+                disabled={isSharedWithMe}
+                aria-label={`Lag time: ${variable.name}`}
+              />
+            }
+            label=""
+          />
+        </TableCell>
+      )}
       <TableCell size="small">
         {!noDosing && (
           <FormControlLabel

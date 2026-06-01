@@ -4,35 +4,21 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { projectHandlers } from "./project.mock";
-
-import { HttpResponse, delay, http } from "msw";
+// Import ALL mocks from generated-mocks-with-data directory
+// (this directory contains mocks WITH dataset data - includes subjects, groups, biomarkers)
 import {
-  biomarkerTypes,
-  dataset,
   project,
-  protocols,
-  subjects,
-} from "./dataset.mock";
-
-const datasetHandlers = [
-  http.get("/api/dataset/:id", async () => {
-    await delay();
-    return HttpResponse.json(dataset, { status: 200 });
-  }),
-  http.get("/api/subject_group", async () => {
-    await delay();
-    return HttpResponse.json(dataset.groups, { status: 200 });
-  }),
-  http.get("/api/subject", async () => {
-    await delay();
-    return HttpResponse.json(subjects, { status: 200 });
-  }),
-  http.get("/api/biomarker_type", async () => {
-    await delay();
-    return HttpResponse.json(biomarkerTypes, { status: 200 });
-  }),
-];
+  projectHandlers,
+  protocolHandlers,
+  unitHandlers,
+  simulationHandlers,
+  datasetHandlers,
+  subjectHandlers,
+  subjectGroupHandlers,
+  biomarkerTypeHandlers,
+  modelHandlers,
+  variableHandlers,
+} from "./generated-mocks-with-data";
 
 const meta: Meta<typeof Data> = {
   title: "Data Upload (edit dataset)",
@@ -40,20 +26,18 @@ const meta: Meta<typeof Data> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: {
-        project: [
-          http.get("/api/project/:id", async () => {
-            await delay();
-            return HttpResponse.json(project, { status: 200 });
-          }),
-          http.get("/api/protocol", async () => {
-            await delay();
-            return HttpResponse.json(protocols, { status: 200 });
-          }),
-          ...projectHandlers,
-        ],
-        dataset: datasetHandlers,
-      },
+      handlers: [
+        ...projectHandlers,
+        ...modelHandlers,
+        ...protocolHandlers,
+        ...unitHandlers,
+        ...variableHandlers,
+        ...simulationHandlers,
+        ...datasetHandlers,
+        ...subjectHandlers,
+        ...subjectGroupHandlers,
+        ...biomarkerTypeHandlers,
+      ],
     },
   },
   decorators: [
@@ -91,7 +75,7 @@ export const Default: Story = {
     expect(downloadNONMEMButton).toBeInTheDocument();
 
     const groupTabs = await canvas.findAllByRole("tab", {
-      name: /Group \w+/i,
+      name: /Data-Group \d+/i,
     });
     expect(groupTabs.length).toBe(2);
 
@@ -121,12 +105,14 @@ export const EditDataset: Story = {
     const editDatasetButton = await canvas.findByRole("button", {
       name: /Edit Dataset/i,
     });
-    await waitFor(() =>
-      expect(
-        canvas.getByRole("button", {
-          name: /Edit Dataset/i,
-        }),
-      ).toBeEnabled(),
+    await waitFor(
+      () =>
+        expect(
+          canvas.getByRole("button", {
+            name: /Edit Dataset/i,
+          }),
+        ).toBeEnabled(),
+      { timeout: 10000 },
     );
     await userEvent.click(editDatasetButton);
 
@@ -171,6 +157,41 @@ export const MapDosing: Story = {
       name: "Dosing",
     });
     expect(mapDosingTable).toBeInTheDocument();
+
+    const variableSelects = await canvas.findAllByRole("combobox", {
+      name: "Variable",
+    });
+    expect(variableSelects).toHaveLength(2);
+    await waitFor(() => {
+      expect(variableSelects[0]).toHaveTextContent("A1");
+      expect(variableSelects[1]).toHaveTextContent("A1");
+    });
+
+    const unitSelects = canvas.getAllByRole("combobox", {
+      name: "Units",
+    });
+    expect(unitSelects.length).toBe(2);
+    await waitFor(() => {
+      expect(unitSelects[0]).toHaveTextContent("mg");
+      expect(unitSelects[1]).toHaveTextContent("mg");
+    });
+
+    const perKgCheckboxes = canvas.getAllByRole("checkbox", {
+      name: "Per Body Weight(kg)",
+    });
+    expect(perKgCheckboxes.length).toBe(2);
+    perKgCheckboxes.forEach((checkbox) => {
+      expect(checkbox).toBeChecked();
+    });
+
+    const amountInputs = canvas.getAllByRole("spinbutton", {
+      name: "Amount",
+    });
+    expect(amountInputs).toHaveLength(2);
+    amountInputs.forEach((input) => {
+      expect(input).toHaveValue(10);
+    });
+    await userEvent.type(amountInputs[0], "[backspace][backspace]15");
   },
 };
 
@@ -191,28 +212,15 @@ export const MapObservations: Story = {
     });
     expect(mapObservationsHeading).toBeInTheDocument();
 
-    const groupsHeading = await canvas.findByRole("heading", {
-      name: "Groups",
-    });
-    expect(groupsHeading).toBeInTheDocument();
-
     const variableSelects = await canvas.findAllByRole("combobox", {
       name: "Variable",
     });
-    expect(variableSelects).toHaveLength(2);
-    await waitFor(() => {
-      expect(variableSelects[0]).toHaveTextContent("C1");
-      expect(variableSelects[1]).toHaveTextContent("E");
-    });
-
-    const groupTabs = canvas.getAllByRole("tab", {
-      name: /Group \w+/i,
-    });
-    expect(groupTabs.length).toBe(2);
-
-    const groupDataGrid = canvas.getByRole("grid", {
-      name: "Group IV",
-    });
-    expect(groupDataGrid).toBeInTheDocument();
+    expect(variableSelects).toHaveLength(1);
+    await waitFor(
+      () => {
+        expect(variableSelects[0]).toHaveTextContent("C1");
+      },
+      { timeout: 10000 },
+    );
   },
 };

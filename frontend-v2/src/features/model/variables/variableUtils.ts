@@ -3,16 +3,17 @@ import {
   CompoundRead,
   ProjectRead,
   UnitRead,
+  useVariableRetrieveQuery,
   useVariableUpdateMutation,
   Variable,
   VariableRead,
 } from "../../../app/backendApi";
-import { FormData } from "../Model";
+import { ModelFormData } from "../modelFormState";
 import { useEffect } from "react";
 import useDirty from "../../../hooks/useDirty";
 import useEditProtocol from "./useEditProtocol";
 
-export function useFormData({ control }: { control: Control<FormData> }) {
+export function useFormData({ control }: { control: Control<ModelFormData> }) {
   const {
     fields: mappings,
     append: mappingsAppend,
@@ -44,51 +45,57 @@ export function useVariableFormState({
   project,
   timeVariable,
   units,
-  variable,
+  variable_from_list,
 }: {
   compound: CompoundRead;
   project: ProjectRead;
   timeVariable: VariableRead | undefined;
   units: UnitRead[];
-  variable: VariableRead;
+  variable_from_list: VariableRead;
 }) {
+  const { data: variable_read, refetch: refetchVariable } =
+    useVariableRetrieveQuery({ id: variable_from_list.id });
+  const variable = variable_read || variable_from_list;
   const {
     handleSubmit,
-    formState: { isDirty: isDirtyVariable, submitCount },
+    formState: { isDirty: isDirtyVariable },
     setValue,
-    watch,
+    reset,
   } = useForm<Variable>({
-    defaultValues: variable || { id: 0, name: "" },
+    defaultValues: variable || { name: "" },
     values: variable,
   });
-  const watchProtocolId = watch("protocol");
-  const isDirty = watchProtocolId !== variable?.protocol || isDirtyVariable;
+  const isDirty = isDirtyVariable;
   useDirty(isDirty);
   const [updateVariable] = useVariableUpdateMutation();
-  const { addProtocol, removeProtocol, hasProtocol } = useEditProtocol({
+  const {
+    addProtocol: addProtocolOriginal,
+    removeProtocol: removeProtocolOriginal,
+    hasProtocol,
+    updateProtocol,
+  } = useEditProtocol({
     compound,
     project,
     units,
     timeVariable,
-    variable,
-    watchProtocolId,
+    variable: variable || { id: 0, qname: "", name: "" },
   });
 
+  const addProtocol = () => {
+    addProtocolOriginal().then(() => {
+      refetchVariable();
+    });
+  };
+
+  const removeProtocol = () => {
+    removeProtocolOriginal().then(() => {
+      refetchVariable();
+    });
+  };
+
   useEffect(() => {
-    if (isDirty && submitCount === 0) {
-      handleSubmit((data) => {
-        // @ts-expect-error - lower_bound and upper_bound can be null
-        if (data.lower_bound === "") {
-          data.lower_bound = null;
-        }
-        // @ts-expect-error - lower_bound and upper_bound can be null
-        if (data.upper_bound === "") {
-          data.upper_bound = null;
-        }
-        updateVariable({ id: variable.id, variable: data });
-      })();
-    }
-  }, [handleSubmit, isDirty, submitCount, updateVariable, variable.id]);
+    reset(variable_read);
+  }, [reset, variable_read]);
 
   return {
     handleSubmit,
@@ -98,5 +105,6 @@ export function useVariableFormState({
     addProtocol,
     removeProtocol,
     hasProtocol,
+    updateProtocol,
   };
 }

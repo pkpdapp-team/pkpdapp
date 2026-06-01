@@ -13,6 +13,8 @@ import {
   Tooltip,
   Stack,
   TextField as MaterialTextField,
+  Chip,
+  Autocomplete,
   ButtonBase,
 } from "@mui/material";
 import Delete from "@mui/icons-material/Delete";
@@ -52,6 +54,7 @@ interface Props {
   isSelected: boolean;
   otherProjectNames: string[];
   isAnyProjectSelected: boolean;
+  allTags: string[];
   compound?: CompoundRead;
 }
 
@@ -73,6 +76,7 @@ const ProjectEditorRow: FC<Props> = ({
   isSelected,
   isAnyProjectSelected,
   otherProjectNames,
+  allTags,
   compound,
 }) => {
   const dispatch = useDispatch();
@@ -225,6 +229,10 @@ const ProjectEditorRow: FC<Props> = ({
     return true;
   };
 
+  const tags = project.tags
+    ? project.tags.split(",").map((tag) => tag.trim())
+    : [];
+
   const copyProject = () => {
     projectCopyUpdate({ id: project.id, project: project });
   };
@@ -241,6 +249,8 @@ const ProjectEditorRow: FC<Props> = ({
 
     return 15;
   };
+
+  const unusedTags = allTags.filter((tag) => !tags.includes(tag));
 
   return (
     <>
@@ -300,6 +310,37 @@ const ProjectEditorRow: FC<Props> = ({
           <Typography component="span">
             {speciesOptions.find((s) => s.value === project.species)?.label}
           </Typography>
+        </TableCell>
+        <TableCell>
+          {isEditMode ? (
+            <Tooltip
+              title="Select tags. You can create a new tag by typing the name and pressing enter"
+              placement="top"
+            >
+              <Autocomplete
+                multiple
+                freeSolo
+                id="tags-standard"
+                options={unusedTags}
+                getOptionLabel={(option) => option}
+                defaultValue={tags}
+                onChange={(event, value) =>
+                  setValue("project.tags", value.join(","), {
+                    shouldDirty: true,
+                  })
+                }
+                renderInput={(params) => (
+                  <MaterialTextField {...params} variant="standard" />
+                )}
+              />
+            </Tooltip>
+          ) : (
+            <Stack direction="row" spacing={0.5}>
+              {tags.map((tag) => (
+                <Chip key={tag} label={tag} />
+              ))}
+            </Stack>
+          )}
         </TableCell>
         <TableCell>
           {isEditMode ? (
@@ -370,11 +411,11 @@ const ProjectEditorRow: FC<Props> = ({
               </Tooltip>
               {isSharedWithMe && (
                 <Tooltip title="This project is shared with me as view-only">
-                  <div>
+                  <span>
                     <IconButton disabled>
                       <VisibilityIcon />
                     </IconButton>
-                  </div>
+                  </span>
                 </Tooltip>
               )}
             </Stack>
@@ -448,7 +489,11 @@ const ProjectRow: FC<Props> = (props) => {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <TableRow>
+        <TableCell colSpan={6}>Loading...</TableCell>
+      </TableRow>
+    );
   }
 
   return <ProjectEditorRow {...props} compound={compound} />;

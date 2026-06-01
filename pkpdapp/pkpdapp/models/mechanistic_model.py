@@ -7,6 +7,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from pkpdapp.models import MyokitModelMixin
+from pkpdapp.models.tag import Tag
 
 
 class MechanisticModel(models.Model, MyokitModelMixin):
@@ -51,6 +52,30 @@ class MechanisticModel(models.Model, MyokitModelMixin):
             "whether this model is a library model (i.e. it is not an "
             "uploaded user model)"
         ),
+    )
+
+    # model_type field, possible model types are PK-Model, PD-Model,
+    # PK-Extravascular, or Tumor-Growth
+    class ModelType(models.TextChoices):
+        PK_MODEL = "PK", "PK-Model"
+        PK_EFFECT_COMPARTMENT = "PKEF", "PK-Effect-Compartment"
+        PK_EXTRAVASCULAR = "PKEX", "PK-Extravascular"
+        PD_MODEL = "PD", "PD-Model"
+        TUMOR_GROWTH = "TG", "Tumor-Growth"
+        TUMOR_GROWTH_INHIBITION = "TGI", "Tumor-Growth-Inhibition"
+
+    model_type = models.CharField(
+        blank=True,
+        null=True,
+        max_length=4,
+        choices=ModelType.choices,
+        help_text="type of model",
+    )
+
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        help_text="tags for the model",
     )
 
     class Meta:

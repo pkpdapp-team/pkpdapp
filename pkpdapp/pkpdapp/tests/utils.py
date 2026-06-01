@@ -4,11 +4,14 @@
 # copyright notice and full license details.
 #
 from pkpdapp.models import (
-    Inference, PharmacodynamicModel,
+    Inference,
+    PharmacodynamicModel,
     CombinedModel,
     Unit,
     LogLikelihood,
-    Project, BiomarkerType, Biomarker,
+    Project,
+    BiomarkerType,
+    Biomarker,
     Algorithm,
     Dataset,
     Subject,
@@ -20,31 +23,32 @@ def create_pd_inference(sampling=False):
     compound = Compound.objects.create(name="demo")
     project = Project.objects.create(name="demo", compound=compound)
     pd = PharmacodynamicModel.objects.get(
-        name='tumour_growth_gompertz',
+        name="tumour_growth_gompertz",
         read_only=False,
     )
     model = CombinedModel.objects.create(
-        name='my wonderful model',
+        name="my wonderful model",
         pd_model=pd,
+        project=project,
     )
     # generate some fake data
-    output = model.variables.get(qname='PDCompartment.TS')
-    time = model.variables.get(qname='environment.t')
+    output = model.variables.get(qname="PDCompartment.TS")
+    time = model.variables.get(qname="environment.t")
     data = model.simulate(outputs=[output.qname, time.qname])[0]
     print(data)
     TS = data[output.id]
     times = data[time.id]
     dataset = Dataset.objects.create(
-        name='fake data',
+        name="fake data",
         project=project,
     )
     bt = BiomarkerType.objects.create(
-        name='fake data',
+        name="fake data",
         dataset=dataset,
-        stored_unit=Unit.objects.get(symbol='mL'),
-        display_unit=Unit.objects.get(symbol='mL'),
-        stored_time_unit=Unit.objects.get(symbol='day'),
-        display_time_unit=Unit.objects.get(symbol='day'),
+        stored_unit=Unit.objects.get(symbol="mL"),
+        display_unit=Unit.objects.get(symbol="mL"),
+        stored_time_unit=Unit.objects.get(symbol="day"),
+        display_time_unit=Unit.objects.get(symbol="day"),
     )
     subject1 = Subject.objects.create(
         id_in_dataset=1,
@@ -70,12 +74,12 @@ def create_pd_inference(sampling=False):
         )
 
     bt_covariate = BiomarkerType.objects.create(
-        name='fake body weight',
+        name="fake body weight",
         dataset=dataset,
-        stored_unit=Unit.objects.get(symbol='kg'),
-        display_unit=Unit.objects.get(symbol='kg'),
-        stored_time_unit=Unit.objects.get(symbol='day'),
-        display_time_unit=Unit.objects.get(symbol='day'),
+        stored_unit=Unit.objects.get(symbol="kg"),
+        display_unit=Unit.objects.get(symbol="kg"),
+        stored_time_unit=Unit.objects.get(symbol="day"),
+        display_time_unit=Unit.objects.get(symbol="day"),
     )
 
     for s in [subject1, subject2]:
@@ -86,11 +90,13 @@ def create_pd_inference(sampling=False):
             subject=s,
         )
 
-    algorithm = Algorithm.objects.get(
-        name='Haario-Bardenet') if sampling \
-        else Algorithm.objects.get(name='XNES')
+    algorithm = (
+        Algorithm.objects.get(name="Haario-Bardenet")
+        if sampling
+        else Algorithm.objects.get(name="XNES")
+    )
     inference = Inference.objects.create(
-        name='bob',
+        name="bob",
         project=project,
         max_number_of_iterations=10,
         algorithm=algorithm,
@@ -100,12 +106,12 @@ def create_pd_inference(sampling=False):
     log_likelihood = LogLikelihood.objects.create(
         variable=model.variables.first(),
         inference=inference,
-        form=LogLikelihood.Form.MODEL
+        form=LogLikelihood.Form.MODEL,
     )
 
     # remove all outputs except
     output_names = [
-        'PDCompartment.TS',
+        "PDCompartment.TS",
     ]
     outputs = []
     for output in log_likelihood.outputs.all():

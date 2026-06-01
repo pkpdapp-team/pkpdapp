@@ -1,0 +1,67 @@
+[[model]]
+name: Transit compartments absorption model
+author: Michael Gertz
+
+# tags: no tags
+
+# Initial values:
+PKCompartment.Aa = 0
+PKCompartment.Atr1 = 0
+PKCompartment.Atr2 = 0
+PKCompartment.Atr3 = 0
+PKCompartment.Atr4 = 0
+PKCompartment.Atr5 = 0
+PKCompartment.Atr6 = 0
+PKCompartment.Atr7 = 0
+PKCompartment.Atr8 = 0
+PKCompartment.Atr9 = 0
+PKCompartment.Atr10 = 0
+
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+ka = 1 in [1/h]
+    desc: First order absorption rate constant 
+	
+ktrA = 1 in [1/h]
+    desc: Transit rate constant of absorption 
+
+RateAbs = ka*Aa in [pmol/h]
+	desc: Absorption rate
+
+dot(Atr10) = -ktrA*Atr10 in [pmol]
+    desc: Amount of drug in the 10th transit compartment
+
+dot(Atr9) = ktrA*(Atr10-Atr9) in [pmol]
+    desc: Amount of drug in the 9th transit compartment
+
+dot(Atr8) = ktrA*(Atr9-Atr8) in [pmol]
+    desc: Amount of drug in the 8th transit compartment	
+	
+dot(Atr7) = ktrA*(Atr8-Atr7) in [pmol]
+    desc: Amount of drug in the 7th transit compartment
+
+dot(Atr6) = ktrA*(Atr7-Atr6) in [pmol]
+    desc: Amount of drug in the 6th transit compartment	
+	
+dot(Atr5) = ktrA*(Atr6-Atr5) in [pmol]
+    desc: Amount of drug in the 5th transit compartment
+
+dot(Atr4) = ktrA*(Atr5-Atr4) in [pmol]
+    desc: Amount of drug in the 4th transit compartment	
+	
+dot(Atr3) = ktrA*(Atr4-Atr3) in [pmol]
+    desc: Amount of drug in the 3rd transit compartment
+
+dot(Atr2) = ktrA*(Atr3-Atr2) in [pmol]
+    desc: Amount of drug in the 2nd transit compartment
+
+dot(Atr1) = ktrA*(Atr2-Atr1) in [pmol]
+    desc: Amount of drug in the 1st transit compartment (most proximal to absorption compartment)	
+
+dot(Aa) = ktrA*Atr1 -RateAbs in [pmol]
+    desc: Amount of drug in absorption compartment

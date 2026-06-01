@@ -11,9 +11,7 @@ from django.core.exceptions import ValidationError
 
 def validate_duration(value):
     if value <= 0:
-        raise ValidationError(
-            'Duration should be greater than 0'
-        )
+        raise ValidationError("Duration should be greater than 0")
 
 
 class DoseBase(models.Model):
@@ -22,41 +20,33 @@ class DoseBase(models.Model):
     """
 
     start_time = models.FloatField(
-        help_text=(
-            'starting time point of dose, '
-            'see protocol for units'
-        )
+        help_text=("starting time point of dose, " "see protocol for units")
     )
     amount = models.FloatField(
         help_text=(
-            'amount of compound administered over the duration, '
-            'see protocol for units. Rate of administration is '
-            'assumed constant'
+            "amount of compound administered over the duration, "
+            "see protocol for units. Rate of administration is "
+            "assumed constant"
         )
     )
     duration = models.FloatField(
         default=1.0,
         help_text=(
-            'Duration of dose administration, '
-            'see protocol for units. '
-            'Duration must be greater than 0.'
+            "Duration of dose administration, "
+            "see protocol for units. "
+            "Duration must be greater than 0."
         ),
-        validators=[validate_duration]
+        validators=[validate_duration],
     )
 
     repeats = models.IntegerField(
         default=1,
-        help_text=(
-            'Number of times to repeat the dose. '
-        ),
+        help_text=("Number of times to repeat the dose. "),
     )
 
     repeat_interval = models.FloatField(
         default=1.0,
-        help_text=(
-            'Interval between repeated doses. '
-            'See protocol for units. '
-        ),
+        help_text=("Interval between repeated doses. " "See protocol for units. "),
     )
 
     class Meta:
@@ -74,9 +64,8 @@ class DoseBase(models.Model):
         super().save(force_insert, force_update, *args, **kwargs)
 
         models = set()
-        for v in self.protocol.variables.all().select_related(
-            'dosed_pk_model'
-        ):
+        v = self.protocol.variable
+        if v is not None:
             models.add(v.dosed_pk_model)
         for m in models:
             m.update_simulator()
@@ -93,20 +82,23 @@ class DoseBase(models.Model):
 
 class Dose(DoseBase, StoredModel):
     protocol = models.ForeignKey(
-        Protocol, on_delete=models.CASCADE,
-        related_name='doses',
-        help_text='protocol containing this dose',
-        default=None, null=True, blank=True
+        Protocol,
+        on_delete=models.CASCADE,
+        related_name="doses",
+        help_text="protocol containing this dose",
+        default=None,
+        null=True,
+        blank=True,
     )
 
     def copy(self, stored_protocol):
         stored_dose_kwargs = {
-            'protocol': stored_protocol,
-            'start_time': self.start_time,
-            'amount': self.amount,
-            'duration': self.duration,
-            'repeats': self.repeats,
-            'repeat_interval': self.repeat_interval,
-            'read_only': True,
+            "protocol": stored_protocol,
+            "start_time": self.start_time,
+            "amount": self.amount,
+            "duration": self.duration,
+            "repeats": self.repeats,
+            "repeat_interval": self.repeat_interval,
+            "read_only": True,
         }
         return Dose.objects.create(**stored_dose_kwargs)

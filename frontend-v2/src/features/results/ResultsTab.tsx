@@ -70,9 +70,8 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const { updateResults } = useResults();
 
   const loaded =
-    (intervals.length &&
-      concentrationVariables.length &&
-      parameters.length) > 0;
+    (intervals.length && concentrationVariables.length && parameters.length) >
+    0;
   if (!loaded) {
     return <div>Loading...</div>;
   }
@@ -105,7 +104,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
         ? concentrationVariables
         : rows === "intervals"
           ? intervals
-          : [{ name: "Project" }, ...groups];
+          : [{ name: "Sim-Group 1" }, ...groups];
   const rowColumn =
     rows === "parameters"
       ? "Parameter"
@@ -200,7 +199,7 @@ const ResultsTab: FC<{ table: ResultsTableRead }> = ({ table }) => {
   const groupSelect = {
     filter: handleGroupChange,
     value: group,
-    items: [{ name: "Project" }, ...groups],
+    items: [{ name: "Sim-Group 1" }, ...groups],
     label: "Group",
   };
   const intervalSelect = {

@@ -11,6 +11,12 @@ import {
   IconButton,
   SvgIcon,
   Box,
+  OutlinedInput,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Chip,
 } from "@mui/material";
 import {
   Compound,
@@ -22,6 +28,7 @@ import {
   useSimulationCreateMutation,
   useUnitListQuery,
   useCompoundListQuery,
+  useTagListQuery,
   CompoundRead,
   ProjectRead,
 } from "../../app/backendApi";
@@ -83,10 +90,11 @@ enum SortOptions {
   COMPOUND = "compound",
 }
 
-const SM_SIM_TIME = 24;
-const LM_SIM_TIME = 168;
+const SM_SIM_TIME = 48;
+const LM_SIM_TIME = 672;
 const ProjectTable: FC = () => {
   const [sortBy, setSortBy] = useState<SortOptions>(SortOptions.CREATED);
+  const [filterBy, setFilterBy] = useState<string[]>([]);
 
   const handleSortBy = (option: SortOptions) => {
     setSortBy((prev) => {
@@ -104,8 +112,9 @@ const ProjectTable: FC = () => {
   const user = useSelector((state: RootState) => state.login.user);
   const { data: compounds, isLoading: compoundsLoading } =
     useCompoundListQuery();
+  const { data: tagsData, isLoading: tagsLoading } = useTagListQuery();
 
-  const projects = projectsUnordered ? [...projectsUnordered] : undefined;
+  let projects = projectsUnordered ? [...projectsUnordered] : undefined;
 
   const { data: units, isLoading: unitsLoading } = useUnitListQuery({});
 
@@ -116,8 +125,25 @@ const ProjectTable: FC = () => {
   const [addSimulation] = useSimulationCreateMutation();
   const { addDataset } = useDataset(selectedProject);
 
-  if (isLoading || unitsLoading || compoundsLoading) {
+  if (isLoading || unitsLoading || compoundsLoading || tagsLoading) {
     return <div>Loading...</div>;
+  }
+
+  const allTagsSet = projects?.reduce((acc, project) => {
+    if (project.tags) {
+      project.tags.split(",").forEach((tag) => {
+        acc.add(tag.trim());
+      });
+    }
+    return acc;
+  }, new Set<string>());
+  const allTags = allTagsSet ? Array.from(allTagsSet) : [];
+
+  if (filterBy.length > 0) {
+    projects = projects?.filter((project) => {
+      const tags = project.tags ? project.tags.split(",") : [];
+      return filterBy.every((tag) => tags.includes(tag));
+    });
   }
 
   const compoundNames = compounds?.reduce(
@@ -154,6 +180,7 @@ const ProjectTable: FC = () => {
   }
 
   const projectNames = projects?.map((project) => project.name) || [];
+  const favoritePkTagId = tagsData?.find((tag) => tag.name === "favorites")?.id;
   const handleAddRow = (type: "SM" | "LM") => {
     const user_access = [
       { id: user?.id || 0, read_only: false, user: user?.id || 0, project: 0 },
@@ -167,11 +194,15 @@ const ProjectTable: FC = () => {
       new_name = `${new_name_base}${append}`;
       name_exists = projectNames.includes(new_name);
     }
+
+    const kg_unit = units?.find((u) => u.symbol === "kg")?.id;
     const project: Project = {
       name: new_name,
       description: "",
       compound: 0,
       user_access,
+      species_weight_unit: kg_unit,
+      pk_tags: favoritePkTagId ? [favoritePkTagId] : [],
     };
 
     let compound: Compound | undefined = undefined;
@@ -180,7 +211,6 @@ const ProjectTable: FC = () => {
         name: "untitled",
         description: "",
         compound_type: "SM",
-        efficacy_experiments: [],
         dissociation_constant: 500,
       };
     } else if (type === "LM") {
@@ -188,7 +218,6 @@ const ProjectTable: FC = () => {
         name: "untitled",
         description: "",
         compound_type: "LM",
-        efficacy_experiments: [],
         molecular_mass: 150000,
         fraction_unbound_plasma: 1.0,
         dissociation_constant: 1,
@@ -211,7 +240,7 @@ const ProjectTable: FC = () => {
               name: "Table 1",
               project: newProject.data.id,
               columns: "parameters",
-              rows: "variables",
+              rows: "groups",
               filters: {
                 parameterIndex: "columns",
                 variableIndex: "rows",
@@ -274,6 +303,40 @@ const ProjectTable: FC = () => {
           New Project
         </DropdownButton>
       </Box>
+      <FormControl sx={{ m: 1, width: 300 }} size="small">
+        <InputLabel id="filter-by-tags-label">Filter By Tag</InputLabel>
+        <Select
+          labelId="filter-by-tags-label"
+          id="filter-by-tags"
+          multiple
+          value={filterBy}
+          onChange={(event) => {
+            const {
+              target: { value },
+            } = event;
+            setFilterBy(
+              // On autofill we get a stringified value.
+              typeof value === "string" ? value.split(",") : value,
+            );
+          }}
+          input={
+            <OutlinedInput id="filter-by-tags-chip" label="Filter By Tag" />
+          }
+          renderValue={(selected) => (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+              {selected.map((value) => (
+                <Chip key={value} label={value} />
+              ))}
+            </Box>
+          )}
+        >
+          {allTags.map((tag) => (
+            <MenuItem key={tag} value={tag}>
+              {tag}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <TableContainer
         sx={{
           height: getTableHeight({ steps: PROJECT_TABLE_BREAKPOINTS }),
@@ -359,6 +422,9 @@ const ProjectTable: FC = () => {
                   </div>
                 </TableCell>
                 <TableCell sx={{ borderBottom: "solid 2px blue" }}>
+                  <div style={{ ...defaultHeaderSx }}>Tags </div>
+                </TableCell>
+                <TableCell sx={{ borderBottom: "solid 2px blue" }}>
                   <div style={{ ...defaultHeaderSx }}>Description </div>
                 </TableCell>
                 <TableCell
@@ -384,6 +450,7 @@ const ProjectTable: FC = () => {
                     .slice(0, i)
                     .concat(projectNames.slice(i + 1))}
                   isSelected={selectedProject === project.id}
+                  allTags={allTags}
                 />
               ))}
             </TableBody>

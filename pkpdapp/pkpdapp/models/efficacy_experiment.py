@@ -5,48 +5,43 @@
 #
 
 from django.db import models
-from pkpdapp.models import (
-    Compound
-)
+from pkpdapp.models import Compound
 
 
 class EfficacyExperiment(models.Model):
     name = models.CharField(
-        max_length=100, help_text='name of the experiment',
-        blank=True, default=''
+        max_length=100, help_text="name of the experiment", blank=True, default=""
     )
 
-    c50 = models.FloatField(
-        help_text=(
-            'half maximal effective concentration'
-        )
-    )
+    c50 = models.FloatField(help_text=("half maximal effective concentration"))
 
     c50_unit = models.ForeignKey(
-        'Unit', on_delete=models.PROTECT,
-        related_name='efficacy_experiments',
-        help_text='unit for c50'
+        "Unit",
+        on_delete=models.PROTECT,
+        related_name="efficacy_experiments",
+        help_text="unit for c50",
     )
 
     hill_coefficient = models.FloatField(
-        default=1.0,
-        help_text=(
-            'Hill coefficient measure of binding'
-        )
+        default=1.0, help_text=("Hill coefficient measure of binding")
     )
 
     compound = models.ForeignKey(
-        Compound, on_delete=models.CASCADE,
-        related_name='efficacy_experiments',
-        help_text='compound for efficacy experiment'
+        Compound,
+        on_delete=models.CASCADE,
+        related_name="efficacy_experiments",
+        help_text="compound for efficacy experiment",
     )
+
+    def get_project(self):
+        return self.compound.get_project()
 
     def copy(self, compound):
         kwargs = {
-            'name': self.name,
-            'c50': self.c50,
-            'c50_unit': self.c50_unit,
-            'hill_coefficient': self.hill_coefficient,
-            'compound': compound,
+            "name": self.name,
+            "c50": self.c50,
+            "c50_unit": self.c50_unit,
+            "hill_coefficient": self.hill_coefficient,
+            "compound": compound,
         }
         return EfficacyExperiment.objects.create(**kwargs)

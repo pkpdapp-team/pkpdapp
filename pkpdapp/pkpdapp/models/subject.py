@@ -12,41 +12,46 @@ class Subject(models.Model):
     """
     A subject in a particular dataset.
     """
-    id_in_dataset = models.IntegerField(help_text='unique id in the dataset')
+
+    id_in_dataset = models.IntegerField(help_text="unique id in the dataset")
     dataset = models.ForeignKey(
-        'Dataset', on_delete=models.CASCADE,
-        related_name='subjects',
-        help_text='dataset containing this subject'
+        "Dataset",
+        on_delete=models.CASCADE,
+        related_name="subjects",
+        help_text="dataset containing this subject",
     )
     protocol = models.ForeignKey(
-        'Protocol', on_delete=models.SET_NULL,
-        related_name='subjects',
-        blank=True, null=True,
-        help_text='dosing protocol for this subject.'
+        "Protocol",
+        on_delete=models.SET_NULL,
+        related_name="subjects",
+        blank=True,
+        null=True,
+        help_text="dosing protocol for this subject.",
     )
     shape = models.IntegerField(
         default=0,
         help_text=(
-            'Shape index associated with this subject. '
-            'For plotting purposes in the frontend'
-        )
+            "Shape index associated with this subject. "
+            "For plotting purposes in the frontend"
+        ),
     )
     display = models.BooleanField(
         default=True,
         help_text=(
-            'True if this subject will be displayed in the '
-            'frontend, False otherwise'
-        )
+            "True if this subject will be displayed in the " "frontend, False otherwise"
+        ),
     )
     metadata = JSONField(
         default=dict,
-        help_text='subject metadata',
+        help_text="subject metadata",
     )
     group = models.ForeignKey(
-        'SubjectGroup', on_delete=models.CASCADE,
-        related_name='subjects',
-        blank=True, null=True,
-        help_text='subject group containing this subject.'
+        "SubjectGroup",
+        on_delete=models.CASCADE,
+        related_name="subjects",
+        blank=True,
+        null=True,
+        help_text="subject group containing this subject.",
     )
 
     def get_project(self):
@@ -54,9 +59,26 @@ class Subject(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['id_in_dataset', 'dataset'],
-                                    name='subject_dataset_unique'),
+            models.UniqueConstraint(
+                fields=["id_in_dataset", "dataset"], name="subject_dataset_unique"
+            ),
         ]
 
     def __str__(self):
         return str(self.id_in_dataset)
+
+    def copy(self, new_protocol, new_dataset, new_group):
+        """
+        Create a copy of this subject with the same values but a different
+        protocol, dataset and group.
+        """
+        new_subject = Subject.objects.create(
+            id_in_dataset=self.id_in_dataset,
+            dataset=new_dataset,
+            protocol=new_protocol,
+            shape=self.shape,
+            display=self.display,
+            metadata=self.metadata,
+            group=new_group,
+        )
+        return new_subject

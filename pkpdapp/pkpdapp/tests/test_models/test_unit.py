@@ -5,8 +5,10 @@
 #
 
 import pkpdapp.tests  # noqa: F401
+from django.db.models import Q
 from django.test import TestCase
 from pkpdapp.models import Unit, Compound
+from math import log10
 
 
 class TestUnitModel(TestCase):
@@ -16,12 +18,21 @@ class TestUnitModel(TestCase):
             description="description for my cool compound",
         )
 
+    def check_myokit_unit(self, unit_symbol):
+        unit = Unit.objects.get(symbol=unit_symbol)
+        myokit_unit = unit.get_myokit_unit()
+        self.assertEqual(unit.multiplier, log10(myokit_unit.multiplier()))
+
     def check_compatible_unit(self, unit_symbol, compatible_units, compound=None):
         unit = Unit.objects.get(symbol=unit_symbol)
         compat_symbols = [
             u.symbol for u in unit.get_compatible_units(compound=compound)
         ]
         self.assertCountEqual(compat_symbols, compatible_units)
+
+    def test_time_unit_conversion(self):
+        for symbol in ["s", "min", "h", "day", "week"]:
+            self.check_myokit_unit(symbol)
 
     def test_compatible_units(self):
         self.check_compatible_unit("s", ["s", "min", "h", "day", "week"])
@@ -46,13 +57,13 @@ class TestUnitModel(TestCase):
         self.check_compatible_unit("nmol", ["mol", "nmol", "pmol", "µmol"])
         self.check_compatible_unit(
             "nmol",
-            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg", "µg"],
             compound=self.compound,
         )
-        self.check_compatible_unit("mg", ["mg", "g", "ng", "kg"])
+        self.check_compatible_unit("mg", ["mg", "g", "ng", "kg", "µg"])
         self.check_compatible_unit(
             "mg",
-            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg"],
+            ["mol", "nmol", "pmol", "µmol", "mg", "g", "ng", "kg", "µg"],
             compound=self.compound,
         )
         self.check_compatible_unit(
@@ -107,4 +118,72 @@ class TestUnitModel(TestCase):
                 "",
             ],
             compound=self.compound,
+        )
+
+    def test_mm3_unit_compatibility(self):
+        """Test that mm³ is compatible with other volume units"""
+        self.check_compatible_unit("mm³", ["L", "mL", "mm³"])
+
+    def test_mm3_unit_conversions(self):
+        """Test conversion factors for mm³"""
+        mm3 = Unit.objects.get(symbol="mm³")
+        mL = Unit.objects.get(symbol="mL")
+        L = Unit.objects.get(symbol="L")
+
+        # 1 mL = 1000 mm³
+        self.assertAlmostEqual(mm3.convert_to(mL), 1e-3, places=9)
+
+        # 1 L = 1,000,000 mm³
+        self.assertAlmostEqual(mm3.convert_to(L), 1e-6, places=9)
+
+    def test_ug_unit_compatibility(self):
+        """Test that µg is compatible with other mass units"""
+        self.check_compatible_unit("µg", ["mg", "g", "ng", "kg", "µg"])
+
+    def test_ug_unit_conversions(self):
+        """Test conversion factors for µg"""
+        ug = Unit.objects.get(symbol="µg")
+        mg = Unit.objects.get(symbol="mg")
+        g = Unit.objects.get(symbol="g")
+        ng = Unit.objects.get(symbol="ng")
+
+        # 1 mg = 1000 µg
+        self.assertAlmostEqual(ug.convert_to(mg), 1e-3, places=9)
+
+        # 1 g = 1,000,000 µg
+        self.assertAlmostEqual(ug.convert_to(g), 1e-6, places=9)
+
+        # 1 µg = 1000 ng
+        self.assertAlmostEqual(ug.convert_to(ng), 1e3, places=9)
+
+    def test_all_auc_units_exist(self):
+        tolerance = 1e-9
+        concentration_units = Unit.objects.filter(
+            Q(
+                g__range=(1 - tolerance, 1 + tolerance),
+                mol__range=(-tolerance, tolerance),
+            )
+            | Q(
+                mol__range=(1 - tolerance, 1 + tolerance),
+                g__range=(-tolerance, tolerance),
+            ),
+            m__range=(-3 - tolerance, -3 + tolerance),
+            s__range=(-tolerance, tolerance),
+            A__range=(-tolerance, tolerance),
+            K__range=(-tolerance, tolerance),
+            cd__range=(-tolerance, tolerance),
+        )
+        time_units = [unit for unit in Unit.objects.all() if unit.is_time_unit()]
+
+        missing_units = []
+        for time_unit in time_units:
+            for concentration_unit in concentration_units:
+                auc_unit_symbol = f"{time_unit.symbol}*{concentration_unit.symbol}"
+                if not Unit.objects.filter(symbol=auc_unit_symbol).exists():
+                    missing_units.append(auc_unit_symbol)
+
+        self.assertEqual(
+            missing_units,
+            [],
+            "Missing AUC units: {}".format(", ".join(missing_units)),
         )

@@ -21,13 +21,17 @@ import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import {
+  useCombinedModelListQuery,
   TimeIntervalRead,
   useProjectRetrieveQuery,
   useUnitListQuery,
+  useVariableListQuery,
+  useVariablePartialUpdateMutation,
 } from "../../../app/backendApi";
 import { RootState } from "../../../app/store";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
+import { getAucVariable, getCompositeAucUnit } from "./utils";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -61,19 +65,46 @@ const TABLE_BREAKPOINTS = [
 ];
 
 function useTimeUnits() {
+  const units = useUnits();
+  const hourUnit = units?.find((unit) => unit.symbol === "h");
+  return hourUnit?.compatible_units || [];
+}
+
+function useProjectModel() {
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const projectIdOrZero = projectId || 0;
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  return models?.[0] || null;
+}
+
+function useUnits() {
+  const projectId = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const projectIdOrZero = projectId || 0;
   const { data: project } = useProjectRetrieveQuery(
-    { id: projectId || 0 },
+    { id: projectIdOrZero },
     { skip: !projectId },
   );
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound },
     { skip: !project || !project.compound },
   );
-  const hourUnit = units?.find((unit) => unit.symbol === "h");
-  return hourUnit?.compatible_units || [];
+  return units;
+}
+
+function useVariables() {
+  const model = useProjectModel();
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
+  return variables || [];
 }
 
 function TimeUnitSelect() {
@@ -83,7 +114,11 @@ function TimeUnitSelect() {
   const [selectedUnit, setSelectedUnit] = useState(
     interval?.unit || defaultTimeUnit,
   );
+  const model = useProjectModel();
+  const variables = useVariables();
+  const units = useUnits();
   const timeUnits = useTimeUnits();
+  const [updateVariable] = useVariablePartialUpdateMutation();
   const timeUnitOptions =
     timeUnits?.map((unit) => ({ value: unit.id, label: unit.symbol })) || [];
 
@@ -92,6 +127,26 @@ function TimeUnitSelect() {
     if (unit) {
       setSelectedUnit(+unit.id);
       setIntervals(intervals.map((i) => ({ ...i, unit: +unit.id })));
+      if (model && units) {
+        model.derived_variables
+          .filter((dv) => dv.type === "AUC")
+          .forEach((derivedVariable) => {
+            const variable = variables.find(
+              (v) => v.id === derivedVariable.pk_variable,
+            );
+            if (!variable) {
+              return;
+            }
+            const aucVariable = getAucVariable(variable, variables);
+            const aucUnit = getCompositeAucUnit(unit, variable, units);
+            if (aucVariable && aucUnit) {
+              updateVariable({
+                id: aucVariable.id,
+                patchedVariable: { secondary_unit: aucUnit.id },
+              });
+            }
+          });
+      }
     }
   }
 

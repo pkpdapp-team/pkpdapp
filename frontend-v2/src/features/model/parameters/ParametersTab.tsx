@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { Control } from "react-hook-form";
 import {
   CombinedModelRead,
   ProjectRead,
@@ -20,9 +21,10 @@ import {
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
 import HelpButton from "../../../components/HelpButton";
-import { getConstVariables, getNoReset } from "./resetToSpeciesDefaults";
+import { useConstVariables, useNoReset } from "./getConstVariables";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
 import { useSelector } from "react-redux";
+import { ModelFormData } from "../modelFormState";
 import { RootState } from "../../../app/store";
 import { selectIsProjectShared } from "../../login/loginSlice";
 import {
@@ -35,10 +37,17 @@ interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
   variables: VariableRead[];
+  control: Control<ModelFormData>;
   units: UnitRead[];
 }
 
-const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
+const ParametersTab: FC<Props> = ({
+  model,
+  project,
+  variables,
+  units,
+  control,
+}) => {
   const [setParamsToDefault] =
     useCombinedModelSetParamsToDefaultsUpdateMutation();
 
@@ -46,8 +55,8 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
     selectIsProjectShared(state, project),
   );
 
-  const constVariables = getConstVariables(variables, model);
-  const noReset = getNoReset(project);
+  const constVariables = useConstVariables();
+  const noReset = useNoReset();
 
   const myResetToSpeciesDefaults = () => {
     setParamsToDefault({ id: model.id, combinedModel: model });
@@ -121,6 +130,12 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
                   </HelpButton>{" "}
                 </div>
               </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>Nonlinearity</div>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -131,8 +146,11 @@ const ParametersTab: FC<Props> = ({ model, project, variables, units }) => {
             )}
             {constVariables.map((variable) => (
               <ParameterRow
+                model={model}
+                variables={variables}
+                modelControl={control}
                 key={variable.id}
-                variable={variable}
+                variable_from_list={variable}
                 project={project}
                 units={units}
               />

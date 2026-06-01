@@ -373,6 +373,11 @@ paths:
     put:
       operationId: combined_model_update
       parameters:
+      - in: query
+        name: delete_protocols
+        schema:
+          type: boolean
+        description: Delete linked protocols and dosing variables.
       - in: path
         name: id
         schema:
@@ -1022,6 +1027,12 @@ paths:
   /api/efficacy_experiment/:
     get:
       operationId: efficacy_experiment_list
+      parameters:
+      - in: query
+        name: compound_id
+        schema:
+          type: integer
+        description: Filter results by compound ID
       tags:
       - efficacy_experiment
       security:
@@ -3087,6 +3098,147 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/tag/:
+    get:
+      operationId: tag_list
+      tags:
+      - tag
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+    post:
+      operationId: tag_create
+      tags:
+      - tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Tag'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/tag/{id}/:
+    get:
+      operationId: tag_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this tag.
+        required: true
+      tags:
+      - tag
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    put:
+      operationId: tag_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this tag.
+        required: true
+      tags:
+      - tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Tag'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Tag'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    patch:
+      operationId: tag_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this tag.
+        required: true
+      tags:
+      - tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTag'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    delete:
+      operationId: tag_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this tag.
+        required: true
+      tags:
+      - tag
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/unit/:
     get:
       operationId: unit_list
@@ -3610,10 +3762,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -3629,6 +3777,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
       required:
       - data
       - dataset
@@ -3640,6 +3792,9 @@ components:
       - name
       - stored_time_unit
       - stored_unit
+    BlankEnum:
+      enum:
+      - ''
     CategoryEnum:
       enum:
       - SA
@@ -3691,6 +3846,10 @@ components:
         mmt:
           type: string
           readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
+          readOnly: true
         sbml:
           type: string
           readOnly: true
@@ -3725,12 +3884,21 @@ components:
         has_saturation:
           type: boolean
           description: whether the pk model has saturation
+        has_extravascular:
+          type: boolean
+          description: whether the pk model has extravascular model
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
+        number_of_effect_compartments:
+          type: integer
+          description: number of effect compartments
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_anti_drug_antibodies:
+          type: boolean
+          description: whether the pk model has anti-drug antibodies
         has_bioavailability:
           type: boolean
           description: whether the pk model has bioavailability
@@ -3750,6 +3918,13 @@ components:
           type: integer
           nullable: true
           description: model
+        pk_model2:
+          type: integer
+          nullable: true
+          description: extravascular model
+        pk_effect_model:
+          type: integer
+          description: effect compartment model
         pd_model:
           type: integer
           nullable: true
@@ -3761,6 +3936,7 @@ components:
       required:
       - components
       - derived_variables
+      - diffsl
       - id
       - is_library_model
       - mappings
@@ -3788,10 +3964,6 @@ components:
         id:
           type: integer
           readOnly: true
-        efficacy_experiments:
-          type: array
-          items:
-            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -3831,6 +4003,10 @@ components:
           type: number
           format: double
           description: molecular mass for target for conversion from mol to grams
+        target2_molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for target 2 for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -3856,6 +4032,9 @@ components:
         target_molecular_mass_unit:
           type: integer
           description: unit for target molecular mass (e.g. g/mol)
+        target2_molecular_mass_unit:
+          type: integer
+          description: unit for target 2 molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration
@@ -3863,7 +4042,6 @@ components:
           type: integer
           description: unit for dissociation constant
       required:
-      - efficacy_experiments
       - id
       - name
     CompoundTypeEnum:
@@ -3957,20 +4135,54 @@ components:
 
             * `AUC` - area under curve
             * `RO` - receptor occupancy
-            * `FUP` - faction unbound plasma
+            * `FUP` - fraction unbound plasma
             * `BPR` - blood plasma ratio
             * `TLG` - dosing lag time
+            * `MM` - Michaelis-Menten
+            * `EMM` - Extended Michaelis-Menten
+            * `EMX` - Emax
+            * `IMX` - Imax
+            * `POW` - Power
+            * `NPW` - Negative Power
+            * `TDI` - Exponential Decay
+            * `IND` - Exponential Increase
         pkpd_model:
           type: integer
           description: PKPD model that this derived variable is for
         pk_variable:
           type: integer
-          description: base variable in PK part of model
+          description: base variable
+        secondary_variable:
+          type: integer
+          nullable: true
+          description: secondary variable
       required:
       - id
       - pk_variable
       - pkpd_model
       - type
+    DiffSLOutput:
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: string
+        outputs:
+          type: array
+          items:
+            type: string
+        state_indices:
+          type: object
+          additionalProperties:
+            type: integer
+        code:
+          type: string
+      required:
+      - code
+      - inputs
+      - outputs
+      - state_indices
     Dose:
       type: object
       properties:
@@ -4304,6 +4516,22 @@ components:
       - id
       - name
       - parent
+    ModelTypeEnum:
+      enum:
+      - PK
+      - PKEF
+      - PKEX
+      - PD
+      - TG
+      - TGI
+      type: string
+      description: |-
+        * `PK` - PK-Model
+        * `PKEF` - PK-Effect-Compartment
+        * `PKEX` - PK-Extravascular
+        * `PD` - PD-Model
+        * `TG` - Tumor-Growth
+        * `TGI` - Tumor-Growth-Inhibition
     Monolix:
       type: object
       properties:
@@ -4335,6 +4563,9 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
+    NullEnum:
+      enum:
+      - null
     PatchedAlgorithm:
       type: object
       properties:
@@ -4385,10 +4616,6 @@ components:
         axis:
           type: boolean
           description: True/False if biomarker type displayed on LHS/RHS axis
-        mapped_qname:
-          type: string
-          description: qname of the mapped model variable
-          maxLength: 50
         stored_unit:
           type: integer
           description: unit for the value stored in :model:`pkpdapp.Biomarker`
@@ -4404,6 +4631,10 @@ components:
         display_time_unit:
           type: integer
           description: unit to use when sending or displaying time values
+        variable:
+          type: integer
+          nullable: true
+          description: mapped variable
     PatchedCombinedModel:
       type: object
       properties:
@@ -4432,6 +4663,10 @@ components:
           readOnly: true
         mmt:
           type: string
+          readOnly: true
+        diffsl:
+          allOf:
+          - $ref: '#/components/schemas/DiffSLOutput'
           readOnly: true
         sbml:
           type: string
@@ -4467,12 +4702,21 @@ components:
         has_saturation:
           type: boolean
           description: whether the pk model has saturation
+        has_extravascular:
+          type: boolean
+          description: whether the pk model has extravascular model
         has_effect:
           type: boolean
           description: whether the pk model has effect compartment
+        number_of_effect_compartments:
+          type: integer
+          description: number of effect compartments
         has_lag:
           type: boolean
           description: whether the pk model has lag
+        has_anti_drug_antibodies:
+          type: boolean
+          description: whether the pk model has anti-drug antibodies
         has_bioavailability:
           type: boolean
           description: whether the pk model has bioavailability
@@ -4492,6 +4736,13 @@ components:
           type: integer
           nullable: true
           description: model
+        pk_model2:
+          type: integer
+          nullable: true
+          description: extravascular model
+        pk_effect_model:
+          type: integer
+          description: effect compartment model
         pd_model:
           type: integer
           nullable: true
@@ -4506,10 +4757,6 @@ components:
         id:
           type: integer
           readOnly: true
-        efficacy_experiments:
-          type: array
-          items:
-            $ref: '#/components/schemas/EfficacyExperiment'
         name:
           type: string
           description: name of the compound
@@ -4549,6 +4796,10 @@ components:
           type: number
           format: double
           description: molecular mass for target for conversion from mol to grams
+        target2_molecular_mass:
+          type: number
+          format: double
+          description: molecular mass for target 2 for conversion from mol to grams
         target_concentration:
           type: number
           format: double
@@ -4574,6 +4825,9 @@ components:
         target_molecular_mass_unit:
           type: integer
           description: unit for target molecular mass (e.g. g/mol)
+        target2_molecular_mass_unit:
+          type: integer
+          description: unit for target 2 molecular mass (e.g. g/mol)
         target_concentration_unit:
           type: integer
           description: unit for target concentration
@@ -4803,10 +5057,30 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         project:
           type: integer
           nullable: true
           description: Project that "owns" this model
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
     PatchedPharmacokinetic:
       type: object
       properties:
@@ -4840,6 +5114,26 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
     PatchedProject:
       type: object
       properties:
@@ -4871,6 +5165,9 @@ components:
           type: string
           format: date-time
           readOnly: true
+        tags:
+          type: string
+          description: comma separated list of tags for this project
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'
@@ -4882,7 +5179,15 @@ components:
             * `H` - Human
             * `K` - Monkey
             * `O` - Other
+        species_weight:
+          type: number
+          format: double
+          description: species weight
+        version:
+          type: integer
         compound:
+          type: integer
+        species_weight_unit:
           type: integer
         users:
           type: array
@@ -4890,6 +5195,16 @@ components:
             type: integer
           readOnly: true
           description: users with access to this project
+        pk_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PK model tags for this project
+        pd_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PD model tags for this project
     PatchedProjectAccess:
       type: object
       properties:
@@ -4914,11 +5229,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
         subjects:
           type: array
           items:
@@ -4938,11 +5248,9 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
+        amount_per_body_weight:
+          type: boolean
+          description: whether the amount is per body weight
         dataset:
           type: integer
           nullable: true
@@ -4964,6 +5272,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -5112,6 +5424,16 @@ components:
           type: integer
           nullable: true
           description: Project that this group belongs to.
+    PatchedTag:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the tag
+          maxLength: 50
     PatchedUnit:
       type: object
       properties:
@@ -5199,6 +5521,11 @@ components:
         id:
           type: integer
           readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -5253,6 +5580,9 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_per_body_weight:
+          type: boolean
+          description: whether the unit is per body weight
         unit_symbol:
           type: string
           nullable: true
@@ -5278,10 +5608,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        threshold_unit:
+        secondary_unit:
           type: integer
           nullable: true
-          description: unit for the threshold values
+          description: display unit for secondary parameters
         unit:
           type: integer
           nullable: true
@@ -5299,10 +5629,6 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
     Pharmacodynamic:
       type: object
       properties:
@@ -5343,10 +5669,30 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         project:
           type: integer
           nullable: true
           description: Project that "owns" this model
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
       required:
       - components
       - id
@@ -5393,6 +5739,26 @@ components:
           type: boolean
           description: whether this model is a library model (i.e. it is not an uploaded
             user model)
+        model_type:
+          nullable: true
+          description: |-
+            type of model
+
+            * `PK` - PK-Model
+            * `PKEF` - PK-Effect-Compartment
+            * `PKEX` - PK-Extravascular
+            * `PD` - PD-Model
+            * `TG` - Tumor-Growth
+            * `TGI` - Tumor-Growth-Inhibition
+          oneOf:
+          - $ref: '#/components/schemas/ModelTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+          description: tags for the model
       required:
       - id
       - name
@@ -5467,6 +5833,9 @@ components:
           type: string
           format: date-time
           readOnly: true
+        tags:
+          type: string
+          description: comma separated list of tags for this project
         species:
           allOf:
           - $ref: '#/components/schemas/ProjectSpeciesEnum'
@@ -5478,7 +5847,15 @@ components:
             * `H` - Human
             * `K` - Monkey
             * `O` - Other
+        species_weight:
+          type: number
+          format: double
+          description: species weight
+        version:
+          type: integer
         compound:
+          type: integer
+        species_weight_unit:
           type: integer
         users:
           type: array
@@ -5486,6 +5863,16 @@ components:
             type: integer
           readOnly: true
           description: users with access to this project
+        pk_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PK model tags for this project
+        pd_tags:
+          type: array
+          items:
+            type: integer
+          description: saved PD model tags for this project
       required:
       - compound
       - created
@@ -5537,11 +5924,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Dose'
-        variables:
-          type: array
-          items:
-            type: integer
-          readOnly: true
         subjects:
           type: array
           items:
@@ -5561,11 +5943,9 @@ components:
           maxLength: 100
         dose_type:
           $ref: '#/components/schemas/DoseTypeEnum'
-        mapped_qname:
-          type: string
-          nullable: true
-          description: qname of the mapped dosing compartment for each dose
-          maxLength: 50
+        amount_per_body_weight:
+          type: boolean
+          description: whether the amount is per body weight
         dataset:
           type: integer
           nullable: true
@@ -5587,6 +5967,10 @@ components:
           type: integer
           nullable: true
           description: unit for the amount value stored in each dose
+        variable:
+          type: integer
+          nullable: true
+          description: dosing variable
         group:
           type: integer
           nullable: true
@@ -5596,7 +5980,6 @@ components:
       - id
       - name
       - subjects
-      - variables
     ResultsTable:
       type: object
       properties:
@@ -5677,6 +6060,9 @@ components:
           items:
             type: number
             format: double
+        group:
+          type: integer
+          nullable: true
         outputs:
           type: object
           additionalProperties:
@@ -5944,6 +6330,19 @@ components:
       - name
       - protocols
       - subjects
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the tag
+          maxLength: 50
+      required:
+      - id
+      - name
     TimeInterval:
       type: object
       properties:
@@ -5985,13 +6384,29 @@ components:
       - FUP
       - BPR
       - TLG
+      - MM
+      - EMM
+      - EMX
+      - IMX
+      - POW
+      - NPW
+      - TDI
+      - IND
       type: string
       description: |-
         * `AUC` - area under curve
         * `RO` - receptor occupancy
-        * `FUP` - faction unbound plasma
+        * `FUP` - fraction unbound plasma
         * `BPR` - blood plasma ratio
         * `TLG` - dosing lag time
+        * `MM` - Michaelis-Menten
+        * `EMM` - Extended Michaelis-Menten
+        * `EMX` - Emax
+        * `IMX` - Imax
+        * `POW` - Power
+        * `NPW` - Negative Power
+        * `TDI` - Exponential Decay
+        * `IND` - Exponential Increase
     Unit:
       type: object
       properties:
@@ -6088,6 +6503,11 @@ components:
         id:
           type: integer
           readOnly: true
+        protocols:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -6142,6 +6562,9 @@ components:
           type: string
           description: fully qualitifed name of the variable
           maxLength: 200
+        unit_per_body_weight:
+          type: boolean
+          description: whether the unit is per body weight
         unit_symbol:
           type: string
           nullable: true
@@ -6167,10 +6590,10 @@ components:
         axis:
           type: boolean
           description: False/True if biomarker type displayed on LHS/RHS axis
-        threshold_unit:
+        secondary_unit:
           type: integer
           nullable: true
-          description: unit for the threshold values
+          description: display unit for secondary parameters
         unit:
           type: integer
           nullable: true
@@ -6188,13 +6611,10 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-        protocol:
-          type: integer
-          nullable: true
-          description: dosing protocol
       required:
       - id
       - name
+      - protocols
       - qname
     Y2ScaleEnum:
       enum:

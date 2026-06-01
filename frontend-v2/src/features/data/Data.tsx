@@ -1,8 +1,10 @@
-import { FC, SyntheticEvent, useState } from "react";
+import { FC, SyntheticEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
+  useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
+  useVariableListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
 import { Box, Button, Grid, Tab, Tabs, Typography } from "@mui/material";
@@ -71,12 +73,30 @@ const Data: FC = () => {
     { id: projectIdOrZero },
     { skip: !projectId },
   );
+  const { data: models } = useCombinedModelListQuery(
+    { projectId: projectIdOrZero },
+    { skip: !projectId },
+  );
+  const model = useMemo(() => {
+    return models?.[0] || undefined;
+  }, [models]);
   const { data: units } = useUnitListQuery(
     { compoundId: project?.compound || 0 },
     { skip: !project?.compound },
   );
+  const { data: variables } = useVariableListQuery(
+    { dosedPkModelId: model?.id || 0 },
+    { skip: !model?.id },
+  );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
-  const csv = generateCSV(dataset, groups, subjectBiomarkers, units, "default");
+  const csv = generateCSV(
+    dataset,
+    groups,
+    subjectBiomarkers,
+    units,
+    "default",
+    variables,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -121,7 +141,14 @@ const Data: FC = () => {
   }
 
   function downloadCSV(format: "default" | "nonmem") {
-    const csv = generateCSV(dataset, groups, subjectBiomarkers, units, format);
+    const csv = generateCSV(
+      dataset,
+      groups,
+      subjectBiomarkers,
+      units,
+      format,
+      variables,
+    );
     const blob = new Blob(["\ufeff", csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -139,12 +166,16 @@ const Data: FC = () => {
         units?.find((unit) => unit.id === protocol.amount_unit)?.symbol || "";
       const timeUnit =
         units?.find((unit) => unit.id === protocol.time_unit)?.symbol || "";
-      const qname = protocol.mapped_qname;
+      const variable = variables?.find(
+        (variable) => variable.id === protocol.variable,
+      );
+      const qname = variable?.qname;
       const doseType = protocol.dose_type;
       return protocol.doses
         .map((dose) => ({
           Amount: dose.amount,
           "Amount Unit": amountUnit,
+          "Per Body Weight(kg)": protocol.amount_per_body_weight ? "1" : "0",
           Time: dose.start_time,
           "Time Unit": timeUnit,
           Duration: dose.duration,
@@ -158,13 +189,13 @@ const Data: FC = () => {
     .map((row, index) => ({ id: index + 1, ...row }));
   const dosingColumns = dosingRows[0]
     ? Object.keys(dosingRows[0])
-        .filter((field) => field !== "id" && field !== "Route")
-        .map((field) => ({
-          field,
-          headerName: field,
-          minWidth:
-            field === "Amount Variable" ? 150 : field.length > 10 ? 130 : 30,
-        }))
+      .filter((field) => field !== "id" && field !== "Route")
+      .map((field) => ({
+        field,
+        headerName: field,
+        minWidth:
+          field === "Amount Variable" ? 150 : field.length > 10 ? 130 : 30,
+      }))
     : [];
   const groupId = group?.id_in_dataset || group?.name;
   const observations =
@@ -192,17 +223,17 @@ const Data: FC = () => {
   const [firstRow] = observations;
   const columns = firstRow
     ? Object.keys(firstRow)
-        .filter((field) => field !== "id")
-        .map((field) => ({
-          field,
-          headerName: field,
-          minWidth:
-            field === "Observation Variable"
-              ? 150
-              : field.length > 10
-                ? 120
-                : 30,
-        }))
+      .filter((field) => field !== "id")
+      .map((field) => ({
+        field,
+        headerName: field,
+        minWidth:
+          field === "Observation Variable"
+            ? 150
+            : field.length > 10
+              ? 120
+              : 30,
+      }))
     : [];
 
   const noData = !groups.length && !observations.length;

@@ -12,9 +12,9 @@ import {
   TableRow,
   Tabs,
   Tab,
-  IconButton,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
+import IconNonButton from "../../components/IconNonButton";
 import {
   useCombinedModelListQuery,
   useSubjectGroupCreateMutation,
@@ -143,7 +143,6 @@ export const Protocols: FC<ProtocolsProps> = ({
   project,
   projectProtocols,
   refetchProtocols,
-  variables,
   units,
   groups,
   refetchGroups,
@@ -153,10 +152,6 @@ export const Protocols: FC<ProtocolsProps> = ({
 
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
-
-  const filteredProtocols = projectProtocols?.filter(
-    (protocol) => protocol.variables.length > 0,
-  );
 
   const handleTabChange = (
     event: SyntheticEvent<Element, Event>,
@@ -168,14 +163,17 @@ export const Protocols: FC<ProtocolsProps> = ({
     setTab(newValue);
   };
 
+  const filteredProtocols = projectProtocols.filter((p) => p.group === null);
+
   const handleAddTab = async () => {
-    const newValue = groups?.length || 1;
-    const existingNames = groups?.map((g) => g.name);
-    let newGroupId = newValue;
-    let newGroupName = `Group ${newValue}`;
+    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group")).map((g) => g.name);
+    const existingNames = groups?.map((g) => g.name) || [];
+    const newGroupId = (groups?.length || 1) + 1;
+    let nextSimGroupValue = existingSimGroupNames.length + 2;
+    let newGroupName = `Sim-Group ${nextSimGroupValue}`;
     while (existingNames?.includes(newGroupName)) {
-      newGroupId++;
-      newGroupName = `Group ${newGroupId}`;
+      nextSimGroupValue++;
+      newGroupName = `Sim-Group ${nextSimGroupValue}`;
     }
     await createSubjectGroup({
       subjectGroup: {
@@ -183,22 +181,18 @@ export const Protocols: FC<ProtocolsProps> = ({
         id_in_dataset: `${newGroupId}`,
         project: project.id,
         protocols: filteredProtocols.map((p) => {
-          const { project, mapped_qname, ...newProtocol } = p;
-          const linkedVariableId = p.variables[0];
-          const mappedQName =
-            mapped_qname ||
-            variables?.find((v) => v.id === linkedVariableId)?.qname;
+          const { project, ...newProtocol } = p;
           return {
             ...newProtocol,
             dataset: null,
             project,
-            name: `${newProtocol.name} - Group ${newValue}`,
-            mapped_qname: mappedQName,
+            name: `${newProtocol.name} - {newGroupName}`,
           };
         }),
       },
     });
     await refetchGroups();
+    await refetchProtocols();
     setTab(groups.length + 1);
   };
 
@@ -223,6 +217,7 @@ export const Protocols: FC<ProtocolsProps> = ({
   };
 
   const onProtocolChange = () => {
+    console.log("Protocol changed, refetching groups and protocols...");
     refetchGroups();
     refetchProtocols();
   };
@@ -235,12 +230,9 @@ export const Protocols: FC<ProtocolsProps> = ({
   }
 
   const subjectGroup = tab === 0 ? null : groups?.[tab - 1];
-  const selectedProtocols =
-    tab === 0
-      ? filteredProtocols
-      : subjectGroup
-        ? [...subjectGroup.protocols]
-        : [];
+  const selectedProtocols = projectProtocols.filter((protocol) =>
+    subjectGroup ? protocol.group === subjectGroup.id : protocol.group === null,
+  );
 
   // sort protocols alphabetically by name
   selectedProtocols?.sort((a, b) => {
@@ -270,10 +262,14 @@ export const Protocols: FC<ProtocolsProps> = ({
           value={tab}
           onChange={handleTabChange}
         >
-          <Tab label={"Project"} {...a11yProps(0)} />
+          <Tab label={"Sim-Group 1"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
-            const selectedDoses =
-              group.protocols?.flatMap((p) => p?.doses) || [];
+            const selectedProtocols = projectProtocols.filter(
+              (protocol) => protocol.group === group.id,
+            );
+            const selectedDoses = selectedProtocols.flatMap(
+              (protocol) => protocol.doses || [],
+            );
             return (
               <Tab
                 key={group.id}
@@ -281,7 +277,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                 {...a11yProps(index + 1)}
                 icon={
                   !groups?.[index] ? undefined : (
-                    <IconButton
+                    <IconNonButton
                       name="remove"
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -292,7 +288,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                         <Error color="error" sx={{ marginRight: ".5rem" }} />
                       )}
                       <RemoveCircleOutlineIcon fontSize="small" />
-                    </IconButton>
+                    </IconNonButton>
                   )
                 }
                 iconPosition="end"
@@ -328,25 +324,24 @@ export const Protocols: FC<ProtocolsProps> = ({
             <TableHead>
               <TableRow>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Dose</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
+                  <div style={{ ...defaultHeaderSx }}> Dose Unit</div>
+                </TableCell>
+                <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
-                    Dose Unit
-                    <HelpButton title="Dose Unit">
-                      Default selection: mg/kg for preclinical, mg for clinical
+                    Per Body Weight (kg)
+                    <HelpButton title="Per Body Weight">
+                      If checked, the dose is given in amount per body
                     </HelpButton>
                   </div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Number of Doses</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Start Time
                     <HelpButton title="Start Time">
                       Time of the first dose
@@ -355,7 +350,6 @@ export const Protocols: FC<ProtocolsProps> = ({
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>
-                    {" "}
                     Dose Duration
                     <HelpButton title="Dose Duration">
                       Duration of dosing. For IV bolus PO/SC dosing use the
@@ -364,11 +358,9 @@ export const Protocols: FC<ProtocolsProps> = ({
                   </div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Dosing Interval</div>
                 </TableCell>
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
-                  {" "}
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
                 {tab === 0 && (

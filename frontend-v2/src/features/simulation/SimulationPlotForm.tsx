@@ -10,6 +10,7 @@ import {
   Simulation,
   UnitRead,
   VariableRead,
+  useEfficacyExperimentListQuery,
   useProjectRetrieveQuery,
 } from "../../app/backendApi";
 import {
@@ -30,7 +31,7 @@ import FloatField from "../../components/FloatField";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
-import { getDefaultAxisTitles } from "./utils";
+import { getDefaultAxisTitles, getYAxisOptions } from "./utils";
 
 interface SimulationPlotFormProps {
   index: number;
@@ -57,6 +58,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   const { data: project } = useProjectRetrieveQuery(
     { id: projectId || 0 },
     { skip: !projectId },
+  );
+  const { data: efficacyExperiments } = useEfficacyExperimentListQuery(
+    { compoundId: project?.compound },
+    { skip: !project?.compound },
   );
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -98,6 +103,21 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
+  const isComplexAmount = (variable: VariableRead | undefined) => {
+    if (!variable) {
+      return false;
+    }
+    if (!variable.name.startsWith("A")) {
+      return false;
+    }
+    const hasT1 = variable.name.includes("T1");
+    const hasT2 = variable.name.includes("T2");
+    const hasD = variable.name.includes("D");
+    // complex if have 2 or more of T1, T2, D
+    const count = (hasT1 ? 1 : 0) + (hasT2 ? 1 : 0) + (hasD ? 1 : 0);
+    return count >= 2;
+  };
+
   type SimulationYAxisWithIndex = FieldArrayWithId<
     Simulation,
     `plots.${number}.y_axes`,
@@ -125,17 +145,23 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     baseY2UnitId = undefined;
   }
 
-  const yAxisVariables = lhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable)?.name,
+  const yAxisVariables = lhs_y_axes.map((y) =>
+    variables.find((v) => v.id === y.variable),
   );
-  const y2AxisVariables = rhs_y_axes.map(
-    (y) => variables.find((v) => v.id === y.variable)?.name,
+  const yAxisVariableNames = yAxisVariables.map((v) => v?.name || "");
+  const yAxisIsComplexAmount = yAxisVariables.some((v) => isComplexAmount(v));
+
+  const y2AxisVariables = rhs_y_axes.map((y) =>
+    variables.find((v) => v.id === y.variable),
   );
+  const y2AxisVariableNames = y2AxisVariables.map((v) => v?.name || "");
+  const y2AxisIsComplexAmount = y2AxisVariables.some((v) => isComplexAmount(v));
+
   const { xAxisTitle, yAxisTitle, y2AxisTitle } = getDefaultAxisTitles({
     plot,
     units,
-    yAxisVariables,
-    y2AxisVariables,
+    yAxisVariableNames,
+    y2AxisVariableNames,
   });
 
   const commonAddYAxis = (
@@ -147,11 +173,18 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     if (!variable) {
       return;
     }
+    const { unit: defaultUnit, scale: defaultScale } = getYAxisOptions(
+      compound,
+      variable,
+      units,
+    );
     if (first) {
       if (right) {
-        setValue(`plots.${index}.y_unit2`, variable.unit);
+        setValue(`plots.${index}.y_unit2`, defaultUnit);
+        setValue(`plots.${index}.y2_scale`, defaultScale);
       } else {
-        setValue(`plots.${index}.y_unit`, variable.unit);
+        setValue(`plots.${index}.y_unit`, defaultUnit);
+        setValue(`plots.${index}.y_scale`, defaultScale);
       }
     }
     addYAxis({
@@ -216,7 +249,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     value: string | number;
   }[] = concentrationVariables.map((v) => ({ label: v.name, value: v.id }));
   receptorOccupancyVariableOptions.push({ label: "None", value: "" });
-  const haveEfficacyExp = compound.efficacy_experiments.length > 0;
+  const haveEfficacyExp = efficacyExperiments?.length;
 
   const axisScaleOptions = [
     { label: "Linear", value: "lin" },
@@ -286,6 +319,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseYUnitId)}
           selectProps={{ disabled: lhs_y_axes.length === 0 || isSharedWithMe }}
+          mustHaveMol={yAxisIsComplexAmount}
         />
         <TextField
           label="Y Axis Label"
@@ -410,6 +444,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
           control={control}
           baseUnit={units.find((u) => u.id === baseY2UnitId)}
           selectProps={{ disabled: rhs_y_axes.length === 0 || isSharedWithMe }}
+          mustHaveMol={y2AxisIsComplexAmount}
         />
         <TextField
           label="Y2 Axis Label"

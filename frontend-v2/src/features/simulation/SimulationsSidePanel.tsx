@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { PageName } from "../main/mainSlice";
 import {
+  CombinedModelRead,
   Simulation,
   SimulationPlot,
   SimulationRead,
@@ -50,6 +51,7 @@ type SimulationsSidePanelType = {
   control: Control<Simulation, unknown>;
   units: UnitRead[];
   simulation: SimulationRead;
+  model: CombinedModelRead;
   groups?: SubjectGroupRead[];
   visibleGroups: string[];
   handleVisibleGroups: (group: ChangeEvent<HTMLInputElement>) => void;
@@ -61,7 +63,7 @@ type SimulationsSidePanelType = {
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
   handleChangeSlider: (variable: number, value: number) => void;
   handleRemoveSlider: (index: number) => () => void;
-  handleSaveSlider: (slider: SimulationSlider) => (value: number) => void;
+  handleSaveAllSlider: () => void;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
@@ -164,12 +166,13 @@ export const SimulationsSidePanel = ({
   groups,
   visibleGroups,
   handleVisibleGroups,
+  model,
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
   handleChangeSlider,
   handleRemoveSlider,
-  handleSaveSlider,
+  handleSaveAllSlider,
   exportSimulation,
   showReference,
   setShowReference,
@@ -246,7 +249,7 @@ export const SimulationsSidePanel = ({
               />
               <Box
                 sx={{
-                  overflowX: "auto",
+                  overflowX: "hidden",
                   maxHeight: getTableHeight({ steps: SidePanelSteps }),
                 }}
               >
@@ -362,12 +365,14 @@ export const SimulationsSidePanel = ({
                             <FormControlLabel
                               control={
                                 <Checkbox
-                                  checked={visibleGroups.includes("Project")}
-                                  value="Project"
+                                  checked={visibleGroups.includes(
+                                    "Sim-Group 1",
+                                  )}
+                                  value="Sim-Group 1"
                                   onChange={handleVisibleGroups}
                                 />
                               }
-                              label="Project"
+                              label="Sim-Group 1"
                             />
                             {groups?.map((group) => (
                               <FormControlLabel
@@ -481,12 +486,20 @@ export const SimulationsSidePanel = ({
                           key={index}
                           index={index}
                           slider={slider}
+                          model={model}
                           onChange={handleChangeSlider}
                           onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
-                          onSave={handleSaveSlider(slider)}
                           units={units}
                         />
                       ))}
+                      <Button
+                        variant="outlined"
+                        sx={{ width: "12rem", marginTop: ".5rem" }}
+                        onClick={handleSaveAllSlider}
+                        disabled={isSharedWithMe}
+                      >
+                        Save All Sliders
+                      </Button>
                     </Collapse>
                   </Box>
                 </Box>

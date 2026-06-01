@@ -5,9 +5,11 @@ import {
   fetchSession,
   isAuthenticated,
   login,
+  signup,
 } from "./features/login/loginSlice";
 import { useSelector } from "react-redux";
 import Login from "./features/login/login";
+import Signup from "./features/login/signup";
 import Sidebar from "./features/main/Sidebar";
 import { useAppDispatch } from "./app/hooks";
 import { RootState } from "./app/store";
@@ -25,6 +27,7 @@ function App() {
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
   const [simulations, setSimulations] = useState<SimulateResponse[]>([]);
+  const [showSignup, setShowSignup] = useState<boolean>(false);
   const simulationContext = {
     simulations,
     setSimulations,
@@ -35,9 +38,35 @@ function App() {
     dispatch(setPage(PageName.PROJECTS));
   };
 
+  const onSignup = (userData: {
+    username: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
+    dispatch(signup(userData));
+    dispatch(setPage(PageName.PROJECTS));
+  };
+
+  const handleShowSignup = () => {
+    setShowSignup(true);
+  };
+
+  const handleBackToLogin = () => {
+    setShowSignup(false);
+  };
+
   useEffect(() => {
     dispatch(fetchSession());
   }, [dispatch]);
+
+  // Reset signup state when user logs out
+  useEffect(() => {
+    if (!isAuth) {
+      setShowSignup(false);
+    }
+  }, [isAuth]);
 
   return (
     <SimulationContext.Provider value={simulationContext}>
@@ -50,8 +79,20 @@ function App() {
             </ProjectDescriptionProvider>
           </CollapsibleSidebarProvider>
         </>
+      ) : showSignup ? (
+        <Signup
+          onSignup={onSignup}
+          onBack={handleBackToLogin}
+          isLoading={false}
+          errorMessage={error}
+        />
       ) : (
-        <Login onLogin={onLogin} isLoading={false} errorMessage={error} />
+        <Login
+          onLogin={onLogin}
+          onSignup={handleShowSignup}
+          isLoading={false}
+          errorMessage={error}
+        />
       )}
     </SimulationContext.Provider>
   );

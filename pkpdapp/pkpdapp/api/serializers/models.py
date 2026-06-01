@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 import traceback
+from django.db import IntegrityError
 from rest_framework import serializers
 from pkpdapp.models import (
     PharmacokineticModel,
@@ -15,6 +16,7 @@ from pkpdapp.models import (
     Variable,
     TimeInterval,
 )
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from pkpdapp.api.serializers import ValidSbml, ValidMmt
 
 
@@ -52,6 +54,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
     components = serializers.SerializerMethodField("get_components")
     variables = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     mmt = serializers.SerializerMethodField("get_mmt", read_only=True)
+    diffsl = serializers.SerializerMethodField("get_diffsl", read_only=True)
     sbml = serializers.SerializerMethodField("get_sbml", read_only=True)
     time_unit = serializers.SerializerMethodField("get_time_unit")
     is_library_model = serializers.SerializerMethodField("get_is_library_model")
@@ -65,6 +68,60 @@ class CombinedModelSerializer(serializers.ModelSerializer):
 
     def get_mmt(self, m) -> str:
         return m.get_mmt()
+
+    @extend_schema_field(inline_serializer(
+        name="DiffSLOutput",
+        fields={
+            "inputs": serializers.ListField(child=serializers.CharField()),
+            "outputs": serializers.ListField(child=serializers.CharField()),
+            "state_indices": serializers.DictField(child=serializers.IntegerField()),
+            "code": serializers.CharField(),
+        }
+    ))
+    def get_diffsl(self, m) -> dict:
+        try:
+            # inputs: slider variables from all simulations in the project
+            inputs = None
+            if m.project is not None:
+                slider_qnames = list(
+                    m.project.simulations
+                    .values_list("sliders__variable__qname", flat=True)
+                    .exclude(sliders__variable__qname=None)
+                    .distinct()
+                )
+                if slider_qnames:
+                    inputs = slider_qnames
+
+            # outputs: non-constant variables whose name does not start with 'A'
+            outputs = list(
+                m.variables
+                .filter(constant=False)
+                .exclude(name__startswith='A')
+                .values_list("qname", flat=True)
+            )
+
+            # states: all state variables
+            states = list(
+                m.variables
+                .filter(state=True)
+                .values_list("qname", flat=True)
+            )
+
+            result = m.get_diffsl(inputs=inputs, outputs=outputs, states=states)
+            return {
+                "inputs": inputs or [],
+                "outputs": outputs,
+                "state_indices": result["state_indices"],
+                "code": result["code"],
+            }
+        except Exception as e:
+            print(traceback.format_exc())
+            return {
+                "inputs": [],
+                "outputs": [],
+                "state_indices": {},
+                "code": f"Error converting to DiffSL: {e}",
+            }
 
     def get_time_unit(self, m) -> int:
         unit = m.get_time_unit()
@@ -109,16 +166,22 @@ class CombinedModelSerializer(serializers.ModelSerializer):
         old_derived_vars = list((instance.derived_variables).all())
         old_time_intervals = list((instance.time_intervals).all())
 
-        pk_model_changed = False
-        if "pk_model" in validated_data:
-            pk_model_changed = instance.pk_model != validated_data.get("pk_model")
+        # if pk_model2 is None, then ensure that lag time and bioavailability is off
+        if validated_data.get("pk_model2") is None:
+            validated_data["has_lag"] = False
+            validated_data["has_bioavailability"] = False
+
         pd_model_changed = False
         if "pd_model" in validated_data:
             pd_model_changed = instance.pd_model != validated_data.get("pd_model")
 
+        # turn on read_only so we don't try to update mappings yet
+        is_read_only = validated_data.get("read_only", False)
+        validated_data["read_only"] = True
         new_pkpd_model = BaseDosedPharmacokineticSerializer().update(
             instance, validated_data
         )
+        validated_data["read_only"] = is_read_only
 
         # if pd model has changed, update effect variable
         if pd_model_changed:
@@ -133,8 +196,7 @@ class CombinedModelSerializer(serializers.ModelSerializer):
             mappings_data = [m for m in mappings_data if m["pd_variable"] is not None]
 
         # don't update mappings if read_only
-        # don't update mapping or derived variables if pk model has changed
-        if not (instance.read_only or pk_model_changed):
+        if not is_read_only:
             for derived_var in derived_var_data:
                 serializer = DerivedVariableSerializer()
                 try:
@@ -144,6 +206,11 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                 except IndexError:
                     derived_var["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(derived_var)
+                except IntegrityError:
+                    # skip derived variable if it causes integrity error
+                    # this can occur if a variable is removed from the model
+                    # that is used in a derived variable
+                    continue
 
             for time_interval in time_interval_data:
                 serializer = TimeIntervalSerializer()
@@ -164,27 +231,32 @@ class CombinedModelSerializer(serializers.ModelSerializer):
                 except IndexError:
                     mapping["pkpd_model"] = new_pkpd_model
                     new_model = serializer.create(mapping)
+                except IntegrityError:
+                    # skip mapping if it causes integrity error
+                    # this can occur if a variable is removed from the model
+                    continue
 
-        # delete any remaining old mappings, derived variables and time intervals
-        for old_model in old_mappings:
-            old_model.delete()
-        for old_model in old_derived_vars:
-            old_model.delete()
-        for old_model in old_time_intervals:
-            old_model.delete()
+            # delete any remaining old mappings,
+            # derived variables and time intervals
+            for old_model in old_mappings:
+                old_model.delete()
+            for old_model in old_derived_vars:
+                old_model.delete()
+            for old_model in old_time_intervals:
+                old_model.delete()
 
-        # update model since mappings might have changed
-        new_pkpd_model.update_model()
+        # save and update model
+        new_pkpd_model.refresh_from_db()
+        new_pkpd_model.read_only = is_read_only
+        new_pkpd_model.save()
 
-        # if pk model has changed, go through all protocols of the project and delete
-        # any that are not associated with a variable
-        if pk_model_changed:
-            project = new_pkpd_model.project
-            if project is not None:
-                for protocol in project.protocols.all():
-                    if not protocol.variables.exists():
-                        protocol.delete()
-
+        # clean up any plots with deleted y axis variables.
+        simulations = new_pkpd_model.project.simulations.all()
+        for sim in simulations:
+            plots = sim.plots.all()
+            for plot in plots:
+                if plot.y_axes.count() == 0:
+                    plot.delete()
         return new_pkpd_model
 
 

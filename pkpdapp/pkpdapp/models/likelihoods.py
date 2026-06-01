@@ -1063,7 +1063,6 @@ class LogLikelihood(models.Model):
         """
         create stored log_likelihood, ignoring children for now
         """
-        print("create_stored_log_likelihood", self.name)
         new_variable = None
         if self.variable is not None:
             old_model = self.variable.get_model()

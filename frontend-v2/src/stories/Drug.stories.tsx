@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within, fn, waitFor, spyOn } from "storybook/test";
+import { expect, within, fn, waitFor, spyOn, screen } from "storybook/test";
 import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
@@ -7,10 +7,13 @@ import Drug from "../features/drug/Drug";
 import { project, projectHandlers } from "./project.mock";
 import { http, delay, HttpResponse } from "msw";
 
+import { EfficacyExperimentRead } from "../app/backendApi";
+
 const compoundSpy = fn();
 const deleteEfficacyExperimentSpy = fn();
 
 let experimentId = 0;
+let experiments: EfficacyExperimentRead[] = [];
 
 const meta: Meta<typeof Drug> = {
   title: "Drug and Target",
@@ -48,17 +51,31 @@ const meta: Meta<typeof Drug> = {
               { status: 200 },
             );
           }),
+          http.get("/api/efficacy_experiment/", async ({ request }) => {
+            await delay();
+            const url = new URL(request.url);
+            const compoundId = url.searchParams.get("compound_id");
+            if (compoundId) {
+              return HttpResponse.json(experiments, { status: 200 });
+            } else {
+              return HttpResponse.json(
+                {
+                  error: "compound_id query parameter is required",
+                },
+                { status: 400 },
+              );
+            }
+          }),
           http.post("/api/efficacy_experiment/", async ({ request }) => {
             await delay();
             const experimentData = await request.json();
-            return HttpResponse.json(
-              {
-                id: experimentId++,
-                //@ts-expect-error experimentData is a request body
-                ...experimentData,
-              },
-              { status: 201 },
-            );
+            const newExperiment = {
+              id: experimentId++,
+              //@ts-expect-error experimentData is a request body
+              ...experimentData,
+            };
+            experiments.push(newExperiment);
+            return HttpResponse.json(newExperiment, { status: 201 });
           }),
           http.put(
             "/api/efficacy_experiment/:id",
@@ -67,14 +84,17 @@ const meta: Meta<typeof Drug> = {
               //@ts-expect-error params.id is a string
               const experimentId = parseInt(params.id, 10);
               const experimentData = await request.json();
-              return HttpResponse.json(
-                {
-                  id: experimentId,
-                  //@ts-expect-error experimentData is a request body
-                  ...experimentData,
-                },
-                { status: 200 },
-              );
+              const newExperiment = {
+                id: experimentId,
+                //@ts-expect-error experimentData is a request body
+                ...experimentData,
+              };
+              experiments.forEach((experiment, index) => {
+                if (experiment.id === experimentId) {
+                  experiments[index] = newExperiment;
+                }
+              });
+              return HttpResponse.json(newExperiment, { status: 200 });
             },
           ),
           http.delete("/api/efficacy_experiment/:id", async ({ params }) => {
@@ -82,6 +102,11 @@ const meta: Meta<typeof Drug> = {
             //@ts-expect-error params.id is a string
             const experimentId = parseInt(params.id, 10);
             deleteEfficacyExperimentSpy(experimentId);
+            experiments.forEach((experiment, index) => {
+              if (experiment.id === experimentId) {
+                experiments.splice(index, 1);
+              }
+            });
             return HttpResponse.json(
               {
                 id: experimentId,
@@ -100,6 +125,11 @@ const meta: Meta<typeof Drug> = {
       return <Story />;
     },
   ],
+  beforeEach: () => {
+    compoundSpy.mockClear();
+    deleteEfficacyExperimentSpy.mockClear();
+    experiments = []; // Clear the experiments array before each story
+  },
 };
 export default meta;
 
@@ -119,6 +149,25 @@ export const Default: Story = {
     expect(efficacyTable).toBeInTheDocument();
     const efficacyTableRows = within(efficacyTable).getAllByRole("row");
     expect(efficacyTableRows).toHaveLength(1); // header + 0 data rows
+  },
+};
+
+export const EditMolecularWeightUnit: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const molecularWeightUnit = await canvas.findByTestId(
+      "select-molecular_mass_unit",
+    );
+    const molecularWeightUnitCombobox =
+      await within(molecularWeightUnit).findByRole("combobox");
+
+    expect(molecularWeightUnit).toBeInTheDocument();
+    expect(molecularWeightUnitCombobox).toHaveTextContent("g/mol (Da)");
+
+    await userEvent.click(molecularWeightUnitCombobox);
+    const unitListBox = await screen.findByRole("listbox");
+    await userEvent.selectOptions(unitListBox, "kg/mol (kDa)");
+    expect(molecularWeightUnitCombobox).toHaveTextContent("kg/mol (kDa)");
   },
 };
 

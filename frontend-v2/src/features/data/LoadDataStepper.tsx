@@ -9,20 +9,25 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import LoadData from "./LoadData";
 import { useState } from "react";
-import MapObservations from "./MapObservations";
-import MapDosing from "./MapDosing";
+import MapObservations from "./observations/MapObservations";
+import MapDosing from "./dosing/MapDosing";
 import PreviewData from "./PreviewData";
 import { RootState } from "../../app/store";
 import { DatasetRead, useDatasetCsvUpdateMutation } from "../../app/backendApi";
-import Stratification from "./Stratification";
+import Stratification from "./stratification/Stratification";
 import useDataset from "../../hooks/useDataset";
 import {
-  normaliseHeader,
+  normaliseFields,
+  parsePerKgDoses,
   removeIgnoredObservations,
   validateDataRow,
 } from "./dataValidation";
 import { Tooltip } from "@mui/material";
-import { IProtocol, getSubjectDoses, getProtocols } from "./protocolUtils";
+import {
+  IProtocol,
+  getSubjectDoses,
+  getProtocols,
+} from "./stratification/protocolUtils";
 import { Notifications } from "./Notifications";
 import {
   CHANGE_STYLING_INNER_HEIGHT_LIMIT,
@@ -55,6 +60,7 @@ type Data = Row[];
 type Field = string;
 
 export type StepperState = {
+  encoding: string;
   fileName: string;
   fields: Field[];
   normalisedHeaders: Field[];
@@ -91,7 +97,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   let displayedErrors = [...errors];
   const [warnings, setWarnings] = useState<string[]>([]);
   const [normalisedFields, setNormalisedFields] = useState<Map<Field, string>>(
-    new Map(csvFields.map(normaliseHeader)),
+    normaliseFields(csvFields),
   );
   const [timeUnit, setTimeUnit] = useState<string | undefined>(undefined);
   const [amountUnit, setAmountUnit] = useState<string | undefined>(undefined);
@@ -105,11 +111,18 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
   const [fileName, setFileName] = useState<string>(
     dataset?.name || "New Dataset",
   );
+  const [encoding, setEncoding] = useState<string>("utf-8");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const onNotificationsOpenChange = () =>
     setIsNotificationsOpen(!isNotificationsOpen);
 
   const state = {
+    get encoding() {
+      return encoding;
+    },
+    set encoding(newEncoding: string) {
+      setEncoding(newEncoding);
+    },
     get fileName() {
       return fileName;
     },
@@ -171,6 +184,7 @@ const LoadDataStepper: FC<IStepper> = ({ csv = "", onCancel, onFinish }) => {
       return [...normalisedFields.values()];
     },
   };
+  parsePerKgDoses(state);
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
   const areValidProtocols = validateSubjectProtocols(protocols);

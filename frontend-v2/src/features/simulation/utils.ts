@@ -2,12 +2,15 @@ import { FieldArrayWithId } from "react-hook-form";
 import {
   CombinedModelRead,
   CompoundRead,
+  EfficacyExperimentRead,
   SimulateResponse,
   Simulation,
   SimulationYAxis,
   SubjectGroupRead,
+  UnitListApiResponse,
   UnitRead,
   VariableRead,
+  Y2ScaleEnum,
 } from "../../app/backendApi";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
@@ -27,6 +30,108 @@ export const plotColours = [
   "#bcbd22", // curry yellow-green
   "#17becf", // blue-teal
 ];
+
+type YAxisOptions = {
+  unit: number | null | undefined;
+  scale: Y2ScaleEnum;
+};
+export function getYAxisOptions(
+  compound: CompoundRead,
+  variable: VariableRead,
+  units: UnitListApiResponse,
+): YAxisOptions {
+  if (!variable.name.startsWith("C")) {
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
+  }
+  const baseUnit = units.find((unit) => unit.id === variable.unit);
+  const compatibleUnits = baseUnit?.compatible_units || [];
+  let concentrationUnitSymbol: string | undefined;
+  if (variable.name.startsWith("CT")) {
+    concentrationUnitSymbol = "pg/mL";
+  } else if (compound.compound_type === "SM") {
+    concentrationUnitSymbol = "ng/mL";
+  } else if (compound.compound_type === "LM") {
+    concentrationUnitSymbol = "µg/mL";
+  }
+  if (!concentrationUnitSymbol) {
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
+  }
+  const concentrationUnit = compatibleUnits.find(
+    (unit) => unit.symbol === concentrationUnitSymbol,
+  );
+  if (!concentrationUnit) {
+    return {
+      unit: variable.unit,
+      scale: "lin",
+    };
+  }
+  return {
+    unit: parseInt(concentrationUnit.id),
+    scale: "lg10",
+  };
+}
+
+/// Determines the output variables of interest for plotting and secondary variables
+/// Includes non-constant variables that match the following criteria:
+/// - For library models: variables that start with C, receptor occupancy (RO), PD effects (E), protein or precursor (P), tumour size (TS) and PercInh, PDO, STM and INH.
+/// - For non-library models: all non-constant variables.
+export function filterOutputs(model: CombinedModelRead | undefined, variables: VariableRead[]): VariableRead[] {
+  return variables.filter(variable => {
+    if (variable.constant) return false;
+    if (model && !model.is_library_model) {
+      return variables
+    }
+    const isConcentration = (
+      variable.qname.startsWith("PKCompartment.C") ||
+      variable.qname.startsWith("Extravascular.Cah") ||
+      variable.qname.startsWith("Extravascular.Cvh") ||
+      (variable.qname.startsWith("EffectCompartment") && variable.name.startsWith("Ce"))
+    ) && !variable.name.startsWith("CLimm");
+    const isReceptorOccupancy = variable.qname.startsWith("PKCompartment") && variable.name.includes("RO");
+    const isPDEffect = variable.qname.startsWith("PDCompartment.E");
+    const isProteinOrPrecursor = variable.qname.startsWith("PDCompartment.P");
+    const isTumourSize = variable.qname.startsWith("PDCompartment.TS");
+    const isInhibition = variable.name.startsWith("PerInh") || variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
+    return isConcentration || isReceptorOccupancy || isPDEffect || isProteinOrPrecursor || isTumourSize || isInhibition;
+  });
+
+}
+
+function getVariableName(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): string {
+  let variableName = variable.name;
+  if (
+    model?.number_of_effect_compartments &&
+    model.number_of_effect_compartments > 1 &&
+    variable.qname.startsWith("EffectCompartment")
+  ) {
+    const [compartment_name] = variable.qname.split(".");
+    const compartment_number = compartment_name.replace(
+      "EffectCompartment",
+      "",
+    );
+    variableName = `${variable.name}${compartment_number}`;
+  }
+  return variableName;
+}
+
+export function renameVariable(
+  variable: VariableRead,
+  model?: CombinedModelRead,
+): VariableRead {
+  return {
+    ...variable,
+    name: getVariableName(variable, model),
+  };
+}
 
 export function ranges(
   minY: number | undefined,
@@ -95,7 +200,7 @@ export function ranges(
 export function genIcLines(
   units: UnitRead[],
   plot: FieldArrayWithId<Simulation, "plots", "id">,
-  compound: CompoundRead,
+  exp: EfficacyExperimentRead | undefined,
   concentrationUnit: UnitRead,
 ) {
   let icLines: number[] = [];
@@ -107,9 +212,6 @@ export function genIcLines(
     ? concentrationUnitIds.includes(plot.y_unit)
     : false;
 
-  const exp = compound.efficacy_experiments.find(
-    (exp) => exp.id === compound.use_efficacy,
-  );
   if (yAxisIsConcentration && exp) {
     if (exp.hill_coefficient && exp.c50) {
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
@@ -149,7 +251,7 @@ export function generatePlotData(
 ) {
   const visible =
     index === 0
-      ? visibleGroups.includes("Project")
+      ? visibleGroups.includes("Sim-Group 1")
       : visibleGroups.includes(group?.name || "");
   const variableValues = d.outputs[y_axis.variable];
   const variable = variables.find((v) => v.id === y_axis.variable);
@@ -163,20 +265,34 @@ export function generatePlotData(
     (u) => parseInt(u.id) === yaxisUnit?.id,
   );
 
-  const is_target = model.is_library_model
-    ? variableName?.includes("CT1") || variableName?.includes("AT1")
+  const starts_with_A = model.is_library_model
+    ? variableName?.startsWith("A")
     : false;
+  const starts_with_C_or_A = model.is_library_model
+    ? variableName?.startsWith("C") || starts_with_A
+    : false;
+  const has_target_1 = starts_with_C_or_A && variableName?.includes("T1");
+  const has_target_2 = starts_with_C_or_A && variableName?.includes("T2");
+  const has_drug = starts_with_C_or_A && variableName?.includes("D");
+
+  // if we've got a concentration or amount variable that includes T1 or T2, use the target conversion factors
+  // unless D is also present (then it's a drug concentration/amount).
+  const is_target = starts_with_C_or_A && has_target_1 && !has_drug;
+  const is_target2 = starts_with_C_or_A && has_target_2 && !has_drug;
+
   const yConversionFactor = yCompatibleUnit
     ? parseFloat(
-        is_target
-          ? yCompatibleUnit.target_conversion_factor
+      is_target
+        ? yCompatibleUnit.target_conversion_factor
+        : is_target2
+          ? yCompatibleUnit.target2_conversion_factor
           : yCompatibleUnit.conversion_factor,
-      )
+    )
     : 1.0;
 
   const name = variableValues
-    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "project"}`
-    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "project"}`;
+    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "Sim-Group 1"}`
+    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "Sim-Group 1"}`;
   const x = variableValues ? d.time.map((t) => t * xConversionFactor) : [];
   const y = variableValues
     ? variableValues.map((v) => v * yConversionFactor)
@@ -254,27 +370,27 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-  (data: SimulateResponse, index: number) => {
-    const colourIndex = index + colourOffset;
-    const colour = plotColours[colourIndex % plotColours.length];
-    const group = groups?.[index - 1];
-    const style = isReference ? "dot" : "solid";
-    return generatePlotData(
-      data,
-      visibleGroups,
-      colour,
-      style,
-      index,
-      group,
-      y_axis,
-      plot,
-      units,
-      model,
-      variables,
-      xConversionFactor,
-      isReference,
-    );
-  };
+    (data: SimulateResponse, index: number) => {
+      const colourIndex = index + colourOffset;
+      const colour = plotColours[colourIndex % plotColours.length];
+      const group = groups?.find((g) => g.id === data.group);
+      const style = isReference ? "dot" : "solid";
+      return generatePlotData(
+        data,
+        visibleGroups,
+        colour,
+        style,
+        index,
+        group,
+        y_axis,
+        plot,
+        units,
+        model,
+        variables,
+        xConversionFactor,
+        isReference,
+      );
+    };
 
 type PlotsProps = {
   data: SimulateResponse[];
@@ -361,16 +477,16 @@ export const getYRanges = ({
 export const getDefaultAxisTitles = ({
   plot,
   units,
-  yAxisVariables,
-  y2AxisVariables,
+  yAxisVariableNames,
+  y2AxisVariableNames,
 }: {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   units: UnitRead[];
-  yAxisVariables: (string | undefined)[];
-  y2AxisVariables: (string | undefined)[];
+  yAxisVariableNames: (string | undefined)[];
+  y2AxisVariableNames: (string | undefined)[];
 }) => {
-  let yAxisTitle = [...new Set(yAxisVariables)].join(", ");
-  let y2AxisTitle = [...new Set(y2AxisVariables)].join(", ");
+  let yAxisTitle = [...new Set(yAxisVariableNames)].join(", ");
+  let y2AxisTitle = [...new Set(y2AxisVariableNames)].join(", ");
   let xAxisTitle = "Time";
   const yUnit = units.find((u) => u.id === plot.y_unit);
   const y2Unit = units.find((u) => u.id === plot.y_unit2);
@@ -406,25 +522,25 @@ export const getPlotDimensions = ({
   if (isVertical && !isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height / 2 - buffer,
-          width: dimensions.width - buffer,
-        }
+        height: dimensions.height / 2 - buffer,
+        width: dimensions.width - buffer,
+      }
       : {
-          height: dimensions.height / 1.5 - buffer,
-          width: dimensions.width - buffer,
-        };
+        height: dimensions.height / 1.5 - buffer,
+        width: dimensions.width - buffer,
+      };
   }
 
   if (!isVertical && isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-          height: dimensions.height - buffer,
-          width: dimensions.width / columnCount - buffer,
-        }
+        height: dimensions.height - buffer,
+        width: dimensions.width / columnCount - buffer,
+      }
       : {
-          height: dimensions.height - buffer,
-          width: dimensions.width / 1.5 - buffer,
-        };
+        height: dimensions.height - buffer,
+        width: dimensions.width / 1.5 - buffer,
+      };
   }
 
   return {
@@ -656,44 +772,44 @@ export const generateScatterPlots: (
   visibleGroups,
   y_axis,
 }) => {
-  const xAxisUnit = units.find((u) => u.id === plot.x_unit);
-  const yAxisUnit = y_axis.right
-    ? units.find((u) => u.id === plot.y_unit2)
-    : units.find((u) => u.id === plot.y_unit);
+    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+    const yAxisUnit = y_axis.right
+      ? units.find((u) => u.id === plot.y_unit2)
+      : units.find((u) => u.id === plot.y_unit);
 
-  const colourOffset = data.length * i;
-  const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
-  const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
-  const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
-  const yCompatibleUnit = unit?.compatible_units.find(
-    (u) => parseInt(u.id) === yAxisUnit?.id,
-  );
-  const timeCompatibleUnit = timeUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === xAxisUnit?.id,
-  );
-  const timeConversionFactor = timeCompatibleUnit
-    ? parseFloat(timeCompatibleUnit.conversion_factor)
-    : 1.0;
-  const is_target = model.is_library_model
-    ? qname?.includes("CT1") || qname?.includes("AT1")
-    : false;
-  const yConversionFactor = yCompatibleUnit
-    ? parseFloat(
+    const colourOffset = data.length * i;
+    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
+    const yCompatibleUnit = unit?.compatible_units.find(
+      (u) => parseInt(u.id) === yAxisUnit?.id,
+    );
+    const timeCompatibleUnit = timeUnit?.compatible_units.find(
+      (u) => parseInt(u.id) === xAxisUnit?.id,
+    );
+    const timeConversionFactor = timeCompatibleUnit
+      ? parseFloat(timeCompatibleUnit.conversion_factor)
+      : 1.0;
+    const is_target = model.is_library_model
+      ? qname?.includes("CT1") || qname?.includes("AT1")
+      : false;
+    const yConversionFactor = yCompatibleUnit
+      ? parseFloat(
         is_target
           ? yCompatibleUnit.target_conversion_factor
           : yCompatibleUnit.conversion_factor,
       )
-    : 1.0;
-  return groups?.map((group, index) =>
-    generateScatterPlot({
-      biomarkerData,
-      colourOffset,
-      group,
-      index,
-      timeConversionFactor,
-      visibleGroups,
-      y_axis,
-      yConversionFactor,
-    }),
-  );
-};
+      : 1.0;
+    return groups?.map((group, index) =>
+      generateScatterPlot({
+        biomarkerData,
+        colourOffset,
+        group,
+        index,
+        timeConversionFactor,
+        visibleGroups,
+        y_axis,
+        yConversionFactor,
+      }),
+    );
+  };

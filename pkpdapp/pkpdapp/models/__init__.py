@@ -26,14 +26,10 @@ from .pharmacodynamic_model import (
 from .pharmacokinetic_model import (
     PharmacokineticModel,
 )
-from .combined_model import (
-    CombinedModel,
-    PkpdMapping,
-    DerivedVariable,
-    TimeInterval
-)
-from .dataset import Dataset
+from .derived_variable import DerivedVariable
+from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .variable import Variable
+from .dataset import Dataset
 from .profile import Profile
 from .myokit_forward_model import MyokitForwardModel
 from .likelihoods import (
@@ -57,7 +53,7 @@ from .inference import (
     Inference,
     Algorithm,
 )
-
+from .tag import Tag
 
 
 from .inference_mixin import InferenceMixin
