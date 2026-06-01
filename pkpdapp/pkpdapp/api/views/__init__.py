@@ -13,7 +13,6 @@ from .filters import (
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter,
-    InferenceFilter,
     DatasetFilter,
 )
 from .permissions import (
@@ -39,13 +38,6 @@ from .models import (
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
-from .inference import (
-    InferenceView,
-    InferenceChainView,
-    AlgorithmView,
-    StopInferenceView,
-    InferenceWizardView,
-)
 from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
@@ -61,5 +53,4 @@ from .subject_group import SubjectGroupView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
-from .likelihoods import LogLikelihoodView
 from .tag import TagView

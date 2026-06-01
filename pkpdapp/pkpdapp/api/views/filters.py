@@ -17,9 +17,6 @@ from pkpdapp.models import (
     Variable,
     Subject,
     SubjectGroup,
-    Inference,
-    InferenceChain,
-    LogLikelihood,
     Simulation,
     ResultsTable,
 )
@@ -87,34 +84,6 @@ class PdModelFilter(filters.BaseFilterBackend):
         return queryset
 
 
-class InferenceFilter(filters.BaseFilterBackend):
-    """
-    Filter that only allows users to filter by inference.
-    """
-
-    def filter_queryset(self, request, queryset, view):
-        inference_id = request.query_params.get("inference_id")
-        if inference_id is not None:
-            try:
-                inference = Inference.objects.get(id=inference_id)
-                if queryset.model == Variable:
-                    model = inference.get_model()
-                    if model:
-                        queryset = model.variables.all()
-                    else:
-                        queryset = queryset.model.objects.none()
-                elif queryset.model == InferenceChain:
-                    queryset = inference.chains.all()
-                elif queryset.model == LogLikelihood:
-                    queryset = inference.log_likelihoods.all()
-                else:
-                    raise RuntimeError(queryset_model_not_recognised_text)
-            except Inference.DoesNotExist:
-                queryset = queryset.model.objects.none()
-
-        return queryset
-
-
 class DatasetFilter(filters.BaseFilterBackend):
     """
     Filter that only allows users to filter by dataset.
@@ -163,12 +132,6 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pk_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
-                elif queryset.model == Inference:
-                    queryset = project.inference_set
-                elif queryset.model == InferenceChain:
-                    queryset = InferenceChain.objects.filter(
-                        inference__in=project.inference_set.all()
-                    )
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(dataset__project=project)
                 elif queryset.model == Subject:

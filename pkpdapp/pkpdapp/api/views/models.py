@@ -20,7 +20,6 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     CombinedModel,
-    Inference,
 )
 
 
@@ -114,24 +113,6 @@ class CombinedModelView(viewsets.ModelViewSet):
             return response.Response(
                 {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
-
-    @decorators.action(
-        detail=True,
-        methods=["PUT"],
-        serializer_class=CombinedModelSerializer,
-    )
-    def set_variables_from_inference(self, request, pk):
-        obj = self.get_object()
-        try:
-            inference = Inference.objects.get(id=request.data["inference_id"])
-        except Inference.DoesNotExist:
-            return response.Response(
-                {"inference_id": "inference not found"}, status.HTTP_400_BAD_REQUEST
-            )
-
-        obj.set_variables_from_inference(inference)
-        serializer = self.serializer_class(obj)
-        return response.Response(serializer.data)
 
     @decorators.action(
         detail=True,
