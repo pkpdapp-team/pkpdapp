@@ -24,6 +24,7 @@ class VariableContext:
     name: str
     binding: str | None
     value: float
+    conversion_factor: float
     constant: bool
     state: bool
 
@@ -126,7 +127,6 @@ class SimulateContext:
         biomarker_types: list[int] | None = None,
         subject_groups: list[int] | None = None,
     ):
-        self._model = model
         self.model_id = model.id
         self.model_table = model._meta.db_table
         self.model_class = model.__class__.__name__
@@ -142,6 +142,7 @@ class SimulateContext:
         self._variables_by_id = {
             variable.id: variable for variable in self._variables_by_qname.values()
         }
+        self._variable_contexts_by_qname = self._build_variable_contexts()
         self.variable_values = self._build_variable_values(variables)
         self.inputs = self._build_inputs()
         self.time_max = self._build_time_max(model, time_max)
@@ -168,6 +169,7 @@ class SimulateContext:
         del self._project
         del self._variables_by_qname
         del self._variables_by_id
+        del self._protocols
 
     def simulate_model(
         self,
@@ -186,7 +188,7 @@ class SimulateContext:
         )
         sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
         datalog = sim.run(self.time_max, log=outputs)
-        return self._model.serialize_datalog(datalog, model)
+        return self.serialize_datalog(datalog, model)
 
     def simulate_model_diffsol(
         self,
@@ -227,12 +229,32 @@ class SimulateContext:
         ode.atol = 1e-6
         ode.rtol = 1e-4
         solution = ode.solve(input_values, self.time_max)
-        return self._model.serialize_diffsol_solution(solution, model, outputs)
+        return self.serialize_diffsol_solution(solution, model, outputs)
+
+    def serialize_datalog(self, datalog, myokit_model) -> dict[int, list[float]]:
+        result = {}
+        for qname, values in datalog.items():
+            variable = self._get_variable_context(qname)
+            result[variable.id] = (
+                np.frombuffer(values) / variable.conversion_factor
+            ).tolist()
+        return result
+
+    def serialize_diffsol_solution(
+        self,
+        solution,
+        myokit_model,
+        outputs: list[str],
+    ) -> dict[int, list[float]]:
+        result = {}
+        for index, output_qname in enumerate(outputs):
+            values = solution.ys[index, :]
+            variable = self._get_variable_context(output_qname)
+            result[variable.id] = (values / variable.conversion_factor).tolist()
+        return result
 
     def _simulation_variable_values(self) -> dict[str, float]:
-        return {
-            qname: context.value for qname, context in self.variable_values.items()
-        }
+        return {qname: context.value for qname, context in self.variable_values.items()}
 
     def _build_inputs(self) -> tuple[InputContext, ...]:
         return tuple(
@@ -297,6 +319,18 @@ class SimulateContext:
         variables = model.variables.select_related("unit").all()
         return {variable.qname: variable for variable in variables}
 
+    def _build_variable_contexts(self) -> dict[str, VariableContext]:
+        contexts = {}
+        for variable in self._variables_by_qname.values():
+            value = 0.0
+            if variable.constant:
+                value = self._convert_variable_value(
+                    variable,
+                    variable.get_default_value(),
+                )
+            contexts[variable.qname] = self._variable_context(variable, value)
+        return contexts
+
     def _build_variable_values(
         self, variables: dict[str, float] | None
     ) -> dict[str, VariableContext]:
@@ -304,11 +338,7 @@ class SimulateContext:
         for variable in self._variables_by_qname.values():
             if not variable.constant:
                 continue
-            value = self._convert_variable_value(
-                variable,
-                variable.get_default_value(),
-            )
-            values[variable.qname] = self._variable_context(variable, value)
+            values[variable.qname] = self._variable_contexts_by_qname[variable.qname]
         if variables is None:
             return values
 
@@ -561,9 +591,7 @@ class SimulateContext:
         from pkpdapp.models import BiomarkerType
 
         model_variable_qnames = set(self._variables_by_qname)
-        biomarker_type_qs = BiomarkerType.objects.filter(
-            dataset__project=self._project
-        )
+        biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=self._project)
 
         if biomarker_type_ids is None:
             biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
@@ -727,6 +755,7 @@ class SimulateContext:
             name=variable.name,
             binding=variable.binding,
             value=float(value),
+            conversion_factor=self._conversion_factor(variable),
             constant=variable.constant,
             state=variable.state,
         )
@@ -749,23 +778,36 @@ class SimulateContext:
                 f"Variable with qname {qname} does not exist in model."
             )
 
-    def _convert_variable_value(self, variable, value: float) -> float:
+    def _get_variable_context(self, qname: str) -> VariableContext:
+        try:
+            return self._variable_contexts_by_qname[qname]
+        except KeyError:
+            from pkpdapp.models import Variable
+
+            raise Variable.DoesNotExist(
+                f"Variable with qname {qname} does not exist in model."
+            )
+
+    def _conversion_factor(self, variable) -> float:
         myokit_variable = self._myokit_model.get(variable.qname)
         if variable.unit is None:
-            converted = float(value)
-        else:
-            converted = float(value) * variable.unit.convert_to(
-                myokit_variable.unit(),
-                compound=self._compound,
-                target=self._unit_conversion_target(variable.qname),
-            )
-            if (
-                self._project is not None
-                and self._project.version > 2
-                and variable.unit_per_body_weight
-            ):
-                converted *= self._project.species_weight
-        return converted
+            return 1.0
+
+        conversion_factor = variable.unit.convert_to(
+            myokit_variable.unit(),
+            compound=self._compound,
+            target=self._unit_conversion_target(variable.qname),
+        )
+        if (
+            self._project is not None
+            and self._project.version > 2
+            and variable.unit_per_body_weight
+        ):
+            conversion_factor *= self._project.species_weight
+        return conversion_factor
+
+    def _convert_variable_value(self, variable, value: float) -> float:
+        return float(value) * self._conversion_factor(variable)
 
     def _get_tlag(self, qname: str) -> float:
         context = self.variable_values.get(f"{qname}_tlag_ud")

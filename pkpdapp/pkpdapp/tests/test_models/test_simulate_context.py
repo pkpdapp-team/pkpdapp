@@ -95,4 +95,7 @@ class TestSimulateContext(TestCase):
 
         self.assertFalse(hasattr(context, "_project"))
         self.assertFalse(hasattr(context, "_variables_by_qname"))
+        self.assertFalse(hasattr(context, "_variables_by_id"))
+        self.assertFalse(hasattr(context, "_protocols"))
+        self.assertFalse(hasattr(context, "_model"))
         self.assertFalse(hasattr(context, "default_variables"))
