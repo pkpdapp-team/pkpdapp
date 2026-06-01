@@ -602,6 +602,48 @@ paths:
           description: ''
         '404':
           description: No response body
+  /api/combined_model/{id}/simulate_uncertainty:
+    post:
+      operationId: combined_model_simulate_uncertainty_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          description: No response body
   /api/compound/:
     get:
       operationId: compound_list
@@ -1877,6 +1919,48 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SimulateResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          description: No response body
+  /api/pharmacodynamic/{id}/simulate_uncertainty:
+    post:
+      operationId: pharmacodynamic_simulate_uncertainty_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
           description: ''
         '400':
           content:
@@ -6242,6 +6326,59 @@ components:
               format: double
       required:
       - outputs
+      - time
+    SimulateUncertainty:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            type: string
+        variables:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        variable_distributions:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {}
+        time_max:
+          type: number
+          format: double
+        sample_count:
+          type: integer
+          minimum: 1
+        seed:
+          type: integer
+        quantiles:
+          type: array
+          items:
+            type: number
+            format: double
+            maximum: 1.0
+            minimum: 0.0
+      required:
+      - outputs
+    SimulateUncertaintyResponse:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: number
+            format: double
+        sample_count:
+          type: integer
+        outputs:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {}
+      required:
+      - outputs
+      - sample_count
       - time
     Simulation:
       type: object

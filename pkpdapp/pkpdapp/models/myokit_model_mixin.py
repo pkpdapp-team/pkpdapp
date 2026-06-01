@@ -18,18 +18,19 @@ import threading
 from django.core.cache import cache
 import logging
 import pints
+import pydiffsol
 from scipy.linalg import svd
 
 from pkpdapp.models import Biomarker, BiomarkerType, SubjectGroup
+from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
 
-import pydiffsol
 
+class MyokitModelMixin(UncertaintySimulationMixin):
 
-class MyokitModelMixin:
     def _initialise_variables(self, model, variables):
         # Convert units
         variables = {
@@ -242,6 +243,37 @@ class MyokitModelMixin:
             myokit_model = self.create_myokit_model()
             cache.set(key, myokit_model, timeout=None)
         return myokit_model
+
+    def get_myokit_simulator(
+        self,
+        override_tlag=None,
+        model=None,
+        time_max=None,
+        dosing_protocols=None,
+    ):
+        # Cache only the default simulator configuration. Any overrides are
+        # returned directly to avoid stale or cross-configuration reuse.
+        uses_default_configuration = (
+            override_tlag is None
+            and model is None
+            and time_max is None
+            and dosing_protocols is None
+        )
+        if not uses_default_configuration:
+            return self.create_myokit_simulator(
+                override_tlag=override_tlag,
+                model=model,
+                time_max=time_max,
+                dosing_protocols=dosing_protocols,
+            )
+
+        key = self._get_myokit_simulator_cache_key()
+        with lock:
+            simulator = cache.get(key)
+        if simulator is None:
+            simulator = self.create_myokit_simulator()
+            cache.set(key, simulator, timeout=None)
+        return simulator
 
     def is_variables_out_of_date(self):
         model = self.get_myokit_model()
@@ -682,6 +714,31 @@ class MyokitModelMixin:
         soln = ode.solve(np.array(input_values), time_max)
         return self.serialize_diffsol_solution(soln, model, outputs)
 
+    def _get_model_dosing_protocols(self):
+        project = self.get_project()
+        if project is None:
+            return [{}], []
+
+        protocols = project.protocols.all()
+        project_dosing_protocols = {
+            p.variable.qname: p
+            for p in protocols
+            if p.group is None and p.variable is not None
+        }
+
+        groups = get_subject_groups(project)
+        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
+        model_dosing_protocols = [project_dosing_protocols]
+        for group in groups:
+            dosing_protocols = {
+                p.variable.qname: p
+                for p in protocols
+                if p.group == group and p.variable is not None
+            }
+            model_dosing_protocols.append(dosing_protocols)
+
+        return model_dosing_protocols, groups
+
     def simulate_model(
         self,
         outputs=None,
@@ -740,8 +797,8 @@ class MyokitModelMixin:
         if outputs is None:
             outputs = []
 
-        # TODO, we query self.variables a lot in the methods below (often deeply nested), would it be
-        # more efficient to get all variables once here and pass them in as an argument to the methods below?
+        # TODO: we query self.variables a lot below, often deeply nested.
+        # It may be more efficient to fetch once here and pass through.
         default_variables = {
             v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
         }
@@ -753,26 +810,7 @@ class MyokitModelMixin:
                 **variables,
             }
 
-        # add a dose_rate variable to the model for each
-        # dosed variable
-        project = self.get_project()
-        protocols = project.protocols.all()
-        project_dosing_protocols = {
-            p.variable.qname: p
-            for p in protocols
-            if p.group is None and p.variable is not None
-        }
-        model_dosing_protocols = [project_dosing_protocols]
-
-        groups = get_subject_groups(project)
-        # sort groups starting alphabetically, but with those starting with Sim first
-        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
-
-        for group in groups:
-            dosing_protocols = {
-                p.variable.qname: p for p in protocols if p.group == group
-            }
-            model_dosing_protocols.append(dosing_protocols)
+        model_dosing_protocols, groups = self._get_model_dosing_protocols()
 
         if use_diffsol:
             result = [
@@ -824,33 +862,41 @@ class MyokitModelMixin:
         """
         Fits the model against the data indicated
 
-        two different noise models are supported, gaussian additive (i.e. sum of squares)
+                two different noise models are supported: gaussian additive
+                (i.e. sum of squares)
         and log-normal multiplicative.
 
-        The fitting is performed across all subject groups indicated, for each subject group:
-            1. all the variable outputs mapped to the biomarker types are found, these will be
+                The fitting is performed across all indicated subject groups.
+                For each subject group:
+                        1. all variable outputs mapped to biomarker types are found;
+                            these
                the requested outputs for the simulation for that subject group
-            2. the data is gathered from all the biomarkers for that subject group and those
+                        2. data are gathered from all biomarkers in that subject
+                            group and
                biomarker types, this is collected in a (a) list of time points and
                (b) 2D array where columns are timepoints and the rows arre outputs
                (same order as the requested outputs in 1.).
             3. a diffsol Ode model is contructed using the outputs from 1.
 
-        Then the fitting is performed. The loss function for each iteration of the fitting has the
+                Then fitting is performed. The loss function for each iteration has the
         following structure:
             - total loss initialised to zero
             - loop through each subject group:
-                - a simulation is performed using the Ode model for that subject group, using
-                  the solve_dense method on Ode, passing in the timepoints collected in 2. above
-                - the loss function for that subject group is calculated and added to the total
+                                - a simulation is performed using that group's
+                                    Ode model with solve_dense and the timepoints
+                                    collected in step 2
+                                - that group's loss is calculated and added to the total
                   loss
 
-        The package Pints is used for the optimisation (https://pints.readthedocs.io/en/stable/optimisers/index.html).
-        The optimisation method is chosen by the ``method`` argument. Gradient-free methods (cmaes, pso,
-        nelder-mead) only require the loss function. Gradient-based methods (gradient_descent) also require
-        sensitivities, which are computed via forward sensitivity analysis using ``solve_fwd_sens``. The
-        methods ``adam`` and ``irprop`` are provided for future compatibility but require a newer version
-        of pints that exposes ``pints.Adam`` / ``pints.IRPropMinus``.
+                The package Pints is used for optimisation
+                (https://pints.readthedocs.io/en/stable/optimisers/index.html).
+                The optimisation method is chosen by the ``method`` argument.
+                Gradient-free methods (cmaes, pso, nelder-mead) only require the
+                loss function. Gradient-based methods (gradient_descent) also require
+                sensitivities, computed via forward sensitivity analysis using
+                ``solve_fwd_sens``. The methods ``adam`` and ``irprop`` are provided
+                for future compatibility but require a newer pints version exposing
+                ``pints.Adam`` / ``pints.IRPropMinus``.
 
         Arguments
         ---------
@@ -1200,12 +1246,15 @@ class MyokitModelMixin:
 
         if np.any(lower_bounds >= upper_bounds):
             raise ValueError(
-                f"Every lower bound ({lower_bounds.tolist()}) must be less than its upper bound ({upper_bounds.tolist()})."
+                f"Every lower bound ({lower_bounds.tolist()}) must be less "
+                f"than its upper bound ({upper_bounds.tolist()})."
             )
 
         if np.any(starting < lower_bounds) or np.any(starting > upper_bounds):
             raise ValueError(
-                f"Starting values ({starting.tolist()}) must lie within the supplied bounds ({lower_bounds.tolist()}, {upper_bounds.tolist()})."
+                f"Starting values ({starting.tolist()}) must lie within "
+                f"the supplied bounds ({lower_bounds.tolist()}, "
+                f"{upper_bounds.tolist()})."
             )
 
         return variables, starting, lower_bounds, upper_bounds
@@ -1508,7 +1557,8 @@ class MyokitModelMixin:
 
         input_values = np.array(group["input_values"], copy=True)
         # Conversion factors: solve_fwd_sens gives d(y)/d(converted_param).
-        # Since converted = factor * original, d(y)/d(original) = d(y)/d(converted) * factor.
+        # Since converted = factor * original,
+        # d(y)/d(original) = d(y)/d(converted) * factor.
         conversion_factors = [
             self._get_optimise_conversion_factor(variable, group["model"])
             for variable in input_variables

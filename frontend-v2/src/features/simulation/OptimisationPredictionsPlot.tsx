@@ -90,6 +90,8 @@ const OptimisationPredictionsPlot: FC<OptimisationPredictionsPlotProps> = ({
         const plotData = createPlots({
           data: predictions,
           dataReference: [],
+          uncertaintyData: [],
+          uncertaintyReferenceData: [],
           groups,
           model,
           plot: plotWithId,
@@ -103,14 +105,24 @@ const OptimisationPredictionsPlot: FC<OptimisationPredictionsPlotProps> = ({
         const yRanges = getYRanges({ plotData });
 
         const icLines: number[] = concentrationUnit
-          ? genIcLines(units, plotWithId, efficiencyExperiment, concentrationUnit)
+          ? genIcLines(
+              units,
+              plotWithId,
+              efficiencyExperiment,
+              concentrationUnit,
+            )
           : [];
 
         const convertedTime =
           predictions[0]?.time.map((t) => t * xConversionFactor) ?? [];
         const minX = convertedTime.length ? Math.min(...convertedTime) : 0;
         const maxX = convertedTime.length ? Math.max(...convertedTime) : 1;
-        const icLineShapes = getICLineShapes({ icLines, minX, maxX, plot: plotWithId });
+        const icLineShapes = getICLineShapes({
+          icLines,
+          minX,
+          maxX,
+          plot: plotWithId,
+        });
 
         const yAxisVariableNames = plotData
           .filter((d) => !d.yaxis)

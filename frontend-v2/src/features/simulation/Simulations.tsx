@@ -75,7 +75,6 @@ function addPlotVariableOption(variable: VariableRead) {
   };
 }
 
-
 interface UseSimulationDataProps {
   model?: CombinedModelRead;
   simulation?: SimulationRead;
@@ -122,13 +121,14 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc || dv.type === "AUC";
-    }, false)
+        return acc || dv.type === "AUC";
+      }, false)
     : false;
 
   const {
     loadingSimulate,
     data,
+    uncertaintyData,
     error: simulateError,
   } = useSimulation(simInputs, model, hasPlots || hasSecondaryParameters);
 
@@ -141,11 +141,17 @@ function useSimulationData({
     timeMax,
     useLegacySolver,
   );
-  const { data: dataReference } = useSimulation(
-    refSimInputs,
-    showReference ? model : undefined,
-  );
-  return { loadingSimulate, simInputs, data, simulateError, dataReference };
+  const { data: dataReference, uncertaintyData: uncertaintyReferenceData } =
+    useSimulation(refSimInputs, showReference ? model : undefined);
+  return {
+    loadingSimulate,
+    simInputs,
+    data,
+    uncertaintyData,
+    simulateError,
+    dataReference,
+    uncertaintyReferenceData,
+  };
 }
 
 interface SimulationsTabProps {
@@ -219,8 +225,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     widenSliderRange,
     narrowSliderRange,
   } = useSliderSettings();
-  const [optimiseResult, setOptimiseResult] =
-    useState<OptimiseResponse | null>(null);
+  const [optimiseResult, setOptimiseResult] = useState<OptimiseResponse | null>(
+    null,
+  );
   const [optimiseResultOpen, setOptimiseResultOpen] = useState(false);
   const [optimiseError, setOptimiseError] = useState<ErrorObject | null>(null);
   const [shouldShowLegend, setShouldShowLegend] = useState(true);
@@ -242,17 +249,24 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     time_max_unit: model?.time_unit || 0,
   };
 
-  const { loadingSimulate, simInputs, data, simulateError, dataReference } =
-    useSimulationData({
-      model,
-      simulation,
-      sliderValues: undefined,
-      getSliderValue,
-      variables,
-      units,
-      showReference,
-      useLegacySolver,
-    });
+  const {
+    loadingSimulate,
+    simInputs,
+    data,
+    uncertaintyData,
+    simulateError,
+    dataReference,
+    uncertaintyReferenceData,
+  } = useSimulationData({
+    model,
+    simulation,
+    sliderValues: undefined,
+    getSliderValue,
+    variables,
+    units,
+    showReference,
+    useLegacySolver,
+  });
 
   const {
     reset,
@@ -296,12 +310,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       //setLoadingSimulate(true);
       reset(simulation);
     }
-  }, [
-    initialiseSliderSettings,
-    reset,
-    simulation,
-    variables,
-  ]);
+  }, [initialiseSliderSettings, reset, simulation, variables]);
 
   const [exportSimulation, { error: exportSimulateErrorBase }] =
     useExportSimulation({
@@ -456,48 +465,51 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     }
   };
 
-  const handleOptimiseWithInputs = useCallback(async (optimiseInputs: Optimise) => {
-    if (!model) {
-      setOptimiseError({ error: "Model not found" });
-      return;
-    }
+  const handleOptimiseWithInputs = useCallback(
+    async (optimiseInputs: Optimise) => {
+      if (!model) {
+        setOptimiseError({ error: "Model not found" });
+        return;
+      }
 
-    if (optimiseInputs.inputs.length < 1) {
-      setOptimiseError({ error: "At least one slider is required to optimise." });
-      return;
-    }
+      if (optimiseInputs.inputs.length < 1) {
+        setOptimiseError({
+          error: "At least one slider is required to optimise.",
+        });
+        return;
+      }
 
-    setOptimiseError(null);
+      setOptimiseError(null);
 
-    const response = await optimiseModel(optimiseInputs);
+      const response = await optimiseModel(optimiseInputs);
 
-    if (response.error) {
-      setOptimiseError(response.error);
-      return;
-    }
+      if (response.error) {
+        setOptimiseError(response.error);
+        return;
+      }
 
-    if (!response.data || response.data.optimal.length !== optimiseInputs.inputs.length) {
-      setOptimiseError({
-        error: "Optimise response did not match the selected sliders.",
+      if (
+        !response.data ||
+        response.data.optimal.length !== optimiseInputs.inputs.length
+      ) {
+        setOptimiseError({
+          error: "Optimise response did not match the selected sliders.",
+        });
+        return;
+      }
+
+      setSliderValues((currentSliderValues) => {
+        const nextSliderValues = new Map(currentSliderValues);
+        optimiseInputs.inputs.forEach((variableId, index) => {
+          nextSliderValues.set(variableId, response.data!.optimal[index]);
+        });
+        return nextSliderValues;
       });
-      return;
-    }
-
-    setSliderValues((currentSliderValues) => {
-      const nextSliderValues = new Map(currentSliderValues);
-      optimiseInputs.inputs.forEach((variableId, index) => {
-        nextSliderValues.set(variableId, response.data!.optimal[index]);
-      });
-      return nextSliderValues;
-    });
-    setOptimiseResult(response.data);
-    setOptimiseResultOpen(true);
-  }, [
-    model,
-    optimiseModel,
-    setSliderValues,
-    visibleSubjectGroupIds,
-  ]);
+      setOptimiseResult(response.data);
+      setOptimiseResultOpen(true);
+    },
+    [model, optimiseModel, setSliderValues, visibleSubjectGroupIds],
+  );
 
   const handleOptimise = useCallback(() => {
     handleOptimiseWithInputs(
@@ -653,7 +665,11 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
                   index={index}
                   plot={plot}
                   data={data}
+                  uncertaintyData={uncertaintyData}
                   dataReference={showReference ? dataReference : []}
+                  uncertaintyReferenceData={
+                    showReference ? uncertaintyReferenceData : []
+                  }
                   variables={
                     variables?.map((variable) =>
                       renameVariable(variable, model),
@@ -706,7 +722,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
               severity="success"
               onClose={() => setOptimiseResultOpen(false)}
             >
-              Optimisation complete. Loss: {optimiseResult?.loss.toFixed(4)}. {" "}
+              Optimisation complete. Loss: {optimiseResult?.loss.toFixed(4)}.{" "}
               {optimiseResult?.reason}
             </Alert>
           </Snackbar>

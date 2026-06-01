@@ -7,6 +7,7 @@ import {
   PageName,
   setPage,
 } from "../features/main/mainSlice";
+import { Optimise } from "../app/backendApi";
 import { project, projectHandlers } from "./project.mock";
 import { simulationData, simulationWithGroupsData } from "./simulations.mock";
 
@@ -128,47 +129,32 @@ export const Default: Story = {
 export const Parameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const parametersButton = await canvas.findByRole(
-      "button",
-      {
-        name: "Parameters 0",
-        expanded: false,
-      },
-    );
+    const parametersButton = await canvas.findByRole("button", {
+      name: "Parameters 0",
+      expanded: false,
+    });
     expect(parametersButton).toBeInTheDocument();
     await userEvent.click(parametersButton);
     expect(parametersButton).toHaveAttribute("aria-expanded", "true");
 
-    const addParameterButton = await canvas.findByRole(
-      "button",
-      {
-        name: /Add parameter/i,
-      },
-    );
+    const addParameterButton = await canvas.findByRole("button", {
+      name: /Add parameter/i,
+    });
     await userEvent.click(addParameterButton);
 
-    const parameterOption = await screen.findByRole(
-      "button",
-      {
-        name: /^V1/,
-      },
-    );
+    const parameterOption = await screen.findByRole("button", {
+      name: /^V1/,
+    });
     await userEvent.click(parameterOption);
 
-    const simulationSlider = await screen.findByRole(
-      "slider",
-      {
-        name: "V1 [mL/kg]",
-      },
-    );
+    const simulationSlider = await screen.findByRole("slider", {
+      name: "V1 [mL/kg]",
+    });
     expect(simulationSlider).toBeInTheDocument();
 
-    const inputField = await screen.findByRole(
-      "spinbutton",
-      {
-        name: "V1 [mL/kg]",
-      },
-    );
+    const inputField = await screen.findByRole("spinbutton", {
+      name: "V1 [mL/kg]",
+    });
     expect(inputField).toBeInTheDocument();
     await userEvent.click(inputField);
     expect(inputField).toHaveFocus();
@@ -261,11 +247,11 @@ export const WithGroups: Story = {
     msw: {
       handlers: {
         dataset: [
-          http.get("/api/dataset/:id", async () => {
+          http.get(/\/api\/dataset\/\d+\/?$/, async () => {
             await delay();
             return HttpResponse.json(dataset, { status: 200 });
           }),
-          http.get("/api/subject_group", async ({ request }) => {
+          http.get(/\/api\/subject_group\/?$/, async ({ request }) => {
             await delay();
             const url = new URL(request.url);
             const projectId = url.searchParams.get("project_id");
@@ -274,11 +260,11 @@ export const WithGroups: Story = {
             }
             return HttpResponse.json([], { status: 200 });
           }),
-          http.get("/api/subject", async () => {
+          http.get(/\/api\/subject\/?$/, async () => {
             await delay();
             return HttpResponse.json(subjects, { status: 200 });
           }),
-          http.get("/api/biomarker_type", async () => {
+          http.get(/\/api\/biomarker_type\/?$/, async () => {
             await delay();
             return HttpResponse.json(biomarkerTypes, { status: 200 });
           }),
@@ -328,17 +314,53 @@ export const OptimiseSingleParameter: Story = {
   parameters: {
     msw: {
       handlers: {
+        dataset: [
+          http.get("/api/dataset/:id", async () => {
+            await delay();
+            return HttpResponse.json(dataset, { status: 200 });
+          }),
+          http.get("/api/subject_group", async ({ request }) => {
+            await delay();
+            const url = new URL(request.url);
+            const projectId = url.searchParams.get("project_id");
+            if (projectId) {
+              return HttpResponse.json(dataset.groups, { status: 200 });
+            }
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/subject", async () => {
+            await delay();
+            return HttpResponse.json(subjects, { status: 200 });
+          }),
+          http.get("/api/biomarker_type", async () => {
+            await delay();
+            return HttpResponse.json(biomarkerTypes, { status: 200 });
+          }),
+        ],
         optimise: http.post(
           "/api/combined_model/:id/optimise",
           async ({ request }) => {
             await delay(250);
-            const optimiseParams = await request.json();
+            const optimiseParams = (await request.json()) as Optimise;
             optimiseSpy(optimiseParams);
             return HttpResponse.json(
               {
                 optimal: [2.5],
                 loss: 0.01234,
                 reason: "Stopped after 8 iterations.",
+                inputs: optimiseParams.inputs,
+                starting: optimiseParams.starting,
+                bounds: optimiseParams.bounds,
+                biomarker_types: optimiseParams.biomarker_types || [],
+                subject_groups: optimiseParams.subject_groups || [],
+                max_iterations: optimiseParams.max_iterations || null,
+                use_multiplicative_noise:
+                  optimiseParams.use_multiplicative_noise ?? true,
+                method: optimiseParams.method || "pso",
+                predictions: null,
+                residuals: null,
+                covariance: null,
+                condition_number: null,
               },
               { status: 200 },
             );
@@ -370,7 +392,7 @@ export const OptimiseSingleParameter: Story = {
     const optimiseButton = await screen.findByRole("button", {
       name: "Optimise",
     });
-    expect(optimiseButton).toBeEnabled();
+    await waitFor(() => expect(optimiseButton).toBeEnabled());
     await userEvent.click(optimiseButton);
 
     const loadingIndicator = await screen.findByRole("progressbar");
