@@ -53,6 +53,7 @@ class OptimiseContext(SimulateContext):
             model=model,
             outputs=outputs,
             variables=variables,
+            dynamic_inputs=optimise_inputs,
             use_diffsol=use_diffsol,
             time_max=time_max,
             build_simulation_groups=False,
@@ -428,22 +429,7 @@ class OptimiseContext(SimulateContext):
             lower_bounds,
             upper_bounds,
         ):
-            variable = self._variables_by_id.get(input_id)
-            if variable is None:
-                from pkpdapp.models import Variable
-
-                raise Variable.DoesNotExist(
-                    f"Optimisation input variables do not exist: {[input_id]}"
-                )
-            if not variable.constant:
-                raise ValueError(
-                    f"Optimisation input {variable.qname} must be a constant variable."
-                )
-            if variable.qname.endswith("_tlag_ud"):
-                raise ValueError(
-                    "Optimising tlag variables is not supported by this method."
-                )
-
+            variable = self._variables_by_id[input_id]
             converted_start = self._convert_variable_value(variable, start)
             converted_lower = self._convert_variable_value(variable, lower)
             converted_upper = self._convert_variable_value(variable, upper)
@@ -455,12 +441,6 @@ class OptimiseContext(SimulateContext):
                 raise ValueError(
                     f"Starting value for {variable.qname} must lie within bounds."
                 )
-            if variable.id not in self._input_index_by_variable_id:
-                raise ValueError(
-                    "Optimisation inputs are missing from context inputs: "
-                    f"[{variable.id}]"
-                )
-
     def _build_optimisation_groups(
         self,
         biomarker_types: list[int] | None,

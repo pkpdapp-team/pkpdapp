@@ -32,9 +32,7 @@ class UncertaintySimulationMixin:
             raise ValueError(f"distribution for {qname} is missing mean")
 
         if variance is None and std is None:
-            raise ValueError(
-                f"distribution for {qname} must define variance or std"
-            )
+            raise ValueError(f"distribution for {qname} must define variance or std")
 
         if variance is not None and variance < 0:
             raise ValueError(f"distribution for {qname} has negative variance")
@@ -97,29 +95,28 @@ class UncertaintySimulationMixin:
         if outputs is None:
             outputs = []
 
-        default_variables = {
-            v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
-        }
-        if variables is None:
-            variables = default_variables
-        else:
-            variables = {
-                **default_variables,
-                **variables,
-            }
-
         if variable_distributions is None:
             variable_distributions = {}
 
-        for qname in variable_distributions.keys():
-            self.variables.get(qname=qname)
-
         quantiles = self._validate_quantiles(quantiles)
-        model_dosing_protocols, groups = self._get_model_dosing_protocols()
+        from pkpdapp.models.simulate_context import SimulateContext
+
+        dynamic_input_ids = [
+            self.variables.get(qname=qname).id for qname in variable_distributions
+        ]
         rng = np.random.default_rng(seed)
 
+        base_context = SimulateContext(
+            model=self,
+            outputs=outputs,
+            variables=variables,
+            dynamic_inputs=dynamic_input_ids,
+            use_diffsol=use_diffsol,
+            time_max=time_max,
+        )
+
         uncertainty_results = []
-        for i, dosing_protocols in enumerate(model_dosing_protocols):
+        for simulation_group in base_context.simulation_groups:
             sampled_outputs = []
             for _ in range(sample_count):
                 sampled_variables = self._sample_variables(
@@ -127,21 +124,20 @@ class UncertaintySimulationMixin:
                     variable_distributions=variable_distributions,
                     rng=rng,
                 )
-                if use_diffsol:
-                    sampled_output = self.simulate_model_diffsol(
-                        variables=sampled_variables,
-                        time_max=time_max,
-                        outputs=outputs,
-                        dosing_protocols=dosing_protocols,
+                sampled_values_by_id = {
+                    base_context.get_variable_context(qname).id: (
+                        sampled_value
+                        * base_context.get_variable_context(qname).conversion_factor
                     )
-                else:
-                    sampled_output = self.simulate_model(
-                        variables=sampled_variables,
-                        time_max=time_max,
-                        outputs=outputs,
-                        dosing_protocols=dosing_protocols,
+                    for qname, sampled_value in sampled_variables.items()
+                    if qname in variable_distributions
+                }
+                sampled_outputs.append(
+                    base_context.simulate_model(
+                        simulation_group,
+                        values_by_id=sampled_values_by_id,
                     )
-                sampled_outputs.append(sampled_output)
+                )
 
             aggregated_outputs = self._aggregate_sampled_outputs(
                 sampled_outputs=sampled_outputs,
@@ -153,7 +149,7 @@ class UncertaintySimulationMixin:
                     "time": self._extract_time_values(sampled_outputs[0]),
                     "outputs": aggregated_outputs,
                     "sample_count": sample_count,
-                    "group_id": None if i == 0 else groups[i - 1].id,
+                    "group_id": simulation_group.group_id,
                 }
             )
 

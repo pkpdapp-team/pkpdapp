@@ -93,6 +93,7 @@ class SimulateContext:
         model: Any,
         outputs: list[str] | None = None,
         variables: dict[str, float] | None = None,
+        dynamic_inputs: list[int] | None = None,
         use_diffsol: bool = False,
         time_max: float | None = None,
         build_simulation_groups: bool = True,
@@ -118,6 +119,7 @@ class SimulateContext:
         self.variable_values = self._build_variable_values(variables)
         self.inputs = self._build_inputs()
         self._input_index_by_variable_id = self._build_input_index_by_variable_id()
+        self.dynamic_input_ids = self._validate_dynamic_inputs(dynamic_inputs)
         self._set_base_input_rhs()
         self.time_max = self._build_time_max(model, time_max)
 
@@ -138,6 +140,7 @@ class SimulateContext:
     def simulate_model(
         self,
         simulation_group: SimulationGroupContext,
+        values_by_id: dict[int, float] | None = None,
     ) -> dict[int, list[float]]:
         model = self._myokit_model
         inputs = self._simulation_inputs(simulation_group)
@@ -146,11 +149,23 @@ class SimulateContext:
         for qname, value in simulation_group.nonlinear_inputs.items():
             self._myokit_model.get(qname).set_rhs(float(value))
 
+        if values_by_id is not None:
+            for variable_id, value in values_by_id.items():
+                if variable_id not in self.dynamic_input_ids:
+                    raise ValueError(
+                        f"Variable {variable_id} is not a configured dynamic input."
+                    )
+                input_name = self.get_input_name(variable_id)
+                self._myokit_model.get(input_name).set_rhs(float(value))
+
         if simulation_group.diffsol_ode is not None:
             input_values = np.asarray(
                 [input_context.value for input_context in inputs],
                 dtype=float,
             )
+            if values_by_id is not None:
+                for variable_id, value in values_by_id.items():
+                    input_values[self._input_index_by_variable_id[variable_id]] = value
             solution = simulation_group.diffsol_ode.solve(input_values, self.time_max)
             return self.serialize_diffsol_solution(solution, model, outputs)
 
@@ -216,6 +231,41 @@ class SimulateContext:
             self._variables_by_qname[input_context.name].id: index
             for index, input_context in enumerate(self.inputs)
         }
+
+    def _validate_dynamic_inputs(
+        self, dynamic_inputs: list[int] | None
+    ) -> tuple[int, ...]:
+        if dynamic_inputs is None:
+            return ()
+
+        if len(set(dynamic_inputs)) != len(dynamic_inputs):
+            raise ValueError("Dynamic inputs must be unique.")
+
+        validated_inputs = []
+        for input_id in dynamic_inputs:
+            variable = self._variables_by_id.get(input_id)
+            if variable is None:
+                from pkpdapp.models import Variable
+
+                raise Variable.DoesNotExist(
+                    f"Dynamic input variables do not exist: {[input_id]}"
+                )
+            if not variable.constant:
+                raise ValueError(
+                    f"Dynamic input {variable.qname} must be a constant variable."
+                )
+            if variable.qname.endswith("_tlag_ud"):
+                raise ValueError(
+                    "Dynamic tlag variables are not supported by this method."
+                )
+            if variable.id not in self._input_index_by_variable_id:
+                raise ValueError(
+                    "Dynamic inputs are missing from context inputs: "
+                    f"[{variable.id}]"
+                )
+            validated_inputs.append(variable.id)
+
+        return tuple(validated_inputs)
 
     def _set_base_input_rhs(self):
         for input_context in self.inputs:

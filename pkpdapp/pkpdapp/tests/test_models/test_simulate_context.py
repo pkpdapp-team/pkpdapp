@@ -46,6 +46,13 @@ class TestSimulateContext(TestCase):
             use_diffsol=True,
             time_max=12,
         )
+        dynamic_context = SimulateContext(
+            model,
+            outputs=["Central.response", "environment.t"],
+            variables={"Central.k": 0.25},
+            time_max=12,
+            dynamic_inputs=[input_variables[0].id],
+        )
 
         self.assertEqual(context.model_id, model.id)
         self.assertEqual(context.project_id, model.project_id)
@@ -156,6 +163,19 @@ class TestSimulateContext(TestCase):
             diffsol_context.simulate_model(diffsol_context.simulation_groups[1]),
             expected_diffsol,
         )
+
+        baseline_dynamic = dynamic_context.simulate_model(
+            dynamic_context.simulation_groups[1]
+        )
+        overridden_dynamic = dynamic_context.simulate_model(
+            dynamic_context.simulation_groups[1],
+            values_by_id={input_variables[0].id: 0.3},
+        )
+        self.assertEqual(
+            set(baseline_dynamic.keys()),
+            set(overridden_dynamic.keys()),
+        )
+        self.assertNotEqual(baseline_dynamic, overridden_dynamic)
 
         self.assertFalse(hasattr(context, "_project"))
         self.assertFalse(hasattr(context, "_variables_by_qname"))
