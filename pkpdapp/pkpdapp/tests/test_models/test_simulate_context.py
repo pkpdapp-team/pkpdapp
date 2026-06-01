@@ -84,12 +84,10 @@ class TestSimulateContext(TestCase):
             self.assertEqual(len(group_context.records), len(SELECTED_TIMES))
 
         starting_values = {
-            variable.id: value
-            for variable, value in zip(input_variables, [0.2, 1.5])
+            variable.id: value for variable, value in zip(input_variables, [0.2, 1.5])
         }
         true_values = {
-            variable.id: value
-            for variable, value in zip(input_variables, [0.22, 1.7])
+            variable.id: value for variable, value in zip(input_variables, [0.22, 1.7])
         }
         starting_prediction = optimise_context._optimise_predict(
             optimise_context.optimisation_groups[0],
