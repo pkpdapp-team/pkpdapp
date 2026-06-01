@@ -16,7 +16,7 @@ import numpy as np
 import myokit
 import pydiffsol
 
-from pkpdapp.models.myokit_model_mixin import get_protocol, set_administration
+from pkpdapp.models.myokit_protocol import get_protocol, set_administration
 
 
 @dataclass(frozen=True)
@@ -231,6 +231,16 @@ class SimulateContext:
             InputContext(name=qname, value=value)
             for qname, value in simulation_group.nonlinear_inputs.items()
         )
+
+    @property
+    def input_index_by_variable_id(self) -> dict[int, int]:
+        return self._input_index_by_variable_id
+
+    def get_variable_context(self, qname: str) -> VariableContext:
+        return self._get_variable_context(qname)
+
+    def get_input_name(self, variable_id: int) -> str:
+        return self.inputs[self._input_index_by_variable_id[variable_id]].name
 
     def _myokit_protocols(
         self,

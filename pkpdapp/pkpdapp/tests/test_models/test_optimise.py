@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 from django.test import TestCase
+from pkpdapp.models.optimise_context import OptimiseContext
 from pkpdapp.models import (
     Biomarker,
     BiomarkerType,
@@ -17,6 +18,33 @@ from pkpdapp.tests.optimise_fixtures import (
 
 
 class TestOptimise(TestCase):
+    def _build_optimise_context(self, setup, starting, bounds):
+        return OptimiseContext(
+            model=setup["model"],
+            optimise_inputs=[variable.id for variable in setup["inputs"]],
+            starting=starting,
+            bounds=bounds,
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            use_diffsol=True,
+        )
+
+    def _to_model_space_values_by_id(self, context, input_ids, values):
+        conversion_factors = np.asarray(
+            [
+                context.get_variable_context(
+                    context.get_input_name(input_id)
+                ).conversion_factor
+                for input_id in input_ids
+            ],
+            dtype=float,
+        )
+        model_values = np.asarray(values, dtype=float) * conversion_factors
+        return {
+            input_id: float(value)
+            for input_id, value in zip(input_ids, model_values)
+        }
+
     def _exponential_data(self):
         setup = create_exponential_data(
             name_prefix="optimise", group_name_prefix="Data", rng_seed=12345
@@ -77,7 +105,7 @@ class TestOptimise(TestCase):
         ):
             axis = axes[index, 0]
 
-            time_values = np.asarray(group["t_eval"], dtype=float)
+            time_values = np.asarray(group.t_eval, dtype=float)
             axis.plot(
                 time_values, true_prediction[0], label="True parameter prediction"
             )
@@ -88,18 +116,14 @@ class TestOptimise(TestCase):
             )
 
             record_times = [
-                record["time"]
-                for record in group["records"]
-                if record["output_index"] == 0
+                record.time for record in group.records if record.output_index == 0
             ]
             record_values = [
-                record["value"]
-                for record in group["records"]
-                if record["output_index"] == 0
+                record.value for record in group.records if record.output_index == 0
             ]
             axis.scatter(record_times, record_values, label="Observed data", s=15)
             axis.set_xlabel("Time (h)")
-            axis.set_ylabel(group["outputs"][0])
+            axis.set_ylabel(group.outputs[0].qname)
             axis.set_title(f"Group {index + 1}")
             axis.legend()
 
@@ -113,25 +137,37 @@ class TestOptimise(TestCase):
     def test_optimise(self):
         setup = self._exponential_data()
         model = setup["model"]
-        input_variables = setup["inputs"]
+        input_ids = [variable.id for variable in setup["inputs"]]
         true_values = setup["true"]
         starting = [0.27, 1.45]
         bounds = ([0.16, 1.2], [0.3, 2.1])
         group_ids = [group.id for group in setup["groups"]]
         biomarker_type_ids = [setup["biomarker_type"].id]
 
-        prepared_groups = model._prepare_optimise_groups(
-            biomarker_type_ids,
-            group_ids,
+        context = self._build_optimise_context(
+            setup,
+            starting,
+            bounds,
+        )
+        prepared_groups = context.optimisation_groups
+        starting_values_by_id = self._to_model_space_values_by_id(
+            context,
+            input_ids,
+            starting,
+        )
+        true_values_by_id = self._to_model_space_values_by_id(
+            context,
+            input_ids,
+            true_values,
         )
 
         starting_predictions = [
-            model._optimise_predict(group, input_variables, starting)
+            context.optimise_predict(group, starting_values_by_id)
             for group in prepared_groups
         ]
 
         true_predictions = [
-            model._optimise_predict(group, input_variables, true_values)
+            context.optimise_predict(group, true_values_by_id)
             for group in prepared_groups
         ]
 
@@ -140,7 +176,7 @@ class TestOptimise(TestCase):
             starting_predictions,
             prepared_groups,
         ):
-            expected_shape = (len(group["outputs"]), len(group["t_eval"]))
+            expected_shape = (len(group.outputs), len(group.t_eval))
             self.assertEqual(true_prediction.shape, expected_shape)
             self.assertEqual(starting_prediction.shape, expected_shape)
 
@@ -150,21 +186,19 @@ class TestOptimise(TestCase):
             starting_predictions,
         )
 
-        starting_loss = model._optimise_loss(
+        starting_loss = context.optimise_loss(
             prepared_groups,
-            input_variables,
-            starting,
+            starting_values_by_id,
         )
-        true_loss = model._optimise_loss(
+        true_loss = context.optimise_loss(
             prepared_groups,
-            input_variables,
-            true_values,
+            true_values_by_id,
         )
 
         self.assertLess(true_loss, starting_loss)
 
         result = model.optimise(
-            inputs=[variable.id for variable in input_variables],
+            inputs=input_ids,
             starting=starting,
             bounds=bounds,
             biomarker_types=biomarker_type_ids,
@@ -232,14 +266,22 @@ class TestOptimise(TestCase):
             value=0.0,
         )
 
-        groups = setup["model"]._prepare_optimise_groups(
-            [setup["biomarker_type"].id],
-            [group.id for group in setup["groups"]],
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        input_ids = [variable.id for variable in setup["inputs"]]
+        context = self._build_optimise_context(
+            setup,
+            starting,
+            bounds,
         )
-        loss = setup["model"]._optimise_loss(
-            groups,
-            setup["inputs"],
+        true_values_by_id = self._to_model_space_values_by_id(
+            context,
+            input_ids,
             setup["true"],
+        )
+        loss = context.optimise_loss(
+            context.optimisation_groups,
+            true_values_by_id,
             use_multiplicative_noise=True,
         )
         self.assertEqual(loss, np.inf)
@@ -254,11 +296,19 @@ class TestOptimise(TestCase):
         group_ids = [group.id for group in setup["groups"]]
         biomarker_type_ids = [setup["biomarker_type"].id]
 
-        prepared_groups = model._prepare_optimise_groups(biomarker_type_ids, group_ids)
-        starting_loss = model._optimise_loss(
-            prepared_groups,
-            setup["inputs"],
+        context = self._build_optimise_context(
+            setup,
             starting,
+            bounds,
+        )
+        starting_values_by_id = self._to_model_space_values_by_id(
+            context,
+            input_ids,
+            starting,
+        )
+        starting_loss = context.optimise_loss(
+            context.optimisation_groups,
+            starting_values_by_id,
         )
 
         result = model.optimise(
@@ -286,32 +336,39 @@ class TestOptimise(TestCase):
         group_ids = [group.id for group in setup["groups"]]
         biomarker_type_ids = [setup["biomarker_type"].id]
 
-        prepared_groups = model._prepare_optimise_groups(biomarker_type_ids, group_ids)
-        starting_loss = model._optimise_loss(
-            prepared_groups,
-            setup["inputs"],
+        context = self._build_optimise_context(
+            setup,
             starting,
+            bounds,
+        )
+        prepared_groups = context.optimisation_groups
+        starting_values_by_id = self._to_model_space_values_by_id(
+            context,
+            input_ids,
+            starting,
+        )
+        starting_loss = context.optimise_loss(
+            prepared_groups,
+            starting_values_by_id,
         )
 
         # Verify that sensitivity helper returns correctly shaped arrays.
-        y, y_prime = model._optimise_predict_with_sens(
+        y, y_prime = context.optimise_predict_with_sens(
             prepared_groups[0],
-            setup["inputs"],
-            starting,
+            starting_values_by_id,
         )
-        n_times = len(prepared_groups[0]["t_eval"])
-        n_outputs = len(prepared_groups[0]["outputs"])
-        n_params = len(setup["inputs"])
+        n_times = len(prepared_groups[0].t_eval)
+        n_outputs = len(prepared_groups[0].outputs)
+        n_params = len(input_ids)
         self.assertEqual(y.shape, (n_times, n_outputs))
         self.assertEqual(y_prime.shape, (n_times, n_outputs, n_params))
         self.assertTrue(np.all(np.isfinite(y)))
         self.assertTrue(np.all(np.isfinite(y_prime)))
 
         # Verify that _optimise_loss_gradient returns scalar loss + vector gradient.
-        total_loss, total_gradient = model._optimise_loss_gradient(
+        total_loss, total_gradient = context.optimise_loss_gradient(
             prepared_groups,
-            setup["inputs"],
-            starting,
+            starting_values_by_id,
         )
         self.assertTrue(np.isfinite(total_loss))
         self.assertEqual(total_gradient.shape, (n_params,))

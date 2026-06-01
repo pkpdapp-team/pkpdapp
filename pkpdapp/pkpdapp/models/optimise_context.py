@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 import numpy as np
+from scipy.linalg import svd
 
 from pkpdapp.models.simulate_context import (
     OutputContext,
@@ -62,6 +63,7 @@ class OptimiseContext(SimulateContext):
             starting,
             bounds,
         )
+        self.optimise_input_ids = tuple(optimise_inputs)
         self.optimisation_groups = self._build_optimisation_groups(
             biomarker_types,
             subject_groups,
@@ -101,6 +103,13 @@ class OptimiseContext(SimulateContext):
             )
 
         return y
+
+    def optimise_predict(
+        self,
+        group: OptimisationGroupContext,
+        values_by_id: dict[int, float],
+    ):
+        return self._optimise_predict(group, values_by_id)
 
     def _optimise_predict_with_sens(
         self,
@@ -149,6 +158,13 @@ class OptimiseContext(SimulateContext):
 
         return y.T, y_prime
 
+    def optimise_predict_with_sens(
+        self,
+        group: OptimisationGroupContext,
+        values_by_id: dict[int, float],
+    ):
+        return self._optimise_predict_with_sens(group, values_by_id)
+
     def _optimise_loss(
         self,
         groups: tuple[OptimisationGroupContext, ...],
@@ -181,6 +197,14 @@ class OptimiseContext(SimulateContext):
         if not np.isfinite(total):
             return np.inf
         return float(total)
+
+    def optimise_loss(
+        self,
+        groups: tuple[OptimisationGroupContext, ...],
+        values_by_id: dict[int, float],
+        use_multiplicative_noise=False,
+    ):
+        return self._optimise_loss(groups, values_by_id, use_multiplicative_noise)
 
     def _optimise_loss_gradient(
         self,
@@ -231,6 +255,153 @@ class OptimiseContext(SimulateContext):
         if not np.isfinite(total_loss):
             return np.inf, np.zeros(n_params)
         return float(total_loss), total_gradient
+
+    def optimise_loss_gradient(
+        self,
+        groups: tuple[OptimisationGroupContext, ...],
+        values_by_id: dict[int, float],
+        use_multiplicative_noise=False,
+    ):
+        return self._optimise_loss_gradient(
+            groups,
+            values_by_id,
+            use_multiplicative_noise,
+        )
+
+    def optimise_diagnostics(
+        self,
+        optimal_model: np.ndarray,
+        use_multiplicative_noise=False,
+    ):
+        input_ids = self.optimise_input_ids
+        n_params = len(input_ids)
+        values_by_id = {
+            input_id: float(value)
+            for input_id, value in zip(
+                input_ids,
+                np.asarray(optimal_model, dtype=float),
+            )
+        }
+        conversion_factors = np.asarray(
+            [
+                self.get_variable_context(self.get_input_name(input_id)).conversion_factor
+                for input_id in input_ids
+            ],
+            dtype=float,
+        )
+
+        predictions_list = []
+        residuals_list = []
+        jacobian_rows = []
+        residual_values = []
+
+        time_context = self.get_variable_context(self.time_qname)
+        time_conversion_factor = time_context.conversion_factor
+
+        for group in self.optimisation_groups:
+            try:
+                y, y_prime = self.optimise_predict_with_sens(group, values_by_id)
+            except Exception:
+                logger.exception("diffsol sensitivity solve failed during diagnostics.")
+                return {
+                    "predictions": None,
+                    "residuals": None,
+                    "covariance": None,
+                    "condition_number": None,
+                }
+
+            t_eval = np.asarray(group.t_eval, dtype=float)
+
+            pred_dict = {"group_id": group.group_id}
+            pred_dict[time_context.id] = (t_eval / time_conversion_factor).tolist()
+            output_contexts = [
+                self.get_variable_context(output.qname) for output in group.outputs
+            ]
+            for i, output in enumerate(group.outputs):
+                output_conversion_factor = output_contexts[i].conversion_factor
+                pred_dict[output.id] = (
+                    y[:, i] / output_conversion_factor
+                ).tolist()
+            predictions_list.append(pred_dict)
+
+            obs_residuals_per_output = {i: [] for i in range(len(group.outputs))}
+
+            for record in group.records:
+                t_idx = record.time_index
+                o_idx = record.output_index
+                prediction = y[t_idx, o_idx]
+                observed = record.value
+
+                if use_multiplicative_noise:
+                    if prediction <= 0 or observed <= 0:
+                        residual = np.nan
+                        jac_row = np.full(n_params, np.nan)
+                    else:
+                        residual = np.log(prediction) - np.log(observed)
+                        jac_row = y_prime[t_idx, o_idx, :] / prediction
+                    residual_for_output = residual
+                else:
+                    residual = prediction - observed
+                    output_conversion_factor = output_contexts[o_idx].conversion_factor
+                    residual_for_output = residual / output_conversion_factor
+                    jac_row = y_prime[t_idx, o_idx, :]
+
+                obs_residuals_per_output[o_idx].append(float(residual_for_output))
+                jacobian_rows.append(jac_row)
+                residual_values.append(float(residual))
+
+            resid_dict = {"group_id": group.group_id}
+            all_obs_times = sorted(
+                set(record.time / time_conversion_factor for record in group.records)
+            )
+            resid_dict[time_context.id] = all_obs_times
+            for i, output in enumerate(group.outputs):
+                resid_dict[output.id] = obs_residuals_per_output[i]
+            residuals_list.append(resid_dict)
+
+        J = np.array(jacobian_rows)
+        residual_arr = np.array(residual_values)
+
+        valid_mask = np.isfinite(residual_arr) & np.all(np.isfinite(J), axis=1)
+        J_valid = J[valid_mask]
+        resid_valid = residual_arr[valid_mask]
+        n_valid = len(resid_valid)
+
+        if n_valid <= n_params:
+            return {
+                "predictions": predictions_list,
+                "residuals": residuals_list,
+                "covariance": None,
+                "condition_number": None,
+            }
+
+        rss = float(np.dot(resid_valid, resid_valid))
+        sigma2 = rss / (n_valid - n_params)
+
+        JtJ = J_valid.T @ J_valid
+        try:
+            cov_model = sigma2 * np.linalg.pinv(JtJ)
+            inv_cf = np.diag(1.0 / conversion_factors)
+            cov = inv_cf @ cov_model @ inv_cf
+        except np.linalg.LinAlgError:
+            cov = None
+
+        condition_number = None
+        if cov is not None:
+            try:
+                singular_values = svd(cov, compute_uv=False)
+                s_max = singular_values[0]
+                s_min = singular_values[-1]
+                condition_number = float(s_max / s_min) if s_min != 0 else np.inf
+            except Exception:
+                pass
+
+        return {
+            "predictions": predictions_list,
+            "residuals": residuals_list,
+            "covariance": cov.tolist() if cov is not None else None,
+            "condition_number": condition_number,
+        }
 
     def _validate_optimise_inputs(
         self,
