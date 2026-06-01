@@ -414,8 +414,9 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@loc
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
         "LOCATION": "127.0.0.1:11211",
+        "OPTIONS": {"ignore_exc": True},
     }
 }
 
@@ -441,3 +442,14 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 }
 
 TEST_RUNNER = "snapshottest.django.TestRunner"
+
+_csrf_trusted_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in [
+        *_csrf_trusted_origins,
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ]
+    if origin.strip()
+]
