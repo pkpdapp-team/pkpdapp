@@ -5,6 +5,7 @@ import {
   CompoundRead,
   EfficacyExperimentRead,
   Optimise,
+  SimulateUncertaintyResponse,
   SimulateResponse,
   Simulation,
   SimulationSlider,
@@ -24,7 +25,10 @@ type GetDefaultOptimiseInputsProps = {
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
   variables: VariableRead[];
   getSliderValue: (variableId: number, variable?: VariableRead) => number;
-  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
+  getSliderBounds: (
+    variableId: number,
+    variable?: VariableRead,
+  ) => [number, number];
   plots: { y_axes: SimulationYAxis[] }[];
   biomarkerTypes: BiomarkerTypeRead[];
   subjectGroups: number[];
@@ -83,6 +87,44 @@ export const plotColours = [
   "#17becf", // blue-teal
 ];
 
+const hexToRgba = (hex: string, alpha: number): string => {
+  const normalizedHex = hex.replace("#", "");
+  const r = parseInt(normalizedHex.substring(0, 2), 16);
+  const g = parseInt(normalizedHex.substring(2, 4), 16);
+  const b = parseInt(normalizedHex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getQuantileBounds = (
+  uncertainty: SimulateUncertaintyResponse,
+  variableId: number,
+): { lower: number[]; upper: number[] } | null => {
+  const summary = uncertainty.outputs[String(variableId)];
+  if (!summary) {
+    return null;
+  }
+
+  const quantileEntries = Object.entries(
+    summary.quantiles as Record<string, number[]>,
+  )
+    .map(([key, values]) => ({ q: Number(key), values }))
+    .filter(({ q }) => Number.isFinite(q))
+    .sort((a, b) => a.q - b.q);
+
+  if (quantileEntries.length < 2) {
+    return null;
+  }
+
+  const lower =
+    quantileEntries.find((entry) => Math.abs(entry.q - 0.05) < 1e-9)?.values ||
+    quantileEntries[0].values;
+  const upper =
+    quantileEntries.find((entry) => Math.abs(entry.q - 0.95) < 1e-9)?.values ||
+    quantileEntries[quantileEntries.length - 1].values;
+
+  return { lower, upper };
+};
+
 type YAxisOptions = {
   unit: number | null | undefined;
   scale: Y2ScaleEnum;
@@ -133,26 +175,43 @@ export function getYAxisOptions(
 /// Includes non-constant variables that match the following criteria:
 /// - For library models: variables that start with C, receptor occupancy (RO), PD effects (E), protein or precursor (P), tumour size (TS) and PercInh, PDO, STM and INH.
 /// - For non-library models: all non-constant variables.
-export function filterOutputs(model: CombinedModelRead | undefined, variables: VariableRead[]): VariableRead[] {
-  return variables.filter(variable => {
+export function filterOutputs(
+  model: CombinedModelRead | undefined,
+  variables: VariableRead[],
+): VariableRead[] {
+  return variables.filter((variable) => {
     if (variable.constant) return false;
     if (model && !model.is_library_model) {
-      return variables
+      return variables;
     }
-    const isConcentration = (
-      variable.qname.startsWith("PKCompartment.C") ||
-      variable.qname.startsWith("Extravascular.Cah") ||
-      variable.qname.startsWith("Extravascular.Cvh") ||
-      (variable.qname.startsWith("EffectCompartment") && variable.name.startsWith("Ce"))
-    ) && !variable.name.startsWith("CLimm");
-    const isReceptorOccupancy = variable.qname.startsWith("PKCompartment") && variable.name.includes("RO");
+    const isConcentration =
+      (variable.qname.startsWith("PKCompartment.C") ||
+        variable.qname.startsWith("Extravascular.Cah") ||
+        variable.qname.startsWith("Extravascular.Cvh") ||
+        (variable.qname.startsWith("EffectCompartment") &&
+          variable.name.startsWith("Ce"))) &&
+      !variable.name.startsWith("CLimm");
+    const isReceptorOccupancy =
+      variable.qname.startsWith("PKCompartment") &&
+      variable.name.includes("RO");
     const isPDEffect = variable.qname.startsWith("PDCompartment.E");
     const isProteinOrPrecursor = variable.qname.startsWith("PDCompartment.P");
     const isTumourSize = variable.qname.startsWith("PDCompartment.TS");
-    const isInhibition = variable.name.startsWith("PerInh") || variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
-    return isConcentration || isReceptorOccupancy || isPDEffect || isProteinOrPrecursor || isTumourSize || isInhibition;
+    const isInhibition =
+      variable.name.startsWith("PerInh") ||
+      variable.name.startsWith("PercInh") ||
+      variable.name.startsWith("PDO") ||
+      variable.name.startsWith("STM") ||
+      variable.name.startsWith("INH");
+    return (
+      isConcentration ||
+      isReceptorOccupancy ||
+      isPDEffect ||
+      isProteinOrPrecursor ||
+      isTumourSize ||
+      isInhibition
+    );
   });
-
 }
 
 function getVariableName(
@@ -290,7 +349,7 @@ export function generatePlotData(
   d: SimulateResponse,
   visibleGroups: string[],
   colour: string,
-  dash: string,
+  dash: "dot" | "solid",
   index: number,
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
@@ -300,7 +359,7 @@ export function generatePlotData(
   variables: VariableRead[],
   xConversionFactor: number,
   isReference?: boolean,
-) {
+): Partial<ScatterDataWithVariable> {
   const visible =
     index === 0
       ? visibleGroups.includes("Sim-Group 1")
@@ -334,12 +393,12 @@ export function generatePlotData(
 
   const yConversionFactor = yCompatibleUnit
     ? parseFloat(
-      is_target
-        ? yCompatibleUnit.target_conversion_factor
-        : is_target2
-          ? yCompatibleUnit.target2_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-    )
+        is_target
+          ? yCompatibleUnit.target_conversion_factor
+          : is_target2
+            ? yCompatibleUnit.target2_conversion_factor
+            : yCompatibleUnit.conversion_factor,
+      )
     : 1.0;
 
   const name = variableValues
@@ -350,17 +409,98 @@ export function generatePlotData(
     ? variableValues.map((v) => v * yConversionFactor)
     : [];
   const yaxis = y_axis.right ? "y2" : undefined;
+  const visibleValue: ScatterData["visible"] = visible ? true : "legendonly";
+  const variableLabel = variableValues ? variableName : String(y_axis.variable);
   const basePlot = {
     yaxis,
     x,
     y,
     name: name.trim(),
-    variable: variableValues ? variableName : y_axis.variable,
-    visible: visible ? true : "legendonly",
+    variable: variableLabel,
+    visible: visibleValue,
   };
   return variableValues
     ? { ...basePlot, line: { color: colour, dash: dash } }
-    : { ...basePlot, type: "scatter" };
+    : { ...basePlot, type: "scatter" as const };
+}
+
+export function generateUncertaintyBandData(
+  uncertainty: SimulateUncertaintyResponse,
+  visibleGroups: string[],
+  colour: string,
+  index: number,
+  group: SubjectGroupRead | undefined,
+  y_axis: SimulationYAxis,
+  plot: FieldArrayWithId<Simulation, "plots", "id">,
+  units: UnitRead[],
+  model: CombinedModelRead,
+  variables: VariableRead[],
+  xConversionFactor: number,
+  isReference?: boolean,
+): Partial<ScatterDataWithVariable>[] {
+  const visible =
+    index === 0
+      ? visibleGroups.includes("Sim-Group 1")
+      : visibleGroups.includes(group?.name || "");
+
+  const bounds = getQuantileBounds(uncertainty, y_axis.variable);
+  if (!bounds) {
+    return [];
+  }
+
+  const variable = variables.find((v) => v.id === y_axis.variable);
+  const variableName = variable?.name;
+  const variableUnit = units.find((u) => u.id === variable?.unit);
+  const yaxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
+  const yCompatibleUnit = variableUnit?.compatible_units.find(
+    (u) => parseInt(u.id) === yaxisUnit?.id,
+  );
+
+  const is_target = model.is_library_model
+    ? variableName?.includes("CT1") || variableName?.includes("AT1")
+    : false;
+  const yConversionFactor = yCompatibleUnit
+    ? parseFloat(
+        is_target
+          ? yCompatibleUnit.target_conversion_factor
+          : yCompatibleUnit.conversion_factor,
+      )
+    : 1.0;
+
+  const x = uncertainty.time.map((t) => t * xConversionFactor);
+  const lowerY = bounds.lower.map((v) => v * yConversionFactor);
+  const upperY = bounds.upper.map((v) => v * yConversionFactor);
+  const yaxis = y_axis.right ? "y2" : undefined;
+  const visibleValue: ScatterData["visible"] = visible ? true : "legendonly";
+
+  return [
+    {
+      yaxis,
+      x,
+      y: lowerY,
+      mode: "lines",
+      line: { width: 0, color: hexToRgba(colour, isReference ? 0.04 : 0.1) },
+      hoverinfo: "skip",
+      showlegend: false,
+      visible: visibleValue,
+      variable: variableName || String(y_axis.variable),
+    },
+    {
+      yaxis,
+      x,
+      y: upperY,
+      mode: "lines",
+      line: { width: 0, color: hexToRgba(colour, isReference ? 0.04 : 0.1) },
+      fill: "tonexty",
+      fillcolor: hexToRgba(colour, isReference ? 0.08 : 0.16),
+      hoverinfo: "skip",
+      showlegend: false,
+      visible: visibleValue,
+      variable: variableName || String(y_axis.variable),
+    },
+  ];
 }
 
 export function minMaxAxisLimits(
@@ -422,31 +562,33 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-    (data: SimulateResponse, index: number) => {
-      const colourIndex = index + colourOffset;
-      const colour = plotColours[colourIndex % plotColours.length];
-      const group = groups?.find((g) => g.id === data.group);
-      const style = isReference ? "dot" : "solid";
-      return generatePlotData(
-        data,
-        visibleGroups,
-        colour,
-        style,
-        index,
-        group,
-        y_axis,
-        plot,
-        units,
-        model,
-        variables,
-        xConversionFactor,
-        isReference,
-      );
-    };
+  (data: SimulateResponse, index: number) => {
+    const colourIndex = index + colourOffset;
+    const colour = plotColours[colourIndex % plotColours.length];
+    const group = groups?.find((g) => g.id === data.group);
+    const style = isReference ? "dot" : "solid";
+    return generatePlotData(
+      data,
+      visibleGroups,
+      colour,
+      style,
+      index,
+      group,
+      y_axis,
+      plot,
+      units,
+      model,
+      variables,
+      xConversionFactor,
+      isReference,
+    );
+  };
 
 type PlotsProps = {
   data: SimulateResponse[];
+  uncertaintyData: SimulateUncertaintyResponse[];
   dataReference: SimulateResponse[];
+  uncertaintyReferenceData: SimulateUncertaintyResponse[];
   groups: SubjectGroupRead[] | undefined;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
@@ -458,7 +600,9 @@ type PlotsProps = {
 
 export const createPlots = ({
   data,
+  uncertaintyData,
   dataReference,
+  uncertaintyReferenceData,
   groups,
   model,
   plot,
@@ -469,19 +613,64 @@ export const createPlots = ({
 }: PlotsProps) => {
   return plot.y_axes.map((y_axis, i) => {
     const colourOffset = data.length * i;
-    return data
-      .map(
-        createPlot({
-          colourOffset,
-          groups,
-          model,
+
+    const bands = uncertaintyData.flatMap((uncertainty, index) => {
+      const colourIndex = index + colourOffset;
+      const colour = plotColours[colourIndex % plotColours.length];
+      const group = groups?.find((g) => g.id === uncertainty.group);
+      return generateUncertaintyBandData(
+        uncertainty,
+        visibleGroups,
+        colour,
+        index,
+        group,
+        y_axis,
+        plot,
+        units,
+        model,
+        variables,
+        xConversionFactor,
+      );
+    });
+
+    const referenceBands = uncertaintyReferenceData.flatMap(
+      (uncertainty, index) => {
+        const colourIndex = index + colourOffset;
+        const colour = plotColours[colourIndex % plotColours.length];
+        const group = groups?.find((g) => g.id === uncertainty.group);
+        return generateUncertaintyBandData(
+          uncertainty,
+          visibleGroups,
+          colour,
+          index,
+          group,
+          y_axis,
           plot,
           units,
+          model,
           variables,
-          visibleGroups,
           xConversionFactor,
-          y_axis,
-        }),
+          true,
+        );
+      },
+    );
+
+    return bands
+      .concat(referenceBands)
+      .concat(
+        data.map(
+          createPlot({
+            colourOffset,
+            groups,
+            model,
+            plot,
+            units,
+            variables,
+            visibleGroups,
+            xConversionFactor,
+            y_axis,
+          }),
+        ),
       )
       .concat(
         dataReference.map(
@@ -574,25 +763,25 @@ export const getPlotDimensions = ({
   if (isVertical && !isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height / 2 - buffer,
-        width: dimensions.width - buffer,
-      }
+          height: dimensions.height / 2 - buffer,
+          width: dimensions.width - buffer,
+        }
       : {
-        height: dimensions.height / 1.5 - buffer,
-        width: dimensions.width - buffer,
-      };
+          height: dimensions.height / 1.5 - buffer,
+          width: dimensions.width - buffer,
+        };
   }
 
   if (!isVertical && isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height - buffer,
-        width: dimensions.width / columnCount - buffer,
-      }
+          height: dimensions.height - buffer,
+          width: dimensions.width / columnCount - buffer,
+        }
       : {
-        height: dimensions.height - buffer,
-        width: dimensions.width / 1.5 - buffer,
-      };
+          height: dimensions.height - buffer,
+          width: dimensions.width / 1.5 - buffer,
+        };
   }
 
   return {
@@ -824,47 +1013,47 @@ export const generateScatterPlots: (
   visibleGroups,
   y_axis,
 }) => {
-    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
-    const yAxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
+  const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+  const yAxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
 
-    const colourOffset = data.length * i;
-    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
-    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
-    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
-    const yCompatibleUnit = unit?.compatible_units.find(
-      (u) => parseInt(u.id) === yAxisUnit?.id,
-    );
-    const timeCompatibleUnit = timeUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === xAxisUnit?.id,
-    );
-    const timeConversionFactor = timeCompatibleUnit
-      ? parseFloat(timeCompatibleUnit.conversion_factor)
-      : 1.0;
-    const is_target = model.is_library_model
-      ? qname?.includes("CT1") || qname?.includes("AT1")
-      : false;
-    const yConversionFactor = yCompatibleUnit
-      ? parseFloat(
+  const colourOffset = data.length * i;
+  const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+  const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+  const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
+  const yCompatibleUnit = unit?.compatible_units.find(
+    (u) => parseInt(u.id) === yAxisUnit?.id,
+  );
+  const timeCompatibleUnit = timeUnit?.compatible_units.find(
+    (u) => parseInt(u.id) === xAxisUnit?.id,
+  );
+  const timeConversionFactor = timeCompatibleUnit
+    ? parseFloat(timeCompatibleUnit.conversion_factor)
+    : 1.0;
+  const is_target = model.is_library_model
+    ? qname?.includes("CT1") || qname?.includes("AT1")
+    : false;
+  const yConversionFactor = yCompatibleUnit
+    ? parseFloat(
         is_target
           ? yCompatibleUnit.target_conversion_factor
           : yCompatibleUnit.conversion_factor,
       )
-      : 1.0;
-    return groups?.map((group, index) =>
-      generateScatterPlot({
-        biomarkerData,
-        colourOffset,
-        group,
-        index,
-        timeConversionFactor,
-        visibleGroups,
-        y_axis,
-        yConversionFactor,
-      }),
-    );
-  };
+    : 1.0;
+  return groups?.map((group, index) =>
+    generateScatterPlot({
+      biomarkerData,
+      colourOffset,
+      group,
+      index,
+      timeConversionFactor,
+      visibleGroups,
+      y_axis,
+      yConversionFactor,
+    }),
+  );
+};
 
 /**
  * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
@@ -882,7 +1071,7 @@ export function optimisePredictionsToSimulateResponses(
   return predictions.map((pred) => {
     const groupId = pred["group_id"] as number | null | undefined;
     const time = timeVariable
-      ? (pred[String(timeVariable.id)] as number[] | undefined) ?? []
+      ? ((pred[String(timeVariable.id)] as number[] | undefined) ?? [])
       : [];
     const outputs: { [key: string]: number[] } = {};
     for (const [key, values] of Object.entries(pred)) {

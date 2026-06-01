@@ -207,6 +207,16 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.simulate,
       }),
     }),
+    combinedModelSimulateUncertaintyCreate: build.mutation<
+      CombinedModelSimulateUncertaintyCreateApiResponse,
+      CombinedModelSimulateUncertaintyCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/simulate_uncertainty`,
+        method: "POST",
+        body: queryArg.simulateUncertainty,
+      }),
+    }),
     compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
       query: () => ({ url: `/api/compound/` }),
     }),
@@ -618,6 +628,16 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
         method: "POST",
         body: queryArg.simulate,
+      }),
+    }),
+    pharmacodynamicSimulateUncertaintyCreate: build.mutation<
+      PharmacodynamicSimulateUncertaintyCreateApiResponse,
+      PharmacodynamicSimulateUncertaintyCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacodynamic/${queryArg.id}/simulate_uncertainty`,
+        method: "POST",
+        body: queryArg.simulateUncertainty,
       }),
     }),
     pharmacokineticList: build.query<
@@ -1388,6 +1408,12 @@ export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
 };
+export type CombinedModelSimulateUncertaintyCreateApiResponse =
+  /** status 200  */ SimulateUncertaintyResponse[];
+export type CombinedModelSimulateUncertaintyCreateApiArg = {
+  id: number;
+  simulateUncertainty: SimulateUncertainty;
+};
 export type CompoundListApiResponse = /** status 200  */ CompoundRead[];
 export type CompoundListApiArg = void;
 export type CompoundCreateApiResponse = /** status 201  */ CompoundRead;
@@ -1646,6 +1672,12 @@ export type PharmacodynamicSimulateCreateApiResponse =
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
+};
+export type PharmacodynamicSimulateUncertaintyCreateApiResponse =
+  /** status 200  */ SimulateUncertaintyResponse[];
+export type PharmacodynamicSimulateUncertaintyCreateApiArg = {
+  id: number;
+  simulateUncertainty: SimulateUncertainty;
 };
 export type PharmacokineticListApiResponse =
   /** status 200  */ PharmacokineticRead[];
@@ -2568,6 +2600,31 @@ export type Simulate = {
   };
   time_max?: number;
   use_diffsol?: boolean;
+};
+export type SimulateUncertaintyResponse = {
+  time: number[];
+  sample_count: number;
+  group?: number | null;
+  outputs: {
+    [key: string]: {
+      [key: string]: any;
+    };
+  };
+};
+export type SimulateUncertainty = {
+  outputs: string[];
+  variables?: {
+    [key: string]: number;
+  };
+  variable_distributions?: {
+    [key: string]: {
+      [key: string]: any;
+    };
+  };
+  time_max?: number;
+  sample_count?: number;
+  seed?: number;
+  quantiles?: number[];
 };
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
@@ -4431,6 +4488,7 @@ export const {
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelSetVariablesFromInferenceUpdateMutation,
   useCombinedModelSimulateCreateMutation,
+  useCombinedModelSimulateUncertaintyCreateMutation,
   useCompoundListQuery,
   useCompoundCreateMutation,
   useCompoundRetrieveQuery,
@@ -4481,6 +4539,7 @@ export const {
   usePharmacodynamicSbmlUpdateMutation,
   usePharmacodynamicSetVariablesFromInferenceUpdateMutation,
   usePharmacodynamicSimulateCreateMutation,
+  usePharmacodynamicSimulateUncertaintyCreateMutation,
   usePharmacokineticListQuery,
   usePharmacokineticCreateMutation,
   usePharmacokineticRetrieveQuery,

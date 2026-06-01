@@ -3,6 +3,7 @@ import createPlotlyComponent from "react-plotly.js/factory";
 import {
   CombinedModelRead,
   CompoundRead,
+  SimulateUncertaintyResponse,
   SimulateResponse,
   Simulation,
   UnitRead,
@@ -45,7 +46,9 @@ interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   data: SimulateResponse[];
+  uncertaintyData: SimulateUncertaintyResponse[];
   dataReference: SimulateResponse[];
+  uncertaintyReferenceData: SimulateUncertaintyResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
@@ -68,7 +71,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   index,
   plot,
   data,
+  uncertaintyData,
   dataReference,
+  uncertaintyReferenceData,
   variables,
   control,
   setValue,
@@ -119,7 +124,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
 
   const plotData = createPlots({
     data,
+    uncertaintyData,
     dataReference,
+    uncertaintyReferenceData,
     groups,
     model,
     plot,

@@ -109,3 +109,76 @@ class TestSimulateView(APITestCase):
         url = reverse("simulate-combined-model", args=(123,))
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_simulate_uncertainty(self):
+        pd = PharmacodynamicModel.objects.get(
+            name='tumour_growth_gompertz',
+            read_only=False,
+        )
+        pk = PharmacokineticModel.objects.get(
+            name='one_compartment_clinical',
+        )
+        m = CombinedModel.objects.create(
+            name='my wonderful model',
+            pd_model=pd,
+            pk_model=pk,
+            project=self.project,
+        )
+
+        url = reverse('simulate-uncertainty-combined-model', args=(m.pk,))
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variables': {
+                'PDCompartment.TS0': 1.1,
+            },
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'mean': 1.1,
+                    'variance': 0.01,
+                }
+            },
+            'sample_count': 20,
+            'seed': 42,
+            'quantiles': [0.1, 0.5, 0.9],
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        repeated_response = self.client.post(url, data, format='json')
+        self.assertEqual(repeated_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, repeated_response.data)
+
+        for sim in response.data:
+            self.assertEqual(sim['sample_count'], 20)
+            self.assertTrue(len(sim['time']) > 0)
+            outputs = sim['outputs']
+            self.assertCountEqual(
+                list(outputs.keys()),
+                [
+                    str(Variable.objects.get(qname=qname, dosed_pk_model=m).id)
+                    for qname in data['outputs']
+                ],
+            )
+            for summary in outputs.values():
+                self.assertIn('mean', summary)
+                self.assertIn('std', summary)
+                self.assertIn('quantiles', summary)
+                self.assertEqual(len(summary['mean']), len(sim['time']))
+                self.assertEqual(len(summary['std']), len(sim['time']))
+                self.assertCountEqual(
+                    list(summary['quantiles'].keys()),
+                    ['0.1', '0.5', '0.9'],
+                )
+
+        invalid_variance_data = {
+            **data,
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'mean': 1.1,
+                    'variance': -0.1,
+                }
+            },
+        }
+        response = self.client.post(url, invalid_variance_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

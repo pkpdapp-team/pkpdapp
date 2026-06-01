@@ -61,6 +61,11 @@ urlpatterns = [
         name="optimise-combined-model",
     ),
     path(
+        "api/combined_model/<int:pk>/simulate_uncertainty",
+        api.SimulateUncertaintyCombinedView.as_view(),
+        name="simulate-uncertainty-combined-model",
+    ),
+    path(
         "api/inference/wizard",
         api.InferenceWizardView.as_view(),
         name="inference-wizard",
@@ -74,6 +79,11 @@ urlpatterns = [
         "api/pharmacodynamic/<int:pk>/simulate",
         api.SimulatePdView.as_view(),
         name="simulate-pharmacodynamic",
+    ),
+    path(
+        "api/pharmacodynamic/<int:pk>/simulate_uncertainty",
+        api.SimulateUncertaintyPdView.as_view(),
+        name="simulate-uncertainty-pharmacodynamic",
     ),
     path("api/csrf/", api.get_csrf, name="auth-csrf"),
     path("api/login/", api.login_view, name="auth-login"),
