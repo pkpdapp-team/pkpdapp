@@ -7,8 +7,11 @@ import {
   Checkbox,
   Button,
   Collapse,
+  CircularProgress,
   Stack,
   Badge,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { createPortal } from "react-dom";
 import DropdownButton from "../../components/DropdownButton";
@@ -18,22 +21,32 @@ import SimulationSliderView from "./SimulationSliderView";
 import HelpButton from "../../components/HelpButton";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import Settings from "@mui/icons-material/Settings";
+import Visibility from "@mui/icons-material/Visibility";
 import { ChangeEvent, useState } from "react";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import useDataset from "../../hooks/useDataset";
 import { PageName } from "../main/mainSlice";
 import {
   CombinedModelRead,
+  BiomarkerTypeRead,
+  CompoundRead,
   Simulation,
   SimulationPlot,
   SimulationRead,
   SimulationSlider,
   SubjectGroupRead,
+  VariableRead,
   UnitRead,
+  Optimise,
+  OptimiseResponse,
 } from "../../app/backendApi";
 import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
+import OptimisationSettings from "./OptimisationSettings";
+import OptimisationView from "./OptimisationView";
 import "../../App.css";
 
 type SimulationsSidePanelType = {
@@ -52,6 +65,7 @@ type SimulationsSidePanelType = {
   units: UnitRead[];
   simulation: SimulationRead;
   model: CombinedModelRead;
+  compound: CompoundRead;
   groups?: SubjectGroupRead[];
   visibleGroups: string[];
   handleVisibleGroups: (group: ChangeEvent<HTMLInputElement>) => void;
@@ -61,14 +75,27 @@ type SimulationsSidePanelType = {
   }[];
   handleAddSlider: (slider: number) => void;
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
   handleChangeSlider: (variable: number, value: number) => void;
-  handleRemoveSlider: (index: number) => () => void;
+  handleWidenSlider: (variableId: number) => void;
+  handleNarrowSlider: (variableId: number) => void;
+  handleRemoveSlider: (index: number, variableId: number) => () => void;
   handleSaveAllSlider: () => void;
+  handleOptimise: () => void;
+  handleOptimiseWithInputs: (optimiseInputs: Optimise) => void;
+  visibleSubjectGroupIds: number[];
+  loadingOptimise: boolean;
+  optimiseResult: OptimiseResponse | null;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
+  useLegacySolver: boolean;
+  setUseLegacySolver: (useLegacySolver: boolean) => void;
   shouldShowLegend: boolean;
   setShouldShowLegend: (value: boolean) => void;
+  variables: VariableRead[];
+  biomarkerTypes: BiomarkerTypeRead[];
 };
 
 const ButtonSx = {
@@ -167,21 +194,40 @@ export const SimulationsSidePanel = ({
   visibleGroups,
   handleVisibleGroups,
   model,
+  compound,
   addSliderOptions,
   handleAddSlider,
   orderedSliders,
+  getSliderValue,
+  getSliderBounds,
   handleChangeSlider,
+  handleWidenSlider,
+  handleNarrowSlider,
   handleRemoveSlider,
   handleSaveAllSlider,
+  handleOptimise,
+  handleOptimiseWithInputs,
+  visibleSubjectGroupIds,
+  loadingOptimise,
+  optimiseResult,
   exportSimulation,
   showReference,
   setShowReference,
+  useLegacySolver,
+  setUseLegacySolver,
   shouldShowLegend,
   setShouldShowLegend,
+  variables,
+  biomarkerTypes,
 }: SimulationsSidePanelType) => {
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
+  const selectedProject = useSelector(
+    (state: RootState) => state.main.selectedProject,
+  );
+  const { dataset, subjectBiomarkers } = useDataset(selectedProject);
+  const hasData = !!dataset && subjectBiomarkers.some((bm) => bm.length > 0);
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(false);
   const [collapseOptions, setCollapseOptions] = useState(false);
@@ -189,6 +235,8 @@ export const SimulationsSidePanel = ({
   const [collapseParameters, setCollapseParameters] = useState(false);
   const [collapseReference, setCollapseReference] = useState(false);
   const [collapseLegend, setCollapseLegend] = useState(false);
+  const [optimiseSettingsOpen, setOptimiseSettingsOpen] = useState(false);
+  const [optimiseViewOpen, setOptimiseViewOpen] = useState(false);
   const { simulationAnimationClasses } = useCollapsibleSidebar();
 
   const onLayoutChange = (value: string) => {
@@ -331,6 +379,17 @@ export const SimulationsSidePanel = ({
                               selectProps={{
                                 disabled: isSharedWithMe,
                               }}
+                            />
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={useLegacySolver}
+                                  onChange={(event) =>
+                                    setUseLegacySolver(event.target.checked)
+                                  }
+                                />
+                              }
+                              label="Use legacy solver"
                             />
                           </Stack>
                         </>
@@ -487,8 +546,15 @@ export const SimulationsSidePanel = ({
                           index={index}
                           slider={slider}
                           model={model}
+                          getSliderValue={getSliderValue}
+                          getSliderBounds={getSliderBounds}
                           onChange={handleChangeSlider}
-                          onRemove={handleRemoveSlider(slider.fieldArrayIndex)}
+                          onWiden={handleWidenSlider}
+                          onNarrow={handleNarrowSlider}
+                          onRemove={handleRemoveSlider(
+                            slider.fieldArrayIndex,
+                            slider.variable,
+                          )}
                           units={units}
                         />
                       ))}
@@ -500,6 +566,56 @@ export const SimulationsSidePanel = ({
                       >
                         Save All Sliders
                       </Button>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ marginTop: ".5rem" }}
+                      >
+                        <Button
+                          variant="outlined"
+                          sx={{ width: "10rem" }}
+                          onClick={handleOptimise}
+                          disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1 || !hasData}
+                          data-cy="optimise-parameters"
+                        >
+                          Optimise
+                        </Button>
+                        <Tooltip title="Optimisation settings" placement="top">
+                          <span>
+                            <IconButton
+                              aria-label="Open optimisation settings"
+                              onClick={() => setOptimiseSettingsOpen(true)}
+                              disabled={
+                                isSharedWithMe ||
+                                loadingOptimise ||
+                                orderedSliders.length < 1 ||
+                                !hasData
+                              }
+                              sx={{ border: "1px solid #DBD7D3", borderRadius: "4px" }}
+                              data-cy="optimise-settings"
+                            >
+                              <Settings />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="View last optimisation result" placement="top">
+                          <span>
+                            <IconButton
+                              aria-label="View optimisation result"
+                              onClick={() => setOptimiseViewOpen(true)}
+                              disabled={!optimiseResult}
+                              sx={{ border: "1px solid #DBD7D3", borderRadius: "4px" }}
+                              data-cy="optimise-view"
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        {loadingOptimise && (
+                          <CircularProgress size={20} aria-label="Optimising" />
+                        )}
+                      </Stack>
                     </Collapse>
                   </Box>
                 </Box>
@@ -516,6 +632,34 @@ export const SimulationsSidePanel = ({
               cannot be changed in the current version.
             </HelpButton>
           </Box>
+          <OptimisationSettings
+            open={optimiseSettingsOpen}
+            onClose={() => setOptimiseSettingsOpen(false)}
+            orderedSliders={orderedSliders}
+            variables={variables}
+            getSliderValue={getSliderValue}
+            getSliderBounds={getSliderBounds}
+            onOptimise={handleOptimiseWithInputs}
+            loadingOptimise={loadingOptimise}
+            plots={plots}
+            biomarkerTypes={biomarkerTypes}
+            groups={groups ?? []}
+            visibleSubjectGroupIds={visibleSubjectGroupIds}
+          />
+          <OptimisationView
+            open={optimiseViewOpen}
+            onClose={() => setOptimiseViewOpen(false)}
+            optimiseResult={optimiseResult}
+            variables={variables}
+            units={units}
+            groups={groups}
+            biomarkerTypes={biomarkerTypes}
+            subjectBiomarkers={subjectBiomarkers}
+            model={model}
+            compound={compound}
+            visibleGroups={visibleGroups}
+            plots={plots}
+          />
         </Box>,
         portalRoot,
       )}

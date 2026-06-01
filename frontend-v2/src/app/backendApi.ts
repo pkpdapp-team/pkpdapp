@@ -167,6 +167,16 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    combinedModelOptimiseCreate: build.mutation<
+      CombinedModelOptimiseCreateApiResponse,
+      CombinedModelOptimiseCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/optimise`,
+        method: "POST",
+        body: queryArg.optimise,
+      }),
+    }),
     combinedModelSetParamsToDefaultsUpdate: build.mutation<
       CombinedModelSetParamsToDefaultsUpdateApiResponse,
       CombinedModelSetParamsToDefaultsUpdateApiArg
@@ -1352,6 +1362,12 @@ export type CombinedModelDestroyApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
 };
+export type CombinedModelOptimiseCreateApiResponse =
+  /** status 200  */ OptimiseResponse;
+export type CombinedModelOptimiseCreateApiArg = {
+  id: number;
+  optimise: Optimise;
+};
 export type CombinedModelSetParamsToDefaultsUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
 export type CombinedModelSetParamsToDefaultsUpdateApiArg = {
@@ -2500,6 +2516,44 @@ export type PatchedCombinedModelRead = {
   /** second PD part of model */
   pd_model2?: number | null;
 };
+export type OptimiseResponse = {
+  optimal: number[];
+  loss: number;
+  reason: string;
+  inputs: number[];
+  starting: number[];
+  bounds: number[][];
+  biomarker_types?: number[] | null;
+  subject_groups?: number[] | null;
+  max_iterations?: number | null;
+  use_multiplicative_noise: boolean;
+  method: string;
+  predictions:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  residuals:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  covariance: number[][] | null;
+  condition_number: number | null;
+};
+export type ErrorResponse = {
+  error: string;
+};
+export type Optimise = {
+  inputs: number[];
+  starting: number[];
+  bounds: number[][];
+  biomarker_types?: number[] | null;
+  subject_groups?: number[] | null;
+  max_iterations?: number | null;
+  use_multiplicative_noise?: boolean;
+  method?: string;
+};
 export type SimulateResponse = {
   time: number[];
   group?: number | null;
@@ -2507,15 +2561,13 @@ export type SimulateResponse = {
     [key: string]: number[];
   };
 };
-export type ErrorResponse = {
-  error: string;
-};
 export type Simulate = {
   outputs: string[];
   variables: {
     [key: string]: number;
   };
   time_max?: number;
+  use_diffsol?: boolean;
 };
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
@@ -4375,6 +4427,7 @@ export const {
   useCombinedModelUpdateMutation,
   useCombinedModelPartialUpdateMutation,
   useCombinedModelDestroyMutation,
+  useCombinedModelOptimiseCreateMutation,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelSetVariablesFromInferenceUpdateMutation,
   useCombinedModelSimulateCreateMutation,

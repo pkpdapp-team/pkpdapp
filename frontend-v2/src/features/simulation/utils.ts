@@ -1,10 +1,13 @@
 import { FieldArrayWithId } from "react-hook-form";
 import {
+  BiomarkerTypeRead,
   CombinedModelRead,
   CompoundRead,
   EfficacyExperimentRead,
+  Optimise,
   SimulateResponse,
   Simulation,
+  SimulationSlider,
   SimulationYAxis,
   SubjectGroupRead,
   UnitListApiResponse,
@@ -16,6 +19,55 @@ import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
+
+type GetDefaultOptimiseInputsProps = {
+  orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
+  variables: VariableRead[];
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (variableId: number, variable?: VariableRead) => [number, number];
+  plots: { y_axes: SimulationYAxis[] }[];
+  biomarkerTypes: BiomarkerTypeRead[];
+  subjectGroups: number[];
+};
+
+export function getDefaultOptimiseInputs({
+  orderedSliders,
+  variables,
+  getSliderValue,
+  getSliderBounds,
+  plots,
+  biomarkerTypes,
+  subjectGroups,
+}: GetDefaultOptimiseInputsProps): Optimise {
+  const inputs = orderedSliders.map((slider) => slider.variable);
+  const starting = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderValue(variableId, variable);
+  });
+  const boundsByVariable = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderBounds(variableId, variable);
+  });
+  const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
+  const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
+
+  // Determine which biomarker types are shown in the simulation plots
+  // by matching plot y-axis variable IDs to biomarker type variable IDs
+  const plottedVariableIds = new Set(
+    plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
+  );
+  const biomarker_types = biomarkerTypes
+    .filter((bt) => bt.variable != null && plottedVariableIds.has(bt.variable))
+    .map((bt) => bt.id);
+
+  return {
+    inputs,
+    starting,
+    bounds: [lowerBounds, upperBounds],
+    biomarker_types,
+    subject_groups: subjectGroups,
+  };
+}
 
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
 export const plotColours = [
@@ -813,3 +865,33 @@ export const generateScatterPlots: (
       }),
     );
   };
+
+/**
+ * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
+ * SimulateResponse[] so they can be consumed by the same plotting utilities.
+ *
+ * The backend returns each entry as a plain dict keyed by integer variable id
+ * (plus a "group_id" key).  SimulateResponse expects:
+ *   { time: number[], group?: number|null, outputs: { [varId: string]: number[] } }
+ */
+export function optimisePredictionsToSimulateResponses(
+  predictions: { [key: string]: unknown }[],
+  variables: VariableRead[],
+): SimulateResponse[] {
+  const timeVariable = variables.find((v) => v.binding === "time");
+  return predictions.map((pred) => {
+    const groupId = pred["group_id"] as number | null | undefined;
+    const time = timeVariable
+      ? (pred[String(timeVariable.id)] as number[] | undefined) ?? []
+      : [];
+    const outputs: { [key: string]: number[] } = {};
+    for (const [key, values] of Object.entries(pred)) {
+      if (key === "group_id") continue;
+      if (key === String(timeVariable?.id)) continue;
+      if (Array.isArray(values)) {
+        outputs[key] = values as number[];
+      }
+    }
+    return { time, group: groupId ?? null, outputs };
+  });
+}

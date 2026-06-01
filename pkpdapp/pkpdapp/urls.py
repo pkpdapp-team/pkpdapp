@@ -56,6 +56,11 @@ urlpatterns = [
         name="simulate-combined-model",
     ),
     path(
+        "api/combined_model/<int:pk>/optimise",
+        api.OptimiseCombinedView.as_view(),
+        name="optimise-combined-model",
+    ),
+    path(
         "api/inference/wizard",
         api.InferenceWizardView.as_view(),
         name="inference-wizard",

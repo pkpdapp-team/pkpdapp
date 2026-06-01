@@ -50,6 +50,9 @@ from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
 )
+from .optimise import (
+    OptimiseCombinedView,
+)
 from .results_table import ResultsTableView
 from .subject import SubjectView
 from .subject_group import SubjectGroupView

@@ -67,7 +67,9 @@ export default function useDataset(selectedProject: number | null) {
       { datasetId: datasetIdOrZero },
       { skip: !datasetIdOrZero },
     );
-  const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
+  const biomarkerTypes = (biomarkerTypeData || DEFAULT_BIOMARKERS).filter(
+    (b) => b.variable != null,
+  );
 
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
@@ -138,6 +140,7 @@ export default function useDataset(selectedProject: number | null) {
   return {
     dataset,
     groups: subjectGroups,
+    biomarkerTypes,
     subjectBiomarkers: subjectBiomarkers,
     addDataset,
     updateDataset,
