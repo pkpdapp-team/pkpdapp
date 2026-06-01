@@ -5,6 +5,7 @@
 #
 
 import pkpdapp.tests  # noqa: F401
+from django.db.models import Q
 from django.test import TestCase
 from pkpdapp.models import Unit, Compound
 from math import log10
@@ -154,3 +155,35 @@ class TestUnitModel(TestCase):
 
         # 1 µg = 1000 ng
         self.assertAlmostEqual(ug.convert_to(ng), 1e3, places=9)
+
+    def test_all_auc_units_exist(self):
+        tolerance = 1e-9
+        concentration_units = Unit.objects.filter(
+            Q(
+                g__range=(1 - tolerance, 1 + tolerance),
+                mol__range=(-tolerance, tolerance),
+            )
+            | Q(
+                mol__range=(1 - tolerance, 1 + tolerance),
+                g__range=(-tolerance, tolerance),
+            ),
+            m__range=(-3 - tolerance, -3 + tolerance),
+            s__range=(-tolerance, tolerance),
+            A__range=(-tolerance, tolerance),
+            K__range=(-tolerance, tolerance),
+            cd__range=(-tolerance, tolerance),
+        )
+        time_units = [unit for unit in Unit.objects.all() if unit.is_time_unit()]
+
+        missing_units = []
+        for time_unit in time_units:
+            for concentration_unit in concentration_units:
+                auc_unit_symbol = f"{time_unit.symbol}*{concentration_unit.symbol}"
+                if not Unit.objects.filter(symbol=auc_unit_symbol).exists():
+                    missing_units.append(auc_unit_symbol)
+
+        self.assertEqual(
+            missing_units,
+            [],
+            "Missing AUC units: {}".format(", ".join(missing_units)),
+        )

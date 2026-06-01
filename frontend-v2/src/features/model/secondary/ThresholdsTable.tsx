@@ -31,6 +31,7 @@ import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { renameVariable } from "../../simulation/utils";
 import { getYAxisOptions } from "../../simulation/utils";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
+import { getAucVariable, getCompositeAucUnit } from "./utils";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -138,17 +139,19 @@ function VariableRow({
   if (!variable_read || !compound || !units) {
     return "Loading...";
   }
+  const unitList = units;
   const variable = variable_read as VariableRead;
-  const [compartmentName, name] = variable.qname.split(".");
-  const aucVariable = variables?.find(
-    (v) => v.qname === `${compartmentName}.calc_${name}_AUC`,
-  );
-  const { unit: defaultUnitId } = getYAxisOptions(compound, variable, units);
+  const aucVariable = variables
+    ? getAucVariable(variable, variables)
+    : undefined;
+  const { unit: defaultUnitId } = getYAxisOptions(compound, variable, unitList);
   if (defaultUnitId) {
-    const newThresholdUnit = units.find((u) => u.id === defaultUnitId);
-    const aucUnit = units.find(
-      (unit) =>
-        unit.symbol === `${timeUnit?.symbol}*${newThresholdUnit?.symbol}`,
+    const newThresholdUnit = unitList.find((u) => u.id === defaultUnitId);
+    const aucUnit = getCompositeAucUnit(
+      timeUnit,
+      variable,
+      unitList,
+      newThresholdUnit,
     );
     if (newThresholdUnit && !variable.secondary_unit) {
       setUnitSymbol(newThresholdUnit.symbol);
@@ -200,9 +203,8 @@ function VariableRow({
   }
   function onChangeUnit(event: SelectChangeEvent) {
     setUnitSymbol(event.target.value as string);
-    const unit = units?.find((unit) => unit.symbol === event.target.value);
-    const aucUnitSymbol = `${timeUnit?.symbol}*${event.target.value}`;
-    const aucUnit = units?.find((unit) => unit.symbol === aucUnitSymbol);
+    const unit = unitList.find((unit) => unit.symbol === event.target.value);
+    const aucUnit = getCompositeAucUnit(timeUnit, variable, unitList, unit);
     if (unit) {
       updateVariable({
         id: variable.id,
