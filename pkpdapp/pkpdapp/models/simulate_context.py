@@ -5,7 +5,16 @@
 #
 
 from dataclasses import dataclass, field
+import os
+import tempfile
 from typing import Any
+
+from myokit.formats.diffsl import DiffSLExporter
+import numpy as np
+import myokit
+import pydiffsol
+
+from pkpdapp.models.myokit_model_mixin import get_protocol, set_administration
 
 
 @dataclass(frozen=True)
@@ -35,6 +44,12 @@ class OutputContext:
     qname: str
     name: str
     binding: str | None
+
+
+@dataclass(frozen=True)
+class InputContext:
+    name: str
+    value: float
 
 
 @dataclass(frozen=True)
@@ -111,6 +126,7 @@ class SimulateContext:
         biomarker_types: list[int] | None = None,
         subject_groups: list[int] | None = None,
     ):
+        self._model = model
         self.model_id = model.id
         self.model_table = model._meta.db_table
         self.model_class = model.__class__.__name__
@@ -126,9 +142,8 @@ class SimulateContext:
         self._variables_by_id = {
             variable.id: variable for variable in self._variables_by_qname.values()
         }
-        self.default_variables = self._build_default_variables()
-
         self.variable_values = self._build_variable_values(variables)
+        self.inputs = self._build_inputs()
         self.time_max = self._build_time_max(model, time_max)
 
         self.outputs = self._build_outputs(outputs or [])
@@ -151,10 +166,114 @@ class SimulateContext:
 
     def _discard_database_state(self):
         del self._project
-        del self._myokit_model
         del self._variables_by_qname
         del self._variables_by_id
-        del self._protocols
+
+    def simulate_model(
+        self,
+        simulation_group: SimulationGroupContext,
+    ) -> dict[int, list[float]]:
+        model = self._myokit_model
+        inputs = self._simulation_inputs(simulation_group)
+        outputs = [output.qname for output in self.outputs]
+
+        for input_context in inputs:
+            model.get(input_context.name).set_rhs(float(input_context.value))
+
+        sim = myokit.Simulation(
+            model,
+            protocol=self._myokit_protocols(model, simulation_group),
+        )
+        sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
+        datalog = sim.run(self.time_max, log=outputs)
+        return self._model.serialize_datalog(datalog, model)
+
+    def simulate_model_diffsol(
+        self,
+        simulation_group: SimulationGroupContext,
+    ) -> dict[int, list[float]]:
+        model = self._myokit_model
+        inputs = self._simulation_inputs(simulation_group)
+        input_values = np.asarray(
+            [input_context.value for input_context in inputs],
+            dtype=float,
+        )
+        outputs = [output.qname for output in self.outputs]
+        protocols = self._myokit_protocols(model, simulation_group)
+        input_variables = [model.get(input_context.name) for input_context in inputs]
+        output_variables = [model.get(output.qname) for output in self.outputs]
+
+        path = ""
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        try:
+            path = temp.name
+            temp.close()
+            DiffSLExporter().model(
+                path,
+                model,
+                convert_units=False,
+                protocol=protocols,
+                inputs=input_variables,
+                outputs=output_variables,
+                final_time=self.time_max,
+            )
+            with open(path, "r") as exported_file:
+                content = exported_file.read()
+        finally:
+            os.remove(path)
+
+        ode = pydiffsol.Ode(content)
+        ode.ode_solver = pydiffsol.esdirk34
+        ode.atol = 1e-6
+        ode.rtol = 1e-4
+        solution = ode.solve(input_values, self.time_max)
+        return self._model.serialize_diffsol_solution(solution, model, outputs)
+
+    def _simulation_variable_values(self) -> dict[str, float]:
+        return {
+            qname: context.value for qname, context in self.variable_values.items()
+        }
+
+    def _build_inputs(self) -> tuple[InputContext, ...]:
+        return tuple(
+            InputContext(name=qname, value=context.value)
+            for qname, context in self.variable_values.items()
+        )
+
+    def _simulation_inputs(
+        self,
+        simulation_group: SimulationGroupContext,
+    ) -> tuple[InputContext, ...]:
+        return self.inputs + tuple(
+            InputContext(name=qname, value=value)
+            for qname, value in simulation_group.nonlinear_inputs.items()
+        )
+
+    def _myokit_protocols(
+        self,
+        model,
+        simulation_group: SimulationGroupContext,
+    ) -> dict[str, myokit.Protocol]:
+        for protocol_context in simulation_group.dosing_protocols:
+            pacing_label = protocol_context.pacing_label
+            if not any(
+                variable.binding() == pacing_label
+                for variable in model.variables(bound=True)
+            ):
+                set_administration(
+                    model,
+                    model.get(protocol_context.variable_qname),
+                )
+
+        return {
+            protocol_context.pacing_label: get_protocol(
+                [
+                    (event.level, event.start, event.duration)
+                    for event in protocol_context.events
+                ]
+            )
+            for protocol_context in simulation_group.dosing_protocols
+        }
 
     def _load_project(self, model):
         project = model.get_project()
@@ -178,8 +297,10 @@ class SimulateContext:
         variables = model.variables.select_related("unit").all()
         return {variable.qname: variable for variable in variables}
 
-    def _build_default_variables(self) -> dict[str, VariableContext]:
-        defaults = {}
+    def _build_variable_values(
+        self, variables: dict[str, float] | None
+    ) -> dict[str, VariableContext]:
+        values = {}
         for variable in self._variables_by_qname.values():
             if not variable.constant:
                 continue
@@ -187,13 +308,7 @@ class SimulateContext:
                 variable,
                 variable.get_default_value(),
             )
-            defaults[variable.qname] = self._variable_context(variable, value)
-        return defaults
-
-    def _build_variable_values(
-        self, variables: dict[str, float] | None
-    ) -> dict[str, VariableContext]:
-        values = dict(self.default_variables)
+            values[variable.qname] = self._variable_context(variable, value)
         if variables is None:
             return values
 
@@ -576,7 +691,9 @@ class SimulateContext:
         )
         nonlinear_inputs = self._build_nonlinear_inputs(protocols)
         input_values = {
-            qname: variable.value for qname, variable in self.default_variables.items()
+            qname: variable.value
+            for qname, variable in self.variable_values.items()
+            if variable.constant
         }
         input_values.update(nonlinear_inputs)
         missing_inputs = [

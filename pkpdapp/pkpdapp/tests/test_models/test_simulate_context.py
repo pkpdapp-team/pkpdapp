@@ -71,7 +71,28 @@ class TestSimulateContext(TestCase):
             self.assertIn("Central.k", group_context.input_values)
             self.assertIn("Central.scale", group_context.input_values)
 
+        simulation_group = context.simulation_groups[1]
+        expected_myokit = model.simulate(
+            outputs=["Central.response", "environment.t"],
+            variables={"Central.k": 0.25},
+            time_max=12,
+            use_diffsol=False,
+        )[1]
+        expected_myokit.pop("group_id")
+        self.assertEqual(context.simulate_model(simulation_group), expected_myokit)
+
+        expected_diffsol = model.simulate(
+            outputs=["Central.response", "environment.t"],
+            variables={"Central.k": 0.25},
+            time_max=12,
+            use_diffsol=True,
+        )[1]
+        expected_diffsol.pop("group_id")
+        self.assertEqual(
+            context.simulate_model_diffsol(simulation_group),
+            expected_diffsol,
+        )
+
         self.assertFalse(hasattr(context, "_project"))
-        self.assertFalse(hasattr(context, "_myokit_model"))
         self.assertFalse(hasattr(context, "_variables_by_qname"))
-        self.assertFalse(hasattr(context, "_protocols"))
+        self.assertFalse(hasattr(context, "default_variables"))
