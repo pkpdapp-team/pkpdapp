@@ -33,11 +33,6 @@ from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .variable import Variable
 from .dataset import Dataset
 from .profile import Profile
-from .myokit_forward_model import MyokitForwardModel
-from .likelihoods import (
-    LogLikelihood,
-    LogLikelihoodParameter,
-)
 from .inference_results import (
     InferenceChain,
     InferenceResult,

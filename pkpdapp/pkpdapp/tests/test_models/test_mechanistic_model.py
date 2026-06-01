@@ -110,14 +110,29 @@ class TestDosedPharmokineticModel(TestCase):
 
         # dosed model should have a concentration at t ~ 0.5
         # of greater than 0.01
-        sim = self.model.get_myokit_simulator()
-
-        output = sim.run(self.model.time_max)
-        index = np.where(np.array(output["environment.t"]) > 0.5)[0][0]
-        self.assertGreater(output["PKCompartment.C1"][index], 0.01)
+        output = self.model.simulate(
+            outputs=["PKCompartment.C1", "environment.t"],
+            time_max=self.model.time_max,
+            use_diffsol=False,
+        )[0]
+        time_id = self.model.variables.get(qname="environment.t").id
+        c1_id = self.model.variables.get(qname="PKCompartment.C1").id
+        index = np.where(np.array(output[time_id]) > 0.5)[0][0]
+        self.assertGreater(
+            output[c1_id][index],
+            0.01,
+        )
 
         # non-dosed model should have a concentration at t ~ 0.5 of near zero
-        pk_sim = self.pk.get_myokit_simulator()
-        output = pk_sim.run(self.pk.time_max)
-        index = np.where(np.array(output["environment.t"]) > 0.5)[0][0]
-        self.assertLess(output["PKCompartment.C1"][index], 1e-6)
+        output = self.pk.simulate(
+            outputs=["PKCompartment.C1", "environment.t"],
+            time_max=self.pk.time_max,
+            use_diffsol=False,
+        )[0]
+        time_id = self.pk.variables.get(qname="environment.t").id
+        c1_id = self.pk.variables.get(qname="PKCompartment.C1").id
+        index = np.where(np.array(output[time_id]) > 0.5)[0][0]
+        self.assertLess(
+            output[c1_id][index],
+            1e-6,
+        )

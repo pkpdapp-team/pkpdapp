@@ -285,7 +285,9 @@ class OptimiseContext(SimulateContext):
         }
         conversion_factors = np.asarray(
             [
-                self.get_variable_context(self.get_input_name(input_id)).conversion_factor
+                self.get_variable_context(
+                    self.get_input_name(input_id)
+                ).conversion_factor
                 for input_id in input_ids
             ],
             dtype=float,
@@ -320,9 +322,7 @@ class OptimiseContext(SimulateContext):
             ]
             for i, output in enumerate(group.outputs):
                 output_conversion_factor = output_contexts[i].conversion_factor
-                pred_dict[output.id] = (
-                    y[:, i] / output_conversion_factor
-                ).tolist()
+                pred_dict[output.id] = (y[:, i] / output_conversion_factor).tolist()
             predictions_list.append(pred_dict)
 
             obs_residuals_per_output = {i: [] for i in range(len(group.outputs))}
@@ -441,6 +441,7 @@ class OptimiseContext(SimulateContext):
                 raise ValueError(
                     f"Starting value for {variable.qname} must lie within bounds."
                 )
+
     def _build_optimisation_groups(
         self,
         biomarker_types: list[int] | None,

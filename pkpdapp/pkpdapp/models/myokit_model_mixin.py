@@ -4,22 +4,16 @@
 # copyright notice and full license details.
 #
 
-import hashlib
-import os
-import tempfile
+import logging
+import threading
 from typing import Any, cast
 
-import pkpdapp
+import myokit
 import numpy as np
+import pints
+from django.core.cache import cache
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
-from myokit.formats.diffsl import DiffSLExporter
-import myokit
-import threading
-from django.core.cache import cache
-import logging
-import pints
-import pydiffsol
 
 from pkpdapp.models.optimise_context import OptimiseContext
 from pkpdapp.models.simulate_context import SimulateContext
@@ -32,90 +26,8 @@ lock = threading.Lock()
 
 class MyokitModelMixin(UncertaintySimulationMixin):
 
-    @staticmethod
-    def _get_protocol_amount_conversion_factor(
-        project, protocol, amount_var, compound, target
-    ):
-        # if the amount unit is in per kg, use species weight to convert
-        # to per animal
-        additional_conversion_factor = 1.0
-        if (
-            project is not None
-            and project.version > 2
-            and protocol.amount_per_body_weight
-        ):
-            additional_conversion_factor = project.species_weight
-
-        amount_conversion_factor = (
-            protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, target=target
-            )
-            * additional_conversion_factor
-        )
-        return amount_conversion_factor
-
-    def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
-        protocols = {}
-        time_var = model.binding("time")
-        project = self.get_project()
-        if project is None:
-            compound = None
-        else:
-            compound = project.compound
-
-        for qname, protocol in dosing_protocols.items():
-            amount_var = model.get(qname)
-            set_administration(model, amount_var)
-            tlag_value = self._get_tlag_value(qname)
-            # override tlag if set
-            if qname in override_tlag:
-                tlag_value = override_tlag[qname]
-
-            target = self._unit_conversion_target(qname)
-
-            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, amount_var, compound, target
-            )
-
-            time_conversion_factor = protocol.time_unit.convert_to(
-                time_var.unit(), compound=compound
-            )
-
-            dosing_events = _get_dosing_events(
-                protocol.doses,
-                amount_conversion_factor,
-                time_conversion_factor,
-                tlag_value,
-                time_max,
-            )
-            protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
-        return protocols
-
-    def _get_override_tlag(self, variables):
-        override_tlag = {}
-        if isinstance(self, pkpdapp.models.CombinedModel):
-            for dv in self.derived_variables.all():
-                if dv.type == "TLG":
-                    derived_param = dv.pk_variable.qname + "_tlag_ud"
-                    if derived_param in variables:
-                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
-        return override_tlag
-
-    def _get_tlag_value(self, qname):
-        from pkpdapp.models import Variable
-
-        # get tlag value default to 0
-        derived_param = qname + "_tlag_ud"
-        try:
-            return self.variables.get(qname=derived_param).default_value
-        except Variable.DoesNotExist:
-            return 0.0
-
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
-
-    def _get_myokit_simulator_cache_key(self, hash=None):
-        return "myokit_simulator_{}_{}_{}".format(self._meta.db_table, self.id, hash)
 
     @staticmethod
     def sbml_string_to_mmt(sbml):
@@ -137,83 +49,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def get_diffsol_ode(
-        self,
-        override_tlag,
-        model,
-        time_max,
-        dosing_protocols,
-        outputs,
-        inputs,
-    ):
-        protocols = self._get_myokit_protocols(
-            model=model,
-            dosing_protocols=dosing_protocols,
-            override_tlag=override_tlag,
-            time_max=time_max,
-        )
-
-        inputs_myokit = [model.get(qname) for qname in inputs]
-        outputs_myokit = [model.get(qname) for qname in outputs]
-
-        temp = tempfile.NamedTemporaryFile(delete=False)
-        try:
-            path = temp.name
-            temp.close()  # important so other code can open it
-            DiffSLExporter().model(
-                path,
-                model,
-                convert_units=False,
-                protocol=protocols,
-                inputs=inputs_myokit,
-                outputs=outputs_myokit,
-                final_time=time_max,
-            )
-            with open(path, "r") as f:
-                content = f.read()
-        finally:
-            os.remove(path)  # cleanup
-
-        key = self._get_myokit_simulator_cache_key(
-            hash=hashlib.sha256(content.encode()).hexdigest()
-        )
-        ode = cache.get(key)
-        if ode is None:
-            ode = pydiffsol.Ode(content)
-            ode.ode_solver = pydiffsol.esdirk34
-            ode.atol = 1e-6
-            ode.rtol = 1e-4
-            cache.set(key, ode, timeout=None)
-        return ode
-
-    def create_myokit_simulator(
-        self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
-    ):
-        if override_tlag is None:
-            override_tlag = {}
-
-        if model is None:
-            model = self.get_myokit_model()
-
-        if dosing_protocols is None:
-            # add a dose_rate variable to the model for each
-            # dosed variable
-            dosing_protocols = {}
-            for v in self.variables.filter(state=True):
-                for p in v.protocols.all():
-                    dosing_protocols[v.qname] = p
-
-        protocols = self._get_myokit_protocols(
-            model=model,
-            dosing_protocols=dosing_protocols,
-            override_tlag=override_tlag,
-            time_max=time_max,
-        )
-
-        with lock:
-            sim = myokit.Simulation(model, protocol=protocols)
-        return sim
-
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
         with lock:
@@ -223,41 +58,9 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             cache.set(key, myokit_model, timeout=None)
         return myokit_model
 
-    def get_myokit_simulator(
-        self,
-        override_tlag=None,
-        model=None,
-        time_max=None,
-        dosing_protocols=None,
-    ):
-        # Cache only the default simulator configuration. Any overrides are
-        # returned directly to avoid stale or cross-configuration reuse.
-        uses_default_configuration = (
-            override_tlag is None
-            and model is None
-            and time_max is None
-            and dosing_protocols is None
-        )
-        if not uses_default_configuration:
-            return self.create_myokit_simulator(
-                override_tlag=override_tlag,
-                model=model,
-                time_max=time_max,
-                dosing_protocols=dosing_protocols,
-            )
-
-        key = self._get_myokit_simulator_cache_key()
-        with lock:
-            simulator = cache.get(key)
-        if simulator is None:
-            simulator = self.create_myokit_simulator()
-            cache.set(key, simulator, timeout=None)
-        return simulator
-
     def is_variables_out_of_date(self):
         model = self.get_myokit_model()
 
-        # just check if the number of const variables is right
         # TODO: is this sufficient, we are also updating on save
         # so I think it should be ok....?
         all_const_variables = self.variables.filter(constant=True)
@@ -266,13 +69,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         return len(all_const_variables) != myokit_variable_count
 
     def update_simulator(self):
-        # delete simulator from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        return None
 
     def update_model(self):
         logger.info("UPDATE MODEL")
-        # delete model and simulators from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        # delete model cache
         cache.delete(self._get_myokit_model_cache_key())
 
         # update the variables of the model
@@ -489,12 +290,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             "equations": equations,
         }
 
-    def states(self):
-        """states are dependent variables of the model to be solved"""
-        model = self.get_myokit_model()
-        states = model.variables(state=True, sort=True)
-        return [self._serialise_variable(s) for s in states]
-
     def components(self):
         """
         outputs are dependent (e.g. y) and independent (e.g. time)
@@ -502,104 +297,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         """
         model = self.get_myokit_model()
         return [self._serialise_component(c) for c in model.components(sort=True)]
-
-    def outputs(self):
-        """
-        outputs are dependent (e.g. y) and independent (e.g. time)
-        variables of the model to be solved
-        """
-        model = self.get_myokit_model()
-        outpts = model.variables(const=False, sort=True)
-        return [self._serialise_variable(o) for o in outpts]
-
-    def myokit_variables(self):
-        """
-        variables are independent variables of the model that are constant
-        over time. aka parameters of the model
-        """
-        model = self.get_myokit_model()
-        variables = model.variables(const=True, sort=True)
-        return [self._serialise_variable(v) for v in variables]
-
-    def _conversion_factor(self, variable, myokit_variable_sbml):
-        target = None
-        if self.is_library_model:
-            if "CT1" in variable.qname or "AT1" in variable.qname:
-                target = 1
-            elif "CT2" in variable.qname or "AT2" in variable.qname:
-                target = 2
-        if variable.unit is None:
-            conversion_factor = 1.0
-        else:
-            project = self.get_project()
-            compound = None
-            if project is not None:
-                compound = project.compound
-            conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound, target=target
-            )
-            if (
-                project is not None
-                and project.version > 2
-                and variable.unit_per_body_weight
-            ):
-                conversion_factor *= project.species_weight
-        return conversion_factor
-
-    def _convert_unit(self, variable, myokit_variable_sbml, value):
-        conversion_factor = self._conversion_factor(variable, myokit_variable_sbml)
-
-        return conversion_factor * value
-
-    def _convert_unit_qname(self, qname, value, myokit_model):
-        try:
-            variable = self.variables.get(qname=qname)
-        except pkpdapp.models.Variable.DoesNotExist:
-            raise ValueError(f"Variable with qname {qname} does not exist in model.")
-        myokit_variable_sbml = myokit_model.get(qname)
-        new_value = self._convert_unit(variable, myokit_variable_sbml, value)
-        return new_value
-
-    def _convert_bound_unit(self, binding, value, myokit_model):
-        myokit_variable_sbml = myokit_model.binding(binding)
-        variable = self.variables.get(qname=myokit_variable_sbml.qname())
-        return self._convert_unit(variable, myokit_variable_sbml, value)
-
-    def serialize_datalog(self, datalog, myokit_model):
-        result = {}
-        for k, v in datalog.items():
-            variable = self.variables.get(qname=k)
-            myokit_variable_sbml = myokit_model.get(k)
-
-            if variable.unit is None:
-                conversion_factor = 1.0
-            else:
-                conversion_factor = self._conversion_factor(
-                    variable, myokit_variable_sbml
-                )
-
-            result[variable.id] = (np.frombuffer(v) / conversion_factor).tolist()
-
-        return result
-
-    def serialize_diffsol_solution(self, soln, myokit_model, outputs):
-        result = {}
-        for i in range(len(outputs)):
-            y = soln.ys[i, :]
-            output_qname = outputs[i]
-            variable = self.variables.get(qname=output_qname)
-            myokit_variable_sbml = myokit_model.get(output_qname)
-
-            if variable.unit is None:
-                conversion_factor = 1.0
-            else:
-                conversion_factor = self._conversion_factor(
-                    variable, myokit_variable_sbml
-                )
-
-            result[variable.id] = (y / conversion_factor).tolist()
-
-        return result
 
     def get_time_max(self):
         return self.time_max
@@ -670,13 +367,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 two different noise models are supported: gaussian additive
                 (i.e. sum of squares)
         and log-normal multiplicative.
-
-                The fitting is performed across all indicated subject groups.
+                    return None
                 For each subject group:
                         1. all variable outputs mapped to biomarker types are found;
                             these
                the requested outputs for the simulation for that subject group
-                        2. data are gathered from all biomarkers in that subject
                             group and
                biomarker types, this is collected in a (a) list of time points and
                (b) 2D array where columns are timepoints and the rows arre outputs
