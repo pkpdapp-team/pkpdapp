@@ -55,16 +55,6 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   notificationsInfo,
   project,
 }: IDosingProtocols) => {
-  console.log("DosingProtocols render", {
-    administrationIdField,
-    amountUnitField,
-    amountUnit,
-    state,
-    units,
-    variables,
-    notificationsInfo,
-    project,
-  });
   const amountField = findFieldByType("Amount", state);
   const amountVariableField = findFieldByType("Amount Variable", state);
   const timeField = findFieldByType("Time", state);
@@ -75,10 +65,10 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
   const dosingRows: Row[] = amountField
     ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
+      (row) =>
+        (row[amountField] && row[amountField] !== ".") ||
+        parseInt(row[administrationIdField]),
+    )
     : state.data.filter((row) => parseInt(row[administrationIdField]));
 
   const isAmount = (variable: VariableRead) => {
@@ -90,7 +80,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
       variable.constant === false &&
       variableUnit?.symbol !== "" &&
       amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
+      undefined
     );
   };
   const amountVariables = variables?.filter(isAmount) || [];
@@ -227,8 +217,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         .filter((row) => {
           return uniqueDoseRow
             ? doseGroupingFields.every(
-                (field) => row[field] === uniqueDoseRow[field],
-              )
+              (field) => row[field] === uniqueDoseRow[field],
+            )
             : row[dosingRowKeyField] === rowKey;
         })
         .forEach((row) => {
@@ -289,25 +279,25 @@ const DosingProtocols: FC<IDosingProtocols> = ({
 
   const handleFieldChange =
     (rowKey: string, field: string) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const nextData = [...state.data];
-      const { value } = event.target;
-      const uniqueDoseRow = uniqueDosingRows.find(
-        (row) => row[dosingRowKeyField] === rowKey,
-      );
-      nextData
-        .filter((row) => {
-          return uniqueDoseRow
-            ? doseGroupingFields.every(
+      (event: ChangeEvent<HTMLInputElement>) => {
+        const nextData = [...state.data];
+        const { value } = event.target;
+        const uniqueDoseRow = uniqueDosingRows.find(
+          (row) => row[dosingRowKeyField] === rowKey,
+        );
+        nextData
+          .filter((row) => {
+            return uniqueDoseRow
+              ? doseGroupingFields.every(
                 (field) => row[field] === uniqueDoseRow[field],
               )
-            : row[dosingRowKeyField] === rowKey;
-        })
-        .forEach((row) => {
-          row[field] = value;
-        });
-      state.data = nextData;
-    };
+              : row[dosingRowKeyField] === rowKey;
+          })
+          .forEach((row) => {
+            row[field] = value;
+          });
+        state.data = nextData;
+      };
 
   return (
     <Box component="div">
