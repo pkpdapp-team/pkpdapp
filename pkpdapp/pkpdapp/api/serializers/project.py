@@ -31,8 +31,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ("created",)
 
     def create(self, validated_data):
-        # save method of log_likelihood will create its own parameters,
-        # so ignore any parameters that are given
         users = validated_data.pop("projectaccess_set")
         project = BaseProjectSerializer().create(validated_data)
         for user in users:

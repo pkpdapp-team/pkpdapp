@@ -5,7 +5,6 @@
 #
 
 import myokit
-import numpy as np
 
 
 def set_administration(model, drug_amount, direct=True):
@@ -123,22 +122,17 @@ def get_dosing_events(
     for dose in doses.all():
         if dose.repeat_interval <= 0:
             continue
-        start_times = np.arange(
-            dose.start_time + tlag_time,
-            dose.start_time + tlag_time + dose.repeat_interval * dose.repeats,
-            dose.repeat_interval,
-        )
-        if len(start_times) == 0:
-            continue
-        dose_level = dose.amount / dose.duration
-        dosing_events += [
-            (
-                (amount_conversion_factor / time_conversion_factor) * dose_level,
-                time_conversion_factor * start_time,
-                time_conversion_factor * dose.duration,
+        for repeat_index in range(dose.repeats):
+            start = dose.start_time + repeat_index * dose.repeat_interval
+            converted_start = time_conversion_factor * start + tlag_time
+            converted_duration = time_conversion_factor * dose.duration
+            level = (
+                amount_conversion_factor
+                / time_conversion_factor
+                * dose.amount
+                / dose.duration
             )
-            for start_time in start_times
-        ]
+            dosing_events.append((level, converted_start, converted_duration))
 
     if time_max is not None:
         for i, (level, start, duration) in enumerate(dosing_events):

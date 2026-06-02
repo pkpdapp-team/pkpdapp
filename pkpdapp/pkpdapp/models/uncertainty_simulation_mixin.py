@@ -95,6 +95,9 @@ class UncertaintySimulationMixin:
         if outputs is None:
             outputs = []
 
+        if variables is None:
+            variables = {}
+
         if variable_distributions is None:
             variable_distributions = {}
 

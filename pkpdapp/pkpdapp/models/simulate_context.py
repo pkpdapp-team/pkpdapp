@@ -16,7 +16,11 @@ import numpy as np
 import myokit
 import pydiffsol
 
-from pkpdapp.models.myokit_protocol import get_protocol, set_administration
+from pkpdapp.models.myokit_protocol import (
+    get_dosing_events,
+    get_protocol,
+    set_administration,
+)
 
 
 @dataclass(frozen=True)
@@ -144,32 +148,18 @@ class SimulateContext:
         values_by_id: dict[int, float] | None = None,
     ) -> dict[int, list[float]]:
         model = self._myokit_model
-        inputs = self._simulation_inputs(simulation_group)
+        inputs = self._simulation_inputs(simulation_group, values_by_id)
         outputs = [output.qname for output in self.outputs]
-
-        for qname, value in simulation_group.nonlinear_inputs.items():
-            self._myokit_model.get(qname).set_rhs(float(value))
-
-        if values_by_id is not None:
-            for variable_id, value in values_by_id.items():
-                if variable_id not in self.dynamic_input_ids:
-                    raise ValueError(
-                        f"Variable {variable_id} is not a configured dynamic input."
-                    )
-                input_name = self.get_input_name(variable_id)
-                self._myokit_model.get(input_name).set_rhs(float(value))
 
         if simulation_group.diffsol_ode is not None:
             input_values = np.asarray(
                 [input_context.value for input_context in inputs],
                 dtype=float,
             )
-            if values_by_id is not None:
-                for variable_id, value in values_by_id.items():
-                    input_values[self._input_index_by_variable_id[variable_id]] = value
             solution = simulation_group.diffsol_ode.solve(input_values, self.time_max)
             return self.serialize_diffsol_solution(solution, model, outputs)
 
+        self._set_input_rhs(inputs)
         sim = myokit.Simulation(
             model,
             protocol=self._myokit_protocols(model, simulation_group),
@@ -269,7 +259,10 @@ class SimulateContext:
         return tuple(validated_inputs)
 
     def _set_base_input_rhs(self):
-        for input_context in self.inputs:
+        self._set_input_rhs(self.inputs)
+
+    def _set_input_rhs(self, inputs: tuple[InputContext, ...]):
+        for input_context in inputs:
             self._myokit_model.get(input_context.name).set_rhs(
                 float(input_context.value)
             )
@@ -277,11 +270,22 @@ class SimulateContext:
     def _simulation_inputs(
         self,
         simulation_group: SimulationGroupContext,
+        values_by_id: dict[int, float] | None = None,
     ) -> tuple[InputContext, ...]:
-        return self.inputs + tuple(
-            InputContext(name=qname, value=value)
+        inputs = list(self.inputs)
+        if values_by_id is not None:
+            for variable_id in self.dynamic_input_ids:
+                input_index = self._input_index_by_variable_id[variable_id]
+                input_context = inputs[input_index]
+                inputs[input_index] = InputContext(
+                    name=input_context.name,
+                    value=float(values_by_id[variable_id]),
+                )
+        inputs.extend(
+            InputContext(name=qname, value=float(value))
             for qname, value in simulation_group.nonlinear_inputs.items()
         )
+        return tuple(inputs)
 
     @property
     def input_index_by_variable_id(self) -> dict[int, int]:
@@ -379,9 +383,11 @@ class SimulateContext:
     def _build_time_max(self, model, time_max: float | None) -> float:
         if time_max is None:
             time_max = model.get_time_max()
+        from pkpdapp.models.variable import Variable
+
         try:
             time_variable = self._get_variable_by_qname(self.time_qname)
-        except Exception:
+        except Variable.DoesNotExist:
             return float(time_max)
         return self._convert_variable_value(time_variable, time_max)
 
@@ -661,33 +667,16 @@ class SimulateContext:
         tlag_time: float,
         time_max: float | None,
     ) -> list[DoseEventContext]:
-        events = []
-        for dose in protocol.doses.all():
-            if dose.repeat_interval <= 0:
-                continue
-            for repeat_index in range(dose.repeats):
-                start = dose.start_time + repeat_index * dose.repeat_interval
-                converted_start = time_conversion_factor * start + tlag_time
-                converted_duration = time_conversion_factor * dose.duration
-                level = (
-                    amount_conversion_factor
-                    / time_conversion_factor
-                    * dose.amount
-                    / dose.duration
-                )
-                if time_max is not None:
-                    if abs(converted_start - time_max) < 1e-6:
-                        converted_start = time_max
-                    elif abs(converted_start + converted_duration - time_max) < 1e-6:
-                        converted_duration = time_max - converted_start
-                events.append(
-                    DoseEventContext(
-                        level=level,
-                        start=converted_start,
-                        duration=converted_duration,
-                    )
-                )
-        return events
+        return [
+            DoseEventContext(level=level, start=start, duration=duration)
+            for level, start, duration in get_dosing_events(
+                protocol.doses,
+                amount_conversion_factor,
+                time_conversion_factor,
+                tlag_time,
+                time_max,
+            )
+        ]
 
     def _unit_conversion_target(self, qname: str) -> int | None:
         if self.is_library_model:

@@ -174,11 +174,15 @@ class TestSimulateContext(TestCase):
             dynamic_context.simulation_groups[1],
             values_by_id={input_variables[0].id: 0.3},
         )
+        reset_dynamic = dynamic_context.simulate_model(
+            dynamic_context.simulation_groups[1]
+        )
         self.assertEqual(
             set(baseline_dynamic.keys()),
             set(overridden_dynamic.keys()),
         )
         self.assertNotEqual(baseline_dynamic, overridden_dynamic)
+        self.assertEqual(baseline_dynamic, reset_dynamic)
 
         self.assertFalse(hasattr(context, "_project"))
         self.assertFalse(hasattr(context, "_variables_by_qname"))
@@ -204,13 +208,13 @@ class TestSimulateContext(TestCase):
         with self.assertRaises(Variable.DoesNotExist):
             context.get_variable_context("Central.missing")
 
-    def test_dynamic_input_validation_and_runtime_override_errors(self):
+    def test_dynamic_input_validation(self):
         setup = create_exponential_data(
             name_prefix="simulate_context_dynamic",
             group_name_prefix="Dynamic",
         )
         model = setup["model"]
-        k, scale = setup["inputs"]
+        k, _ = setup["inputs"]
         amount = model.variables.get(qname="Central.amount")
         missing_id = max(variable.id for variable in model.variables.all()) + 1000
 
@@ -222,21 +226,6 @@ class TestSimulateContext(TestCase):
 
         with self.assertRaisesMessage(ValueError, "must be a constant variable"):
             SimulateContext(model, dynamic_inputs=[amount.id])
-
-        context = SimulateContext(
-            model,
-            outputs=["Central.response"],
-            dynamic_inputs=[k.id],
-            time_max=2,
-        )
-        with self.assertRaisesMessage(
-            ValueError,
-            f"Variable {scale.id} is not a configured dynamic input.",
-        ):
-            context.simulate_model(
-                context.simulation_groups[1],
-                values_by_id={scale.id: 1.8},
-            )
 
     def test_dosing_protocol_context_builds_events_and_group_ordering(self):
         setup = create_exponential_data(

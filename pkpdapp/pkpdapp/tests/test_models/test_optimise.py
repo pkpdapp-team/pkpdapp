@@ -303,7 +303,12 @@ class TestOptimise(TestCase):
 
         invalid_cases = [
             ([], [], ([], []), "at least one input"),
-            ([input_ids[0], input_ids[0]], [0.2, 0.2], ([0.1, 0.1], [0.3, 0.3]), "unique"),
+            (
+                [input_ids[0], input_ids[0]],
+                [0.2, 0.2],
+                ([0.1, 0.1], [0.3, 0.3]),
+                "unique",
+            ),
             (input_ids, [0.2], ([0.1, 1.0], [0.3, 2.0]), "same length as inputs"),
             (
                 input_ids,
