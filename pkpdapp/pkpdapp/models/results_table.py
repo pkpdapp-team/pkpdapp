@@ -48,6 +48,9 @@ class ResultsTable(models.Model):
     def __str__(self):
         return self.name
 
+    def get_project(self):
+        return self.project
+
     def copy(self, new_project):
         """
         Create a copy of this table for a new project.

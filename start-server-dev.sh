@@ -53,11 +53,19 @@ echo -e "${GREEN}[Backend]${NC} Creating test user (username: test, password: te
 python manage.py shell -c "
 from django.contrib.auth import get_user_model;
 User = get_user_model();
-if not User.objects.filter(username='test').exists():
-    User.objects.create_superuser('test', 'test@example.com', 'test');
+user, created = User.objects.get_or_create(
+    username='test',
+    defaults={'email': 'test@example.com'}
+);
+user.email = 'test@example.com';
+user.is_staff = False;
+user.is_superuser = False;
+user.set_password('test');
+user.save();
+if created:
     print('Test user created');
 else:
-    print('Test user already exists');
+    print('Test user updated to a normal user');
 " 2>/dev/null || echo "Note: Could not create test user (may already exist)"
 
 # Start Django development server in background
