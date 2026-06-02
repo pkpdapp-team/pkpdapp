@@ -12,7 +12,10 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveConstraint(
             model_name="loglikelihood",
-            name="loglikelihood: fixed log_likelihood must have a value or biomarker_type",
+            name=(
+                "loglikelihood: fixed log_likelihood must have a value or "
+                "biomarker_type"
+            ),
         ),
         migrations.RemoveConstraint(
             model_name="loglikelihood",
