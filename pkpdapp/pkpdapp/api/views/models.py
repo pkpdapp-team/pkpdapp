@@ -155,7 +155,6 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
-        print("xXXXXXx", serializer.errors)
         return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(
@@ -171,22 +170,3 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             serializer.save()
             return response.Response(serializer.data)
         return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
-    @decorators.action(
-        detail=True,
-        methods=["PUT"],
-        serializer_class=PharmacodynamicSerializer,
-    )
-    def set_variables_from_inference(self, request, pk):
-        obj = self.get_object()
-        try:
-            print("got request", request.data)
-            inference = Inference.objects.get(id=request.data["inference_id"])
-        except Inference.DoesNotExist:
-            return response.Response(
-                {"inference_id": "inference not found"}, status.HTTP_400_BAD_REQUEST
-            )
-
-        obj.set_variables_from_inference(inference)
-        serializer = self.serializer_class(obj)
-        return response.Response(serializer.data)
