@@ -297,7 +297,13 @@ class SimulateContext:
         model,
         simulation_group: SimulationGroupContext,
     ) -> dict[str, myokit.Protocol]:
-        for protocol_context in simulation_group.dosing_protocols:
+        active_protocols = [
+            protocol_context
+            for protocol_context in simulation_group.dosing_protocols
+            if len(protocol_context.events) > 0
+        ]
+
+        for protocol_context in active_protocols:
             pacing_label = protocol_context.pacing_label
             if not any(
                 variable.binding() == pacing_label
@@ -315,7 +321,7 @@ class SimulateContext:
                     for event in protocol_context.events
                 ]
             )
-            for protocol_context in simulation_group.dosing_protocols
+            for protocol_context in active_protocols
         }
 
     def _load_project(self, model):
