@@ -2,6 +2,7 @@ import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { http, HttpResponse } from "msw";
 
 import SimulationPlotView from "../features/simulation/SimulationPlotView";
 import {
@@ -14,6 +15,7 @@ import {
   VariableRead,
 } from "../app/backendApi";
 import { simulationData } from "./simulations.mock";
+import { combinedModels, project, protocols, subjectGroups } from "./generated-mocks";
 
 const baseSimulation = simulationData[0] as SimulateResponse;
 const outputIds = Object.keys(baseSimulation.outputs);
@@ -215,6 +217,25 @@ const meta: Meta<typeof SimulationPlotView> = {
   component: SimulationPlotView,
   parameters: {
     layout: "fullscreen",
+    msw: {
+      handlers: [
+        http.get("/api/protocol/", () => {
+          return HttpResponse.json(protocols, { status: 200 });
+        }),
+        http.get("/api/subject_group/", () => {
+          return HttpResponse.json(subjectGroups, { status: 200 });
+        }),
+        http.get("/api/project/:id/", ({ params }) => {
+          if (Number(params.id) === project.id) {
+            return HttpResponse.json(project, { status: 200 });
+          }
+          return HttpResponse.json(null, { status: 404 });
+        }),
+        http.get("/api/combined_model/", () => {
+          return HttpResponse.json(combinedModels, { status: 200 });
+        }),
+      ],
+    },
   },
   render: () => <PlotHarness />,
 };

@@ -69,6 +69,14 @@ const meta: Meta<typeof Projects> = {
             await delay();
             return HttpResponse.json(mockProjects, { status: 200 });
           }),
+          http.get("/api/tag/", async () => {
+            await delay();
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/tag", async () => {
+            await delay();
+            return HttpResponse.json([], { status: 200 });
+          }),
           http.get("/api/project/:id", async ({ params }) => {
             await delay();
             //@ts-expect-error params.id is a string
@@ -117,6 +125,33 @@ const meta: Meta<typeof Projects> = {
               (project) => project.id !== projectId,
             );
             return HttpResponse.json({ id: projectId }, { status: 204 });
+          }),
+          http.post("/api/dataset/", async ({ request }) => {
+            await delay();
+            const dataset = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error dataset is DefaultBodyType
+              { ...dataset, id: 1, subjects: [], groups: [] },
+              { status: 201 },
+            );
+          }),
+          http.post("/api/combined_model/", async ({ request }) => {
+            await delay();
+            const model = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error model is DefaultBodyType
+              { ...model, id: 1 },
+              { status: 201 },
+            );
+          }),
+          http.post("/api/simulation/", async ({ request }) => {
+            await delay();
+            const simulation = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error simulation is DefaultBodyType
+              { ...simulation, id: 1 },
+              { status: 201 },
+            );
           }),
           http.get("/api/compound/:id", async () => {
             await delay();
