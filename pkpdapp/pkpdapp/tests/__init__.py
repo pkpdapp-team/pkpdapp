@@ -4,10 +4,8 @@
 # copyright notice and full license details.
 #
 # flake8: noqa f401
-import os
 import django
+import os
 
-
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pkpdapp.settings")
 django.setup()
-dummy = ""
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pkpdapp.settings')

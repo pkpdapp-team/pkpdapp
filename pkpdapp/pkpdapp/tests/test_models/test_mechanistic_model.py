@@ -72,9 +72,10 @@ class TestDosedPharmokineticModel(TestCase):
             amount_unit=Unit.objects.get(symbol="pmol"),
             time_unit=Unit.objects.get(symbol="h"),
             name="my_cool_protocol",
-            dose_type=Protocol.DoseType.INDIRECT,
             variable=v,
         )
+        self.model.update_model()
+        self.pk.update_model()
 
     def test_reset_to_default(self):
         v = self.model.variables.get(qname="PKCompartment.CL")

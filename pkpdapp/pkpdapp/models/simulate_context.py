@@ -372,7 +372,10 @@ class SimulateContext:
     def _build_time_max(self, model, time_max: float | None) -> float:
         if time_max is None:
             time_max = model.get_time_max()
-        time_variable = self._get_variable_by_qname(self.time_qname)
+        try:
+            time_variable = self._get_variable_by_qname(self.time_qname)
+        except Exception:
+            return float(time_max)
         return self._convert_variable_value(time_variable, time_max)
 
     def _build_outputs(self, output_qnames: list[str]) -> tuple[OutputContext, ...]:
@@ -382,18 +385,18 @@ class SimulateContext:
         )
 
     def _load_protocols(self):
-        if self._project is None:
-            return []
-        return list(
-            self._project.protocols.select_related(
-                "variable",
-                "group",
-                "amount_unit",
-                "time_unit",
-            )
-            .prefetch_related("doses")
-            .all()
-        )
+        from pkpdapp.models import Protocol
+
+        protocols = []
+        if self.model_class == "CombinedModel":
+            for protocol in (
+                Protocol.objects.filter(variable__dosed_pk_model=self.model_id)
+                .select_related("variable", "group", "amount_unit", "time_unit")
+                .prefetch_related("doses")
+            ):
+                protocols.append(protocol)
+
+        return protocols
 
     def _build_simulation_groups(self) -> tuple[SimulationGroupContext, ...]:
         groups = [

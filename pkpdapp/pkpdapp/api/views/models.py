@@ -51,15 +51,15 @@ class CombinedModelView(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_update(self, serializer):
-        delete_protocols = self.request.query_params.get('delete_protocols', None)
+        delete_protocols = self.request.query_params.get("delete_protocols", None)
         # Set flag on instance before first save attempt
         instance = self.get_object()
-        if (delete_protocols is not None) and delete_protocols.lower() == 'true':
+        if (delete_protocols is not None) and delete_protocols.lower() == "true":
             instance._delete_protocols = True
         try:
             serializer.save()
         except IntegrityError as e:
-            if (delete_protocols is not None) and delete_protocols.lower() == 'true':
+            if (delete_protocols is not None) and delete_protocols.lower() == "true":
                 # After rollback, identify which variables will be deleted
                 # and only delete protocols for those variables
 
