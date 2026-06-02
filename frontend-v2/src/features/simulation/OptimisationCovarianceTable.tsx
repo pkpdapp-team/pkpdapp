@@ -6,7 +6,6 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Typography,
 } from "@mui/material";
 import { VariableRead } from "../../app/backendApi";
 

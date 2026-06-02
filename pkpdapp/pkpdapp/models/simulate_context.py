@@ -6,6 +6,7 @@
 
 from dataclasses import dataclass, field
 import hashlib
+import logging
 import os
 import tempfile
 from typing import Any
@@ -22,6 +23,7 @@ from pkpdapp.models.myokit_protocol import (
     set_administration,
 )
 
+logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class VariableContext:
@@ -111,6 +113,9 @@ class SimulateContext:
         self.project_id = self._project.id if self._project is not None else None
         self.is_library_model = bool(getattr(model, "is_library_model", False))
 
+        self._diffsol_cached_count = 0
+        self._diffsol_created_count = 0
+
         self._myokit_model = model.create_myokit_model()
         self.mmt = self._myokit_model.code()
         self.time_qname = self._myokit_model.binding("time").qname()
@@ -135,6 +140,14 @@ class SimulateContext:
         )
         if discard_database_state:
             self._discard_database_state()
+
+        logger.info(
+            "SimulateContext model=%s/%s diffsol_odes cached=%d created=%d",
+            self.model_table,
+            self.model_id,
+            self._diffsol_cached_count,
+            self._diffsol_created_count,
+        )
 
     def _discard_database_state(self):
         del self._project
@@ -202,6 +215,9 @@ class SimulateContext:
             ode.atol = 1e-6
             ode.rtol = 1e-4
             cache.set(cache_key, ode, timeout=None)
+            self._diffsol_created_count += 1
+        else:
+            self._diffsol_cached_count += 1
         return ode
 
     def _diffsol_ode_cache_key(self, content: str) -> str:
