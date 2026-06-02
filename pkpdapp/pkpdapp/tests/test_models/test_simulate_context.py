@@ -4,9 +4,12 @@
 # copyright notice and full license details.
 #
 
+from unittest import mock
+
 from django.test import TestCase
 import numpy as np
 
+from pkpdapp.models import Dose, Variable
 from pkpdapp.models.optimise_context import OptimiseContext
 from pkpdapp.models.simulate_context import SimulateContext
 from pkpdapp.tests.optimise_fixtures import SELECTED_TIMES, create_exponential_data
@@ -183,3 +186,178 @@ class TestSimulateContext(TestCase):
         self.assertFalse(hasattr(context, "_protocols"))
         self.assertFalse(hasattr(context, "_model"))
         self.assertFalse(hasattr(context, "default_variables"))
+
+    def test_invalid_variable_references_raise(self):
+        setup = create_exponential_data(
+            name_prefix="simulate_context_invalid",
+            group_name_prefix="Invalid",
+        )
+        model = setup["model"]
+
+        with self.assertRaises(Variable.DoesNotExist):
+            SimulateContext(model, outputs=["Central.missing"])
+
+        with self.assertRaises(Variable.DoesNotExist):
+            SimulateContext(model, variables={"Central.missing": 1.0})
+
+        context = SimulateContext(model, outputs=["Central.response"])
+        with self.assertRaises(Variable.DoesNotExist):
+            context.get_variable_context("Central.missing")
+
+    def test_dynamic_input_validation_and_runtime_override_errors(self):
+        setup = create_exponential_data(
+            name_prefix="simulate_context_dynamic",
+            group_name_prefix="Dynamic",
+        )
+        model = setup["model"]
+        k, scale = setup["inputs"]
+        amount = model.variables.get(qname="Central.amount")
+        missing_id = max(variable.id for variable in model.variables.all()) + 1000
+
+        with self.assertRaisesMessage(ValueError, "Dynamic inputs must be unique."):
+            SimulateContext(model, dynamic_inputs=[k.id, k.id])
+
+        with self.assertRaises(Variable.DoesNotExist):
+            SimulateContext(model, dynamic_inputs=[missing_id])
+
+        with self.assertRaisesMessage(ValueError, "must be a constant variable"):
+            SimulateContext(model, dynamic_inputs=[amount.id])
+
+        context = SimulateContext(
+            model,
+            outputs=["Central.response"],
+            dynamic_inputs=[k.id],
+            time_max=2,
+        )
+        with self.assertRaisesMessage(
+            ValueError,
+            f"Variable {scale.id} is not a configured dynamic input.",
+        ):
+            context.simulate_model(
+                context.simulation_groups[1],
+                values_by_id={scale.id: 1.8},
+            )
+
+    def test_dosing_protocol_context_builds_events_and_group_ordering(self):
+        setup = create_exponential_data(
+            name_prefix="simulate_context_dosing",
+            group_name_prefix="Dose",
+        )
+        model = setup["model"]
+        group = setup["groups"][0]
+        protocol = group.protocols.get()
+        protocol.doses.all().delete()
+
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=0.0,
+            amount=10.0,
+            duration=0.1,
+            repeats=1,
+            repeat_interval=1.0,
+        )
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=0.2,
+            amount=5.0,
+            duration=0.1,
+            repeats=3,
+            repeat_interval=0.4,
+        )
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=1.2,
+            amount=2.0,
+            duration=0.1,
+            repeats=1,
+            repeat_interval=1.0,
+        )
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=1.15,
+            amount=2.0,
+            duration=0.05,
+            repeats=1,
+            repeat_interval=1.0,
+        )
+        Dose.objects.create(
+            protocol=protocol,
+            start_time=0.4,
+            amount=99.0,
+            duration=0.1,
+            repeats=3,
+            repeat_interval=0.0,
+        )
+
+        context = SimulateContext(
+            model,
+            outputs=["Central.response"],
+            time_max=1.2,
+        )
+
+        self.assertEqual(
+            [group_context.group_name for group_context in context.simulation_groups],
+            [None, "Dose-Group 1", "Dose-Group 2"],
+        )
+        group_context = next(
+            group_context
+            for group_context in context.simulation_groups
+            if group_context.group_id == group.id
+        )
+        protocol_context = group_context.dosing_protocols[0]
+        self.assertEqual(protocol_context.pacing_label, "pace_Central_amount")
+        self.assertEqual(len(protocol_context.events), 6)
+
+        starts = [event.start for event in protocol_context.events]
+        levels = [event.level for event in protocol_context.events]
+        self.assertTrue(np.allclose(starts[:4], [0.0, 0.2, 0.6, 1.0]))
+        self.assertAlmostEqual(protocol_context.events[0].level, 100.0)
+        self.assertAlmostEqual(protocol_context.events[0].duration, 0.1)
+        self.assertNotIn(990.0, levels)
+        self.assertIn(1.2, starts)
+        self.assertAlmostEqual(protocol_context.events[-1].duration, 0.05)
+
+    def test_diffsol_ode_cache_reuses_ode_for_same_content(self):
+        setup = create_exponential_data(
+            name_prefix="simulate_context_cache",
+            group_name_prefix="Cache",
+        )
+        context = SimulateContext(setup["model"], outputs=["Central.response"])
+
+        class FakeOde:
+            created = []
+
+            def __init__(self, content):
+                self.content = content
+                FakeOde.created.append(self)
+
+        class FakeCache:
+            def __init__(self):
+                self.values = {}
+
+            def get(self, key):
+                return self.values.get(key)
+
+            def set(self, key, value, timeout=None):
+                self.values[key] = value
+
+        fake_cache = FakeCache()
+        with (
+            mock.patch("pkpdapp.models.simulate_context.cache", fake_cache),
+            mock.patch("pkpdapp.models.simulate_context.pydiffsol.Ode", FakeOde),
+        ):
+            first = context._get_cached_diffsol_ode("ode-content")
+            second = context._get_cached_diffsol_ode("ode-content")
+            third = context._get_cached_diffsol_ode("other-content")
+
+        self.assertIs(first, second)
+        self.assertIsNot(first, third)
+        self.assertEqual([ode.content for ode in FakeOde.created], [
+            "ode-content",
+            "other-content",
+        ])
+        self.assertEqual(first.ode_solver, third.ode_solver)
+        self.assertNotEqual(
+            context._diffsol_ode_cache_key("ode-content"),
+            context._diffsol_ode_cache_key("other-content"),
+        )
