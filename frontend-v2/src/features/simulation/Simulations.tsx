@@ -508,7 +508,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       setOptimiseResult(response.data);
       setOptimiseResultOpen(true);
     },
-    [model, optimiseModel, setSliderValues, visibleSubjectGroupIds],
+    [model, optimiseModel, setSliderValues],
   );
 
   const handleOptimise = useCallback(() => {
