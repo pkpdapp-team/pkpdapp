@@ -1,13 +1,13 @@
 gunicorn
-Django~=5.2.14
-setuptools<=65.5.1
+Django~=6.0.4
+setuptools~=82.0.1
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5
-pandas>=1.0
+pandas>=2.3
 whitenoise>=5.0.1
 docutils>=0.16
 python-markdown-math>=0.8
-pints @ git+https://github.com/pints-team/pints@i1403-multi-outputs#egg=pints
+pints~=0.6.1
 myokit @ git+https://github.com/myokit/myokit.git@main
 django-extensions>=3.1.1
 jsonfield>=3.1.0
@@ -20,13 +20,13 @@ django-polymorphic>=3.1.0
 drf-writable-nested>=0.6.3
 celery>=5.1.2
 tdigest>=0.5.2.2
-pymc3>=3.11.5
+pymc>=6.0.1
 django-auth-ldap>=4.1.0
 pyyaml>=6.0.0
 drf-spectacular>=0.26.2
 openpyxl>=3.1.2
 django-user-visit>=2.0.0
-snapshottest>=0.6.0
+snapshottest==1.0.0a1
 django-cprofile-middleware>=1.0.5
 ipython
 pydiffsol>=0.5.2

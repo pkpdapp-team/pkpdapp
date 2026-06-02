@@ -61,7 +61,12 @@ class DerivedVariable(StoredModel):
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
-        super().save(force_insert, force_update, *args, **kwargs)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            **kwargs
+        )
 
         # don't update a stored model
         if self.read_only:

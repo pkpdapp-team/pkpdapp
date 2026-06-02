@@ -522,7 +522,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='dosebase',
-            constraint=models.CheckConstraint(check=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
+            constraint=models.CheckConstraint(condition=models.Q(('duration__gt', 0)), name='Duration must be greater than 0'),
         ),
         migrations.AddField(
             model_name='derivedvariable',
@@ -636,11 +636,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('is_log', True), ('lower_bound__gt', 0)), ('is_log', False), _connector='OR'), name='variable: log scale must have a lower bound greater than zero'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('is_log', True), ('lower_bound__gt', 0)), ('is_log', False), _connector='OR'), name='variable: log scale must have a lower bound greater than zero'),
         ),
         migrations.AddConstraint(
             model_name='variable',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', True), ('pd_model__isnull', False)), models.Q(('pk_model__isnull', False), ('dosed_pk_model__isnull', True), ('pd_model__isnull', True)), models.Q(('pk_model__isnull', True), ('dosed_pk_model__isnull', False), ('pd_model__isnull', True)), _connector='OR'), name='variable: variable must belong to a model'),
         ),
         migrations.AddConstraint(
             model_name='subject',
@@ -652,15 +652,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
-            constraint=models.CheckConstraint(check=models.Q(('form', 'F'), ('value__isnull', True), ('biomarker_type__isnull', True), _negated=True), name='loglikelihood: fixed log_likelihood must have a value or biomarker_type'),
+            constraint=models.CheckConstraint(condition=models.Q(('form', 'F'), ('value__isnull', True), ('biomarker_type__isnull', True), _negated=True), name='loglikelihood: fixed log_likelihood must have a value or biomarker_type'),
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
-            constraint=models.CheckConstraint(check=models.Q(('form', 'M'), ('variable__isnull', True), _negated=True), name='loglikelihood: model log_likelihood must have a variable'),
+            constraint=models.CheckConstraint(condition=models.Q(('form', 'M'), ('variable__isnull', True), _negated=True), name='loglikelihood: model log_likelihood must have a variable'),
         ),
         migrations.AddConstraint(
             model_name='loglikelihood',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('form', 'F'), ('form', 'S'), ('form', 'M'), _connector='OR'), ('biomarker_type__isnull', False), ('protocol_filter', False), _negated=True), name='loglikelihood: deterministic log_likelihoods cannot have data'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('form', 'F'), ('form', 'S'), ('form', 'M'), _connector='OR'), ('biomarker_type__isnull', False), ('protocol_filter', False), _negated=True), name='loglikelihood: deterministic log_likelihoods cannot have data'),
         ),
         migrations.AddField(
             model_name='dose',

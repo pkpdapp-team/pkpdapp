@@ -24,7 +24,7 @@ ENV VITE_APP_VERSION=$GIT_COMMIT_ID
 
 RUN yarn build
 
-FROM python:3.10-bookworm
+FROM python:3.12-bookworm
 
 # install libsundials-dev
 RUN apt-get update && apt-get upgrade -y
