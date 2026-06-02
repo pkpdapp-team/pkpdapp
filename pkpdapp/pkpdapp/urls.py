@@ -37,10 +37,6 @@ router.register("pharmacokinetic", api.PharmacokineticView, basename="pharmacoki
 router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacodynamic")
 
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
-
-router.register("inference", api.InferenceView, basename="inference")
-router.register("algorithm", api.AlgorithmView, basename="algorithm")
-router.register("inference_chain", api.InferenceChainView, basename="inference_chain")
 router.register("simulation", api.SimulationViewSet, basename="simulation")
 
 urlpatterns = [
@@ -64,16 +60,6 @@ urlpatterns = [
         "api/combined_model/<int:pk>/simulate_uncertainty",
         api.SimulateUncertaintyCombinedView.as_view(),
         name="simulate-uncertainty-combined-model",
-    ),
-    path(
-        "api/inference/wizard",
-        api.InferenceWizardView.as_view(),
-        name="inference-wizard",
-    ),
-    path(
-        "api/inference/<int:pk>/stop",
-        api.StopInferenceView.as_view(),
-        name="stop-inference",
     ),
     path(
         "api/pharmacodynamic/<int:pk>/simulate",

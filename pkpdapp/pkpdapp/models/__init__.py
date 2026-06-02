@@ -19,6 +19,8 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .categorical_biomarker import CategoricalBiomarker
 from .myokit_model_mixin import MyokitModelMixin
+from .simulate_context import SimulateContext
+from .optimise_context import OptimiseContext
 from .mechanistic_model import MechanisticModel
 from .pharmacodynamic_model import (
     PharmacodynamicModel,
@@ -31,17 +33,6 @@ from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .variable import Variable
 from .dataset import Dataset
 from .profile import Profile
-from .myokit_forward_model import MyokitForwardModel
-from .likelihoods import (
-    LogLikelihood,
-    LogLikelihoodParameter,
-)
-from .inference_results import (
-    InferenceChain,
-    InferenceResult,
-    InferenceFunctionResult,
-    InferenceOutputResult,
-)
 from .simulation import (
     Simulation,
     SimulationYAxis,
@@ -49,11 +40,4 @@ from .simulation import (
     SimulationSlider,
     SimulationPlot,
 )
-from .inference import (
-    Inference,
-    Algorithm,
-)
 from .tag import Tag
-
-
-from .inference_mixin import InferenceMixin

@@ -4,24 +4,19 @@
 # copyright notice and full license details.
 #
 
-import hashlib
-import os
-import tempfile
+import logging
+import threading
+from typing import Any, cast
 
-import pkpdapp
+import myokit
 import numpy as np
+import pints
+from django.core.cache import cache
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
-from myokit.formats.diffsl import DiffSLExporter
-import myokit
-import threading
-from django.core.cache import cache
-import logging
-import pints
-import pydiffsol
-from scipy.linalg import svd
 
-from pkpdapp.models import Biomarker, BiomarkerType, SubjectGroup
+from pkpdapp.models.optimise_context import OptimiseContext
+from pkpdapp.models.simulate_context import SimulateContext
 from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 logger = logging.getLogger(__name__)
@@ -31,112 +26,8 @@ lock = threading.Lock()
 
 class MyokitModelMixin(UncertaintySimulationMixin):
 
-    def _initialise_variables(self, model, variables):
-        # Convert units
-        variables = {
-            qname: self._convert_unit_qname(qname, value, model)
-            for qname, value in variables.items()
-        }
-
-        # Set constants in model
-        for var_name, var_value in variables.items():
-            model.get(var_name).set_rhs(float(var_value))
-
-        return variables
-
-    def _initialise_diffsol_inputs(self, model, variables):
-        # Convert units
-        inputs = {
-            qname: self._convert_unit_qname(qname, value, model)
-            for qname, value in variables.items()
-        }
-
-        return inputs
-
-    @staticmethod
-    def _get_protocol_amount_conversion_factor(
-        project, protocol, amount_var, compound, target
-    ):
-        # if the amount unit is in per kg, use species weight to convert
-        # to per animal
-        additional_conversion_factor = 1.0
-        if (
-            project is not None
-            and project.version > 2
-            and protocol.amount_per_body_weight
-        ):
-            additional_conversion_factor = project.species_weight
-
-        amount_conversion_factor = (
-            protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, target=target
-            )
-            * additional_conversion_factor
-        )
-        return amount_conversion_factor
-
-    def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
-        protocols = {}
-        time_var = model.binding("time")
-        project = self.get_project()
-        if project is None:
-            compound = None
-        else:
-            compound = project.compound
-
-        for qname, protocol in dosing_protocols.items():
-            amount_var = model.get(qname)
-            set_administration(model, amount_var)
-            tlag_value = self._get_tlag_value(qname)
-            # override tlag if set
-            if qname in override_tlag:
-                tlag_value = override_tlag[qname]
-
-            target = self._unit_conversion_target(qname)
-
-            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, amount_var, compound, target
-            )
-
-            time_conversion_factor = protocol.time_unit.convert_to(
-                time_var.unit(), compound=compound
-            )
-
-            dosing_events = _get_dosing_events(
-                protocol.doses,
-                amount_conversion_factor,
-                time_conversion_factor,
-                tlag_value,
-                time_max,
-            )
-            protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
-        return protocols
-
-    def _get_override_tlag(self, variables):
-        override_tlag = {}
-        if isinstance(self, pkpdapp.models.CombinedModel):
-            for dv in self.derived_variables.all():
-                if dv.type == "TLG":
-                    derived_param = dv.pk_variable.qname + "_tlag_ud"
-                    if derived_param in variables:
-                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
-        return override_tlag
-
-    def _get_tlag_value(self, qname):
-        from pkpdapp.models import Variable
-
-        # get tlag value default to 0
-        derived_param = qname + "_tlag_ud"
-        try:
-            return self.variables.get(qname=derived_param).default_value
-        except Variable.DoesNotExist:
-            return 0.0
-
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
-
-    def _get_myokit_simulator_cache_key(self, hash=None):
-        return "myokit_simulator_{}_{}_{}".format(self._meta.db_table, self.id, hash)
 
     @staticmethod
     def sbml_string_to_mmt(sbml):
@@ -158,83 +49,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def get_diffsol_ode(
-        self,
-        override_tlag,
-        model,
-        time_max,
-        dosing_protocols,
-        outputs,
-        inputs,
-    ):
-        protocols = self._get_myokit_protocols(
-            model=model,
-            dosing_protocols=dosing_protocols,
-            override_tlag=override_tlag,
-            time_max=time_max,
-        )
-
-        inputs_myokit = [model.get(qname) for qname in inputs]
-        outputs_myokit = [model.get(qname) for qname in outputs]
-
-        temp = tempfile.NamedTemporaryFile(delete=False)
-        try:
-            path = temp.name
-            temp.close()  # important so other code can open it
-            DiffSLExporter().model(
-                path,
-                model,
-                convert_units=False,
-                protocol=protocols,
-                inputs=inputs_myokit,
-                outputs=outputs_myokit,
-                final_time=time_max,
-            )
-            with open(path, "r") as f:
-                content = f.read()
-        finally:
-            os.remove(path)  # cleanup
-
-        key = self._get_myokit_simulator_cache_key(
-            hash=hashlib.sha256(content.encode()).hexdigest()
-        )
-        ode = cache.get(key)
-        if ode is None:
-            ode = pydiffsol.Ode(content)
-            ode.ode_solver = pydiffsol.esdirk34
-            ode.atol = 1e-6
-            ode.rtol = 1e-4
-            cache.set(key, ode, timeout=None)
-        return ode
-
-    def create_myokit_simulator(
-        self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
-    ):
-        if override_tlag is None:
-            override_tlag = {}
-
-        if model is None:
-            model = self.get_myokit_model()
-
-        if dosing_protocols is None:
-            # add a dose_rate variable to the model for each
-            # dosed variable
-            dosing_protocols = {}
-            for v in self.variables.filter(state=True):
-                for p in v.protocols.all():
-                    dosing_protocols[v.qname] = p
-
-        protocols = self._get_myokit_protocols(
-            model=model,
-            dosing_protocols=dosing_protocols,
-            override_tlag=override_tlag,
-            time_max=time_max,
-        )
-
-        with lock:
-            sim = myokit.Simulation(model, protocol=protocols)
-        return sim
-
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
         with lock:
@@ -244,41 +58,9 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             cache.set(key, myokit_model, timeout=None)
         return myokit_model
 
-    def get_myokit_simulator(
-        self,
-        override_tlag=None,
-        model=None,
-        time_max=None,
-        dosing_protocols=None,
-    ):
-        # Cache only the default simulator configuration. Any overrides are
-        # returned directly to avoid stale or cross-configuration reuse.
-        uses_default_configuration = (
-            override_tlag is None
-            and model is None
-            and time_max is None
-            and dosing_protocols is None
-        )
-        if not uses_default_configuration:
-            return self.create_myokit_simulator(
-                override_tlag=override_tlag,
-                model=model,
-                time_max=time_max,
-                dosing_protocols=dosing_protocols,
-            )
-
-        key = self._get_myokit_simulator_cache_key()
-        with lock:
-            simulator = cache.get(key)
-        if simulator is None:
-            simulator = self.create_myokit_simulator()
-            cache.set(key, simulator, timeout=None)
-        return simulator
-
     def is_variables_out_of_date(self):
         model = self.get_myokit_model()
 
-        # just check if the number of const variables is right
         # TODO: is this sufficient, we are also updating on save
         # so I think it should be ok....?
         all_const_variables = self.variables.filter(constant=True)
@@ -287,13 +69,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         return len(all_const_variables) != myokit_variable_count
 
     def update_simulator(self):
-        # delete simulator from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        return None
 
     def update_model(self):
         logger.info("UPDATE MODEL")
-        # delete model and simulators from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        # delete model cache
         cache.delete(self._get_myokit_model_cache_key())
 
         # update the variables of the model
@@ -447,29 +227,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 removed_variables += ["PKCompartment.CLada", "PKCompartment.tada"]
         return removed_variables
 
-    def set_variables_from_inference(self, inference):
-        results_for_mle = inference.get_maximum_likelihood()
-        for result in results_for_mle:
-            inference_var = result.log_likelihood.outputs.first().variable
-            # noise variables won't have a model variable
-            if inference_var is not None:
-                model_var = self.variables.filter(qname=inference_var.qname).first()
-            else:
-                model_var = None
-            if model_var is not None:
-                model_var.default_value = result.value
-                if (
-                    model_var.lower_bound
-                    and model_var.lower_bound > model_var.default_value
-                ):
-                    model_var.lower_bound = model_var.default_value
-                if (
-                    model_var.upper_bound
-                    and model_var.upper_bound < model_var.default_value
-                ):
-                    model_var.upper_bound = model_var.default_value
-                model_var.save()
-
     @staticmethod
     def _serialise_equation(equ):
         writer = MathMLExpressionWriter()
@@ -510,12 +267,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             "equations": equations,
         }
 
-    def states(self):
-        """states are dependent variables of the model to be solved"""
-        model = self.get_myokit_model()
-        states = model.variables(state=True, sort=True)
-        return [self._serialise_variable(s) for s in states]
-
     def components(self):
         """
         outputs are dependent (e.g. y) and independent (e.g. time)
@@ -524,250 +275,8 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         model = self.get_myokit_model()
         return [self._serialise_component(c) for c in model.components(sort=True)]
 
-    def outputs(self):
-        """
-        outputs are dependent (e.g. y) and independent (e.g. time)
-        variables of the model to be solved
-        """
-        model = self.get_myokit_model()
-        outpts = model.variables(const=False, sort=True)
-        return [self._serialise_variable(o) for o in outpts]
-
-    def myokit_variables(self):
-        """
-        variables are independent variables of the model that are constant
-        over time. aka parameters of the model
-        """
-        model = self.get_myokit_model()
-        variables = model.variables(const=True, sort=True)
-        return [self._serialise_variable(v) for v in variables]
-
-    def _conversion_factor(self, variable, myokit_variable_sbml):
-        target = None
-        if self.is_library_model:
-            if "CT1" in variable.qname or "AT1" in variable.qname:
-                target = 1
-            elif "CT2" in variable.qname or "AT2" in variable.qname:
-                target = 2
-        if variable.unit is None:
-            conversion_factor = 1.0
-        else:
-            project = self.get_project()
-            compound = None
-            if project is not None:
-                compound = project.compound
-            conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound, target=target
-            )
-            if (
-                project is not None
-                and project.version > 2
-                and variable.unit_per_body_weight
-            ):
-                conversion_factor *= project.species_weight
-        return conversion_factor
-
-    def _convert_unit(self, variable, myokit_variable_sbml, value):
-        conversion_factor = self._conversion_factor(variable, myokit_variable_sbml)
-
-        return conversion_factor * value
-
-    def _convert_unit_qname(self, qname, value, myokit_model):
-        try:
-            variable = self.variables.get(qname=qname)
-        except pkpdapp.models.Variable.DoesNotExist:
-            raise ValueError(f"Variable with qname {qname} does not exist in model.")
-        myokit_variable_sbml = myokit_model.get(qname)
-        new_value = self._convert_unit(variable, myokit_variable_sbml, value)
-        return new_value
-
-    def _convert_bound_unit(self, binding, value, myokit_model):
-        myokit_variable_sbml = myokit_model.binding(binding)
-        variable = self.variables.get(qname=myokit_variable_sbml.qname())
-        return self._convert_unit(variable, myokit_variable_sbml, value)
-
-    def serialize_datalog(self, datalog, myokit_model):
-        result = {}
-        for k, v in datalog.items():
-            variable = self.variables.get(qname=k)
-            myokit_variable_sbml = myokit_model.get(k)
-
-            if variable.unit is None:
-                conversion_factor = 1.0
-            else:
-                conversion_factor = self._conversion_factor(
-                    variable, myokit_variable_sbml
-                )
-
-            result[variable.id] = (np.frombuffer(v) / conversion_factor).tolist()
-
-        return result
-
-    def serialize_diffsol_solution(self, soln, myokit_model, outputs):
-        result = {}
-        for i in range(len(outputs)):
-            y = soln.ys[i, :]
-            output_qname = outputs[i]
-            variable = self.variables.get(qname=output_qname)
-            myokit_variable_sbml = myokit_model.get(output_qname)
-
-            if variable.unit is None:
-                conversion_factor = 1.0
-            else:
-                conversion_factor = self._conversion_factor(
-                    variable, myokit_variable_sbml
-                )
-
-            result[variable.id] = (y / conversion_factor).tolist()
-
-        return result
-
     def get_time_max(self):
         return self.time_max
-
-    def _handle_nonlinarities(self, model, dosing_protocols):
-        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
-        # value of the first dose concentration
-        if (
-            self.is_library_model
-            and model.has_variable("PKNonlinearities.C_Drug")
-            and dosing_protocols is not None
-            and len(dosing_protocols) > 0
-        ):
-            project = self.get_project()
-            myokit_var = model.get("PKNonlinearities.C_Drug")
-            # set C_Drug equal to the sum of the first dose amounts for all protocols
-            # within this group
-            # TODO: later we will get users to select which variable to use for the
-            # dose concentration via the nonlinearities UI interface.
-            dose_sum = 0.0
-            for protocol in dosing_protocols.values():
-                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                    project, protocol, myokit_var, project.compound, target=None
-                )
-                dose_sum += protocol.doses.first().amount * amount_conversion_factor
-
-            # C_Drug cannot be zero as it might be raised to a negative power
-            dose_sum = max(dose_sum, 1e-6)
-            myokit_var.set_rhs(dose_sum)
-
-    def _nonlinarities_inputs_diffsol(self, model, dosing_protocols):
-        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
-        # value of the first dose concentration
-        if (
-            self.is_library_model
-            and model.has_variable("PKNonlinearities.C_Drug")
-            and dosing_protocols is not None
-            and len(dosing_protocols) > 0
-        ):
-            project = self.get_project()
-            myokit_var = model.get("PKNonlinearities.C_Drug")
-            # set C_Drug equal to the sum of the first dose amounts for all protocols
-            # within this group
-            # TODO: later we will get users to select which variable to use for the
-            # dose concentration via the nonlinearities UI interface.
-            dose_sum = 0.0
-            for protocol in dosing_protocols.values():
-                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                    project, protocol, myokit_var, project.compound, target=None
-                )
-                dose_sum += protocol.doses.first().amount * amount_conversion_factor
-
-            # C_Drug cannot be zero as it might be raised to a negative power
-            dose_sum = max(dose_sum, 1e-6)
-            return {"PKNonlinearities.C_Drug": dose_sum}
-        else:
-            return {}
-
-    def simulate_model_diffsol(
-        self,
-        outputs,
-        variables,
-        time_max,
-        dosing_protocols,
-    ):
-        model = self.get_myokit_model()
-
-        # Convert units
-        inputs = self._initialise_diffsol_inputs(model, variables)
-        time_max = self._convert_bound_unit("time", time_max, model)
-        nonlinearities_inputs = self._nonlinarities_inputs_diffsol(
-            model, dosing_protocols
-        )
-        input_names = []
-        input_values = []
-        for k, v in {**inputs, **nonlinearities_inputs}.items():
-            input_names.append(k)
-            input_values.append(v)
-
-        # get tlag vars
-        override_tlag = self._get_override_tlag(variables)
-
-        ode = self.get_diffsol_ode(
-            override_tlag=override_tlag,
-            model=model,
-            time_max=time_max,
-            dosing_protocols=dosing_protocols,
-            inputs=input_names,
-            outputs=outputs,
-        )
-        soln = ode.solve(np.array(input_values), time_max)
-        return self.serialize_diffsol_solution(soln, model, outputs)
-
-    def _get_model_dosing_protocols(self):
-        project = self.get_project()
-        if project is None:
-            return [{}], []
-
-        protocols = project.protocols.all()
-        project_dosing_protocols = {
-            p.variable.qname: p
-            for p in protocols
-            if p.group is None and p.variable is not None
-        }
-
-        groups = get_subject_groups(project)
-        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
-        model_dosing_protocols = [project_dosing_protocols]
-        for group in groups:
-            dosing_protocols = {
-                p.variable.qname: p
-                for p in protocols
-                if p.group == group and p.variable is not None
-            }
-            model_dosing_protocols.append(dosing_protocols)
-
-        return model_dosing_protocols, groups
-
-    def simulate_model(
-        self,
-        outputs=None,
-        variables=None,
-        time_max=None,
-        dosing_protocols=None,
-    ):
-        model = self.get_myokit_model()
-
-        # Convert units
-        variables = self._initialise_variables(model, variables)
-        time_max = self._convert_bound_unit("time", time_max, model)
-        self._handle_nonlinarities(model, dosing_protocols)
-
-        # get tlag vars
-        override_tlag = self._get_override_tlag(variables)
-
-        # create simulator
-        sim = self.create_myokit_simulator(
-            override_tlag=override_tlag,
-            model=model,
-            time_max=time_max,
-            dosing_protocols=dosing_protocols,
-        )
-        # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
-        # Simulate, logging only state variables given by `outputs`
-        datalog = sim.run(time_max, log=outputs)
-        return self.serialize_datalog(datalog, model)
 
     def simulate(self, outputs=None, variables=None, time_max=None, use_diffsol=True):
         """
@@ -791,52 +300,22 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             There is a <variable id> for all the requested outputs, including time
         """
 
-        if time_max is None:
-            time_max = self.get_time_max()
+        context = SimulateContext(
+            model=self,
+            outputs=outputs or [],
+            variables=variables,
+            use_diffsol=use_diffsol,
+            time_max=time_max,
+        )
 
-        if outputs is None:
-            outputs = []
-
-        # TODO: we query self.variables a lot below, often deeply nested.
-        # It may be more efficient to fetch once here and pass through.
-        default_variables = {
-            v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
-        }
-        if variables is None:
-            variables = default_variables
-        else:
-            variables = {
-                **default_variables,
-                **variables,
-            }
-
-        model_dosing_protocols, groups = self._get_model_dosing_protocols()
-
-        if use_diffsol:
-            result = [
-                self.simulate_model_diffsol(
-                    variables=variables,
-                    time_max=time_max,
-                    outputs=outputs,
-                    dosing_protocols=dosing_protocols,
-                )
-                for dosing_protocols in model_dosing_protocols
-            ]
-        else:
-            result = [
-                self.simulate_model(
-                    variables=variables,
-                    time_max=time_max,
-                    outputs=outputs,
-                    dosing_protocols=dosing_protocols,
-                )
-                for dosing_protocols in model_dosing_protocols
-            ]
-
-        # set group id for matching on plots
-        result[0].update({"group_id": None})
-        for r, group in zip(result[1:], groups):
-            r.update({"group_id": group.id if group is not None else None})
+        result = []
+        for simulation_group in context.simulation_groups:
+            group_result = cast(
+                dict[Any, Any],
+                context.simulate_model(simulation_group),
+            )
+            group_result["group_id"] = simulation_group.group_id
+            result.append(group_result)
         return result
 
     _OPTIMISE_METHODS = {
@@ -865,13 +344,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 two different noise models are supported: gaussian additive
                 (i.e. sum of squares)
         and log-normal multiplicative.
-
-                The fitting is performed across all indicated subject groups.
+                    return None
                 For each subject group:
                         1. all variable outputs mapped to biomarker types are found;
                             these
                the requested outputs for the simulation for that subject group
-                        2. data are gathered from all biomarkers in that subject
                             group and
                biomarker types, this is collected in a (a) list of time points and
                (b) 2D array where columns are timepoints and the rows arre outputs
@@ -961,62 +438,93 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         if max_iterations is None:
             max_iterations = 100
 
-        input_variables, starting, lower_bounds, upper_bounds = (
-            self._validate_optimise_inputs(inputs, starting, bounds)
+        context = OptimiseContext(
+            model=self,
+            optimise_inputs=inputs,
+            starting=starting,
+            bounds=bounds,
+            biomarker_types=biomarker_types,
+            subject_groups=subject_groups,
+            use_diffsol=True,
         )
-        groups = self._prepare_optimise_groups(biomarker_types, subject_groups)
-        self._prepare_optimise_input_variables(input_variables, groups[0]["model"])
+
+        starting = np.asarray(starting, dtype=float)
+        lower_bounds = np.asarray(bounds[0], dtype=float)
+        upper_bounds = np.asarray(bounds[1], dtype=float)
+
+        conversion_factors = np.asarray(
+            [
+                context.get_variable_context(
+                    context.get_input_name(input_id)
+                ).conversion_factor
+                for input_id in inputs
+            ],
+            dtype=float,
+        )
+        starting_model = np.asarray(starting, dtype=float) * conversion_factors
+        lower_bounds_model = np.asarray(lower_bounds, dtype=float) * conversion_factors
+        upper_bounds_model = np.asarray(upper_bounds, dtype=float) * conversion_factors
 
         class OptimiseError(pints.ErrorMeasure):
-            def n_parameters(inner_self):
-                return len(input_variables)
+            def values_by_id(self, values):
+                return {
+                    input_id: float(value)
+                    for input_id, value in zip(
+                        inputs,
+                        np.asarray(values, dtype=float),
+                    )
+                }
 
-            def __call__(inner_self, values):
-                loss = self._optimise_loss(
-                    groups,
-                    input_variables,
-                    values,
+            def n_parameters(self):
+                return len(inputs)
+
+            def __call__(self, x):
+                loss = context.optimise_loss(
+                    context.optimisation_groups,
+                    self.values_by_id(x),
                     use_multiplicative_noise=use_multiplicative_noise,
                 )
-                if np.isfinite(loss) and loss < inner_self.best_loss:
-                    inner_self.best_loss = float(loss)
-                    inner_self.best_values = np.asarray(values, dtype=float).copy()
+                if np.isfinite(loss) and loss < self.best_loss:
+                    self.best_loss = float(loss)
+                    self.best_values = np.asarray(x, dtype=float).copy()
                 return loss
 
-            def evaluateS1(inner_self, values):
+            def evaluateS1(self, x):
                 try:
-                    total_loss, total_gradient = self._optimise_loss_gradient(
-                        groups,
-                        input_variables,
-                        values,
+                    total_loss, total_gradient = context.optimise_loss_gradient(
+                        context.optimisation_groups,
+                        self.values_by_id(x),
                         use_multiplicative_noise=use_multiplicative_noise,
                     )
                 except Exception:
                     logger.exception(
                         "solve_fwd_sens failed during gradient computation."
                     )
-                    return np.inf, np.zeros(len(input_variables))
+                    return np.inf, np.zeros(len(inputs))
                 if not np.isfinite(total_loss):
-                    return np.inf, np.zeros(len(input_variables))
+                    return np.inf, np.zeros(len(inputs))
                 loss = float(total_loss)
-                if np.isfinite(loss) and loss < inner_self.best_loss:
-                    inner_self.best_loss = loss
-                    inner_self.best_values = np.asarray(values, dtype=float).copy()
+                if np.isfinite(loss) and loss < self.best_loss:
+                    self.best_loss = loss
+                    self.best_values = np.asarray(x, dtype=float).copy()
                 return loss, total_gradient
 
         error = OptimiseError()
         error.best_loss = np.inf
-        error.best_values = np.asarray(starting, dtype=float).copy()
-        starting_loss = error(starting)
+        error.best_values = np.asarray(starting_model, dtype=float).copy()
+        starting_loss = error(starting_model)
         if not np.isfinite(starting_loss):
             raise RuntimeError(
                 "Initial optimisation loss is not finite. Check that the solver "
                 "returns all requested dense output times and that data are valid."
             )
 
-        optimiser_start = np.asarray(starting, dtype=float)
+        optimiser_start = np.asarray(starting_model, dtype=float)
 
-        boundaries = pints.RectangularBoundaries(lower_bounds, upper_bounds)
+        boundaries = pints.RectangularBoundaries(
+            lower_bounds_model,
+            upper_bounds_model,
+        )
         optimiser = pints.OptimisationController(
             error,
             optimiser_start,
@@ -1036,839 +544,17 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         if reason is None:
             reason = f"Stopped after {optimiser.iterations()} iterations."
 
-        diagnostics = self._optimise_diagnostics(
-            groups=groups,
-            input_variables=input_variables,
-            optimal=np.asarray(optimal, dtype=float),
+        optimal_model = np.asarray(optimal, dtype=float)
+        diagnostics = context.optimise_diagnostics(
+            optimal_model=optimal_model,
             use_multiplicative_noise=use_multiplicative_noise,
         )
 
+        optimal_user = optimal_model / conversion_factors
+
         return {
-            "optimal": np.asarray(optimal, dtype=float).tolist(),
+            "optimal": np.asarray(optimal_user, dtype=float).tolist(),
             "loss": float(loss),
             "reason": str(reason),
             **diagnostics,
         }
-
-    def _optimise_diagnostics(
-        self, groups, input_variables, optimal, use_multiplicative_noise
-    ):
-        """
-        Compute diagnostic information at the optimal parameter values.
-
-        Returns a dict containing:
-          - "predictions": list of dicts (same format as simulate) with predicted
-            values at the optimal parameters for each group.
-          - "residuals": list of dicts (same format as simulate) with residuals
-            for each observation. Residual = prediction - observed (additive) or
-            log(prediction) - log(observed) (multiplicative). Only time-points
-            that have observed data are included.
-          - "covariance": covariance matrix (n_params x n_params) estimated from
-            the Jacobian, scaled by the residual variance.
-          - "condition_number": condition number of the covariance matrix (ratio
-            of largest to smallest singular value).
-        """
-        n_params = len(input_variables)
-
-        # Collect per-group predictions, residuals, and Jacobian rows.
-        predictions_list = []
-        residuals_list = []
-        jacobian_rows = []  # each row: shape (n_params,)
-        residual_values = []  # scalar residuals (for variance scaling)
-
-        for group in groups:
-            try:
-                y, y_prime = self._optimise_predict_with_sens(
-                    group, input_variables, optimal
-                )
-            except Exception:
-                logger.exception("diffsol sensitivity solve failed during diagnostics.")
-                return {
-                    "predictions": None,
-                    "residuals": None,
-                    "covariance": None,
-                    "condition_number": None,
-                }
-
-            # y: (n_times, n_outputs), y_prime: (n_times, n_outputs, n_params)
-            output_qnames = group["outputs"]
-            t_eval = group["t_eval"]
-
-            # Build variable objects for outputs (to get .id for serialisation).
-            output_variables = [
-                self.variables.get(qname=qname) for qname in output_qnames
-            ]
-            time_variable = self.variables.get(
-                qname=group["model"].binding("time").qname()
-            )
-
-            # --- predictions dict (same format as simulate) ---
-            pred_dict = {"group_id": group.get("group_id")}
-            pred_dict[time_variable.id] = t_eval.tolist()
-            for i, var in enumerate(output_variables):
-                pred_dict[var.id] = y[:, i].tolist()
-            predictions_list.append(pred_dict)
-
-            # --- residuals dict (only at observed time-points) ---
-            # We want one entry per (time, output) pair that has observations.
-            # Collect observed times per output.
-            # Build a parallel structure: for each output variable, a list of
-            # (time_value, residual_value) pairs.
-            obs_times_per_output = {i: [] for i in range(len(output_qnames))}
-            obs_residuals_per_output = {i: [] for i in range(len(output_qnames))}
-
-            for record in group["records"]:
-                t_idx = record["time_index"]
-                o_idx = record["output_index"]
-                prediction = y[t_idx, o_idx]
-                observed = record["value"]
-
-                if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
-                        residual = np.nan
-                        jac_row = np.full(n_params, np.nan)
-                    else:
-                        residual = np.log(prediction) - np.log(observed)
-                        jac_row = y_prime[t_idx, o_idx, :] / prediction
-                else:
-                    residual = prediction - observed
-                    jac_row = y_prime[t_idx, o_idx, :]
-
-                obs_times_per_output[o_idx].append(record["time"])
-                obs_residuals_per_output[o_idx].append(float(residual))
-                jacobian_rows.append(jac_row)
-                residual_values.append(float(residual))
-
-            resid_dict = {"group_id": group.get("group_id")}
-            # Include time as union of all observed times, sorted.
-            all_obs_times = sorted(set(r["time"] for r in group["records"]))
-            resid_dict[time_variable.id] = all_obs_times
-            for i, var in enumerate(output_variables):
-                resid_dict[var.id] = obs_residuals_per_output[i]
-            residuals_list.append(resid_dict)
-
-        # --- Covariance matrix ---
-        J = np.array(jacobian_rows)  # (n_obs, n_params)
-        residual_arr = np.array(residual_values)  # (n_obs,)
-
-        valid_mask = np.isfinite(residual_arr) & np.all(np.isfinite(J), axis=1)
-        J_valid = J[valid_mask]
-        resid_valid = residual_arr[valid_mask]
-        n_valid = len(resid_valid)
-
-        if n_valid <= n_params:
-            return {
-                "predictions": predictions_list,
-                "residuals": residuals_list,
-                "covariance": None,
-                "condition_number": None,
-            }
-
-        # Residual variance estimate: RSS / (n - p)
-        rss = float(np.dot(resid_valid, resid_valid))
-        sigma2 = rss / (n_valid - n_params)
-
-        # Covariance = sigma^2 * (J^T J)^{-1}  (pseudoinverse for robustness)
-        JtJ = J_valid.T @ J_valid
-        try:
-            cov = sigma2 * np.linalg.pinv(JtJ)
-        except np.linalg.LinAlgError:
-            cov = None
-
-        # Condition number via SVD
-        condition_number = None
-        if cov is not None:
-            try:
-                singular_values = svd(cov, compute_uv=False)
-                s_max = singular_values[0]
-                s_min = singular_values[-1]
-                condition_number = float(s_max / s_min) if s_min != 0 else np.inf
-            except Exception:
-                pass
-
-        return {
-            "predictions": predictions_list,
-            "residuals": residuals_list,
-            "covariance": cov.tolist() if cov is not None else None,
-            "condition_number": condition_number,
-        }
-
-    def _validate_optimise_inputs(self, inputs, starting, bounds):
-        from pkpdapp.models import Variable
-
-        if len(inputs) < 1:
-            raise ValueError("Optimisation requires at least one input.")
-
-        if len(set(inputs)) != len(inputs):
-            raise ValueError("Optimisation inputs must be unique.")
-
-        if len(starting) != len(inputs):
-            raise ValueError("Starting values must have the same length as inputs.")
-
-        if len(bounds) != 2:
-            raise ValueError("Bounds must be a pair of lower and upper bound lists.")
-
-        lower_bounds, upper_bounds = bounds
-        if len(lower_bounds) != len(inputs) or len(upper_bounds) != len(inputs):
-            raise ValueError("Bounds must have the same length as inputs.")
-
-        variables_by_id = {
-            variable.id: variable
-            for variable in self.variables.filter(id__in=inputs).select_related("unit")
-        }
-        missing = [input_id for input_id in inputs if input_id not in variables_by_id]
-        if missing:
-            raise Variable.DoesNotExist(
-                f"Optimisation input variables do not exist: {missing}"
-            )
-
-        variables = [variables_by_id[input_id] for input_id in inputs]
-        for variable in variables:
-            if not variable.constant:
-                raise ValueError(
-                    f"Optimisation input {variable.qname} must be a constant variable."
-                )
-            if variable.qname.endswith("_tlag_ud"):
-                raise ValueError(
-                    "Optimising tlag variables is not supported by this method."
-                )
-
-        starting = np.asarray(starting, dtype=float)
-        lower_bounds = np.asarray(lower_bounds, dtype=float)
-        upper_bounds = np.asarray(upper_bounds, dtype=float)
-
-        if not (
-            np.all(np.isfinite(starting))
-            and np.all(np.isfinite(lower_bounds))
-            and np.all(np.isfinite(upper_bounds))
-        ):
-            raise ValueError("Starting values and bounds must be finite.")
-
-        if np.any(lower_bounds >= upper_bounds):
-            raise ValueError(
-                f"Every lower bound ({lower_bounds.tolist()}) must be less "
-                f"than its upper bound ({upper_bounds.tolist()})."
-            )
-
-        if np.any(starting < lower_bounds) or np.any(starting > upper_bounds):
-            raise ValueError(
-                f"Starting values ({starting.tolist()}) must lie within "
-                f"the supplied bounds ({lower_bounds.tolist()}, "
-                f"{upper_bounds.tolist()})."
-            )
-
-        return variables, starting, lower_bounds, upper_bounds
-
-    def _prepare_optimise_input_variables(self, input_variables, model):
-        for variable in input_variables:
-            myokit_variable = model.get(variable.qname)
-            variable._optimise_conversion_factor = self._conversion_factor(
-                variable,
-                myokit_variable,
-            )
-        return input_variables
-
-    def _get_optimise_conversion_factor(self, variable, model):
-        conversion_factor = getattr(variable, "_optimise_conversion_factor", None)
-        if conversion_factor is None:
-            self._prepare_optimise_input_variables([variable], model)
-            conversion_factor = variable._optimise_conversion_factor
-        return conversion_factor
-
-    def _prepare_optimise_groups(self, biomarker_types, subject_groups):
-
-        project = self.get_project()
-        if project is None:
-            raise ValueError("Optimisation requires the model to belong to a project.")
-
-        model_variable_qnames = set(self.variables.values_list("qname", flat=True))
-        biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=project)
-
-        if biomarker_types is None:
-            biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
-        else:
-            biomarker_type_qs = biomarker_type_qs.filter(id__in=biomarker_types)
-            found_ids = set(biomarker_type_qs.values_list("id", flat=True))
-            missing_ids = set(biomarker_types) - found_ids
-            if missing_ids:
-                raise BiomarkerType.DoesNotExist(
-                    f"Biomarker types do not exist in this project: {missing_ids}"
-                )
-
-        biomarker_type_list = list(
-            biomarker_type_qs.select_related(
-                "variable",
-                "stored_unit",
-                "stored_time_unit",
-            ).order_by("id")
-        )
-        unmapped = [bt.id for bt in biomarker_type_list if bt.variable is None]
-        if unmapped:
-            raise ValueError(f"Biomarker types are not mapped to variables: {unmapped}")
-
-        invalid = [
-            bt.variable.qname
-            for bt in biomarker_type_list
-            if bt.variable.qname not in model_variable_qnames
-        ]
-        if invalid:
-            raise ValueError(
-                f"Biomarker types map to variables outside this model: {invalid}"
-            )
-
-        if not biomarker_type_list:
-            raise ValueError("No mapped biomarker types were found for optimisation.")
-
-        biomarkers = Biomarker.objects.filter(
-            biomarker_type__in=biomarker_type_list,
-            subject__dataset__project=project,
-        ).select_related(
-            "biomarker_type",
-            "biomarker_type__variable",
-            "biomarker_type__stored_unit",
-            "biomarker_type__stored_time_unit",
-            "subject",
-            "subject__group",
-        )
-
-        if subject_groups is not None:
-            found_group_ids = set(
-                SubjectGroup.objects.filter(
-                    id__in=subject_groups,
-                ).values_list("id", flat=True)
-            )
-            missing_group_ids = set(subject_groups) - found_group_ids
-            if missing_group_ids:
-                raise SubjectGroup.DoesNotExist(
-                    f"Subject groups do not exist: {missing_group_ids}"
-                )
-            biomarkers = biomarkers.filter(subject__group_id__in=subject_groups)
-
-        group_ids = list(
-            biomarkers.order_by("subject__group_id")
-            .values_list("subject__group_id", flat=True)
-            .distinct()
-        )
-        if len(group_ids) == 0:
-            raise ValueError("No biomarker data were found for optimisation.")
-
-        groups = []
-        for group_id in group_ids:
-            if group_id is None:
-                group_biomarkers = biomarkers.filter(subject__group__isnull=True)
-                group = None
-            else:
-                group_biomarkers = biomarkers.filter(subject__group_id=group_id)
-                group = group_biomarkers[0].subject.group
-            groups.append(self._prepare_optimise_group(group, group_biomarkers))
-
-        return groups
-
-    def _prepare_optimise_group(self, group, biomarkers):
-        project = self.get_project()
-        model = self.create_myokit_model()
-        time_var = model.binding("time")
-
-        output_qnames = []
-        output_indices = {}
-        records = []
-        times = []
-
-        for biomarker in biomarkers.order_by("time", "id"):
-            biomarker_type = biomarker.biomarker_type
-            qname = biomarker_type.variable.qname
-            if qname not in output_indices:
-                output_indices[qname] = len(output_qnames)
-                output_qnames.append(qname)
-
-            myokit_variable = model.get(qname)
-            target = self._unit_conversion_target(qname)
-            compound = project.compound if project is not None else None
-            value_conversion_factor = biomarker_type.stored_unit.convert_to(
-                myokit_variable.unit(),
-                compound=compound,
-                target=target,
-            )
-            time_conversion_factor = biomarker_type.stored_time_unit.convert_to(
-                time_var.unit(),
-                compound=compound,
-            )
-
-            time_value = float(biomarker.time) * time_conversion_factor
-            data_value = float(biomarker.value) * value_conversion_factor
-            times.append(time_value)
-            records.append(
-                {
-                    "output_index": output_indices[qname],
-                    "time": time_value,
-                    "value": data_value,
-                }
-            )
-
-        t_eval = np.asarray(sorted(set(times)), dtype=float)
-        time_lookup = {time: i for i, time in enumerate(t_eval)}
-        for record in records:
-            record["time_index"] = time_lookup[record["time"]]
-
-        protocols = project.protocols.all()
-        if group is None:
-            dosing_protocols = {
-                p.variable.qname: p
-                for p in protocols
-                if p.group is None and p.variable is not None
-            }
-        else:
-            dosing_protocols = {
-                p.variable.qname: p
-                for p in protocols
-                if p.group == group and p.variable is not None
-            }
-
-        default_variables = {
-            v.qname: v.get_default_value()
-            for v in self.variables.filter(constant=True).order_by("id")
-        }
-        inputs = self._initialise_diffsol_inputs(model, default_variables)
-        inputs.update(self._nonlinarities_inputs_diffsol(model, dosing_protocols))
-
-        input_names = list(inputs.keys())
-        input_values = np.asarray([inputs[name] for name in input_names], dtype=float)
-        input_indices = {name: i for i, name in enumerate(input_names)}
-        missing_inputs = [
-            qname
-            for qname in self.variables.filter(constant=True)
-            .order_by("id")
-            .values_list("qname", flat=True)
-            if qname not in input_indices
-        ]
-        if missing_inputs:
-            raise ValueError(
-                f"Optimisation inputs are missing from DiffSL inputs: {missing_inputs}"
-            )
-
-        ode = self.get_diffsol_ode(
-            override_tlag={},
-            model=model,
-            time_max=t_eval[-1],
-            dosing_protocols=dosing_protocols,
-            inputs=input_names,
-            outputs=output_qnames,
-        )
-
-        return {
-            "model": model,
-            "ode": ode,
-            "input_names": input_names,
-            "input_values": input_values,
-            "input_indices": input_indices,
-            "outputs": output_qnames,
-            "t_eval": t_eval,
-            "records": records,
-            "group_id": group.id if group is not None else None,
-        }
-
-    def _optimise_loss(
-        self,
-        groups,
-        input_variables,
-        values,
-        use_multiplicative_noise=False,
-    ):
-        values = np.asarray(values, dtype=float)
-        if not np.all(np.isfinite(values)):
-            return np.inf
-
-        total = 0.0
-        for group in groups:
-            try:
-                y = self._optimise_predict(group, input_variables, values)
-            except Exception:
-                logger.exception("diffsol solve failed during optimisation.")
-                return np.inf
-
-            for record in group["records"]:
-                prediction = y[record["output_index"], record["time_index"]]
-                observed = record["value"]
-                if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
-                        return np.inf
-                    residual = np.log(prediction) - np.log(observed)
-                else:
-                    residual = prediction - observed
-                total += residual * residual
-
-        if not np.isfinite(total):
-            return np.inf
-        return float(total)
-
-    def _optimise_predict(self, group, input_variables, values):
-        values = np.asarray(values, dtype=float)
-        if not np.all(np.isfinite(values)):
-            raise ValueError("optimisation values must be finite.")
-
-        input_values = np.array(group["input_values"], copy=True)
-        conversion_factors = [
-            self._get_optimise_conversion_factor(variable, group["model"])
-            for variable in input_variables
-        ]
-        for value, variable, conversion_factor in zip(
-            values, input_variables, conversion_factors
-        ):
-            input_values[group["input_indices"][variable.qname]] = (
-                value * conversion_factor
-            )
-
-        solution = group["ode"].solve_dense(input_values, group["t_eval"])
-        y = solution.ys
-
-        if y.shape != (len(group["outputs"]), len(group["t_eval"])):
-            raise ValueError(
-                "Unexpected prediction shape: "
-                f"{y.shape}, expected {(len(group['outputs']), len(group['t_eval']))}."
-            )
-
-        return y
-
-    def _optimise_predict_with_sens(self, group, input_variables, values):
-        """
-        Like _optimise_predict but uses solve_fwd_sens to also compute the
-        partial derivatives of the outputs w.r.t. the optimised input variables.
-
-        Arguments
-        ---------
-        group : dict
-            Prepared group dict from _prepare_optimise_group.
-        input_variables : list
-            The optimised Variable objects.
-        values : array-like
-            Current values for the optimised variables.
-
-        Returns
-        -------
-        y : np.ndarray, shape (n_times, n_outputs)
-            Simulated values at the evaluation timepoints.
-        y_prime : np.ndarray, shape (n_times, n_outputs, n_parameters)
-            Derivatives of the simulated outputs with respect to each
-            optimised parameter.
-        """
-        values = np.asarray(values, dtype=float)
-        if not np.all(np.isfinite(values)):
-            raise ValueError("optimisation values must be finite.")
-
-        input_values = np.array(group["input_values"], copy=True)
-        # Conversion factors: solve_fwd_sens gives d(y)/d(converted_param).
-        # Since converted = factor * original,
-        # d(y)/d(original) = d(y)/d(converted) * factor.
-        conversion_factors = [
-            self._get_optimise_conversion_factor(variable, group["model"])
-            for variable in input_variables
-        ]
-        for value, variable, conversion_factor in zip(
-            values, input_variables, conversion_factors
-        ):
-            input_values[group["input_indices"][variable.qname]] = (
-                value * conversion_factor
-            )
-
-        solution = group["ode"].solve_fwd_sens(input_values, group["t_eval"])
-        y = np.asarray(solution.ys)  # (n_outputs, n_times)
-
-        if y.shape != (len(group["outputs"]), len(group["t_eval"])):
-            raise ValueError(
-                "Unexpected prediction shape: "
-                f"{y.shape}, expected {(len(group['outputs']), len(group['t_eval']))}."
-            )
-
-        n_params = len(input_variables)
-        n_outputs = len(group["outputs"])
-        n_times = len(group["t_eval"])
-
-        y_prime = np.zeros((n_times, n_outputs, n_params), dtype=float)
-        for k, (variable, cf) in enumerate(zip(input_variables, conversion_factors)):
-            param_idx = group["input_indices"][variable.qname]
-            # sens[param_idx] has shape (n_outputs, n_times): d(y)/d(converted_param).
-            # Transpose to (n_times, n_outputs) and scale by conversion factor.
-            y_prime[:, :, k] = np.asarray(solution.sens[param_idx]).T * cf
-
-        # Transpose y to (n_times, n_outputs) for the return value.
-        return y.T, y_prime
-
-    def _optimise_loss_gradient(
-        self,
-        groups,
-        input_variables,
-        values,
-        use_multiplicative_noise=False,
-    ):
-        """
-        Returns the loss and gradient across prepared groups, using
-        forward sensitivities for the requested input variables.
-
-        Arguments
-        ---------
-        groups : list
-            Prepared group dicts from _prepare_optimise_groups.
-        input_variables : list
-            The optimised Variable objects.
-        values : array-like
-            Current values for the optimised variables.
-        use_multiplicative_noise : bool
-            If True, uses the log-normal residual definition.
-
-        Returns
-        -------
-        loss : float
-            Sum-of-squares loss across the requested groups.
-        gradient : np.ndarray, shape (n_parameters,)
-            Gradient of the total loss w.r.t. the optimised parameters.
-        """
-        gradient = np.zeros(len(input_variables), dtype=float)
-        total_loss = 0.0
-
-        for group in groups:
-            y, y_prime = self._optimise_predict_with_sens(
-                group,
-                input_variables,
-                values,
-            )
-
-            for record in group["records"]:
-                i = record["output_index"]
-                t_idx = record["time_index"]
-                prediction = y[t_idx, i]
-                observed = record["value"]
-
-                if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
-                        return np.inf, np.zeros(len(input_variables))
-                    residual = np.log(prediction) - np.log(observed)
-                    d_residual_dp = y_prime[t_idx, i, :] / prediction
-                else:
-                    residual = prediction - observed
-                    d_residual_dp = y_prime[t_idx, i, :]
-
-                total_loss += residual * residual
-                gradient += 2.0 * residual * d_residual_dp
-
-        if not np.isfinite(total_loss):
-            return np.inf, np.zeros(len(input_variables))
-
-        return float(total_loss), gradient
-
-    def _unit_conversion_target(self, qname):
-        if self.is_library_model:
-            if "CT1" in qname or "AT1" in qname:
-                return 1
-            if "CT2" in qname or "AT2" in qname:
-                return 2
-        return None
-
-
-def set_administration(model, drug_amount, direct=True):
-    r"""
-    Sets the route of administration of the compound.
-
-    The compound is administered to the selected compartment either
-    directly or indirectly. If it is administered directly, a dose rate
-    variable is added to the drug amount's rate of change expression
-
-    .. math ::
-
-        \frac{\text{d}A}{\text{d}t} = \text{RHS} + r_d,
-
-    where :math:`A` is the drug amount in the selected compartment, RHS is
-    the rate of change of :math:`A` prior to adding the dose rate, and
-    :math:`r_d` is the dose rate.
-
-    The dose rate can be set by :meth:`set_dosing_regimen`.
-
-    If the route of administration is indirect, a dosing compartment
-    is added to the model, which is connected to the selected compartment.
-    The dose rate variable is then added to the rate of change expression
-    of the dose amount variable in the dosing compartment. The drug amount
-    in the dosing compartment flows at a linear absorption rate into the
-    selected compartment
-
-    .. math ::
-
-        \frac{\text{d}A_d}{\text{d}t} = -k_aA_d + r_d \\
-        \frac{\text{d}A}{\text{d}t} = \text{RHS} + k_aA_d,
-
-    where :math:`A_d` is the amount of drug in the dose compartment and
-    :math:`k_a` is the absorption rate.
-
-    Setting an indirect administration route changes the number of
-    parameters of the model, and resets the parameter names to their
-    defaults.
-
-    Parameters
-    ----------
-    compartment
-        Compartment to which doses are either directly or indirectly
-        administered.
-    amount_var
-        Drug amount variable in the compartment. By default the drug amount
-        variable is assumed to be 'drug_amount'.
-    direct
-        A boolean flag that indicates whether the dose is administered
-        directly or indirectly to the compartment.
-    """
-    if not drug_amount.is_state():
-        raise ValueError(
-            "The variable <" + str(drug_amount) + "> is not a state "
-            "variable, and can therefore not be dosed."
-        )
-
-    # If administration is indirect, add a dosing compartment and update
-    # the drug amount variable to the one in the dosing compartment
-    time_unit = _get_time_unit(model)
-    if not direct:
-        drug_amount = _add_dose_compartment(model, drug_amount, time_unit)
-
-    # Add dose rate variable to the right hand side of the drug amount
-    _add_dose_rate(drug_amount, time_unit)
-
-
-def get_protocol(events):
-    """
-
-    Parameters
-    ----------
-    events
-        list of (level, start, duration)
-    """
-    myokit_protocol = myokit.Protocol()
-    for e in events:
-        myokit_protocol.schedule(e[0], e[1], e[2])
-
-    return myokit_protocol
-
-
-def _get_pacing_label(variable):
-    return f"pace_{variable.qname().replace('.', '_')}"
-
-
-def _add_dose_rate(drug_amount, time_unit):
-    """
-    Adds a dose rate variable to the state variable, which is bound to the
-    dosing regimen.
-    """
-    # Register a dose rate variable to the compartment and bind it to
-    # pace, i.e. tell myokit that its value is set by the dosing regimen/
-    # myokit.Protocol
-    compartment = drug_amount.parent()
-    dose_rate = compartment.add_variable_allow_renaming(str("dose_rate"))
-    dose_rate.set_binding(_get_pacing_label(drug_amount))
-
-    # Set initial value to 0 and unit to unit of drug amount over unit of
-    # time
-    dose_rate.set_rhs(0)
-    drug_amount_unit = drug_amount.unit()
-    if drug_amount_unit is not None and time_unit is not None:
-        dose_rate.set_unit(drug_amount.unit() / time_unit)
-
-    # Add the dose rate to the rhs of the drug amount variable
-    rhs = drug_amount.rhs()
-    drug_amount.set_rhs(myokit.Plus(rhs, myokit.Name(dose_rate)))
-
-
-def _get_time_unit(model):
-    """
-    Gets the model's time unit.
-    """
-    # Get bound variables
-    bound_variables = [var for var in model.variables(bound=True)]
-
-    # Get the variable that is bound to time
-    # (only one can exist in myokit.Model)
-    for var in bound_variables:
-        if var._binding == "time":
-            return var.unit()
-
-
-def _add_dose_compartment(model, drug_amount, time_unit):
-    """
-    Adds a dose compartment to the model with a linear absorption rate to
-    the connected compartment.
-    """
-    # Add a dose compartment to the model
-    dose_comp = model.add_component_allow_renaming("dose")
-
-    # Create a state variable for the drug amount in the dose compartment
-    dose_drug_amount = dose_comp.add_variable("drug_amount")
-    dose_drug_amount.set_rhs(0)
-    dose_drug_amount.set_unit(drug_amount.unit())
-    dose_drug_amount.promote()
-
-    # Create an absorption rate variable
-    absorption_rate = dose_comp.add_variable("absorption_rate")
-    absorption_rate.set_rhs(1)
-    absorption_rate.set_unit(1 / time_unit)
-
-    # Add outflow expression to dose compartment
-    dose_drug_amount.set_rhs(
-        myokit.Multiply(
-            myokit.PrefixMinus(myokit.Name(absorption_rate)),
-            myokit.Name(dose_drug_amount),
-        )
-    )
-
-    # Add inflow expression to connected compartment
-    rhs = drug_amount.rhs()
-    drug_amount.set_rhs(
-        myokit.Plus(
-            rhs,
-            myokit.Multiply(
-                myokit.Name(absorption_rate), myokit.Name(dose_drug_amount)
-            ),
-        )
-    )
-
-    return dose_drug_amount
-
-
-def _get_dosing_events(
-    doses,
-    amount_conversion_factor=1.0,
-    time_conversion_factor=1.0,
-    tlag_time=0.0,
-    time_max=None,
-):
-    dosing_events = []
-    for d in doses.all():
-        if d.repeat_interval <= 0:
-            continue
-        start_times = np.arange(
-            d.start_time + tlag_time,
-            d.start_time + tlag_time + d.repeat_interval * d.repeats,
-            d.repeat_interval,
-        )
-        if len(start_times) == 0:
-            continue
-        dose_level = d.amount / d.duration
-        dosing_events += [
-            (
-                (amount_conversion_factor / time_conversion_factor) * dose_level,
-                time_conversion_factor * start_time,
-                time_conversion_factor * d.duration,
-            )
-            for start_time in start_times
-        ]
-    # if any dosing events are close to time_max,
-    # make them equal to time_max
-    if time_max is not None:
-        for i, (level, start, duration) in enumerate(dosing_events):
-            if abs(start - time_max) < 1e-6:
-                dosing_events[i] = (level, time_max, duration)
-            elif abs(start + duration - time_max) < 1e-6:
-                dosing_events[i] = (level, start, time_max - start)
-    return dosing_events
-
-
-def get_subject_groups(project):
-    if project is None:
-        return []
-    dataset = project.datasets.first()
-    if dataset is None:
-        return project.groups.all()
-    return dataset.groups.all().union(project.groups.all()).order_by("id")

@@ -74,10 +74,11 @@ LOGGING = {
 SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
 
-ALLOWED_HOSTS = [os.environ.get("HOST_NAME", "localhost"), "127.0.0.1"]
-
-if DEBUG:
-    ALLOWED_HOSTS.append("testserver")
+ALLOWED_HOSTS = [
+    os.environ.get("HOST_NAME", "localhost"),
+    "127.0.0.1",
+    "testserver",
+]
 
 
 # Application definition - to use any of those you need to run `manage.py
@@ -275,8 +276,24 @@ MIDDLEWARE = [
 
 # DJANGO_CPROFILE_MIDDLEWARE_REQUIRE_STAFF = False
 
+_local_dev_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:15173",
+    "http://127.0.0.1:15173",
+]
+
+_cors_allowed_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
 CORS_ALLOWED_ORIGINS = [
-    f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
+    origin.strip()
+    for origin in [
+        *_cors_allowed_origins,
+        f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
+        *_local_dev_origins,
+    ]
+    if origin.strip()
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -448,8 +465,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in [
         *_csrf_trusted_origins,
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        *_local_dev_origins,
     ]
     if origin.strip()
 ]

@@ -55,6 +55,13 @@ const datasetHandlers = [
     }
     return HttpResponse.json(variables, { status: 200 });
   }),
+  http.get("/api/variable/:id/", ({ params }) => {
+    const variable = variables.find((v) => v.id === Number(params.id));
+    if (variable) {
+      return HttpResponse.json(variable, { status: 200 });
+    }
+    return HttpResponse.json(null, { status: 404 });
+  }),
 ];
 
 const meta: Meta<typeof Data> = {

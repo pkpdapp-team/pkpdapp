@@ -14,7 +14,6 @@ from pkpdapp.models import (
 @unittest.skip("not implemented yet")
 class TestSimulation(TestCase):
     def setUp(self):
-        # self.dataset, self.biomarker_type, self.model = setup_pk_inference()
         self.simulation = Simulation.objects.create(
             name="bob",
             project=self.model.project,

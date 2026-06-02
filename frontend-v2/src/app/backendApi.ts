@@ -1,54 +1,6 @@
 import { emptySplitApi as api } from "./emptyApi";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    algorithmList: build.query<AlgorithmListApiResponse, AlgorithmListApiArg>({
-      query: () => ({ url: `/api/algorithm/` }),
-    }),
-    algorithmCreate: build.mutation<
-      AlgorithmCreateApiResponse,
-      AlgorithmCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/`,
-        method: "POST",
-        body: queryArg.algorithm,
-      }),
-    }),
-    algorithmRetrieve: build.query<
-      AlgorithmRetrieveApiResponse,
-      AlgorithmRetrieveApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/algorithm/${queryArg.id}/` }),
-    }),
-    algorithmUpdate: build.mutation<
-      AlgorithmUpdateApiResponse,
-      AlgorithmUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.algorithm,
-      }),
-    }),
-    algorithmPartialUpdate: build.mutation<
-      AlgorithmPartialUpdateApiResponse,
-      AlgorithmPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedAlgorithm,
-      }),
-    }),
-    algorithmDestroy: build.mutation<
-      AlgorithmDestroyApiResponse,
-      AlgorithmDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
     auceCreate: build.mutation<AuceCreateApiResponse, AuceCreateApiArg>({
       query: () => ({ url: `/api/auce/`, method: "POST" }),
     }),
@@ -183,16 +135,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/combined_model/${queryArg.id}/set_params_to_defaults/`,
-        method: "PUT",
-        body: queryArg.combinedModel,
-      }),
-    }),
-    combinedModelSetVariablesFromInferenceUpdate: build.mutation<
-      CombinedModelSetVariablesFromInferenceUpdateApiResponse,
-      CombinedModelSetVariablesFromInferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/combined_model/${queryArg.id}/set_variables_from_inference/`,
         method: "PUT",
         body: queryArg.combinedModel,
       }),
@@ -422,120 +364,6 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
-    inferenceList: build.query<InferenceListApiResponse, InferenceListApiArg>({
-      query: () => ({ url: `/api/inference/` }),
-    }),
-    inferenceCreate: build.mutation<
-      InferenceCreateApiResponse,
-      InferenceCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/`,
-        method: "POST",
-        body: queryArg.inference,
-      }),
-    }),
-    inferenceRetrieve: build.query<
-      InferenceRetrieveApiResponse,
-      InferenceRetrieveApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/inference/${queryArg.id}/` }),
-    }),
-    inferenceUpdate: build.mutation<
-      InferenceUpdateApiResponse,
-      InferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.inference,
-      }),
-    }),
-    inferencePartialUpdate: build.mutation<
-      InferencePartialUpdateApiResponse,
-      InferencePartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedInference,
-      }),
-    }),
-    inferenceDestroy: build.mutation<
-      InferenceDestroyApiResponse,
-      InferenceDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    inferenceStopCreate: build.mutation<
-      InferenceStopCreateApiResponse,
-      InferenceStopCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/stop`,
-        method: "POST",
-      }),
-    }),
-    inferenceWizardCreate: build.mutation<
-      InferenceWizardCreateApiResponse,
-      InferenceWizardCreateApiArg
-    >({
-      query: () => ({ url: `/api/inference/wizard`, method: "POST" }),
-    }),
-    inferenceChainList: build.query<
-      InferenceChainListApiResponse,
-      InferenceChainListApiArg
-    >({
-      query: () => ({ url: `/api/inference_chain/` }),
-    }),
-    inferenceChainCreate: build.mutation<
-      InferenceChainCreateApiResponse,
-      InferenceChainCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/`,
-        method: "POST",
-        body: queryArg.inferenceChain,
-      }),
-    }),
-    inferenceChainRetrieve: build.query<
-      InferenceChainRetrieveApiResponse,
-      InferenceChainRetrieveApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/inference_chain/${queryArg.id}/` }),
-    }),
-    inferenceChainUpdate: build.mutation<
-      InferenceChainUpdateApiResponse,
-      InferenceChainUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.inferenceChain,
-      }),
-    }),
-    inferenceChainPartialUpdate: build.mutation<
-      InferenceChainPartialUpdateApiResponse,
-      InferenceChainPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedInferenceChain,
-      }),
-    }),
-    inferenceChainDestroy: build.mutation<
-      InferenceChainDestroyApiResponse,
-      InferenceChainDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
     ncaCreate: build.mutation<NcaCreateApiResponse, NcaCreateApiArg>({
       query: () => ({ url: `/api/nca/`, method: "POST" }),
     }),
@@ -608,16 +436,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/pharmacodynamic/${queryArg.id}/sbml/`,
         method: "PUT",
         body: queryArg.pharmacodynamicSbml,
-      }),
-    }),
-    pharmacodynamicSetVariablesFromInferenceUpdate: build.mutation<
-      PharmacodynamicSetVariablesFromInferenceUpdateApiResponse,
-      PharmacodynamicSetVariablesFromInferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/set_variables_from_inference/`,
-        method: "PUT",
-        body: queryArg.pharmacodynamic,
       }),
     }),
     pharmacodynamicSimulateCreate: build.mutation<
@@ -1277,35 +1095,6 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as backendApi };
-export type AlgorithmListApiResponse = /** status 200  */ AlgorithmRead[];
-export type AlgorithmListApiArg = void;
-export type AlgorithmCreateApiResponse = /** status 201  */ AlgorithmRead;
-export type AlgorithmCreateApiArg = {
-  algorithm: Algorithm;
-};
-export type AlgorithmRetrieveApiResponse = /** status 200  */ AlgorithmRead;
-export type AlgorithmRetrieveApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-};
-export type AlgorithmUpdateApiResponse = /** status 200  */ AlgorithmRead;
-export type AlgorithmUpdateApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-  algorithm: Algorithm;
-};
-export type AlgorithmPartialUpdateApiResponse =
-  /** status 200  */ AlgorithmRead;
-export type AlgorithmPartialUpdateApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-  patchedAlgorithm: PatchedAlgorithm;
-};
-export type AlgorithmDestroyApiResponse = unknown;
-export type AlgorithmDestroyApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-};
 export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
 export type BiomarkerTypeListApiResponse =
@@ -1391,13 +1180,6 @@ export type CombinedModelOptimiseCreateApiArg = {
 export type CombinedModelSetParamsToDefaultsUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
 export type CombinedModelSetParamsToDefaultsUpdateApiArg = {
-  /** A unique integer value identifying this combined model. */
-  id: number;
-  combinedModel: CombinedModel;
-};
-export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ CombinedModelRead;
-export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
   combinedModel: CombinedModel;
@@ -1543,74 +1325,6 @@ export type EfficacyExperimentDestroyApiArg = {
   /** A unique integer value identifying this efficacy experiment. */
   id: number;
 };
-export type InferenceListApiResponse = /** status 200  */ InferenceRead[];
-export type InferenceListApiArg = void;
-export type InferenceCreateApiResponse = /** status 201  */ InferenceRead;
-export type InferenceCreateApiArg = {
-  inference: Inference;
-};
-export type InferenceRetrieveApiResponse = /** status 200  */ InferenceRead;
-export type InferenceRetrieveApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-};
-export type InferenceUpdateApiResponse = /** status 200  */ InferenceRead;
-export type InferenceUpdateApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-  inference: Inference;
-};
-export type InferencePartialUpdateApiResponse =
-  /** status 200  */ InferenceRead;
-export type InferencePartialUpdateApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-  patchedInference: PatchedInference;
-};
-export type InferenceDestroyApiResponse = unknown;
-export type InferenceDestroyApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-};
-export type InferenceStopCreateApiResponse = unknown;
-export type InferenceStopCreateApiArg = {
-  id: number;
-};
-export type InferenceWizardCreateApiResponse = unknown;
-export type InferenceWizardCreateApiArg = void;
-export type InferenceChainListApiResponse =
-  /** status 200  */ InferenceChainRead[];
-export type InferenceChainListApiArg = void;
-export type InferenceChainCreateApiResponse =
-  /** status 201  */ InferenceChainRead;
-export type InferenceChainCreateApiArg = {
-  inferenceChain: InferenceChain;
-};
-export type InferenceChainRetrieveApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainRetrieveApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-};
-export type InferenceChainUpdateApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainUpdateApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-  inferenceChain: InferenceChain;
-};
-export type InferenceChainPartialUpdateApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainPartialUpdateApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-  patchedInferenceChain: PatchedInferenceChain;
-};
-export type InferenceChainDestroyApiResponse = unknown;
-export type InferenceChainDestroyApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-};
 export type NcaCreateApiResponse = unknown;
 export type NcaCreateApiArg = void;
 export type PharmacodynamicListApiResponse =
@@ -1659,13 +1373,6 @@ export type PharmacodynamicSbmlUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
   pharmacodynamicSbml: PharmacodynamicSbmlWrite;
-};
-export type PharmacodynamicSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ PharmacodynamicRead;
-export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: number;
-  pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicSimulateCreateApiResponse =
   /** status 200  */ SimulateResponse[];
@@ -2081,29 +1788,6 @@ export type VariableDestroyApiArg = {
 };
 export type WhoamiRetrieveApiResponse = unknown;
 export type WhoamiRetrieveApiArg = void;
-export type CategoryEnum = "SA" | "OP" | "OT";
-export type Algorithm = {
-  /** name of the algorithm */
-  name: string;
-  category: CategoryEnum;
-};
-export type AlgorithmRead = {
-  id: number;
-  /** name of the algorithm */
-  name: string;
-  category: CategoryEnum;
-};
-export type PatchedAlgorithm = {
-  /** name of the algorithm */
-  name?: string;
-  category?: CategoryEnum;
-};
-export type PatchedAlgorithmRead = {
-  id?: number;
-  /** name of the algorithm */
-  name?: string;
-  category?: CategoryEnum;
-};
 export type BiomarkerType = {
   /** name of the biomarker type */
   name: string;
@@ -2601,14 +2285,19 @@ export type Simulate = {
   time_max?: number;
   use_diffsol?: boolean;
 };
+export type UncertaintySummary = {
+  mean: number[];
+  std: number[];
+  quantiles: {
+    [key: string]: number[];
+  };
+};
 export type SimulateUncertaintyResponse = {
   time: number[];
-  sample_count: number;
   group?: number | null;
+  sample_count: number;
   outputs: {
-    [key: string]: {
-      [key: string]: any;
-    };
+    [key: string]: UncertaintySummary;
   };
 };
 export type SimulateUncertainty = {
@@ -2624,6 +2313,7 @@ export type SimulateUncertainty = {
   time_max?: number;
   sample_count?: number;
   seed?: number;
+  use_diffsol?: boolean;
   quantiles?: number[];
 };
 export type CompoundTypeEnum = "SM" | "LM";
@@ -3050,240 +2740,6 @@ export type PatchedEfficacyExperimentRead = {
   c50_unit?: number;
   /** compound for efficacy experiment */
   compound?: number;
-};
-export type LogLikelihoodParameter = {
-  /** name of log_likelihood parameter. */
-  name: string;
-  /** parameter index for distribution and equation parameters. blank for models (variable is used instead) */
-  parent_index?: number | null;
-  /** output index for all log_likelihoods.  */
-  child_index?: number;
-  /** length of array representing parameter. null for scalar */
-  length?: number | null;
-  child: number;
-  /** input model variable for this parameter. */
-  variable?: number | null;
-};
-export type LogLikelihoodParameterRead = {
-  id: number;
-  /** name of log_likelihood parameter. */
-  name: string;
-  /** parameter index for distribution and equation parameters. blank for models (variable is used instead) */
-  parent_index?: number | null;
-  /** output index for all log_likelihoods.  */
-  child_index?: number;
-  /** length of array representing parameter. null for scalar */
-  length?: number | null;
-  parent: number;
-  child: number;
-  /** input model variable for this parameter. */
-  variable?: number | null;
-};
-export type FormEnum = "N" | "U" | "LN" | "F" | "S" | "E" | "M";
-export type LogLikelihood = {
-  parameters: LogLikelihoodParameter[];
-  /** name of log_likelihood. */
-  name: string;
-  /** description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3 */
-  description?: string | null;
-  /** set if a fixed value is required */
-  value?: number | null;
-  /** True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken  */
-  time_independent_data?: boolean;
-  /** True if this log_likelihood is observed  */
-  observed?: boolean;
-  form?: FormEnum;
-  /** If form=MODEL, a variable (any) in the deterministic model.  */
-  variable?: number | null;
-  /** data associated with this log_likelihood. This is used for measurement data (observed=True) or for covariates (observed=False). The random variable associated with this log_likelihood has the same shape as this data. For covariates the subject ids in the data correspond to the values of the random variable at that location. */
-  biomarker_type?: number | null;
-  /** filter subject data on this protocol(null implies all subjects) */
-  protocol_filter?: number | null;
-};
-export type LogLikelihoodRead = {
-  id: number;
-  parameters: LogLikelihoodParameterRead[];
-  model: string[] | null;
-  dataset: number | null;
-  time_variable: number | null;
-  is_a_prior: boolean;
-  /** name of log_likelihood. */
-  name: string;
-  /** description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3 */
-  description?: string | null;
-  /** set if a fixed value is required */
-  value?: number | null;
-  /** True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken  */
-  time_independent_data?: boolean;
-  /** True if this log_likelihood is observed  */
-  observed?: boolean;
-  form?: FormEnum;
-  /** Log_likelihood belongs to this inference object.  */
-  inference: number;
-  /** If form=MODEL, a variable (any) in the deterministic model.  */
-  variable?: number | null;
-  /** data associated with this log_likelihood. This is used for measurement data (observed=True) or for covariates (observed=False). The random variable associated with this log_likelihood has the same shape as this data. For covariates the subject ids in the data correspond to the values of the random variable at that location. */
-  biomarker_type?: number | null;
-  /** filter subject data on this protocol(null implies all subjects) */
-  protocol_filter?: number | null;
-  children: number[];
-};
-export type InitializationStrategyEnum = "D" | "R" | "F";
-export type Inference = {
-  log_likelihoods: LogLikelihood[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type InferenceRead = {
-  id: number;
-  log_likelihoods: LogLikelihoodRead[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type PatchedInference = {
-  log_likelihoods?: LogLikelihood[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name?: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project?: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type PatchedInferenceRead = {
-  id?: number;
-  log_likelihoods?: LogLikelihoodRead[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name?: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project?: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type InferenceChain = {
-  /** inference for this chain */
-  inference: number;
-};
-export type InferenceChainRead = {
-  id: number;
-  data: string;
-  outputs: string;
-  /** inference for this chain */
-  inference: number;
-};
-export type PatchedInferenceChain = {
-  /** inference for this chain */
-  inference?: number;
-};
-export type PatchedInferenceChainRead = {
-  id?: number;
-  data?: string;
-  outputs?: string;
-  /** inference for this chain */
-  inference?: number;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
 export type BlankEnum = "";
@@ -4465,12 +3921,6 @@ export type PatchedVariableRead = {
   dosed_pk_model?: number | null;
 };
 export const {
-  useAlgorithmListQuery,
-  useAlgorithmCreateMutation,
-  useAlgorithmRetrieveQuery,
-  useAlgorithmUpdateMutation,
-  useAlgorithmPartialUpdateMutation,
-  useAlgorithmDestroyMutation,
   useAuceCreateMutation,
   useBiomarkerTypeListQuery,
   useBiomarkerTypeCreateMutation,
@@ -4486,7 +3936,6 @@ export const {
   useCombinedModelDestroyMutation,
   useCombinedModelOptimiseCreateMutation,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
-  useCombinedModelSetVariablesFromInferenceUpdateMutation,
   useCombinedModelSimulateCreateMutation,
   useCombinedModelSimulateUncertaintyCreateMutation,
   useCompoundListQuery,
@@ -4514,20 +3963,6 @@ export const {
   useEfficacyExperimentUpdateMutation,
   useEfficacyExperimentPartialUpdateMutation,
   useEfficacyExperimentDestroyMutation,
-  useInferenceListQuery,
-  useInferenceCreateMutation,
-  useInferenceRetrieveQuery,
-  useInferenceUpdateMutation,
-  useInferencePartialUpdateMutation,
-  useInferenceDestroyMutation,
-  useInferenceStopCreateMutation,
-  useInferenceWizardCreateMutation,
-  useInferenceChainListQuery,
-  useInferenceChainCreateMutation,
-  useInferenceChainRetrieveQuery,
-  useInferenceChainUpdateMutation,
-  useInferenceChainPartialUpdateMutation,
-  useInferenceChainDestroyMutation,
   useNcaCreateMutation,
   usePharmacodynamicListQuery,
   usePharmacodynamicCreateMutation,
@@ -4537,7 +3972,6 @@ export const {
   usePharmacodynamicDestroyMutation,
   usePharmacodynamicMmtUpdateMutation,
   usePharmacodynamicSbmlUpdateMutation,
-  usePharmacodynamicSetVariablesFromInferenceUpdateMutation,
   usePharmacodynamicSimulateCreateMutation,
   usePharmacodynamicSimulateUncertaintyCreateMutation,
   usePharmacokineticListQuery,

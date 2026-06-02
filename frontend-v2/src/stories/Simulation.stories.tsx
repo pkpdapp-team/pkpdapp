@@ -67,6 +67,13 @@ const meta: Meta<typeof Simulations> = {
             );
           },
         ),
+        efficacyExperiments: http.get(
+          "/api/efficacy_experiment/",
+          async () => {
+            await delay();
+            return HttpResponse.json([], { status: 200 });
+          },
+        ),
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {

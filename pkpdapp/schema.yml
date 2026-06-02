@@ -4,147 +4,6 @@ info:
   version: 1.0.0
   description: The API for the PKPDApp
 paths:
-  /api/algorithm/:
-    get:
-      operationId: algorithm_list
-      tags:
-      - algorithm
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Algorithm'
-          description: ''
-    post:
-      operationId: algorithm_create
-      tags:
-      - algorithm
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Algorithm'
-          description: ''
-  /api/algorithm/{id}/:
-    get:
-      operationId: algorithm_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this algorithm.
-        required: true
-      tags:
-      - algorithm
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Algorithm'
-          description: ''
-    put:
-      operationId: algorithm_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this algorithm.
-        required: true
-      tags:
-      - algorithm
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Algorithm'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Algorithm'
-          description: ''
-    patch:
-      operationId: algorithm_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this algorithm.
-        required: true
-      tags:
-      - algorithm
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedAlgorithm'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedAlgorithm'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedAlgorithm'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Algorithm'
-          description: ''
-    delete:
-      operationId: algorithm_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this algorithm.
-        required: true
-      tags:
-      - algorithm
-      security:
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/auce/:
     post:
       operationId: auce_create
@@ -497,39 +356,6 @@ paths:
   /api/combined_model/{id}/set_params_to_defaults/:
     put:
       operationId: combined_model_set_params_to_defaults_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this combined model.
-        required: true
-      tags:
-      - combined_model
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CombinedModel'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CombinedModel'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CombinedModel'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CombinedModel'
-          description: ''
-  /api/combined_model/{id}/set_variables_from_inference/:
-    put:
-      operationId: combined_model_set_variables_from_inference_update
       parameters:
       - in: path
         name: id
@@ -1253,401 +1079,6 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/inference/:
-    get:
-      operationId: inference_list
-      tags:
-      - inference
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Inference'
-          description: ''
-    post:
-      operationId: inference_create
-      tags:
-      - inference
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Inference'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Inference'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Inference'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inference'
-          description: ''
-  /api/inference/{id}/:
-    get:
-      operationId: inference_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference.
-        required: true
-      tags:
-      - inference
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inference'
-          description: ''
-    put:
-      operationId: inference_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference.
-        required: true
-      tags:
-      - inference
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Inference'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Inference'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Inference'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inference'
-          description: ''
-    patch:
-      operationId: inference_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference.
-        required: true
-      tags:
-      - inference
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedInference'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedInference'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedInference'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inference'
-          description: ''
-    delete:
-      operationId: inference_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference.
-        required: true
-      tags:
-      - inference
-      security:
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/inference/{id}/stop:
-    post:
-      operationId: inference_stop_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - inference
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/inference/wizard:
-    post:
-      operationId: inference_wizard_create
-      description: |-
-        expecting data in the form:
-        {
-
-            # Inference parameters
-            'id': 1
-            'name': "my inference run",
-            'project': 1,
-            'algorithm': 2,
-            'initialization_strategy': 'R',
-            'initialization_inference': 2,
-            'number_of_chains': 4,
-            'max_number_of_iterations': 3000,
-            'burn_in': 0,
-
-            # Model
-            'model': {
-                'form': 'PK',
-                'id': 5
-            }
-            'dataset': 3,
-
-            # Model parameters
-            'parameters': [
-                {
-                    'name': 'myokit.parameter1'
-                    'form': 'N',
-                    'pooled': False,
-                    'parameters': [
-                        '2 * biomarker[subject_weight]',
-                        'parameter[parameter1_variance]'
-                    ]
-                },
-                {
-                    'name': 'parameter1_variance'
-                    'form': 'N',
-                    'parameters': [0, 1]
-                },
-                {
-                    'name': 'myokit.parameter2'
-                    'form': 'U',
-                    'parameters': [-1, 1]
-                },
-                {
-                    'name': 'myokit.parameter3'
-                    'form': 'F',
-                    'parameters': [123.5]
-                },
-            ]
-
-            # output
-            'observations': [
-                {
-                    'model': 'myokit.plasma_concentration',
-                    'biomarker': 'concentration,
-                    'noise_form': 'N',
-                    'noise_param_form': 'N',
-                    'parameters': [0, 1]
-                },
-                {
-                    'model': 'myokit.bacteria_count',
-                    'biomarker': 'bacteria,
-                    'noise_form': 'LN',
-                    'noise_param_form': 'F'
-                    'parameters': [123.3]
-                },
-            ]
-        }
-
-        Uses model as the base model. If it is a PK or PKPD model, creates a model
-        for each protocol used in the dataset, replacing the protocol of the model
-        with each new one.
-
-        This set of models has a set of parameters. If pooled is True or not given,
-        then parameters of the same qname are assumed to be identical, if pooled is
-        False, then the value of this parameter is different across each subject.
-        All Variable fields from the original model are copied over to the new
-        models. Priors and fixed values for each parameter in this set are provided
-        in 'parameters'. Distribution parameters for each prior can be provided
-        using a python expression, or a number. If a python expression is used, the
-        keywords Parameter[<param_name>] are used to refer to other parameters in
-        the list. Additional parameters can be added to the list (parameters not in
-        the model) to contruct hierarchical inference. You can refer to biomarkers
-        in the expression using the keyword Biomarker[<biomarker_name>].
-
-        The 'observations' field maps model output variables with biomarkers in the
-        dataset
-      tags:
-      - inference
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/inference_chain/:
-    get:
-      operationId: inference_chain_list
-      tags:
-      - inference_chain
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/InferenceChain'
-          description: ''
-    post:
-      operationId: inference_chain_create
-      tags:
-      - inference_chain
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InferenceChain'
-          description: ''
-  /api/inference_chain/{id}/:
-    get:
-      operationId: inference_chain_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference chain.
-        required: true
-      tags:
-      - inference_chain
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InferenceChain'
-          description: ''
-    put:
-      operationId: inference_chain_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference chain.
-        required: true
-      tags:
-      - inference_chain
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/InferenceChain'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InferenceChain'
-          description: ''
-    patch:
-      operationId: inference_chain_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference chain.
-        required: true
-      tags:
-      - inference_chain
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedInferenceChain'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedInferenceChain'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedInferenceChain'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InferenceChain'
-          description: ''
-    delete:
-      operationId: inference_chain_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this inference chain.
-        required: true
-      tags:
-      - inference_chain
-      security:
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/nca/:
     post:
       operationId: nca_create
@@ -1852,39 +1283,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PharmacodynamicSbml'
-          description: ''
-  /api/pharmacodynamic/{id}/set_variables_from_inference/:
-    put:
-      operationId: pharmacodynamic_set_variables_from_inference_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this pharmacodynamic model.
-        required: true
-      tags:
-      - pharmacodynamic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Pharmacodynamic'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Pharmacodynamic'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Pharmacodynamic'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pharmacodynamic'
           description: ''
   /api/pharmacodynamic/{id}/simulate:
     post:
@@ -3832,22 +3230,6 @@ paths:
           description: No response body
 components:
   schemas:
-    Algorithm:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          description: name of the algorithm
-          maxLength: 100
-        category:
-          $ref: '#/components/schemas/CategoryEnum'
-      required:
-      - category
-      - id
-      - name
     BiomarkerType:
       type: object
       properties:
@@ -3919,16 +3301,6 @@ components:
     BlankEnum:
       enum:
       - ''
-    CategoryEnum:
-      enum:
-      - SA
-      - OP
-      - OT
-      type: string
-      description: |-
-        * `SA` - Sampling
-        * `OP` - Optimisation
-        * `OT` - Optimisation
     ColumnsEnum:
       enum:
       - parameters
@@ -4394,120 +3766,6 @@ components:
           type: string
       required:
       - error
-    FormEnum:
-      enum:
-      - N
-      - U
-      - LN
-      - F
-      - S
-      - E
-      - M
-      type: string
-      description: |-
-        * `N` - Normal
-        * `U` - Uniform
-        * `LN` - Log-Normal
-        * `F` - Fixed
-        * `S` - Sum
-        * `E` - Equation
-        * `M` - Model
-    Inference:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        log_likelihoods:
-          type: array
-          items:
-            $ref: '#/components/schemas/LogLikelihood'
-        read_only:
-          type: boolean
-          description: true if object has been stored
-        datetime:
-          type: string
-          format: date-time
-          nullable: true
-          description: datetime the object was stored.
-        name:
-          type: string
-          description: name of the dataset
-          maxLength: 100
-        description:
-          type: string
-          description: short description of what this inference does
-        initialization_strategy:
-          $ref: '#/components/schemas/InitializationStrategyEnum'
-        number_of_chains:
-          type: integer
-          description: number of chains
-        max_number_of_iterations:
-          type: integer
-          description: maximum number of iterations
-        burn_in:
-          type: integer
-          description: final iteration of burn-in
-        number_of_iterations:
-          type: integer
-          description: number of iterations calculated
-        time_elapsed:
-          type: integer
-          description: Elapsed run time for inference in seconds
-        number_of_function_evals:
-          type: integer
-          description: number of function evaluations
-        task_id:
-          type: string
-          nullable: true
-          description: If executing, this is the celery task id
-          maxLength: 40
-        metadata:
-          description: metadata for inference
-        project:
-          type: integer
-          description: Project that "owns" this inference object
-        algorithm:
-          type: integer
-          description: algorithm used to perform the inference
-        initialization_inference:
-          type: integer
-          nullable: true
-      required:
-      - id
-      - log_likelihoods
-      - name
-      - project
-    InferenceChain:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        data:
-          type: string
-          readOnly: true
-        outputs:
-          type: string
-          readOnly: true
-        inference:
-          type: integer
-          description: inference for this chain
-      required:
-      - data
-      - id
-      - inference
-      - outputs
-    InitializationStrategyEnum:
-      enum:
-      - D
-      - R
-      - F
-      type: string
-      description: |-
-        * `D` - Default Value of model
-        * `R` - Random from prior
-        * `F` - From other inference
     IntrinsicClearanceAssayEnum:
       enum:
       - MS
@@ -4516,130 +3774,6 @@ components:
       description: |-
         * `MS` - Microsomes
         * `HC` - Hepatocytes
-    LogLikelihood:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        parameters:
-          type: array
-          items:
-            $ref: '#/components/schemas/LogLikelihoodParameter'
-        model:
-          type: array
-          items:
-            type: string
-          minLength: 2
-          maxLength: 2
-          nullable: true
-          readOnly: true
-        dataset:
-          type: integer
-          nullable: true
-          readOnly: true
-        time_variable:
-          type: integer
-          nullable: true
-          readOnly: true
-        is_a_prior:
-          type: boolean
-          readOnly: true
-        name:
-          type: string
-          description: name of log_likelihood.
-          maxLength: 100
-        description:
-          type: string
-          nullable: true
-          description: 'description of log_likelihood. For equations will be the code
-            of that equation using Python syntax: arg1 * arg2^arg3'
-        value:
-          type: number
-          format: double
-          nullable: true
-          description: set if a fixed value is required
-        time_independent_data:
-          type: boolean
-          description: 'True if biomarker_type refers to time-independent data. If
-            there are multiple timepoints in biomarker_type then only the first is
-            taken '
-        observed:
-          type: boolean
-          description: 'True if this log_likelihood is observed '
-        form:
-          $ref: '#/components/schemas/FormEnum'
-        inference:
-          type: integer
-          readOnly: true
-          description: 'Log_likelihood belongs to this inference object. '
-        variable:
-          type: integer
-          nullable: true
-          description: 'If form=MODEL, a variable (any) in the deterministic model. '
-        biomarker_type:
-          type: integer
-          nullable: true
-          description: data associated with this log_likelihood. This is used for
-            measurement data (observed=True) or for covariates (observed=False). The
-            random variable associated with this log_likelihood has the same shape
-            as this data. For covariates the subject ids in the data correspond to
-            the values of the random variable at that location.
-        protocol_filter:
-          type: integer
-          nullable: true
-          description: filter subject data on this protocol(null implies all subjects)
-        children:
-          type: array
-          items:
-            type: integer
-          readOnly: true
-      required:
-      - children
-      - dataset
-      - id
-      - inference
-      - is_a_prior
-      - model
-      - name
-      - parameters
-      - time_variable
-    LogLikelihoodParameter:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          description: name of log_likelihood parameter.
-          maxLength: 100
-        parent_index:
-          type: integer
-          nullable: true
-          description: parameter index for distribution and equation parameters. blank
-            for models (variable is used instead)
-        child_index:
-          type: integer
-          description: 'output index for all log_likelihoods. '
-        length:
-          type: integer
-          nullable: true
-          description: length of array representing parameter. null for scalar
-        parent:
-          type: integer
-          readOnly: true
-        child:
-          type: integer
-        variable:
-          type: integer
-          nullable: true
-          description: input model variable for this parameter.
-      required:
-      - child
-      - id
-      - name
-      - parent
     ModelTypeEnum:
       enum:
       - PK
@@ -4817,18 +3951,6 @@ components:
       - residuals
       - starting
       - use_multiplicative_noise
-    PatchedAlgorithm:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          description: name of the algorithm
-          maxLength: 100
-        category:
-          $ref: '#/components/schemas/CategoryEnum'
     PatchedBiomarkerType:
       type: object
       properties:
@@ -5192,82 +4314,6 @@ components:
         compound:
           type: integer
           description: compound for efficacy experiment
-    PatchedInference:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        log_likelihoods:
-          type: array
-          items:
-            $ref: '#/components/schemas/LogLikelihood'
-        read_only:
-          type: boolean
-          description: true if object has been stored
-        datetime:
-          type: string
-          format: date-time
-          nullable: true
-          description: datetime the object was stored.
-        name:
-          type: string
-          description: name of the dataset
-          maxLength: 100
-        description:
-          type: string
-          description: short description of what this inference does
-        initialization_strategy:
-          $ref: '#/components/schemas/InitializationStrategyEnum'
-        number_of_chains:
-          type: integer
-          description: number of chains
-        max_number_of_iterations:
-          type: integer
-          description: maximum number of iterations
-        burn_in:
-          type: integer
-          description: final iteration of burn-in
-        number_of_iterations:
-          type: integer
-          description: number of iterations calculated
-        time_elapsed:
-          type: integer
-          description: Elapsed run time for inference in seconds
-        number_of_function_evals:
-          type: integer
-          description: number of function evaluations
-        task_id:
-          type: string
-          nullable: true
-          description: If executing, this is the celery task id
-          maxLength: 40
-        metadata:
-          description: metadata for inference
-        project:
-          type: integer
-          description: Project that "owns" this inference object
-        algorithm:
-          type: integer
-          description: algorithm used to perform the inference
-        initialization_inference:
-          type: integer
-          nullable: true
-    PatchedInferenceChain:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        data:
-          type: string
-          readOnly: true
-        outputs:
-          type: string
-          readOnly: true
-        inference:
-          type: integer
-          description: inference for this chain
     PatchedPharmacodynamic:
       type: object
       properties:
@@ -6352,6 +5398,9 @@ components:
           minimum: 1
         seed:
           type: integer
+        use_diffsol:
+          type: boolean
+          default: true
         quantiles:
           type: array
           items:
@@ -6369,13 +5418,15 @@ components:
           items:
             type: number
             format: double
+        group:
+          type: integer
+          nullable: true
         sample_count:
           type: integer
         outputs:
           type: object
           additionalProperties:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/UncertaintySummary'
       required:
       - outputs
       - sample_count
@@ -6714,6 +5765,30 @@ components:
         * `NPW` - Negative Power
         * `TDI` - Exponential Decay
         * `IND` - Exponential Increase
+    UncertaintySummary:
+      type: object
+      properties:
+        mean:
+          type: array
+          items:
+            type: number
+            format: double
+        std:
+          type: array
+          items:
+            type: number
+            format: double
+        quantiles:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+              format: double
+      required:
+      - mean
+      - quantiles
+      - std
     Unit:
       type: object
       properties:

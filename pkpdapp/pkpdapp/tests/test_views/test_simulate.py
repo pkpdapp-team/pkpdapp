@@ -149,6 +149,19 @@ class TestSimulateView(APITestCase):
         self.assertEqual(repeated_response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, repeated_response.data)
 
+        data_without_variables = {
+            key: value for key, value in data.items() if key != 'variables'
+        }
+        response_without_variables = self.client.post(
+            url,
+            data_without_variables,
+            format='json',
+        )
+        self.assertEqual(
+            response_without_variables.status_code,
+            status.HTTP_200_OK,
+        )
+
         for sim in response.data:
             self.assertEqual(sim['sample_count'], 20)
             self.assertTrue(len(sim['time']) > 0)
