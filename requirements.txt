@@ -1,5 +1,5 @@
 gunicorn
-Django~=4.2.0
+Django~=5.2.14
 setuptools<=65.5.1
 django-cors-headers>=3.7.0
 dpd-static-support>=0.0.5

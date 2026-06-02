@@ -73,17 +73,17 @@ class TestProjectModel(TestCase):
             description='description for my cool dataset',
         )
         p.datasets.add(d)
-        self.assertQuerysetEqual(p.datasets.all(), [d])
+        self.assertEqual(list(p.datasets.all()), [d])
 
         m = PharmacodynamicModel.objects.create(
             name='my_cool_model',
             description='description for my cool model',
         )
         p.pd_models.add(m)
-        self.assertQuerysetEqual(p.pd_models.all(), [m])
+        self.assertEqual(list(p.pd_models.all()), [m])
 
         u = User.objects.create_user(
             'john', 'lennon@thebeatles.com', 'johnpassword'
         )
         p.users.add(u)
-        self.assertQuerysetEqual(p.users.all(), [u])
+        self.assertEqual(list(p.users.all()), [u])
