@@ -25,6 +25,7 @@ from pkpdapp.models.myokit_protocol import (
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class VariableContext:
     id: int
