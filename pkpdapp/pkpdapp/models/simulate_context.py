@@ -120,7 +120,8 @@ class SimulateContext:
         self.inputs = self._build_inputs()
         self._input_index_by_variable_id = self._build_input_index_by_variable_id()
         self.dynamic_input_ids = self._validate_dynamic_inputs(dynamic_inputs)
-        self._set_base_input_rhs()
+        if not use_diffsol:
+            self._set_base_input_rhs()
         self.time_max = self._build_time_max(model, time_max)
 
         self.outputs = self._build_outputs(outputs or [])
