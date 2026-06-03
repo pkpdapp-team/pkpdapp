@@ -351,7 +351,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             ec_myokit = self.pk_effect_model.create_myokit_model()
             for i in range(self.number_of_effect_compartments):
                 pk_model.import_component(
-                    ec_myokit.get("PKCompartment"), new_name=f"EffectCompartment{i+1}"
+                    ec_myokit.get("PKCompartment"),
+                    new_name=f"EffectCompartment{i + 1}"
                 )
 
         # do derived variables for pk model first
@@ -384,7 +385,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 )
             c1_variable = pk_model.get(c1_variable_name)
             for i in range(self.number_of_effect_compartments):
-                c_drug = pk_model.get(f"EffectCompartment{i+1}.C_Drug")
+                c_drug = pk_model.get(f"EffectCompartment{i + 1}.C_Drug")
                 c_drug.set_rhs(myokit.Name(c1_variable))
 
         have_both_models = self.pk_model is not None and self.pd_model is not None
@@ -533,7 +534,12 @@ class CombinedModel(MyokitModelMixin, StoredModel):
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
-        super().save(force_insert, force_update, *args, **kwargs)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            **kwargs
+        )
 
         # don't update a stored model
         if self.read_only:
@@ -716,7 +722,12 @@ class PkpdMapping(StoredModel):
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 
-        super().save(force_insert, force_update, *args, **kwargs)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            **kwargs
+        )
 
         # don't update a stored model
         if self.read_only:
