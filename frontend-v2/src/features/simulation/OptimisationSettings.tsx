@@ -80,6 +80,8 @@ const OptimisationSettings = ({
   const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
+  const [logSigma, setLogSigma] = useState<number>(0);
+  const [sigmaBounds, setSigmaBounds] = useState<[number, number]>([-20, 20]);
 
   useEffect(() => {
     if (!open) {
@@ -104,6 +106,8 @@ const OptimisationSettings = ({
     setMethod(DEFAULT_OPTIMISE_METHOD);
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
+    setLogSigma(defaultOptimiseInputs.log_sigma ?? 0);
+    setSigmaBounds(defaultOptimiseInputs.sigma_bounds ?? [-20, 20]);
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -133,6 +137,8 @@ const OptimisationSettings = ({
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
+      log_sigma: logSigma,
+      sigma_bounds: sigmaBounds,
     });
     onClose();
   };
@@ -299,6 +305,39 @@ const OptimisationSettings = ({
               size="small"
               value={maxIterations}
               onChange={(event) => setMaxIterations(event.target.value)}
+              fullWidth
+            />
+          </Stack>
+          <Divider />
+          <Stack direction="row" spacing={1}>
+            <TextField
+              label="Log sigma"
+              type="number"
+              size="small"
+              value={logSigma}
+              onChange={(event) => setLogSigma(Number(event.target.value))}
+              fullWidth
+            />
+            <TextField
+              label="Sigma min bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[0]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [value, current[1]]);
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Sigma max bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[1]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [current[0], value]);
+              }}
               fullWidth
             />
           </Stack>

@@ -2236,6 +2236,7 @@ export type OptimiseResponse = {
   optimal: number[];
   loss: number;
   reason: string;
+  sigma: number | null;
   inputs: number[];
   starting: number[];
   bounds: number[][];
@@ -2269,6 +2270,8 @@ export type Optimise = {
   max_iterations?: number | null;
   use_multiplicative_noise?: boolean;
   method?: string;
+  log_sigma?: number;
+  sigma_bounds?: [number, number];
 };
 export type SimulateResponse = {
   time: number[];

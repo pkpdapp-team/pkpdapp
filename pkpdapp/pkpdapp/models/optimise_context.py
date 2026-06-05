@@ -418,7 +418,9 @@ class OptimiseContext(SimulateContext):
         condition_number = None
         if cov is not None:
             try:
-                singular_values = svd(cov, compute_uv=False)
+                std = np.sqrt(np.diag(cov))
+                corr = cov / np.outer(std, std)
+                singular_values = svd(corr, compute_uv=False)
                 s_max = singular_values[0]
                 s_min = singular_values[-1]
                 condition_number = float(s_max / s_min) if s_min != 0 else np.inf

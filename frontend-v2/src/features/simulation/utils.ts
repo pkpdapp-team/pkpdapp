@@ -70,6 +70,8 @@ export function getDefaultOptimiseInputs({
     bounds: [lowerBounds, upperBounds],
     biomarker_types,
     subject_groups: subjectGroups,
+    log_sigma: 0,
+    sigma_bounds: [-20, 20],
   };
 }
 
