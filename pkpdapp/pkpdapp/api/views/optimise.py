@@ -101,20 +101,20 @@ class OptimiseBaseView(views.APIView):
 
             data = serializer.validated_data
             try:
-            result = m.optimise(
-                inputs=data["inputs"],
-                starting=data["starting"],
-                bounds=data["bounds"],
-                biomarker_types=data.get("biomarker_types"),
-                subject_groups=data.get("subject_groups"),
-                max_iterations=data.get("max_iterations"),
-                use_multiplicative_noise=data.get(
-                    "use_multiplicative_noise", False
-                ),
-                method=data.get("method", "pso"),
-                log_sigma=data.get("log_sigma", 0.0),
-                sigma_bounds=data.get("sigma_bounds", (-20.0, 20.0)),
-            )
+                result = m.optimise(
+                    inputs=data["inputs"],
+                    starting=data["starting"],
+                    bounds=data["bounds"],
+                    biomarker_types=data.get("biomarker_types"),
+                    subject_groups=data.get("subject_groups"),
+                    max_iterations=data.get("max_iterations"),
+                    use_multiplicative_noise=data.get(
+                        "use_multiplicative_noise", False
+                    ),
+                    method=data.get("method", "pso"),
+                    log_sigma=data.get("log_sigma", 0.0),
+                    sigma_bounds=data.get("sigma_bounds", (-20.0, 20.0)),
+                )
             except (myokit.MyokitError, RuntimeError, ValueError) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})
                 return Response(
