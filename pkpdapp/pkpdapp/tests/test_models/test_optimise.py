@@ -514,7 +514,7 @@ class TestOptimise(TestCase):
                 context.optimise_loss((missing_ode_group,), values_by_id),
                 np.inf,
             )
-            loss, gradient = context.optimise_loss_gradient(
+            loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
                 (missing_ode_group,),
                 values_by_id,
             )
@@ -547,7 +547,7 @@ class TestOptimise(TestCase):
             ),
         )
         with mock.patch("pkpdapp.models.optimise_context.logger.exception"):
-            loss, gradient = context.optimise_loss_gradient(
+            loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
                 (sens_failure_group,),
                 values_by_id,
             )
@@ -569,7 +569,7 @@ class TestOptimise(TestCase):
             ),
             np.inf,
         )
-        loss, gradient = context.optimise_loss_gradient(
+        loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
             (non_positive_group,),
             values_by_id,
             use_multiplicative_noise=True,
@@ -593,6 +593,7 @@ class TestOptimise(TestCase):
         self.assertIsNotNone(diagnostics["residuals"])
         self.assertIsNotNone(diagnostics["covariance"])
         self.assertIsNotNone(diagnostics["condition_number"])
+        self.assertIsInstance(diagnostics["sigma"], float)
 
         first_group = context.optimisation_groups[0]
         time_id = context.get_variable_context(context.time_qname).id
@@ -621,6 +622,7 @@ class TestOptimise(TestCase):
                 "residuals": None,
                 "covariance": None,
                 "condition_number": None,
+                "sigma": 1.0,
             },
         )
 
@@ -734,8 +736,8 @@ class TestOptimise(TestCase):
         self.assertTrue(np.all(np.isfinite(y)))
         self.assertTrue(np.all(np.isfinite(y_prime)))
 
-        # Verify that _optimise_loss_gradient returns scalar loss + vector gradient.
-        total_loss, total_gradient = context.optimise_loss_gradient(
+        # Verify that optimise_loss_gradient returns (nll, ode_gradient, ssr, n_obs).
+        total_loss, total_gradient, ssr, n_obs = context.optimise_loss_gradient(
             prepared_groups,
             starting_values_by_id,
         )

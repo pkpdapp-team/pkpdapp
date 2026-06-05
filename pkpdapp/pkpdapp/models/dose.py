@@ -53,7 +53,7 @@ class DoseBase(models.Model):
         constraints = [
             models.CheckConstraint(
                 name="Duration must be greater than 0",
-                condition=models.Q(duration__gt=0),
+                check=models.Q(duration__gt=0),
             ),
         ]
 

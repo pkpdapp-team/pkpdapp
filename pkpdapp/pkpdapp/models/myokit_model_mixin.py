@@ -337,6 +337,8 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         max_iterations=None,
         use_multiplicative_noise=True,
         method="pso",
+        log_sigma=0.0,
+        sigma_bounds=(-20.0, 20.0),
     ):
         """
         Fits the model against the data indicated
@@ -355,15 +357,15 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                (same order as the requested outputs in 1.).
             3. a diffsol Ode model is contructed using the outputs from 1.
 
-                Then fitting is performed. The loss function for each iteration has the
-        following structure:
-            - total loss initialised to zero
-            - loop through each subject group:
-                                - a simulation is performed using that group's
-                                    Ode model with solve_dense and the timepoints
-                                    collected in step 2
-                                - that group's loss is calculated and added to the total
-                  loss
+                Then fitting is performed. The loss function is the negative
+                log-likelihood
+
+                    nll = N * log_sigma + SSR / (2 * sigma^2)
+
+                where N is the number of observations, SSR is the sum of squared
+                residuals, and sigma = exp(log_sigma) is the noise standard
+                deviation. Both additive and log-normal multiplicative noise
+                models are supported.
 
                 The package Pints is used for optimisation
                 (https://pints.readthedocs.io/en/stable/optimisers/index.html).
@@ -395,6 +397,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         method: str (optional)
             optimisation method, one of "cmaes", "pso" (default), "nelder-mead",
             "gradient_descent", "adam", "irprop"
+        log_sigma: float (optional)
+            initial value for log(sigma), the log noise standard deviation parameter
+            (default 0.0)
+        sigma_bounds: (float, float) (optional)
+            lower and upper bounds for log_sigma (default (-20.0, 20.0))
 
         Returns
         -------
@@ -402,20 +409,20 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             - "optimal": (list) optimal input values (same order as inputs)
             - "loss": (float) value of loss function at optimal
             - "reason": (str) stopping reason
+            - "sigma": (float) estimated noise standard deviation
             - "predictions": (list of dicts) simulated values at the optimal
               parameters, one dict per subject group. Each dict has the same
               format as the dicts returned by ``simulate``: keys are
               ``"group_id"`` and integer variable ids, values are lists of
               floats. The time variable is included.
-            - "residuals": (list of dicts) residuals at observed data points,
-              one dict per subject group. Same format as ``predictions`` but
-              only contains time-points for which observations exist.
-              Residuals are ``prediction - observed`` (additive noise) or
-              ``log(prediction) - log(observed)`` (multiplicative noise).
+            - "residuals": (list of dicts) normalised residuals at observed data
+              points, one dict per subject group. Same format as ``predictions``
+              but only contains time-points for which observations exist.
+              Residuals are divided by the estimated sigma.
             - "covariance": (list of lists or None) estimated covariance matrix
               of the optimal parameters (n_params x n_params), scaled by the
-              residual variance ``RSS / (n_obs - n_params)``. ``None`` if the
-              matrix could not be computed (e.g. insufficient observations).
+              estimated sigma^2. ``None`` if the matrix could not be computed
+              (e.g. insufficient observations).
             - "condition_number": (float or None) condition number of the
               covariance matrix computed from its singular values. ``None`` if
               the covariance matrix is not available.
@@ -461,9 +468,20 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             ],
             dtype=float,
         )
-        starting_model = np.asarray(starting, dtype=float) * conversion_factors
-        lower_bounds_model = np.asarray(lower_bounds, dtype=float) * conversion_factors
-        upper_bounds_model = np.asarray(upper_bounds, dtype=float) * conversion_factors
+        starting_model = (
+            np.append(
+                np.asarray(starting, dtype=float) * conversion_factors,
+                log_sigma,
+            )
+        )
+        lower_bounds_model = np.append(
+            np.asarray(lower_bounds, dtype=float) * conversion_factors,
+            sigma_bounds[0],
+        )
+        upper_bounds_model = np.append(
+            np.asarray(upper_bounds, dtype=float) * conversion_factors,
+            sigma_bounds[1],
+        )
 
         class OptimiseError(pints.ErrorMeasure):
             def values_by_id(self, values):
@@ -476,12 +494,15 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 }
 
             def n_parameters(self):
-                return len(inputs)
+                return len(inputs) + 1
 
             def __call__(self, x):
+                ode_values = x[:-1]
+                log_s = float(x[-1])
                 loss = context.optimise_loss(
                     context.optimisation_groups,
-                    self.values_by_id(x),
+                    self.values_by_id(ode_values),
+                    log_sigma=log_s,
                     use_multiplicative_noise=use_multiplicative_noise,
                 )
                 if np.isfinite(loss) and loss < self.best_loss:
@@ -490,20 +511,27 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 return loss
 
             def evaluateS1(self, x):
+                ode_values = x[:-1]
+                log_s = float(x[-1])
                 try:
-                    total_loss, total_gradient = context.optimise_loss_gradient(
+                    result = context.optimise_loss_gradient(
                         context.optimisation_groups,
-                        self.values_by_id(x),
+                        self.values_by_id(ode_values),
+                        log_sigma=log_s,
                         use_multiplicative_noise=use_multiplicative_noise,
                     )
+                    nll, ode_gradient, ssr, n_obs = result
                 except Exception:
                     logger.exception(
                         "solve_fwd_sens failed during gradient computation."
                     )
-                    return np.inf, np.zeros(len(inputs))
-                if not np.isfinite(total_loss):
-                    return np.inf, np.zeros(len(inputs))
-                loss = float(total_loss)
+                    return np.inf, np.zeros(len(inputs) + 1)
+                if not np.isfinite(nll):
+                    return np.inf, np.zeros(len(inputs) + 1)
+                sigma2 = np.exp(2.0 * log_s)
+                sigma_gradient = n_obs - ssr / sigma2
+                total_gradient = np.append(ode_gradient, sigma_gradient)
+                loss = float(nll)
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = loss
                     self.best_values = np.asarray(x, dtype=float).copy()
@@ -544,13 +572,16 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         if reason is None:
             reason = f"Stopped after {optimiser.iterations()} iterations."
 
-        optimal_model = np.asarray(optimal, dtype=float)
+        optimal = np.asarray(optimal, dtype=float)
+        ode_optimal = optimal[:-1]
+        log_s = float(optimal[-1])
         diagnostics = context.optimise_diagnostics(
-            optimal_model=optimal_model,
+            optimal_model=ode_optimal,
+            log_sigma=log_s,
             use_multiplicative_noise=use_multiplicative_noise,
         )
 
-        optimal_user = optimal_model / conversion_factors
+        optimal_user = ode_optimal / conversion_factors
 
         return {
             "optimal": np.asarray(optimal_user, dtype=float).tolist(),

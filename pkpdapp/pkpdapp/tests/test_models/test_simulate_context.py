@@ -137,7 +137,7 @@ class TestSimulateContext(TestCase):
         self.assertTrue(np.isfinite(true_loss))
         self.assertLess(true_loss, starting_loss)
 
-        total_loss, total_gradient = optimise_context._optimise_loss_gradient(
+        total_loss, total_gradient, ssr, n_obs = optimise_context._optimise_loss_gradient(
             optimise_context.optimisation_groups,
             starting_values,
         )
