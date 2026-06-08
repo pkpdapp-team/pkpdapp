@@ -65,6 +65,10 @@ class OptimiseResponseSerializer(serializers.Serializer):
         allow_null=True,
     )
     condition_number = serializers.FloatField(allow_null=True)
+    log_sigma = serializers.FloatField(allow_null=True)
+    sigma_bounds = serializers.ListField(
+        child=serializers.FloatField(), allow_null=True
+    )
 
 
 class ErrorResponseSerializer(serializers.Serializer):
@@ -134,6 +138,10 @@ class OptimiseBaseView(views.APIView):
                         "use_multiplicative_noise", False
                     ),
                     "method": data.get("method", "pso"),
+                    "log_sigma": data.get("log_sigma", 0.0),
+                    "sigma_bounds": list(data.get(
+                        "sigma_bounds", (-20.0, 20.0)
+                    )),
                 }
             )
             return Response(serialized_result.data)

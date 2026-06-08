@@ -134,6 +134,17 @@ const OptimisationView = ({
                       </TableRow>
                     );
                   })}
+                  {optimiseResult.log_sigma != null && optimiseResult.sigma_bounds != null && optimiseResult.sigma != null && (
+                    <TableRow>
+                      <TableCell>Log sigma</TableCell>
+                      <TableCell>{formatNum(optimiseResult.log_sigma)}</TableCell>
+                      <TableCell>{formatNum(optimiseResult.sigma_bounds[0])}</TableCell>
+                      <TableCell>{formatNum(optimiseResult.sigma_bounds[1])}</TableCell>
+                      <TableCell sx={isNearBound(Math.log(optimiseResult.sigma), optimiseResult.sigma_bounds[0], optimiseResult.sigma_bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                        {formatNum(Math.log(optimiseResult.sigma))}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
               <Stack direction="row" spacing={4} sx={{ mt: 1 }}>

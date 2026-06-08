@@ -212,7 +212,7 @@ class SimulateContext:
         ode = cache.get(cache_key)
         if ode is None:
             ode = pydiffsol.Ode(content)
-            ode.ode_solver = pydiffsol.esdirk34
+            ode.ode_solver = pydiffsol.bdf
             ode.atol = 1e-6
             ode.rtol = 1e-4
             cache.set(cache_key, ode, timeout=None)

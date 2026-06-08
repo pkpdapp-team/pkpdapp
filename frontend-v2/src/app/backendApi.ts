@@ -2245,6 +2245,8 @@ export type OptimiseResponse = {
   max_iterations?: number | null;
   use_multiplicative_noise: boolean;
   method: string;
+  log_sigma?: number | null;
+  sigma_bounds?: [number, number] | null;
   predictions:
     | {
         [key: string]: any;

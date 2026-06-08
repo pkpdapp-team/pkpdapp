@@ -210,6 +210,39 @@ const OptimisationSettings = ({
             );
           })}
           <Divider />
+          <Stack direction="row" spacing={1}>
+            <TextField
+              label="Log sigma"
+              type="number"
+              size="small"
+              value={logSigma}
+              onChange={(event) => setLogSigma(Number(event.target.value))}
+              fullWidth
+            />
+            <TextField
+              label="Sigma min bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[0]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [value, current[1]]);
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Sigma max bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[1]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [current[0], value]);
+              }}
+              fullWidth
+            />
+          </Stack>
+          <Divider />
           <Stack direction="row" spacing={4}>
             <Box>
               <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
@@ -305,39 +338,6 @@ const OptimisationSettings = ({
               size="small"
               value={maxIterations}
               onChange={(event) => setMaxIterations(event.target.value)}
-              fullWidth
-            />
-          </Stack>
-          <Divider />
-          <Stack direction="row" spacing={1}>
-            <TextField
-              label="Log sigma"
-              type="number"
-              size="small"
-              value={logSigma}
-              onChange={(event) => setLogSigma(Number(event.target.value))}
-              fullWidth
-            />
-            <TextField
-              label="Sigma min bound"
-              type="number"
-              size="small"
-              value={sigmaBounds[0]}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setSigmaBounds((current) => [value, current[1]]);
-              }}
-              fullWidth
-            />
-            <TextField
-              label="Sigma max bound"
-              type="number"
-              size="small"
-              value={sigmaBounds[1]}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setSigmaBounds((current) => [current[0], value]);
-              }}
               fullWidth
             />
           </Stack>
