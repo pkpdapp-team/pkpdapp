@@ -569,8 +569,8 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             optimal = error.best_values
             loss = error.best_loss
         reason = optimiser.optimiser().stop()
-        if reason is None:
-            reason = f"Stopped after {optimiser.iterations()} iterations."
+        if not reason:
+            reason = f"Maximum iterations ({optimiser.iterations()}) reached."
 
         optimal = np.asarray(optimal, dtype=float)
         ode_optimal = optimal[:-1]

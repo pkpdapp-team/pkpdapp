@@ -144,7 +144,7 @@ const OptimisationSettings = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Optimisation Settings</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ marginTop: ".5rem" }}>
@@ -210,6 +210,9 @@ const OptimisationSettings = ({
             );
           })}
           <Divider />
+          <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
+            Noise standard deviation (log scale)
+          </Typography>
           <Stack direction="row" spacing={1}>
             <TextField
               label="Log sigma"
@@ -220,7 +223,7 @@ const OptimisationSettings = ({
               fullWidth
             />
             <TextField
-              label="Sigma min bound"
+              label="Min bound"
               type="number"
               size="small"
               value={sigmaBounds[0]}
@@ -231,7 +234,7 @@ const OptimisationSettings = ({
               fullWidth
             />
             <TextField
-              label="Sigma max bound"
+              label="Max bound"
               type="number"
               size="small"
               value={sigmaBounds[1]}
@@ -271,7 +274,7 @@ const OptimisationSettings = ({
             </Box>
             <Box>
               <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
-                Biomarker Types
+                Observations
               </Typography>
               <FormGroup>
                 {biomarkerTypes.map((bt) => {
@@ -295,7 +298,7 @@ const OptimisationSettings = ({
                 })}
                 {biomarkerTypes.length === 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    No biomarker types
+                    No observations
                   </Typography>
                 )}
               </FormGroup>
