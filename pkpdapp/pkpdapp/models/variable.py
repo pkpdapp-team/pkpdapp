@@ -158,11 +158,11 @@ class Variable(StoredModel):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
+                condition=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
                 name=("%(class)s: log scale must have a lower bound greater than zero"),
             ),
             models.CheckConstraint(
-                check=(
+                condition=(
                     (
                         Q(pk_model__isnull=True)
                         & Q(dosed_pk_model__isnull=True)
