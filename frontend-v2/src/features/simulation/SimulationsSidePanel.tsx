@@ -269,7 +269,7 @@ export const SimulationsSidePanel = ({
             sx={{
               display: "flex",
               justifyContent: "flex-start",
-              padding: "1rem",
+              padding: "1rem 0 1rem 1rem",
             }}
           >
             <Box
@@ -278,6 +278,7 @@ export const SimulationsSidePanel = ({
                 display: "flex",
                 alignItems: "center",
                 flexDirection: "column",
+                width: "100%",
               }}
             >
               <Typography variant="h4">Simulations</Typography>
@@ -298,7 +299,12 @@ export const SimulationsSidePanel = ({
               <Box
                 sx={{
                   overflowX: "hidden",
+                  overflowY: "auto",
                   maxHeight: getTableHeight({ steps: SidePanelSteps }),
+                  alignSelf: "stretch",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
                 <Box>
@@ -568,18 +574,17 @@ export const SimulationsSidePanel = ({
                       </Button>
                       <Stack
                         direction="row"
-                        spacing={1}
+                        spacing={0.5}
                         alignItems="center"
                         sx={{ marginTop: ".5rem" }}
                       >
                         <Button
                           variant="outlined"
-                          sx={{ width: "10rem" }}
                           onClick={handleOptimise}
                           disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1 || !hasData}
                           data-cy="optimise-parameters"
                         >
-                          Optimise
+                          Fit
                         </Button>
                         <Tooltip title="Optimisation settings" placement="top">
                           <span>
@@ -595,7 +600,7 @@ export const SimulationsSidePanel = ({
                               sx={{ border: "1px solid #DBD7D3", borderRadius: "4px" }}
                               data-cy="optimise-settings"
                             >
-                              <Settings />
+                              <Settings fontSize="small" />
                             </IconButton>
                           </span>
                         </Tooltip>
@@ -608,10 +613,60 @@ export const SimulationsSidePanel = ({
                               sx={{ border: "1px solid #DBD7D3", borderRadius: "4px" }}
                               data-cy="optimise-view"
                             >
-                              <Visibility />
+                              <Visibility fontSize="small" />
                             </IconButton>
                           </span>
                         </Tooltip>
+                        <HelpButton title="Optimisation" placement="right" maxWidth="500px">
+                          <p>
+                            The optimiser fits model parameters to observed data by minimising a
+                            negative log-likelihood (NLL):
+                          </p>
+                          <p style={{ fontFamily: "monospace", margin: "0.5rem 0" }}>
+                            NLL = N · log(σ) + SSR / (2σ²)
+                          </p>
+                          <p>
+                            where N is the number of observations, σ = exp(log_sigma) is the noise
+                            standard deviation, and SSR is the sum of squared residuals.
+                          </p>
+                          <p><strong>Parameters:</strong></p>
+                          <p>
+                            All the slider parameters are optimised jointly, please remove or add a slider if you want to change what model parameters are included in the optimisation.
+                            The bounds for each parameter are by default set to the slider range, you can widen or narrow the slider range to change the bounds, or you can set custom bounds
+                            in the optimisation settings.
+                          </p>
+                          <p><strong>Data:</strong></p>
+                          <p>
+                            All the data from all of the visible groups are included by default in the optimisation, please change the visible groups if you want to change what group data is included.
+                            You can also customise which groups and which observations are included in the optimisation settings.
+                          </p>
+                          <p><strong>Optimisation configuration:</strong></p>
+                          <p>
+                            The default configuration is indicated below with a *, you can change this in the optimisation settings by clicking the settings icon next to the Fit button.
+                          </p>
+                          <p><strong>Noise models:</strong></p>
+                          <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                            <li><strong>Additive:</strong> residual = prediction − observed</li>
+                            <li><strong>Multiplicative (log-normal)*:</strong> residual = log(prediction) − log(observed)</li>
+                          </ul>
+                          <p><strong>Available methods:</strong></p>
+                          <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                            <li><strong>PSO*</strong> – Particle Swarm Optimisation (gradient-free)</li>
+                            <li><strong>CMA-ES</strong> – Covariance Matrix Adaptation (gradient-free)</li>
+                            <li><strong>Nelder-Mead</strong> – Simplex method (gradient-free)</li>
+                            <li><strong>Gradient Descent</strong> – uses forward sensitivities</li>
+                            <li><strong>Adam</strong> – adaptive learning rate (gradient-based)</li>
+                            <li><strong>iRprop−</strong> – resilient backpropagation (gradient-based)</li>
+                          </ul>
+                          <p><strong>Diagnostics (click the eye icon):</strong></p>
+                          <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                            <li>Parameters near bounds are highlighted in red</li>
+                            <li>Covariance matrix estimated as σ² · (JᵀJ)⁻¹ where J is the Jacobian</li>
+                            <li>%RSE (relative standard error) shown on diagonal</li>
+                            <li>Correlation matrix computed as Corr[i,j] = Cov[i,j] / (√Cov[i,i] · √Cov[j,j]), shown off-diagonal</li>
+                            <li>Condition number (κ = s_max / s_min from SVD of correlation matrix) indicates parameter identifiability</li>
+                          </ul>
+                        </HelpButton>
                         {loadingOptimise && (
                           <CircularProgress size={20} aria-label="Optimising" />
                         )}

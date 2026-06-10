@@ -29,12 +29,21 @@ class OptimiseSerializer(serializers.Serializer):
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
     use_multiplicative_noise = serializers.BooleanField(required=False, default=True)
     method = serializers.CharField(required=False, default="pso")
+    log_sigma = serializers.FloatField(required=False, default=0.0)
+    sigma_bounds = serializers.ListField(
+        child=serializers.FloatField(),
+        min_length=2,
+        max_length=2,
+        required=False,
+        default=(-20.0, 20.0),
+    )
 
 
 class OptimiseResponseSerializer(serializers.Serializer):
     optimal = serializers.ListField(child=serializers.FloatField())
     loss = serializers.FloatField()
     reason = serializers.CharField()
+    sigma = serializers.FloatField(allow_null=True)
     inputs = serializers.ListField(child=serializers.IntegerField())
     starting = serializers.ListField(child=serializers.FloatField())
     bounds = serializers.ListField(
@@ -56,6 +65,10 @@ class OptimiseResponseSerializer(serializers.Serializer):
         allow_null=True,
     )
     condition_number = serializers.FloatField(allow_null=True)
+    log_sigma = serializers.FloatField(allow_null=True)
+    sigma_bounds = serializers.ListField(
+        child=serializers.FloatField(), allow_null=True
+    )
 
 
 class ErrorResponseSerializer(serializers.Serializer):
@@ -103,6 +116,8 @@ class OptimiseBaseView(views.APIView):
                         "use_multiplicative_noise", False
                     ),
                     method=data.get("method", "pso"),
+                    log_sigma=data.get("log_sigma", 0.0),
+                    sigma_bounds=data.get("sigma_bounds", (-20.0, 20.0)),
                 )
             except (myokit.MyokitError, RuntimeError, ValueError) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})
@@ -123,6 +138,10 @@ class OptimiseBaseView(views.APIView):
                         "use_multiplicative_noise", False
                     ),
                     "method": data.get("method", "pso"),
+                    "log_sigma": data.get("log_sigma", 0.0),
+                    "sigma_bounds": list(data.get(
+                        "sigma_bounds", (-20.0, 20.0)
+                    )),
                 }
             )
             return Response(serialized_result.data)

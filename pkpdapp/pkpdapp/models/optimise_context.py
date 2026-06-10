@@ -170,13 +170,16 @@ class OptimiseContext(SimulateContext):
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
+        log_sigma: float = 0.0,
         use_multiplicative_noise=False,
     ):
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
             return np.inf
 
-        total = 0.0
+        sigma2 = np.exp(2.0 * log_sigma)
+        ssr = 0.0
+        n_obs = 0
         for group in groups:
             try:
                 y = self._optimise_predict(group, values_by_id)
@@ -193,37 +196,53 @@ class OptimiseContext(SimulateContext):
                     residual = np.log(prediction) - np.log(observed)
                 else:
                     residual = prediction - observed
-                total += residual * residual
+                ssr += residual * residual
+                n_obs += 1
 
-        if not np.isfinite(total):
+        if not np.isfinite(ssr):
             return np.inf
-        return float(total)
+        nll = n_obs * log_sigma + ssr / (2.0 * sigma2)
+        return float(nll)
 
     def optimise_loss(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
+        log_sigma: float = 0.0,
         use_multiplicative_noise=False,
     ):
-        return self._optimise_loss(groups, values_by_id, use_multiplicative_noise)
+        return self._optimise_loss(
+            groups, values_by_id, log_sigma, use_multiplicative_noise
+        )
 
     def _optimise_loss_gradient(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
+        log_sigma: float = 0.0,
         use_multiplicative_noise=False,
     ):
         """
-        Returns the loss and gradient across prepared groups, using
+        Returns (nll, ode_gradient, ssr, n_obs) across prepared groups, using
         forward sensitivities for the requested input variables.
+
+        The negative log-likelihood is
+
+            nll = n_obs * log_sigma + ssr / (2 * sigma^2)
+
+        and the gradient w.r.t. the ODE parameters is scaled by 1/sigma^2.
+        The gradient w.r.t. log_sigma is not included here; the caller
+        computes it as ``n_obs - ssr / sigma^2``.
         """
         param_ids = tuple(values_by_id.keys())
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
-            return np.inf, np.zeros(len(param_ids))
+            return np.inf, np.zeros(len(param_ids)), 0.0, 0
 
         n_params = len(param_ids)
-        total_loss = 0.0
+        sigma2 = np.exp(2.0 * log_sigma)
+        ssr = 0.0
+        n_obs = 0
         total_gradient = np.zeros(n_params, dtype=float)
 
         for group in groups:
@@ -231,17 +250,17 @@ class OptimiseContext(SimulateContext):
                 y, y_prime = self._optimise_predict_with_sens(group, values_by_id)
             except Exception:
                 logger.exception("solve_fwd_sens failed during gradient computation.")
-                return np.inf, np.zeros(n_params)
+                return np.inf, np.zeros(n_params), 0.0, 0
 
             if y.shape != (len(group.t_eval), len(group.outputs)):
-                return np.inf, np.zeros(n_params)
+                return np.inf, np.zeros(n_params), 0.0, 0
 
             for record in group.records:
                 prediction = y[record.time_index, record.output_index]
                 observed = record.value
                 if use_multiplicative_noise:
                     if prediction <= 0 or observed <= 0:
-                        return np.inf, np.zeros(n_params)
+                        return np.inf, np.zeros(n_params), 0.0, 0
                     residual = np.log(prediction) - np.log(observed)
                     gradient_row = (
                         y_prime[record.time_index, record.output_index, :] / prediction
@@ -250,28 +269,35 @@ class OptimiseContext(SimulateContext):
                     residual = prediction - observed
                     gradient_row = y_prime[record.time_index, record.output_index, :]
 
-                total_loss += residual * residual
-                total_gradient += 2.0 * residual * gradient_row
+                ssr += residual * residual
+                n_obs += 1
+                total_gradient += residual * gradient_row
 
-        if not np.isfinite(total_loss):
-            return np.inf, np.zeros(n_params)
-        return float(total_loss), total_gradient
+        if not np.isfinite(ssr):
+            return np.inf, np.zeros(n_params), 0.0, 0
+
+        total_gradient /= sigma2
+        nll = n_obs * log_sigma + ssr / (2.0 * sigma2)
+        return float(nll), total_gradient, float(ssr), n_obs
 
     def optimise_loss_gradient(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
+        log_sigma: float = 0.0,
         use_multiplicative_noise=False,
     ):
         return self._optimise_loss_gradient(
             groups,
             values_by_id,
+            log_sigma,
             use_multiplicative_noise,
         )
 
     def optimise_diagnostics(
         self,
         optimal_model: np.ndarray,
+        log_sigma: float = 0.0,
         use_multiplicative_noise=False,
     ):
         input_ids = self.optimise_input_ids
@@ -293,6 +319,9 @@ class OptimiseContext(SimulateContext):
             dtype=float,
         )
 
+        sigma = np.exp(log_sigma)
+        sigma2 = sigma * sigma
+
         predictions_list = []
         residuals_list = []
         jacobian_rows = []
@@ -311,6 +340,7 @@ class OptimiseContext(SimulateContext):
                     "residuals": None,
                     "covariance": None,
                     "condition_number": None,
+                    "sigma": float(sigma),
                 }
 
             t_eval = np.asarray(group.t_eval, dtype=float)
@@ -340,11 +370,11 @@ class OptimiseContext(SimulateContext):
                     else:
                         residual = np.log(prediction) - np.log(observed)
                         jac_row = y_prime[t_idx, o_idx, :] / prediction
-                    residual_for_output = residual
+                    residual_for_output = residual / sigma
                 else:
                     residual = prediction - observed
                     output_conversion_factor = output_contexts[o_idx].conversion_factor
-                    residual_for_output = residual / output_conversion_factor
+                    residual_for_output = residual / (output_conversion_factor * sigma)
                     jac_row = y_prime[t_idx, o_idx, :]
 
                 obs_residuals_per_output[o_idx].append(float(residual_for_output))
@@ -374,10 +404,8 @@ class OptimiseContext(SimulateContext):
                 "residuals": residuals_list,
                 "covariance": None,
                 "condition_number": None,
+                "sigma": float(sigma),
             }
-
-        rss = float(np.dot(resid_valid, resid_valid))
-        sigma2 = rss / (n_valid - n_params)
 
         JtJ = J_valid.T @ J_valid
         try:
@@ -390,7 +418,9 @@ class OptimiseContext(SimulateContext):
         condition_number = None
         if cov is not None:
             try:
-                singular_values = svd(cov, compute_uv=False)
+                std = np.sqrt(np.diag(cov))
+                corr = cov / np.outer(std, std)
+                singular_values = svd(corr, compute_uv=False)
                 s_max = singular_values[0]
                 s_min = singular_values[-1]
                 condition_number = float(s_max / s_min) if s_min != 0 else np.inf
@@ -402,6 +432,7 @@ class OptimiseContext(SimulateContext):
             "residuals": residuals_list,
             "covariance": cov.tolist() if cov is not None else None,
             "condition_number": condition_number,
+            "sigma": float(sigma),
         }
 
     def _validate_optimise_inputs(

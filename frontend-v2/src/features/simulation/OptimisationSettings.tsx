@@ -80,6 +80,8 @@ const OptimisationSettings = ({
   const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
+  const [logSigma, setLogSigma] = useState<number>(0);
+  const [sigmaBounds, setSigmaBounds] = useState<[number, number]>([-20, 20]);
 
   useEffect(() => {
     if (!open) {
@@ -104,6 +106,8 @@ const OptimisationSettings = ({
     setMethod(DEFAULT_OPTIMISE_METHOD);
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
+    setLogSigma(defaultOptimiseInputs.log_sigma ?? 0);
+    setSigmaBounds(defaultOptimiseInputs.sigma_bounds ?? [-20, 20]);
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -133,12 +137,14 @@ const OptimisationSettings = ({
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
+      log_sigma: logSigma,
+      sigma_bounds: sigmaBounds,
     });
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Optimisation Settings</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ marginTop: ".5rem" }}>
@@ -204,6 +210,42 @@ const OptimisationSettings = ({
             );
           })}
           <Divider />
+          <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
+            Noise standard deviation (log scale)
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            <TextField
+              label="Log sigma"
+              type="number"
+              size="small"
+              value={logSigma}
+              onChange={(event) => setLogSigma(Number(event.target.value))}
+              fullWidth
+            />
+            <TextField
+              label="Min bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[0]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [value, current[1]]);
+              }}
+              fullWidth
+            />
+            <TextField
+              label="Max bound"
+              type="number"
+              size="small"
+              value={sigmaBounds[1]}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSigmaBounds((current) => [current[0], value]);
+              }}
+              fullWidth
+            />
+          </Stack>
+          <Divider />
           <Stack direction="row" spacing={4}>
             <Box>
               <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
@@ -232,7 +274,7 @@ const OptimisationSettings = ({
             </Box>
             <Box>
               <Typography variant="subtitle2" sx={{ marginBottom: ".25rem" }}>
-                Biomarker Types
+                Observations
               </Typography>
               <FormGroup>
                 {biomarkerTypes.map((bt) => {
@@ -256,7 +298,7 @@ const OptimisationSettings = ({
                 })}
                 {biomarkerTypes.length === 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    No biomarker types
+                    No observations
                   </Typography>
                 )}
               </FormGroup>

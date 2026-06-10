@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useEffect } from "react";
+import { FC, ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import HelpOutline from "@mui/icons-material/HelpOutline";
 import { IconButton, Tooltip } from "@mui/material";
 import { tooltipWrapper } from "../shared/tooltipWrapper";
@@ -33,6 +33,8 @@ const HelpButton: FC<HelpButtonProps> = ({
   maxWidth,
 }) => {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popperRef = useRef<HTMLDivElement>(null);
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
@@ -48,9 +50,25 @@ const HelpButton: FC<HelpButtonProps> = ({
     setOpen(true);
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        buttonRef.current?.contains(target) ||
+        popperRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   return (
     <Tooltip
@@ -59,6 +77,10 @@ const HelpButton: FC<HelpButtonProps> = ({
       disableHoverListener={true}
       open={open}
       slotProps={{
+        popper: {
+          ref: popperRef,
+          sx: { zIndex: 99999 },
+        },
         tooltip: {
           sx: {
             maxWidth: maxWidth,
@@ -70,7 +92,7 @@ const HelpButton: FC<HelpButtonProps> = ({
         transition: { timeout: { enter: 200, exit: 0 } },
       }}
     >
-      <IconButton onClick={handleOpen}>
+      <IconButton ref={buttonRef} onClick={handleOpen}>
         <HelpOutline titleAccess="Help" />
       </IconButton>
     </Tooltip>

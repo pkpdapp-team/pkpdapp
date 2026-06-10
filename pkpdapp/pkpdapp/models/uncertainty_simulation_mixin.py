@@ -118,10 +118,15 @@ class UncertaintySimulationMixin:
             time_max=time_max,
         )
 
+        time_context = base_context.get_variable_context(
+            base_context.time_qname,
+        )
+
         uncertainty_results = []
         for simulation_group in base_context.simulation_groups:
             sampled_outputs = []
-            for _ in range(sample_count):
+            t_eval = None
+            for i in range(sample_count):
                 sampled_variables = self._sample_variables(
                     variables=variables,
                     variable_distributions=variable_distributions,
@@ -130,17 +135,24 @@ class UncertaintySimulationMixin:
                 sampled_values_by_id = {
                     base_context.get_variable_context(qname).id: (
                         sampled_value
-                        * base_context.get_variable_context(qname).conversion_factor
+                        * base_context.get_variable_context(
+                            qname,
+                        ).conversion_factor
                     )
                     for qname, sampled_value in sampled_variables.items()
                     if qname in variable_distributions
                 }
-                sampled_outputs.append(
-                    base_context.simulate_model(
-                        simulation_group,
-                        values_by_id=sampled_values_by_id,
-                    )
+                result = base_context.simulate_model(
+                    simulation_group,
+                    values_by_id=sampled_values_by_id,
+                    t_eval=t_eval,
                 )
+                if i == 0 and time_context.id in result:
+                    t_eval = (
+                        np.asarray(result[time_context.id])
+                        * time_context.conversion_factor
+                    )
+                sampled_outputs.append(result)
 
             aggregated_outputs = self._aggregate_sampled_outputs(
                 sampled_outputs=sampled_outputs,
