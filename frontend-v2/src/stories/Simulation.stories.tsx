@@ -397,7 +397,7 @@ export const OptimiseSingleParameter: Story = {
     await userEvent.click(parameterOption);
 
     const optimiseButton = await screen.findByRole("button", {
-      name: "Optimise",
+      name: "Fit",
     });
     await waitFor(() => expect(optimiseButton).toBeEnabled());
     await userEvent.click(optimiseButton);
