@@ -160,6 +160,7 @@ class SimulateContext:
         self,
         simulation_group: SimulationGroupContext,
         values_by_id: dict[int, float] | None = None,
+        t_eval: np.ndarray | None = None,
     ) -> dict[int, list[float]]:
         model = self._myokit_model
         inputs = self._simulation_inputs(simulation_group, values_by_id)
@@ -170,7 +171,14 @@ class SimulateContext:
                 [input_context.value for input_context in inputs],
                 dtype=float,
             )
-            solution = simulation_group.diffsol_ode.solve(input_values, self.time_max)
+            if t_eval is not None:
+                solution = simulation_group.diffsol_ode.solve_dense(
+                    input_values, t_eval,
+                )
+            else:
+                solution = simulation_group.diffsol_ode.solve(
+                    input_values, self.time_max,
+                )
             return self.serialize_diffsol_solution(solution, model, outputs)
 
         self._set_input_rhs(inputs)
