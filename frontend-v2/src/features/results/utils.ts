@@ -186,15 +186,15 @@ export function formattedNumber(
   lowerThreshold: number = 1e-3,
 ) {
   if (value === 0) {
-    return "0.000";
+    return "0.00";
   }
   if (Math.abs(value) < TOLERANCE) {
-    return "0.000";
+    return "0.00";
   }
 
-  return value > upperThreshold || value < lowerThreshold
-    ? value.toExponential(4)
-    : value.toFixed(3);
+  return value > upperThreshold || value <= lowerThreshold
+    ? value.toExponential(2)
+    : value.toPrecision(3);
 }
 
 interface TableRowProps {
