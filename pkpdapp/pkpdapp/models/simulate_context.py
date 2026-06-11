@@ -171,15 +171,24 @@ class SimulateContext:
                 [input_context.value for input_context in inputs],
                 dtype=float,
             )
-            if t_eval is not None:
-                solution = simulation_group.diffsol_ode.solve_dense(
-                    input_values, t_eval,
+            try:
+                if t_eval is not None:
+                    solution = simulation_group.diffsol_ode.solve_dense(
+                        input_values, t_eval,
+                    )
+                else:
+                    solution = simulation_group.diffsol_ode.solve(
+                        input_values, self.time_max,
+                    )
+            except Exception as e:
+                logger.error(
+                    "Diffsol solver error for model=%s/%s: %s",
+                    self.model_table,
+                    self.model_id,
+                    str(e),
                 )
             else:
-                solution = simulation_group.diffsol_ode.solve(
-                    input_values, self.time_max,
-                )
-            return self.serialize_diffsol_solution(solution, model, outputs)
+                return self.serialize_diffsol_solution(solution, model, outputs)
 
         self._set_input_rhs(inputs)
         sim = myokit.Simulation(
