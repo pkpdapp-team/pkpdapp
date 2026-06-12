@@ -18,6 +18,7 @@ const normalisation = {
     "unit_amount",
     "unit amount",
     "amount_unit",
+    "amount_units",
     "dose unit",
     "dose_unit",
     "unit dose",
@@ -82,6 +83,7 @@ const normalisation = {
   "Observation Unit": [
     "observation unit",
     "observation_unit",
+    "observation_units",
     "dv_units",
     "c_units",
     "y_units",
