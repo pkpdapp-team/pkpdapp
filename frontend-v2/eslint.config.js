@@ -38,7 +38,15 @@ export default typescript.config(
     },
   },
   {
-    ignores: ["src/app/api.ts", "src/app/backendApi.ts"],
+    ignores: [
+      "src/app/api.ts",
+      "src/app/backendApi.ts",
+      // Auto-generated Storybook mocks (DO NOT EDIT). Unit conversion factors
+      // can serialize to precision-losing float literals, which trips
+      // no-loss-of-precision; these files are generated, not hand-maintained.
+      "src/stories/generated-mocks/**",
+      "src/stories/generated-mocks-with-data/**",
+    ],
   },
   storybook.configs["flat/recommended"],
 );

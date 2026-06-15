@@ -3,7 +3,56 @@
 import { SimulationRead } from "../../app/backendApi";
 import { http, HttpResponse, delay } from "msw";
 
-export const simulations = [] as unknown as SimulationRead[];
+export const simulations = [
+  {
+    id: 1,
+    sliders: [
+      {
+        id: 1,
+        variable: 5298
+      },
+      {
+        id: 2,
+        variable: 5299
+      }
+    ],
+    plots: [
+      {
+        id: 1,
+        y_axes: [
+          {
+            id: 1,
+            right: false,
+            variable: 5305
+          }
+        ],
+        cx_lines: [],
+        index: 0,
+        x_scale: "lin",
+        y_scale: "lin",
+        y2_scale: "lin",
+        x_label: "",
+        y_label: "",
+        y2_label: "",
+        min: null,
+        max: null,
+        min2: null,
+        max2: null,
+        x_unit: 9,
+        y_unit: 6,
+        y_unit2: null
+      }
+    ],
+    name: "default",
+    nrows: 1,
+    ncols: 1,
+    time_max: 30.0,
+    abs_tolerance: 1e-06,
+    rel_tolerance: 1e-06,
+    project: 105,
+    time_max_unit: 9
+  }
+] as unknown as SimulationRead[];
 
 export const simulationHandlers = [
   http.get("/api/simulation/", async ({ request }) => {
