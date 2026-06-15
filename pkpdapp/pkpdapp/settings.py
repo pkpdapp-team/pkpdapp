@@ -486,25 +486,6 @@ CACHES = {
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
-CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
-if CLOUDAMQP_URL is None:
-    CELERY_BROKER_URL = [
-        "amqp://",
-        "amqp://{}:{}@rabbitmq:5672".format(
-            os.environ.get("RABBITMQ_DEFAULT_USER", default="guest"),
-            os.environ.get("RABBITMQ_DEFAULT_PASS", default="guest"),
-        ),
-    ]
-else:
-    CELERY_BROKER_URL = CLOUDAMQP_URL
-
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "max_retries": 3,
-    "interval_start": 0,
-    "interval_step": 0.2,
-    "interval_max": 0.5,
-}
-
 TEST_RUNNER = "snapshottest.django.TestRunner"
 
 _csrf_trusted_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")

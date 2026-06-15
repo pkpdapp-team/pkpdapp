@@ -2,18 +2,8 @@ version: "2"
 volumes:
   db:
 services:
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    env_file:
-      - ./.env.prod
-    ports:
-        - 5672:5672
-        - 15672:15672
-    restart: unless-stopped
   app:
     image: pkpdapp
-    depends_on:
-      - rabbitmq
     build:
       dockerfile: Dockerfile
       context: .
