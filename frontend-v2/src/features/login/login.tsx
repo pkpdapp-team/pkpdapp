@@ -11,6 +11,7 @@ import {
   Alert,
 } from "@mui/material";
 import TextField from "../../components/TextField";
+import OAuthButtons from "./OAuthButtons";
 import { defaultAckText } from "../../constants/acknowledgmentText";
 
 interface LoginFormInputs {
@@ -91,15 +92,18 @@ const Login: FC<LoginProps> = ({
             {isLoading ? <CircularProgress size={24} /> : "Login"}
           </Button>
           {VITE_ENABLE_SIGNUP === "true" && (
-            <Button
-              type="button"
-              variant="outlined"
-              color="primary"
-              onClick={onSignup}
-              disabled={isLoading}
-            >
-              Sign Up
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="text"
+                color="primary"
+                onClick={onSignup}
+                disabled={isLoading}
+              >
+                Create an account
+              </Button>
+              <OAuthButtons disabled={isLoading} />
+            </>
           )}
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </Stack>

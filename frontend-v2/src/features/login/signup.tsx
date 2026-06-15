@@ -11,6 +11,7 @@ import {
   Alert,
 } from "@mui/material";
 import TextField from "../../components/TextField";
+import OAuthButtons from "./OAuthButtons";
 import { defaultAckText } from "../../constants/acknowledgmentText";
 
 interface SignupFormInputs {
@@ -33,6 +34,7 @@ interface SignupProps {
   onBack: () => void;
   isLoading: boolean;
   errorMessage?: string;
+  successMessage?: string;
 }
 
 const { VITE_APP_HELP_URL, VITE_APP_ACK_TXT } = import.meta.env;
@@ -42,6 +44,7 @@ const Signup: FC<SignupProps> = ({
   onBack,
   isLoading,
   errorMessage,
+  successMessage,
 }) => {
   const { handleSubmit, control, watch } = useForm<SignupFormInputs>();
   const watchPassword = watch("password");
@@ -186,7 +189,9 @@ const Signup: FC<SignupProps> = ({
               {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
             </Button>
           </Box>
+          <OAuthButtons disabled={isLoading} />
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
         </Stack>
       </form>
       <Typography variant="caption" sx={{ marginTop: 2 }}>

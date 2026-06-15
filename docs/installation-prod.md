@@ -57,6 +57,24 @@ The following variables are used for PrediLogin authentication:
 - `AUTH_PREDILOGIN_ADMIN_GROUP`: user must be in this group to be a superuser (e.g. `admin`)
 - `AUTH_PREDILOGIN_USER_GROUP`: authentication will only succeed if user is in this group (e.g. `user`)
 
+**Email/Password Sign Up & Verification:**
+
+When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password. Registration sends a verification email (handled by [django-allauth](https://docs.allauth.org/)); the user must click the verification link before they can log in. Configure email delivery so these emails can be sent (if `EMAIL_HOST` is unset, emails are printed to the console, which is only suitable for development):
+
+- `EMAIL_HOST`: SMTP server host name
+- `EMAIL_PORT`: SMTP server port
+- `EMAIL_HOST_USER`: SMTP username
+- `EMAIL_HOST_PASSWORD`: SMTP password
+- `DEFAULT_FROM_EMAIL`: the "from" address used for verification emails
+- `FRONTEND_BASE_URL`: base URL the verification link redirects back to after confirming the email (e.g. `https://your-host`). Defaults to `http://localhost:8000`.
+
+**Social Login (Optional):**
+
+Users can also sign up / log in via Google or GitHub. Register an OAuth app with each provider and set the following. The OAuth redirect (callback) URIs to register with the provider are `<host>/accounts/google/login/callback/` and `<host>/accounts/github/login/callback/`. Leave the variables unset to disable a provider.
+
+- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`: Google OAuth credentials
+- `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET`: GitHub OAuth credentials
+
 ### Frontend Environment Variables
 
 There are also a number of frontend variables that can be set in `frontend-v2/.env`:

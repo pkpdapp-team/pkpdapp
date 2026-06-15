@@ -117,8 +117,12 @@ export const login = createAsyncThunk<
   },
 );
 
+interface SignupResponse {
+  detail: string;
+}
+
 export const signup = createAsyncThunk<
-  Login,
+  SignupResponse,
   SignupArgs,
   { rejectValue: LoginErrorResponse }
 >(
@@ -129,7 +133,9 @@ export const signup = createAsyncThunk<
   ) => {
     const csrf = (getState() as RootState).login.csrf;
 
-    // Use the register endpoint
+    // Use the register endpoint. Registration does NOT log the user in: the
+    // backend sends a verification email and the user must click the link in
+    // that email before they are allowed to log in.
     const response = await fetch("/api/register/", {
       method: "POST",
       credentials: "include",
@@ -148,7 +154,7 @@ export const signup = createAsyncThunk<
       .then(isResponseOk)
       .then((data) => {
         dispatch(fetchCsrf());
-        return { isAuthenticated: true, user: data.user };
+        return { detail: data.detail };
       })
       .catch((err) => {
         return rejectWithValue({ error: err.message });
@@ -178,6 +184,9 @@ interface LoginState {
   csrf: string | undefined;
   isAuthenticated: boolean;
   error: string | undefined;
+  // Message shown after a successful email/password registration, prompting
+  // the user to verify their email before logging in.
+  signupMessage: string | undefined;
 }
 
 const slice = createSlice({
@@ -187,6 +196,7 @@ const slice = createSlice({
     csrf: undefined,
     isAuthenticated: false,
     error: undefined,
+    signupMessage: undefined,
   } as LoginState,
   reducers: {
     setCredentials: (state, action) => {
@@ -216,12 +226,14 @@ const slice = createSlice({
       state.error = action.payload?.error;
     });
     builder.addCase(signup.fulfilled, (state, action) => {
-      state.isAuthenticated = action.payload.isAuthenticated;
-      state.user = action.payload.user;
+      // Registration succeeded but the user is NOT logged in yet; show the
+      // "verify your email" message instead.
+      state.signupMessage = action.payload.detail;
       state.error = undefined;
     });
     builder.addCase(signup.rejected, (state, action) => {
       state.error = action.payload?.error;
+      state.signupMessage = undefined;
     });
     builder.addCase(logout.fulfilled, (state, action) => {
       state.isAuthenticated = action.payload.isAuthenticated;
@@ -259,3 +271,5 @@ export const selectAuthHeaders = (state: RootState) => {
 export const isAuthenticated = (state: RootState) =>
   state.login.isAuthenticated;
 export const loginError = (state: RootState) => state.login.error;
+export const selectSignupMessage = (state: RootState) =>
+  state.login.signupMessage;
