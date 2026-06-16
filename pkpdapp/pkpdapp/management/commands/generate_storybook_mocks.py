@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 # flake8: noqa: E501
+import re
 from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
@@ -20,6 +21,10 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     Dataset,
+    Simulation,
+    SimulationSlider,
+    SimulationPlot,
+    SimulationYAxis,
 )
 
 
@@ -187,6 +192,36 @@ class Command(BaseCommand):
             repeat_interval=24,
         )
 
+        # Step 7: Create a simulation with sliders and a plot so the
+        # Simulations page (and the Optimisation Settings dialog) has a
+        # simulation to render against.
+        simulation = Simulation.objects.create(
+            name="default",
+            project=project,
+            nrows=1,
+            ncols=1,
+            time_max=30.0,
+            time_max_unit=Unit.objects.get(symbol="h"),
+        )
+
+        # Sliders on two PD parameters with known bounds behaviour:
+        # - E0 (default 100, no explicit bounds -> derived 10/1000)
+        # - Imax (default 0.8, explicit upper_bound 1.0 -> derived min 0.08)
+        e0_variable = combined_model.variables.get(qname="PDCompartment.E0")
+        imax_variable = combined_model.variables.get(qname="PDCompartment.Imax")
+        SimulationSlider.objects.create(simulation=simulation, variable=e0_variable)
+        SimulationSlider.objects.create(simulation=simulation, variable=imax_variable)
+
+        # One plot showing the central compartment concentration (C1).
+        c1_variable = combined_model.variables.get(name="C1")
+        plot = SimulationPlot.objects.create(
+            simulation=simulation,
+            index=0,
+            x_unit=Unit.objects.get(symbol="h"),
+            y_unit=c1_variable.unit,
+        )
+        SimulationYAxis.objects.create(plot=plot, variable=c1_variable)
+
         return {
             "user": user,
             "compound": compound,
@@ -196,6 +231,7 @@ class Command(BaseCommand):
             "dose": dose,
             "pk_model": pk_model,
             "pd_model": pd_model,
+            "simulation": simulation,
         }
 
     @override_settings(ALLOWED_HOSTS=['*'])
@@ -664,6 +700,16 @@ export * from "./biomarkerTypes.mock";
 """
         (output_path / "index.ts").write_text(content)
 
+    def _to_typescript_key(self, key):
+        """Render a dict key as a valid TypeScript object key.
+
+        Keys that are valid JS identifiers are emitted bare; anything else
+        (e.g. qnames containing dots like "Extravascular.Aa") is quoted.
+        """
+        if isinstance(key, str) and re.match(r"^[A-Za-z_$][A-Za-z0-9_$]*$", key):
+            return key
+        return self._to_typescript(str(key))
+
     def _to_typescript(self, data, indent=0):
         """Convert Python data to TypeScript object literal"""
         indent_str = "  " * indent
@@ -692,7 +738,8 @@ export * from "./biomarkerTypes.mock";
             items = []
             for key, value in data.items():
                 ts_value = self._to_typescript(value, indent + 1)
-                items.append(f"{key}: {ts_value}")
+                ts_key = self._to_typescript_key(key)
+                items.append(f"{ts_key}: {ts_value}")
             items_str = (",\n" + indent_str + "  ").join(items)
             return f"{{\n{indent_str}  {items_str}\n{indent_str}}}"
         else:
