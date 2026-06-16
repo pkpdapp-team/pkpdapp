@@ -1,0 +1,36 @@
+# Optional override that runs a PostgreSQL database alongside the app, for
+# deployments (e.g. a single EC2 instance) that don't use an external/managed
+# database such as RDS.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+#
+# The credentials below must match the DATABASE_URL in .env.prod, which points
+# at the "postgres" service host:
+#   DATABASE_URL=postgres://postgres:sekret2@postgres:5432/postgres
+#
+# IMPORTANT: change POSTGRES_PASSWORD (and the password in .env.prod) from the
+# default before any real deployment.
+version: "2.1"
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sekret2
+      POSTGRES_DB: postgres
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    # Wait for Postgres to be accepting connections (not just started) before
+    # the app boots, since start-server.sh runs `migrate` immediately.
+    depends_on:
+      postgres:
+        condition: service_healthy
