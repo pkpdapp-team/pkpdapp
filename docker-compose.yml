@@ -9,9 +9,17 @@ services:
       context: .
     ports:
       - 443:443
+      # Port 80 serves the ACME challenge and redirects to HTTPS (required for
+      # certbot issuance/renewal and for the http->https redirect).
+      - 80:80
     volumes:
-      - ${PWD}/.certs/pkpdapp.key:/etc/ssl/pkpdapp.key
-      - ${PWD}/.certs/pkpdapp.crt:/etc/ssl/pkpdapp.crt
+      # Manual-cert deploy: place pkpdapp.crt / pkpdapp.key in ./.certs.
+      # Mounted as a directory (not individual files) so replacing the certs is
+      # picked up on an nginx reload. A dedicated /etc/ssl/pkpdapp subdir keeps
+      # the system CA bundle (/etc/ssl/certs) intact.
+      - ${PWD}/.certs:/etc/ssl/pkpdapp:ro
+      # ACME challenge webroot (used by the certbot deploy; harmless here).
+      - ${PWD}/certbot-webroot:/var/www/certbot
     restart: unless-stopped
     env_file:
      - ./.env.prod

@@ -88,7 +88,51 @@ There are also a number of frontend variables that can be set in `frontend-v2/.e
 
 ## SSL Certificate
 
-The application uses SSL certificates for HTTPS. You will need to supply your own SSL certificate and key. These should be placed in the `.certs/` directory in the root folder (this folder needs to be created) and named `pkpdapp.crt` and `pkpdapp.key` respectively.
+The application's nginx terminates TLS on port 443. There are two supported ways to provide the certificate. Both use the same images and config; they differ only in where the certificate files come from.
+
+### Option 1: Supply your own certificate (manual)
+
+Place your certificate and key in a `.certs/` directory in the repository root (create it if needed), named `pkpdapp.crt` and `pkpdapp.key`. This is the default — no extra flags are needed when running the stack. To renew, replace the files and reload nginx (`docker compose exec app nginx -s reload`) or restart the container.
+
+### Option 2: Automatic Let's Encrypt certificates (certbot)
+
+This obtains and auto-renews a free certificate from Let's Encrypt using `certbot` on the host, with the app's nginx serving the ACME challenge over port 80. Use the `docker-compose.certbot.yml` override.
+
+Prerequisites:
+
+- A real domain name set as `HOST_NAME` in `.env.prod`, with a DNS A-record pointing at the server's public (Elastic) IP.
+- Ports **80 and 443** open to the internet in the security group (port 80 is required for the ACME challenge and the HTTP→HTTPS redirect).
+- `certbot` installed on the host (`sudo dnf install -y certbot` on Amazon Linux, `sudo apt install -y certbot` on Ubuntu).
+- `HOST_NAME` available to docker-compose's variable substitution. The override references `${HOST_NAME}`, which compose reads from the shell environment or a root `.env` file (this is separate from `env_file: .env.prod`, which only sets variables *inside* the container). The simplest approach is to export it before running compose, e.g. `export HOST_NAME=your-domain.example`.
+
+First-time bootstrap (nginx needs *some* certificate to start its 443 block, so create a throwaway self-signed one, then issue the real cert):
+
+```bash
+mkdir -p certbot-webroot .certs
+# Throwaway self-signed cert so nginx can boot the first time:
+openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+  -keyout .certs/pkpdapp.key -out .certs/pkpdapp.crt \
+  -subj "/CN=${HOST_NAME}"
+
+# Start the stack (base + certbot override). nginx now answers on port 80.
+docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
+
+# Issue the real certificate via the webroot challenge, and reload nginx in the
+# container whenever the cert is (re)issued:
+sudo certbot certonly --webroot -w ./certbot-webroot -d "${HOST_NAME}" \
+  --deploy-hook "docker compose -f $(pwd)/docker-compose.yml -f $(pwd)/docker-compose.certbot.yml exec -T app nginx -s reload"
+
+# Recreate so nginx picks up the live Let's Encrypt cert path:
+docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
+```
+
+Auto-renewal: certbot installs a systemd timer (or cron) that runs `certbot renew` twice daily; renewals reuse the `--deploy-hook` recorded above, so nginx is reloaded automatically. To be explicit you can add a cron entry instead:
+
+```cron
+0 3 * * * certbot renew --quiet --deploy-hook "docker compose -f /path/to/repo/docker-compose.yml -f /path/to/repo/docker-compose.certbot.yml exec -T app nginx -s reload"
+```
+
+Verify with `sudo certbot renew --dry-run`.
 
 ## PostgreSQL Database
 
@@ -121,16 +165,16 @@ To build the containers, run the following command in the root directory of the 
 
 ### Run the Application
 
-You can run the container with:
+Run the container in the foreground with:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
-You should be able to see the web application at [127.0.0.1](127.0.0.1).
+To leave it running in the background, use `docker compose up -d`.
 
-To leave the container running in the background, use:
+If you are running the bundled PostgreSQL database (see the PostgreSQL section) and/or automatic Let's Encrypt certificates (see the SSL Certificate section), layer the corresponding override files, e.g.:
 
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.certbot.yml up -d
 ```

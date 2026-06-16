@@ -31,3 +31,6 @@ tmp/
 .claude
 .devcontainer
 pkpdapp/pkpdapp/tests/test_models/optimise_verification_plots
+# TLS certs (private keys) and the ACME challenge webroot — runtime/secret, never commit
+.certs/
+certbot-webroot/

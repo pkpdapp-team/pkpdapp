@@ -81,8 +81,18 @@ RUN chown -R www-data:www-data nginx.default.template start-server.sh
 # run as www-data
 USER www-data
 
+# Defaults for the nginx template substitution. The manual-cert deploy reads
+# certs from /etc/ssl/pkpdapp/ (a dedicated subdir so the mount can't clobber
+# the system CA bundle at /etc/ssl/certs). The certbot deploy overrides
+# SSL_CERT_PATH/SSL_KEY_PATH to the Let's Encrypt live paths. HOST_NAME has a
+# default so an unset value can't render an invalid `server_name ;`.
+ENV HOST_NAME=localhost
+ENV SSL_CERT_PATH=/etc/ssl/pkpdapp/pkpdapp.crt
+ENV SSL_KEY_PATH=/etc/ssl/pkpdapp/pkpdapp.key
+
 # start server using the port given by the environment variable $PORT
 # nginx config files don't support env variables so have to do it manually
-# using envsubst
+# using envsubst (only the listed vars are substituted; nginx's own $host etc.
+# are left intact)
 STOPSIGNAL SIGTERM
-CMD /bin/bash -c "envsubst '\$PORT' < ./nginx.default.template > /etc/nginx/sites-available/default" && "./start-server.sh"
+CMD /bin/bash -c "envsubst '\$PORT \$HOST_NAME \$SSL_CERT_PATH \$SSL_KEY_PATH' < ./nginx.default.template > /etc/nginx/sites-available/default" && "./start-server.sh"
