@@ -103,7 +103,12 @@ Prerequisites:
 - A real domain name set as `HOST_NAME` in `.env.prod`, with a DNS A-record pointing at the server's public (Elastic) IP.
 - Ports **80 and 443** open to the internet in the security group (port 80 is required for the ACME challenge and the HTTP→HTTPS redirect).
 - `certbot` installed on the host (`sudo dnf install -y certbot` on Amazon Linux, `sudo apt install -y certbot` on Ubuntu).
-- `HOST_NAME` available to docker-compose's variable substitution. The override references `${HOST_NAME}`, which compose reads from the shell environment or a root `.env` file (this is separate from `env_file: .env.prod`, which only sets variables *inside* the container). The simplest approach is to export it before running compose, e.g. `export HOST_NAME=your-domain.example`.
+
+Note on `HOST_NAME`: the running app reads it from `.env.prod`, so you do **not** need it in your shell for `docker compose` to bring up the stack correctly. However, the one-off `openssl` and `certbot` commands in the bootstrap below use `${HOST_NAME}` as a host shell variable, so export it once in the shell you run them from (matching the value in `.env.prod`):
+
+```bash
+export HOST_NAME=your-domain.example
+```
 
 First-time bootstrap. There is a chicken-and-egg problem: nginx needs *some*
 certificate to start its 443 block, but the certbot override points nginx at

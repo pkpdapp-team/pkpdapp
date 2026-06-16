@@ -90,9 +90,8 @@ ENV HOST_NAME=localhost
 ENV SSL_CERT_PATH=/etc/ssl/pkpdapp/pkpdapp.crt
 ENV SSL_KEY_PATH=/etc/ssl/pkpdapp/pkpdapp.key
 
-# start server using the port given by the environment variable $PORT
-# nginx config files don't support env variables so have to do it manually
-# using envsubst (only the listed vars are substituted; nginx's own $host etc.
-# are left intact)
+# start-server.sh renders the nginx config from the template (via envsubst,
+# resolving $PORT/$HOST_NAME/$SSL_CERT_PATH/$SSL_KEY_PATH from the container
+# environment) and then launches the services.
 STOPSIGNAL SIGTERM
-CMD /bin/bash -c "envsubst '\$PORT \$HOST_NAME \$SSL_CERT_PATH \$SSL_KEY_PATH' < ./nginx.default.template > /etc/nginx/sites-available/default" && "./start-server.sh"
+CMD ["./start-server.sh"]
