@@ -57,7 +57,6 @@ WORKDIR /app
 COPY ./pkpdapp .
 
 RUN python manage.py collectstatic --noinput
-RUN python manage.py migrate --noinput
 
 # copy the built frontend (needs to be after we install nginx)
 COPY --from=build /app/frontend/build /usr/share/nginx/html
