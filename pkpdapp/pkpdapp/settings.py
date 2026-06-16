@@ -480,9 +480,20 @@ if EMAIL_HOST is None:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_PORT = os.environ.get("EMAIL_PORT", default="foo")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="foo")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="foo")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", default="587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="")
+# Connection encryption. Port 587 (submission) uses STARTTLS (EMAIL_USE_TLS);
+# port 465 uses implicit TLS/SSL (EMAIL_USE_SSL). The two are mutually
+# exclusive. Default to STARTTLS, which matches the default port 587 and most
+# providers (e.g. Amazon SES SMTP). Without this, servers on port 587 reject
+# auth with "530 Must issue a STARTTLS command first".
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", default="false").lower() == "true"
+# Django forbids enabling both; if SSL is requested it wins (and disables TLS).
+EMAIL_USE_TLS = (
+    not EMAIL_USE_SSL
+    and os.environ.get("EMAIL_USE_TLS", default="true").lower() == "true"
+)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
 CACHES = {

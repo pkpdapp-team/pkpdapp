@@ -62,9 +62,11 @@ The following variables are used for PrediLogin authentication:
 When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password. Registration sends a verification email (handled by [django-allauth](https://docs.allauth.org/)); the user must click the verification link before they can log in. Configure email delivery so these emails can be sent (if `EMAIL_HOST` is unset, emails are printed to the console, which is only suitable for development):
 
 - `EMAIL_HOST`: SMTP server host name
-- `EMAIL_PORT`: SMTP server port
+- `EMAIL_PORT`: SMTP server port (default `587`)
 - `EMAIL_HOST_USER`: SMTP username
 - `EMAIL_HOST_PASSWORD`: SMTP password
+- `EMAIL_USE_TLS`: use STARTTLS (default `true`; correct for port 587 and most providers including Amazon SES). If this is not set on a port-587 server you will see `530 Must issue a STARTTLS command first`.
+- `EMAIL_USE_SSL`: use implicit SSL instead, for port 465 (default `false`). Only one of `EMAIL_USE_TLS`/`EMAIL_USE_SSL` may be true.
 - `DEFAULT_FROM_EMAIL`: the "from" address used for verification emails
 
 The base URL that the verification link redirects back to is derived automatically from `HOST_NAME` (`https://<HOST_NAME>` in production). Set `FRONTEND_BASE_URL` only if you need to override this, e.g. when the frontend is served from a different host. The CSRF trusted origin is likewise derived from `HOST_NAME`; `CSRF_TRUSTED_ORIGINS` only needs setting to add extra origins.
