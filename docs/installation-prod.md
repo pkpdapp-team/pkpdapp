@@ -66,7 +66,8 @@ When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password.
 - `EMAIL_HOST_USER`: SMTP username
 - `EMAIL_HOST_PASSWORD`: SMTP password
 - `DEFAULT_FROM_EMAIL`: the "from" address used for verification emails
-- `FRONTEND_BASE_URL`: base URL the verification link redirects back to after confirming the email (e.g. `https://your-host`). Defaults to `http://localhost:8000`.
+
+The base URL that the verification link redirects back to is derived automatically from `HOST_NAME` (`https://<HOST_NAME>` in production). Set `FRONTEND_BASE_URL` only if you need to override this, e.g. when the frontend is served from a different host. The CSRF trusted origin is likewise derived from `HOST_NAME`; `CSRF_TRUSTED_ORIGINS` only needs setting to add extra origins.
 
 **Social Login (Optional):**
 

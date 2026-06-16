@@ -74,11 +74,19 @@ LOGGING = {
 SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
 
+HOST_NAME = os.environ.get("HOST_NAME", "localhost")
+
 ALLOWED_HOSTS = [
-    os.environ.get("HOST_NAME", "localhost"),
+    HOST_NAME,
     "127.0.0.1",
     "testserver",
 ]
+
+# Public origin of the deployed site, derived from HOST_NAME. Uses https in
+# production and plain http for local development (DEBUG on). This is the single
+# source of truth for the site URL used by FRONTEND_BASE_URL and
+# CSRF_TRUSTED_ORIGINS below, so a deployment only needs to set HOST_NAME.
+PUBLIC_ORIGIN = "{}://{}".format("http" if DEBUG else "https", HOST_NAME)
 
 
 # Application definition - to use any of those you need to run `manage.py
@@ -198,8 +206,9 @@ AUTHENTICATION_BACKENDS.append(
 
 # --- django-allauth configuration ---
 # Frontend base URL that emailed links (e.g. the verify-email link) and OAuth
-# redirects should point back to. Defaults to the local dev server.
-FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "http://localhost:8000")
+# redirects should point back to. Derived from HOST_NAME by default; set
+# FRONTEND_BASE_URL explicitly only to override (e.g. a separate frontend host).
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", PUBLIC_ORIGIN)
 
 # Require users who sign up with email/password to confirm their email before
 # they are allowed to log in.
@@ -331,7 +340,7 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in [
         *_cors_allowed_origins,
-        f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
+        f"https://{HOST_NAME}:3000",
         *_local_dev_origins,
     ]
     if origin.strip()
@@ -493,6 +502,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in [
         *_csrf_trusted_origins,
+        PUBLIC_ORIGIN,
         *_local_dev_origins,
     ]
     if origin.strip()
