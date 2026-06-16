@@ -78,12 +78,12 @@ Users can also sign up / log in via Google or GitHub. Register an OAuth app with
 
 ### Frontend Environment Variables
 
-There are also a number of frontend variables that can be set in `frontend-v2/.env`:
+The frontend is configured with a number of `VITE_` variables that are baked into the React build. **For the production Docker build, set these in the root `.env.prod` file** — the Dockerfile copies `.env.prod` to `frontend-v2/.env` before `yarn build`, so `.env.prod` is the single source of truth. (`frontend-v2/.env` is used only for local development outside Docker.)
 
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
-- `VITE_ENABLE_SIGNUP`: set to true to enable user sign up
+- `VITE_ENABLE_SIGNUP`: set to true to enable user sign up (should match the backend `ENABLE_SIGNUP`)
 - `VITE_APP_ACK_TXT`: Acknowledgment text for login and signup pages
 
 ## SSL Certificate
