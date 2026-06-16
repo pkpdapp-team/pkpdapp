@@ -40,13 +40,7 @@ function App() {
     dispatch(setPage(PageName.PROJECTS));
   };
 
-  const onSignup = (userData: {
-    username: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  }) => {
+  const onSignup = (userData: { password: string; email: string }) => {
     // Registration does not log the user in. On success, the signup screen
     // shows a "verify your email" message (signupMessage); the user logs in
     // after clicking the verification link in their email.

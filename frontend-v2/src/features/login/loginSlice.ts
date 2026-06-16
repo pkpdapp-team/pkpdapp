@@ -81,10 +81,7 @@ interface LoginArgs {
 }
 
 interface SignupArgs {
-  username: string;
   password: string;
-  firstName: string;
-  lastName: string;
   email: string;
 }
 
@@ -127,15 +124,13 @@ export const signup = createAsyncThunk<
   { rejectValue: LoginErrorResponse }
 >(
   "login/signup",
-  async (
-    { username, password, firstName, lastName, email },
-    { getState, dispatch, rejectWithValue },
-  ) => {
+  async ({ password, email }, { getState, dispatch, rejectWithValue }) => {
     const csrf = (getState() as RootState).login.csrf;
 
     // Use the register endpoint. Registration does NOT log the user in: the
     // backend sends a verification email and the user must click the link in
-    // that email before they are allowed to log in.
+    // that email before they are allowed to log in. The email address is also
+    // used as the username.
     const response = await fetch("/api/register/", {
       method: "POST",
       credentials: "include",
@@ -144,10 +139,7 @@ export const signup = createAsyncThunk<
         "X-CSRFToken": csrf ? csrf : "",
       },
       body: JSON.stringify({
-        username: username,
         password: password,
-        first_name: firstName,
-        last_name: lastName,
         email: email,
       }),
     })

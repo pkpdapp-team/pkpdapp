@@ -24,29 +24,20 @@ def register_view(request):
         )
 
     data = json.loads(request.body)
-    username = data.get("username")
     password = data.get("password")
-    first_name = data.get("first_name", "")
-    last_name = data.get("last_name", "")
     email = data.get("email", "")
 
-    if username is None or password is None:
+    if not email or password is None:
         return JsonResponse(
-            {"detail": "Please provide username and password."}, status=400
+            {"detail": "Please provide an email address and password."}, status=400
         )
 
-    if not email:
-        return JsonResponse(
-            {"detail": "Please provide an email address."}, status=400
-        )
+    # The email address doubles as the username.
+    username = email
 
-    # Check if user already exists
-    if User.objects.filter(username=username).exists():
-        return JsonResponse(
-            {"detail": "A user with this username already exists."}, status=400
-        )
-
-    if User.objects.filter(email=email).exists():
+    if User.objects.filter(email=email).exists() or User.objects.filter(
+        username=username
+    ).exists():
         return JsonResponse(
             {"detail": "A user with this email already exists."}, status=400
         )
@@ -57,8 +48,6 @@ def register_view(request):
         user = User.objects.create_user(
             username=username,
             password=password,
-            first_name=first_name,
-            last_name=last_name,
             email=email,
         )
 

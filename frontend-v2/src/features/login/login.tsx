@@ -68,10 +68,12 @@ const Login: FC<LoginProps> = ({
           </Box>
           <Typography variant="h6">Login</Typography>
           <TextField
-            label="Username"
+            label={VITE_ENABLE_SIGNUP === "true" ? "Email" : "Username"}
             name="username"
             control={control}
-            textFieldProps={{ autoComplete: "username" }}
+            textFieldProps={{
+              autoComplete: VITE_ENABLE_SIGNUP === "true" ? "email" : "username",
+            }}
             mode="onChange"
             autoShrink={true}
           />
