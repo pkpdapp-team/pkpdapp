@@ -105,31 +105,54 @@ Prerequisites:
 - `certbot` installed on the host (`sudo dnf install -y certbot` on Amazon Linux, `sudo apt install -y certbot` on Ubuntu).
 - `HOST_NAME` available to docker-compose's variable substitution. The override references `${HOST_NAME}`, which compose reads from the shell environment or a root `.env` file (this is separate from `env_file: .env.prod`, which only sets variables *inside* the container). The simplest approach is to export it before running compose, e.g. `export HOST_NAME=your-domain.example`.
 
-First-time bootstrap (nginx needs *some* certificate to start its 443 block, so create a throwaway self-signed one, then issue the real cert):
+First-time bootstrap. There is a chicken-and-egg problem: nginx needs *some*
+certificate to start its 443 block, but the certbot override points nginx at
+`/etc/letsencrypt/live/${HOST_NAME}/`, which does not exist until the cert has
+been issued. So the **first boot must use the base compose only** (which reads
+the default `.certs/` path), where we place a throwaway self-signed cert. Only
+after the real cert exists do we switch to the certbot override.
 
 ```bash
 mkdir -p certbot-webroot .certs
-# Throwaway self-signed cert so nginx can boot the first time:
+# Throwaway self-signed cert so nginx can boot the first time, at the DEFAULT
+# cert path (.certs -> /etc/ssl/pkpdapp), i.e. NOT the certbot override path:
 openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
   -keyout .certs/pkpdapp.key -out .certs/pkpdapp.crt \
   -subj "/CN=${HOST_NAME}"
 
-# Start the stack (base + certbot override). nginx now answers on port 80.
-docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
+# nginx runs inside the container as the non-root www-data user, and a bind
+# mount preserves the host file permissions. openssl creates the key 0600
+# (owner-only), so make it readable or nginx cannot start ("permission denied"
+# reading pkpdapp.key):
+chmod 644 .certs/pkpdapp.crt .certs/pkpdapp.key
 
-# Issue the real certificate via the webroot challenge, and reload nginx in the
-# container whenever the cert is (re)issued:
+# Start with the BASE compose only, so nginx uses the self-signed cert above
+# and answers on port 80 for the ACME challenge:
+docker compose up -d
+
+# Issue the real certificate via the webroot challenge. The deploy hook
+# (certbot-deploy-hook.sh) makes the new key readable by the container's nginx
+# group and reloads nginx; it re-runs automatically on every future renewal:
 sudo certbot certonly --webroot -w ./certbot-webroot -d "${HOST_NAME}" \
-  --deploy-hook "docker compose -f $(pwd)/docker-compose.yml -f $(pwd)/docker-compose.certbot.yml exec -T app nginx -s reload"
+  --deploy-hook "$(pwd)/certbot-deploy-hook.sh"
 
-# Recreate so nginx picks up the live Let's Encrypt cert path:
+# Now that /etc/letsencrypt/live/${HOST_NAME}/ exists, switch to the certbot
+# override so nginx reads the real Let's Encrypt cert. The self-signed files in
+# .certs are no longer used (you may delete them):
 docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
 ```
 
-Auto-renewal: certbot installs a systemd timer (or cron) that runs `certbot renew` twice daily; renewals reuse the `--deploy-hook` recorded above, so nginx is reloaded automatically. To be explicit you can add a cron entry instead:
+Why the deploy hook is needed: certbot writes the private key root-only, but the
+container's nginx runs as `www-data`, so without adjusting permissions nginx
+cannot read the Let's Encrypt key (the same "permission denied" problem as the
+self-signed key above). [certbot-deploy-hook.sh](../certbot-deploy-hook.sh)
+grants the container's group read access (group-only, not world-readable) and
+reloads nginx.
+
+Auto-renewal: certbot installs a systemd timer (or cron) that runs `certbot renew` twice daily; renewals reuse the `--deploy-hook` recorded above, so the permissions are re-applied and nginx is reloaded automatically. To be explicit you can add a cron entry instead:
 
 ```cron
-0 3 * * * certbot renew --quiet --deploy-hook "docker compose -f /path/to/repo/docker-compose.yml -f /path/to/repo/docker-compose.certbot.yml exec -T app nginx -s reload"
+0 3 * * * certbot renew --quiet --deploy-hook "/path/to/repo/certbot-deploy-hook.sh"
 ```
 
 Verify with `sudo certbot renew --dry-run`.
