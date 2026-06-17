@@ -18,12 +18,11 @@ import { StepperState } from "../LoadDataStepper";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import {
-  UnitListApiResponse,
   useCombinedModelListQuery,
-  useProjectRetrieveQuery,
-  useUnitListQuery,
   useVariableListQuery,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
+import { useUnits } from "../../results/useUnits";
 import useObservationRows from "./useObservationRows";
 import { validateState } from "../dataValidation";
 import {
@@ -59,7 +58,7 @@ function validateUnitSymbol(
   state: StepperState,
   observationVariableField: string,
   observationUnitField: string,
-  units: UnitListApiResponse,
+  units: UnitReadWithCompatible[],
 ) {
   const observationRows = state.data.filter(
     (row) => !!row[observationVariableField],
@@ -78,10 +77,6 @@ export function useApiQueries() {
     (state: RootState) => state.main.selectedProject,
   );
   const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectId || 0 },
-    { skip: !projectId },
-  );
   const { data: models = [] } = useCombinedModelListQuery(
     { projectId: projectIdOrZero },
     { skip: !projectId },
@@ -91,10 +86,7 @@ export function useApiQueries() {
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
+  const units = useUnits();
 
   return { model, variables, units };
 }
@@ -134,7 +126,7 @@ const MapObservations: FC<IMapObservations> = ({
     }
   }, [state]);
 
-  if (!variables || !units) {
+  if (!variables || units.length === 0) {
     return <Typography>Loading...</Typography>;
   }
 
@@ -152,7 +144,7 @@ const MapObservations: FC<IMapObservations> = ({
         state,
         observationVariableField,
         observationUnitField,
-        units as UnitListApiResponse,
+        units,
       );
       nextData
         .map((row) => {
@@ -214,7 +206,7 @@ const MapObservations: FC<IMapObservations> = ({
       { ...state, data: nextData },
       observationVariableField,
       observationUnitField,
-      units as UnitListApiResponse,
+      units,
     );
     if (!validUnit) {
       errors.push("Mapped observation variables must have units.");

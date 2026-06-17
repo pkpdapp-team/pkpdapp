@@ -3,10 +3,10 @@ import { Control } from "react-hook-form";
 import {
   CombinedModelRead,
   ProjectRead,
-  UnitRead,
   VariableRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import {
   TableContainer,
   Table,
@@ -38,7 +38,7 @@ interface Props {
   project: ProjectRead;
   variables: VariableRead[];
   control: Control<ModelFormData>;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const ParametersTab: FC<Props> = ({

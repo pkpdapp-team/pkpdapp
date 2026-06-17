@@ -11,11 +11,11 @@ import {
   ProjectRead,
   Protocol,
   ProtocolRead,
-  UnitRead,
   useDoseCreateMutation,
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { useForm, useFormState } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -29,7 +29,7 @@ interface Props {
   onChange: () => void;
   project: ProjectRead;
   protocol: ProtocolRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
@@ -120,7 +120,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
 
   const selectedAmountId = protocol.amount_unit;
   const selectedAmountLabel =
-    baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
+    baseUnit?.compatible_units?.find(({ id }) => id === selectedAmountId)
       ?.symbol || "";
 
   const protocolName = mappedVariable.split(".").pop();

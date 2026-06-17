@@ -17,16 +17,16 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import {
   CombinedModelRead,
-  UnitRead,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useUnitListQuery,
   useVariableListQuery,
   useVariableRetrieveQuery,
   useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
+import { useUnits } from "../../results/useUnits";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { renameVariable } from "../../simulation/utils";
 import { getYAxisOptions } from "../../simulation/utils";
@@ -76,22 +76,6 @@ function useModel() {
   return models?.[0] || null;
 }
 
-function useUnits() {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
-  return units;
-}
-
 function useVariables() {
   const model = useModel();
   const { data: variables } = useVariableListQuery(
@@ -125,8 +109,8 @@ function VariableRow({
 }: {
   variable_id: number;
   variableName: string;
-  unit?: UnitRead;
-  timeUnit?: UnitRead;
+  unit?: UnitReadWithCompatible;
+  timeUnit?: UnitReadWithCompatible;
 }) {
   const units = useUnits();
   const variables = useVariables();
@@ -136,7 +120,7 @@ function VariableRow({
   const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
     unit?.symbol,
   );
-  if (!variable_read || !compound || !units) {
+  if (!variable_read || !compound || units.length === 0) {
     return "Loading...";
   }
   const unitList = units;

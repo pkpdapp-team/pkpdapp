@@ -17,6 +17,10 @@ import {
 } from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
 import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
+import {
+  CompatibleUnit,
+  UnitReadWithCompatible,
+} from "../../../shared/unitConversion";
 import { validateState } from "../dataValidation";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
@@ -36,7 +40,7 @@ interface IDosingProtocols {
   amountUnitField?: string;
   amountUnit?: UnitRead;
   state: StepperState;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   notificationsInfo: {
     isOpen: boolean;
@@ -79,7 +83,7 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     return (
       variable.constant === false &&
       variableUnit?.symbol !== "" &&
-      amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
+      amountUnits?.find((unit) => unit.id === variable.unit) !==
       undefined
     );
   };
@@ -441,7 +445,7 @@ interface DosingTableRowProps {
   time?: string;
   timeUnit?: string;
   isPerKg?: boolean;
-  amountUnits?: { [key: string]: string }[];
+  amountUnits?: CompatibleUnit[];
   amountVariables?: VariableRead[];
   additionalDoses?: string;
   interDoseInterval?: string;

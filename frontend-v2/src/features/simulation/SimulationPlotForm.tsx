@@ -8,11 +8,11 @@ import {
 import {
   CompoundRead,
   Simulation,
-  UnitRead,
   VariableRead,
   useEfficacyExperimentListQuery,
   useProjectRetrieveQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import {
   Divider,
   Grid,
@@ -39,7 +39,7 @@ interface SimulationPlotFormProps {
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   compound: CompoundRead;
 }
 
@@ -93,8 +93,8 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   if (concentrationUnit === undefined) {
     return <>No concentration or amount unit found</>;
   }
-  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
-    parseInt(unit.id),
+  const concentrationUnitIds = concentrationUnit.compatible_units.map(
+    (unit) => unit.id,
   );
   const concentrationVariables = variables.filter(
     (variable) => variable.unit && concentrationUnitIds.includes(variable.unit),
@@ -227,9 +227,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       const unitId = variables.find((v) => v.id === axes[0].variable)?.unit;
       const unit = units?.find((u) => u.id === unitId);
       if (unit) {
-        const compatibleUnits = unit.compatible_units.map((u) =>
-          parseInt(u.id),
-        );
+        const compatibleUnits = unit.compatible_units.map((u) => u.id);
         addAxisVars = addAxisVars.filter((v) =>
           v.unit ? compatibleUnits.includes(v.unit) : true,
         );

@@ -8,6 +8,7 @@ import { unitCompatibility } from "./unitConversion.fixture";
 import {
   buildMolecularMassHelper,
   canConvert,
+  computeCompatibleUnits,
   conversionMultiplier,
   ConversionHelper,
 } from "../shared/unitConversion";
@@ -103,6 +104,61 @@ export const ParityWithBackend: Story = {
         expect(
           closeRel(target2, Number(c.target2_conversion_factor)),
           `target2_conversion_factor ${label}: got ${target2}, want ${c.target2_conversion_factor}`,
+        ).toBe(true);
+      }
+    }
+  },
+};
+
+export const ComputeMatchesBackend: Story = {
+  play: async () => {
+    // computeCompatibleUnits is what the frontend uses in place of the
+    // backend's compatible_units field. Assert it reproduces the preserved
+    // backend snapshot exactly: same membership, ordering, and all three
+    // conversion factors, for every unit.
+    const computed = computeCompatibleUnits(allUnits, testCompound);
+
+    expect(computed.length).toBe(unitCompatibility.length);
+
+    for (const expected of unitCompatibility) {
+      const actual = computed.find((u) => u.id === expected.id);
+      expect(actual, `unit id ${expected.id} missing from computed`).toBeTruthy();
+      if (!actual) {
+        continue;
+      }
+
+      // Same set and order of compatible unit ids.
+      const actualIds = actual.compatible_units.map((c) => c.id);
+      const expectedIds = expected.compatible_units.map((c) => c.id);
+      expect(
+        actualIds,
+        `compatible unit ids for ${expected.symbol} (${expected.id})`,
+      ).toEqual(expectedIds);
+
+      for (const ec of expected.compatible_units) {
+        const ac = actual.compatible_units.find((c) => c.id === ec.id);
+        const label = `${expected.symbol} (${expected.id}) -> ${ec.symbol} (${ec.id})`;
+        expect(ac, `compatible unit ${label} missing`).toBeTruthy();
+        if (!ac) {
+          continue;
+        }
+        expect(
+          closeRel(ac.conversion_factor, Number(ec.conversion_factor)),
+          `conversion_factor ${label}: got ${ac.conversion_factor}, want ${ec.conversion_factor}`,
+        ).toBe(true);
+        expect(
+          closeRel(
+            ac.target_conversion_factor,
+            Number(ec.target_conversion_factor),
+          ),
+          `target_conversion_factor ${label}: got ${ac.target_conversion_factor}, want ${ec.target_conversion_factor}`,
+        ).toBe(true);
+        expect(
+          closeRel(
+            ac.target2_conversion_factor,
+            Number(ec.target2_conversion_factor),
+          ),
+          `target2_conversion_factor ${label}: got ${ac.target2_conversion_factor}, want ${ec.target2_conversion_factor}`,
         ).toBe(true);
       }
     }

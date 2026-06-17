@@ -2765,11 +2765,6 @@ paths:
     get:
       operationId: unit_list
       parameters:
-      - in: query
-        name: compound_id
-        schema:
-          type: integer
-        description: Enable conversions based on compound information
       - name: ordering
         required: false
         in: query
@@ -2818,11 +2813,6 @@ paths:
     get:
       operationId: unit_retrieve
       parameters:
-      - in: query
-        name: compound_id
-        schema:
-          type: integer
-        description: Enable conversions based on compound information
       - in: path
         name: id
         schema:
@@ -4737,13 +4727,6 @@ components:
         id:
           type: integer
           readOnly: true
-        compatible_units:
-          type: array
-          items:
-            type: object
-            additionalProperties:
-              type: string
-          readOnly: true
         symbol:
           type: string
           description: symbol for unit display
@@ -5795,13 +5778,6 @@ components:
         id:
           type: integer
           readOnly: true
-        compatible_units:
-          type: array
-          items:
-            type: object
-            additionalProperties:
-              type: string
-          readOnly: true
         symbol:
           type: string
           description: symbol for unit display
@@ -5839,7 +5815,6 @@ components:
           format: double
           description: multiplier in powers of 10
       required:
-      - compatible_units
       - id
       - symbol
     User:

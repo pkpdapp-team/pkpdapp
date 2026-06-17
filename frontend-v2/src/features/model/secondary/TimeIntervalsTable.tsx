@@ -23,12 +23,11 @@ import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOu
 import {
   useCombinedModelListQuery,
   TimeIntervalRead,
-  useProjectRetrieveQuery,
-  useUnitListQuery,
   useVariableListQuery,
   useVariablePartialUpdateMutation,
 } from "../../../app/backendApi";
 import { RootState } from "../../../app/store";
+import { useUnits } from "../../results/useUnits";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { getAucVariable, getCompositeAucUnit } from "./utils";
@@ -82,22 +81,6 @@ function useProjectModel() {
   return models?.[0] || null;
 }
 
-function useUnits() {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
-  return units;
-}
-
 function useVariables() {
   const model = useProjectModel();
   const { data: variables } = useVariableListQuery(
@@ -123,10 +106,12 @@ function TimeUnitSelect() {
     timeUnits?.map((unit) => ({ value: unit.id, label: unit.symbol })) || [];
 
   function onChangeUnit(event: SelectChangeEvent) {
-    const unit = timeUnits?.find((unit) => unit.id === event.target.value);
+    const unit = timeUnits?.find(
+      (unit) => unit.id === +event.target.value,
+    );
     if (unit) {
-      setSelectedUnit(+unit.id);
-      setIntervals(intervals.map((i) => ({ ...i, unit: +unit.id })));
+      setSelectedUnit(unit.id);
+      setIntervals(intervals.map((i) => ({ ...i, unit: unit.id })));
       if (model && units) {
         model.derived_variables
           .filter((dv) => dv.type === "AUC")

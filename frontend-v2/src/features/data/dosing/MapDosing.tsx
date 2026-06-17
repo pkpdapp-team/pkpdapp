@@ -8,12 +8,12 @@ import {
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
-  useUnitListQuery,
   useVariableListQuery,
 } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { findFieldByType } from "../findFieldByType";
 import { normaliseUnitSymbol } from "../unitUtils";
+import { useUnits } from "../../results/useUnits";
 
 interface IMapDosing {
   state: StepperState;
@@ -41,10 +41,7 @@ function useApiQueries() {
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
+  const units = useUnits();
   const amountUnit = units?.find((unit) => unit.symbol === "pmol");
   const [model] = models;
   const { data: variables } = useVariableListQuery(
@@ -52,10 +49,10 @@ function useApiQueries() {
     { skip: !model?.id },
   );
 
-  const loading = [project, projectProtocols, units, variables];
+  const loading = [project, projectProtocols, variables];
 
   return {
-    isLoading: loading.some((x) => !x),
+    isLoading: loading.some((x) => !x) || units.length === 0,
     amountUnit,
     project,
     projectProtocols,

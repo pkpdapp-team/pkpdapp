@@ -81,7 +81,7 @@ const Data: FC = () => {
     return models?.[0] || undefined;
   }, [models]);
   const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
+    {},
     { skip: !project?.compound },
   );
   const { data: variables } = useVariableListQuery(

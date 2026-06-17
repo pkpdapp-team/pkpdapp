@@ -269,9 +269,7 @@ class Command(BaseCommand):
         ).json()
         responses["dose_detail"] = client.get(f"/api/dose/{dose_id}/").json()
         responses["variable_list"] = client.get("/api/variable/").json()
-        responses["unit_list"] = client.get(
-            f"/api/unit/?compound_id={compound_id}"
-        ).json()
+        responses["unit_list"] = client.get("/api/unit/").json()
 
         # Other endpoints (may be empty for now)
         responses["subject_list"] = client.get("/api/subject/").json()
@@ -474,14 +472,8 @@ import {{ http, HttpResponse, delay }} from "msw";
 export const units = {self._to_typescript(units)} as unknown as UnitRead[];
 
 export const unitHandlers = [
-  http.get("/api/unit", async ({{ request }}) => {{
+  http.get("/api/unit", async () => {{
     await delay();
-    const url = new URL(request.url);
-    const compoundId = url.searchParams.get("compound_id");
-    if (compoundId) {{
-      // Filter logic can be added here if needed
-      return HttpResponse.json(units, {{ status: 200 }});
-    }}
     return HttpResponse.json(units, {{ status: 200 }});
   }}),
 ];
@@ -815,9 +807,7 @@ export * from "./biomarkerTypes.mock";
         ).json()
         responses["dose_detail"] = client.get(f"/api/dose/{dose_id}/").json()
         responses["variable_list"] = client.get("/api/variable/").json()
-        responses["unit_list"] = client.get(
-            f"/api/unit/?compound_id={compound_id}"
-        ).json()
+        responses["unit_list"] = client.get("/api/unit/").json()
 
         # Dataset endpoints
         responses["dataset_list"] = client.get(f"/api/dataset/?project_id={project_id}").json()

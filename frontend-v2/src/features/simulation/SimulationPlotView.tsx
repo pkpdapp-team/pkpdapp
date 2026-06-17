@@ -6,11 +6,11 @@ import {
   SimulateUncertaintyResponse,
   SimulateResponse,
   Simulation,
-  UnitRead,
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Data, Layout, ScatterData } from "plotly.js";
 import Plotly from "plotly.js-basic-dist-min";
 import {
@@ -53,7 +53,7 @@ interface SimulationPlotProps {
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
   remove: (index: number) => void;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   compound: CompoundRead;
   model: CombinedModelRead;
   visibleGroups: string[];
@@ -116,10 +116,10 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   const timeUnit = units.find((u) => u.id === timeVariable?.unit);
   const xAxisUnit = units.find((u) => u.id === plot.x_unit);
   const xCompatibleUnit = timeUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === xAxisUnit?.id,
+    (u) => u.id === xAxisUnit?.id,
   );
   const xConversionFactor = xCompatibleUnit
-    ? parseFloat(xCompatibleUnit.conversion_factor)
+    ? xCompatibleUnit.conversion_factor
     : 1.0;
 
   const plotData = createPlots({

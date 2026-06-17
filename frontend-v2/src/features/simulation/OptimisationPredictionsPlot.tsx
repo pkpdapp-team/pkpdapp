@@ -9,10 +9,10 @@ import {
   SimulateResponse,
   SimulationPlot,
   SubjectGroupRead,
-  UnitRead,
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import {
   createPlots,
@@ -32,7 +32,7 @@ interface OptimisationPredictionsPlotProps {
   predictions: SimulateResponse[];
   plots: SimulationPlot[];
   variables: VariableRead[];
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   groups: SubjectGroupRead[] | undefined;
   subjectBiomarkers: SubjectBiomarker[][] | undefined;
   model: CombinedModelRead;
@@ -81,10 +81,10 @@ const OptimisationPredictionsPlot: FC<OptimisationPredictionsPlotProps> = ({
         // x-axis unit conversion (same logic as SimulationPlotView)
         const xAxisUnit = units.find((u) => u.id === plot.x_unit);
         const xCompatibleUnit = timeUnit?.compatible_units.find(
-          (u) => parseInt(u.id) === xAxisUnit?.id,
+          (u) => u.id === xAxisUnit?.id,
         );
         const xConversionFactor = xCompatibleUnit
-          ? parseFloat(xCompatibleUnit.conversion_factor)
+          ? xCompatibleUnit.conversion_factor
           : 1.0;
 
         const plotData = createPlots({

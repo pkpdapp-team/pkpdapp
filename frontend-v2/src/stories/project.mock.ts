@@ -6160,17 +6160,11 @@ export const projectHandlers = [
     }
     return HttpResponse.json([], { status: 200 });
   }),
-  http.get("/api/unit", async ({ request }) => {
+  http.get("/api/unit", async () => {
     await delay();
-    const url = new URL(request.url);
-
-    const compoundId = url.searchParams.get("compound_id");
-    if (compoundId) {
-      return HttpResponse.json(units, {
-        status: 200,
-      });
-    }
-    return HttpResponse.json([], { status: 200 });
+    return HttpResponse.json(units, {
+      status: 200,
+    });
   }),
   http.get("/api/variable", async ({ request }) => {
     await delay();

@@ -39,10 +39,10 @@ import {
   SimulationSlider,
   SubjectGroupRead,
   VariableRead,
-  UnitRead,
   Optimise,
   OptimiseResponse,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import OptimisationSettings from "./OptimisationSettings";
@@ -62,7 +62,7 @@ type SimulationsSidePanelType = {
   setLayout: (layout: string[]) => void;
   plots: SimulationPlot[];
   control: Control<Simulation, unknown>;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   simulation: SimulationRead;
   model: CombinedModelRead;
   compound: CompoundRead;

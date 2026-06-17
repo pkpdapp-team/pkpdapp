@@ -8,22 +8,22 @@ import {
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useSubjectListQuery,
-  useUnitListQuery,
   useBiomarkerTypeListQuery,
-  UnitRead,
   useVariableListQuery,
   useProtocolListQuery,
 } from "../app/backendApi";
 import useSubjectGroups from "./useSubjectGroups";
+import { useUnits } from "../features/results/useUnits";
+import { UnitReadWithCompatible } from "../shared/unitConversion";
 
 export type SubjectBiomarker = {
   id: number;
   subjectId: number;
   subjectDatasetId: number | undefined;
   time: number;
-  timeUnit: UnitRead | undefined;
+  timeUnit: UnitReadWithCompatible | undefined;
   value: number;
-  unit: UnitRead | undefined;
+  unit: UnitReadWithCompatible | undefined;
   qname: string | undefined;
   label: string;
 };
@@ -43,10 +43,7 @@ export default function useDataset(selectedProject: number | null) {
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
-  );
+  const units = useUnits();
   const datasetIdOrZero = project?.datasets[0] || 0;
 
   const { data: dataset, refetch } = useDatasetRetrieveQuery(

@@ -138,3 +138,103 @@ export function buildMolecularMassHelper(
   }
   return { unit, value };
 }
+
+/**
+ * A unit that another unit can be converted to, with the multipliers needed to
+ * convert a value. Mirrors the shape the backend used to send in the
+ * `compatible_units` field of a unit, but with numeric factors.
+ *
+ * - `conversion_factor` uses the compound (drug) molecular mass for mol <-> g.
+ * - `target_conversion_factor` uses the target-1 molecular mass.
+ * - `target2_conversion_factor` uses the target-2 molecular mass.
+ */
+export interface CompatibleUnit {
+  id: number;
+  symbol: string;
+  conversion_factor: number;
+  target_conversion_factor: number;
+  target2_conversion_factor: number;
+}
+
+/** A unit augmented with the frontend-computed list of compatible units. */
+export interface UnitReadWithCompatible extends UnitRead {
+  compatible_units: CompatibleUnit[];
+}
+
+// Backend ordering of compatible units (pkpdapp/models/units.py and the unit
+// view's `ordering`): "-g", "-m", "-mol", "-s", "K", "A", "cd", "-multiplier".
+// Kept so dropdowns built from compatible_units render in the same order.
+function compareUnits(a: UnitRead, b: UnitRead): number {
+  const keys: Array<[keyof UnitRead, number]> = [
+    ["g", -1],
+    ["m", -1],
+    ["mol", -1],
+    ["s", -1],
+    ["K", 1],
+    ["A", 1],
+    ["cd", 1],
+    ["multiplier", -1],
+  ];
+  for (const [key, dir] of keys) {
+    const av = (a[key] as number) ?? 0;
+    const bv = (b[key] as number) ?? 0;
+    if (av !== bv) {
+      return (av - bv) * dir;
+    }
+  }
+  return 0;
+}
+
+/**
+ * Recreate, on the frontend, the `compatible_units` data the backend used to
+ * compute via myokit. For every unit in `units`, find the units it can be
+ * converted to (using the compound's molecular masses to bridge mol <-> g when
+ * available) and the three conversion factors.
+ *
+ * Membership and factors are derived purely from `canConvert` /
+ * `conversionMultiplier`, which are validated against the backend output in
+ * unitConversion.stories.tsx.
+ */
+export function computeCompatibleUnits(
+  units: UnitRead[],
+  compound?: CompoundRead,
+): UnitReadWithCompatible[] {
+  const drugHelper = compound
+    ? buildMolecularMassHelper(compound, units, "compound")
+    : null;
+  const targetHelper = compound
+    ? buildMolecularMassHelper(compound, units, "target")
+    : null;
+  const target2Helper = compound
+    ? buildMolecularMassHelper(compound, units, "target2")
+    : null;
+
+  const drugHelpers = drugHelper ? [drugHelper] : [];
+  const targetHelpers = targetHelper ? [targetHelper] : [];
+  const target2Helpers = target2Helper ? [target2Helper] : [];
+
+  const sorted = [...units].sort(compareUnits);
+
+  return units.map((from) => {
+    const compatible_units: CompatibleUnit[] = [];
+    for (const to of sorted) {
+      // Membership mirrors the backend's compound-aware exponent filter: a unit
+      // is compatible when the (drug) helper can bridge it. Without a compound
+      // this falls back to exact exponent matching.
+      const factor = conversionMultiplier(from, to, drugHelpers);
+      if (factor === null) {
+        continue;
+      }
+      const target = conversionMultiplier(from, to, targetHelpers);
+      const target2 = conversionMultiplier(from, to, target2Helpers);
+      compatible_units.push({
+        id: to.id,
+        symbol: to.symbol,
+        conversion_factor: factor,
+        target_conversion_factor: target ?? factor,
+        target2_conversion_factor: target2 ?? factor,
+      });
+    }
+    return { ...from, compatible_units };
+  });
+}
