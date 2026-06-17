@@ -6,11 +6,28 @@ upstream app_server {
     server unix:/run/gunicorn.socket fail_timeout=0;
 }
 
+# Port 80: serve the ACME (Let's Encrypt) challenge from the webroot and
+# redirect everything else to HTTPS. This block needs no certificate, so nginx
+# can boot and answer the challenge even before a cert has been issued. On the
+# manual-cert deploy the challenge location is simply never requested.
+server {
+    listen 80;
+    server_name ${HOST_NAME};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
 server {
     listen 443 ssl;
-    server_name         pkpdapp.com;
-    ssl_certificate     /etc/ssl/pkpdapp.crt;
-    ssl_certificate_key /etc/ssl/pkpdapp.key;
+    server_name         ${HOST_NAME};
+    ssl_certificate     ${SSL_CERT_PATH};
+    ssl_certificate_key ${SSL_KEY_PATH};
 
     # javascript frontend
     location / {
@@ -40,6 +57,20 @@ server {
       proxy_set_header Host $host;
       proxy_set_header X-Forwarded-Proto $scheme;
       proxy_redirect http://app_server/auth $scheme://$http_host;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_read_timeout 20d;
+      proxy_buffering off;
+    }
+
+    # or /accounts (django-allauth: social login + email confirmation)
+    location /accounts {
+      proxy_pass http://app_server/accounts;
+      proxy_set_header X-Real-IP  $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_redirect http://app_server/accounts $scheme://$http_host;
       proxy_http_version 1.1;
       proxy_set_header Upgrade $http_upgrade;
       proxy_read_timeout 20d;

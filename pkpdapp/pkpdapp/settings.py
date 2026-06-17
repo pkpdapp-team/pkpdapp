@@ -74,11 +74,19 @@ LOGGING = {
 SECRET_KEY = os.environ.get("SECRET_KEY", default="foo")
 
 
+HOST_NAME = os.environ.get("HOST_NAME", "localhost")
+
 ALLOWED_HOSTS = [
-    os.environ.get("HOST_NAME", "localhost"),
+    HOST_NAME,
     "127.0.0.1",
     "testserver",
 ]
+
+# Public origin of the deployed site, derived from HOST_NAME. Uses https in
+# production and plain http for local development (DEBUG on). This is the single
+# source of truth for the site URL used by FRONTEND_BASE_URL and
+# CSRF_TRUSTED_ORIGINS below, so a deployment only needs to set HOST_NAME.
+PUBLIC_ORIGIN = "{}://{}".format("http" if DEBUG else "https", HOST_NAME)
 
 
 # Application definition - to use any of those you need to run `manage.py
@@ -93,19 +101,30 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     # external apps
     "dpd_static_support",
     "django_extensions",
-    "djoser",
     "rest_framework",
-    "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
     "user_visit",
+    # social auth / email verification
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.github",
     # internal apps
     "pkpdapp",
 ]
 
+SITE_ID = 1
+
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 use_predi = bool(int(os.environ.get("AUTH_PREDILOGIN_USE", "0")))
 if use_predi:
@@ -178,30 +197,65 @@ if use_ldap:
                 )
         AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(*searches)
 
-DJOSER = {
-    "PASSWORD_RESET_CONFIRM_URL": "reset-password/{uid}/{token}",
-    "ACTIVATION_URL": "activate/{uid}/{token}",
-    "SEND_ACTIVATION_EMAIL": True,
-    "SEND_CONFIRMATION_EMAIL": True,
-    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
-    "SERIALIZERS": {},
-    "PERMISSIONS": {
-        "activation": ["rest_framework.permissions.AllowAny"],
-        "password_reset": ["rest_framework.permissions.AllowAny"],
-        "password_reset_confirm": ["rest_framework.permissions.AllowAny"],
-        "set_password": ["djoser.permissions.CurrentUserOrAdmin"],
-        "username_reset": ["rest_framework.permissions.AllowAny"],
-        "username_reset_confirm": ["rest_framework.permissions.AllowAny"],
-        "set_username": ["djoser.permissions.CurrentUserOrAdmin"],
-        "user_create": ["rest_framework.permissions.AllowAny"],
-        "user_delete": ["djoser.permissions.CurrentUserOrAdmin"],
-        "user": ["djoser.permissions.CurrentUserOrAdmin"],
-        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
-        "token_create": ["rest_framework.permissions.AllowAny"],
-        "token_destroy": ["rest_framework.permissions.IsAuthenticated"],
+# django-allauth is always available alongside whichever primary backend
+# (model/predi/ldap) is configured above, so social login and email
+# verification work regardless of the deployment's auth backend.
+AUTHENTICATION_BACKENDS.append(
+    "allauth.account.auth_backends.AuthenticationBackend"
+)
+
+# --- django-allauth configuration ---
+# Frontend base URL that emailed links (e.g. the verify-email link) and OAuth
+# redirects should point back to. Derived from HOST_NAME by default; set
+# FRONTEND_BASE_URL explicitly only to override (e.g. a separate frontend host).
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", PUBLIC_ORIGIN)
+
+# Require users who sign up with email/password to confirm their email before
+# they are allowed to log in.
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+
+# Custom adapter so the emailed confirmation link points at our API verify
+# endpoint, which confirms the address and redirects to the SPA.
+ACCOUNT_ADAPTER = "pkpdapp.adapters.PkpdAccountAdapter"
+
+# Social logins provide an already-verified email, so no extra confirmation
+# step is needed and we can auto-create the account.
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# When a social login's (provider-verified) email matches an existing local
+# email/password account, log the user into that account
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APPS": [
+            {
+                "client_id": os.environ.get("GOOGLE_OAUTH_CLIENT_ID", ""),
+                "secret": os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", ""),
+                "key": "",
+            }
+        ],
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    },
+    "github": {
+        "APPS": [
+            {
+                "client_id": os.environ.get("GITHUB_OAUTH_CLIENT_ID", ""),
+                "secret": os.environ.get("GITHUB_OAUTH_CLIENT_SECRET", ""),
+                "key": "",
+            }
+        ],
+        "SCOPE": ["read:user", "user:email"],
     },
 }
-
 
 # django rest framework library
 REST_FRAMEWORK = {
@@ -271,6 +325,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "user_visit.middleware.UserVisitMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     # "django_cprofile_middleware.middleware.ProfilerMiddleware",
 ]
 
@@ -290,7 +345,7 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in [
         *_cors_allowed_origins,
-        f"https://{os.environ.get('HOST_NAME', 'localhost')}:3000",
+        f"https://{HOST_NAME}:3000",
         *_local_dev_origins,
     ]
     if origin.strip()
@@ -336,6 +391,12 @@ SESSION_COOKIE_HTTPONLY = True
 if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    # TLS is terminated upstream (nginx / AWS ALB) and the request reaches
+    # Django over plain HTTP. Trust the X-Forwarded-Proto header so Django
+    # knows the original request was HTTPS. This is required for the OAuth
+    # (allauth) callback URLs to be built as https:// and for the secure
+    # session/CSRF cookies above to be set.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 WSGI_APPLICATION = "pkpdapp.wsgi.application"
 
@@ -424,9 +485,20 @@ if EMAIL_HOST is None:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_PORT = os.environ.get("EMAIL_PORT", default="foo")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="foo")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="foo")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", default="587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="")
+# Connection encryption. Port 587 (submission) uses STARTTLS (EMAIL_USE_TLS);
+# port 465 uses implicit TLS/SSL (EMAIL_USE_SSL). The two are mutually
+# exclusive. Default to STARTTLS, which matches the default port 587 and most
+# providers (e.g. Amazon SES SMTP). Without this, servers on port 587 reject
+# auth with "530 Must issue a STARTTLS command first".
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", default="false").lower() == "true"
+# Django forbids enabling both; if SSL is requested it wins (and disables TLS).
+EMAIL_USE_TLS = (
+    not EMAIL_USE_SSL
+    and os.environ.get("EMAIL_USE_TLS", default="true").lower() == "true"
+)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
 CACHES = {
@@ -439,25 +511,6 @@ CACHES = {
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
-CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL", default=None)
-if CLOUDAMQP_URL is None:
-    CELERY_BROKER_URL = [
-        "amqp://",
-        "amqp://{}:{}@rabbitmq:5672".format(
-            os.environ.get("RABBITMQ_DEFAULT_USER", default="guest"),
-            os.environ.get("RABBITMQ_DEFAULT_PASS", default="guest"),
-        ),
-    ]
-else:
-    CELERY_BROKER_URL = CLOUDAMQP_URL
-
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "max_retries": 3,
-    "interval_start": 0,
-    "interval_step": 0.2,
-    "interval_max": 0.5,
-}
-
 TEST_RUNNER = "snapshottest.django.TestRunner"
 
 _csrf_trusted_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
@@ -465,6 +518,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in [
         *_csrf_trusted_origins,
+        PUBLIC_ORIGIN,
         *_local_dev_origins,
     ]
     if origin.strip()

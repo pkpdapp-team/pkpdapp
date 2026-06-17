@@ -6,12 +6,11 @@
 import json
 import os
 
-from django.contrib.auth import authenticate, login
+from allauth.account.models import EmailAddress
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
-from pkpdapp.api.serializers import UserSerializer
 
 
 @ensure_csrf_cookie
@@ -25,56 +24,48 @@ def register_view(request):
         )
 
     data = json.loads(request.body)
-    username = data.get("username")
     password = data.get("password")
-    first_name = data.get("first_name", "")
-    last_name = data.get("last_name", "")
     email = data.get("email", "")
 
-    if username is None or password is None:
+    if not email or password is None:
         return JsonResponse(
-            {"detail": "Please provide username and password."}, status=400
+            {"detail": "Please provide an email address and password."}, status=400
         )
 
-    # Check if user already exists
-    if User.objects.filter(username=username).exists():
-        return JsonResponse(
-            {"detail": "A user with this username already exists."}, status=400
-        )
+    # The email address doubles as the username.
+    username = email
 
-    if email and User.objects.filter(email=email).exists():
+    if User.objects.filter(email=email).exists() or User.objects.filter(
+        username=username
+    ).exists():
         return JsonResponse(
             {"detail": "A user with this email already exists."}, status=400
         )
 
     try:
-        # Create new user
+        # Create the new user. The user is created up front but cannot log in
+        # until their email address has been verified (enforced in login_view).
         user = User.objects.create_user(
             username=username,
             password=password,
-            first_name=first_name,
-            last_name=last_name,
             email=email,
         )
 
-        # Automatically log in the user
-        user = authenticate(username=username, password=password)
-        if user:
-            login(request, user)
-            return JsonResponse(
-                {
-                    "user": UserSerializer(user).data,
-                    "detail": "Successfully registered and logged in.",
-                }
-            )
-        else:
-            return JsonResponse(
-                {
-                    "detail": "Registration successful but login failed. "
-                    "Please try logging in manually."
-                },
-                status=500,
-            )
+        # Register the email with allauth as unverified and send the
+        # confirmation email containing the verify link.
+        email_address, _ = EmailAddress.objects.get_or_create(
+            user=user,
+            email=email,
+            defaults={"primary": True, "verified": False},
+        )
+        email_address.send_confirmation(request, signup=True)
+
+        return JsonResponse(
+            {
+                "detail": "Registration successful. Please check your email "
+                "to verify your account before logging in."
+            }
+        )
 
     except Exception as e:
         return JsonResponse({"detail": f"Registration failed: {str(e)}"}, status=500)

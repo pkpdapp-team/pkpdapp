@@ -5,6 +5,7 @@
 #
 import json
 
+from allauth.account.models import EmailAddress
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
@@ -41,6 +42,21 @@ def login_view(request):
                 "detail": "Invalid credentials. Either you have supplied an incorrect username/password combination, or you do not have sufficient access"  # noqa E501
             },
             status=400,
+        )
+
+    # If this user has any allauth-managed email addresses (i.e. they signed
+    # up through the email/password registration flow), require that at least
+    # one is verified before allowing login. Users created by other means
+    # (LDAP, Predi, admin, social login) have no unverified addresses and are
+    # unaffected.
+    email_addresses = EmailAddress.objects.filter(user=user)
+    if email_addresses.exists() and not email_addresses.filter(verified=True).exists():
+        return JsonResponse(
+            {
+                "detail": "Please verify your email address before logging in. "
+                "Check your inbox for the verification link."
+            },
+            status=403,
         )
 
     login(request, user)

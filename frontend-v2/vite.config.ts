@@ -30,6 +30,11 @@ const proxy = {
       "^/backend": "/static",
     },
   },
+  // django-allauth OAuth + email-confirmation endpoints
+  "/accounts": {
+    target: "http://localhost:8000",
+    changeOrigin: true,
+  },
 };
 
 // https://vitejs.dev/config/

@@ -11,28 +11,21 @@ import {
   Alert,
 } from "@mui/material";
 import TextField from "../../components/TextField";
+import OAuthButtons from "./OAuthButtons";
 import { defaultAckText } from "../../constants/acknowledgmentText";
 
 interface SignupFormInputs {
-  username: string;
   password: string;
   confirmPassword: string;
-  firstName: string;
-  lastName: string;
   email: string;
 }
 
 interface SignupProps {
-  onSignup: (userData: {
-    username: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  }) => void;
+  onSignup: (userData: { password: string; email: string }) => void;
   onBack: () => void;
   isLoading: boolean;
   errorMessage?: string;
+  successMessage?: string;
 }
 
 const { VITE_APP_HELP_URL, VITE_APP_ACK_TXT } = import.meta.env;
@@ -42,6 +35,7 @@ const Signup: FC<SignupProps> = ({
   onBack,
   isLoading,
   errorMessage,
+  successMessage,
 }) => {
   const { handleSubmit, control, watch } = useForm<SignupFormInputs>();
   const watchPassword = watch("password");
@@ -51,10 +45,7 @@ const Signup: FC<SignupProps> = ({
       return; // This will be handled by validation
     }
     onSignup({
-      username: data.username,
       password: data.password,
-      firstName: data.firstName,
-      lastName: data.lastName,
       email: data.email,
     });
   };
@@ -85,43 +76,6 @@ const Signup: FC<SignupProps> = ({
             </Typography>
           </Box>
           <Typography variant="h6">Sign Up</Typography>
-          <TextField
-            label="Username"
-            name="username"
-            control={control}
-            textFieldProps={{ autoComplete: "username" }}
-            mode="onChange"
-            autoShrink={true}
-            rules={{
-              required: "Username is required",
-              minLength: {
-                value: 3,
-                message: "Username must be at least 3 characters",
-              },
-            }}
-          />
-          <TextField
-            label="First Name"
-            name="firstName"
-            control={control}
-            textFieldProps={{ autoComplete: "given-name" }}
-            mode="onChange"
-            autoShrink={true}
-            rules={{
-              required: "First name is required",
-            }}
-          />
-          <TextField
-            label="Last Name"
-            name="lastName"
-            control={control}
-            textFieldProps={{ autoComplete: "family-name" }}
-            mode="onChange"
-            autoShrink={true}
-            rules={{
-              required: "Last name is required",
-            }}
-          />
           <TextField
             label="Email"
             name="email"
@@ -186,7 +140,9 @@ const Signup: FC<SignupProps> = ({
               {isLoading ? <CircularProgress size={24} /> : "Sign Up"}
             </Button>
           </Box>
+          <OAuthButtons disabled={isLoading} />
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
         </Stack>
       </form>
       <Typography variant="caption" sx={{ marginTop: 2 }}>

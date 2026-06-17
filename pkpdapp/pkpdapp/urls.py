@@ -42,7 +42,9 @@ router.register("simulation", api.SimulationViewSet, basename="simulation")
 urlpatterns = [
     path("admin/doc/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls),
-    path("accounts/", include("django.contrib.auth.urls")),
+    # django-allauth owns /accounts/ (login, logout, password, and the social
+    # provider login/callback URLs e.g. /accounts/google/login/).
+    path("accounts/", include("allauth.urls")),
     path("api/", include(router.urls), name="api"),
     path("api/nca/", api.NcaView.as_view(), name="nca"),
     path("api/auce/", api.AuceView.as_view(), name="auce"),
@@ -75,6 +77,11 @@ urlpatterns = [
     path("api/login/", api.login_view, name="auth-login"),
     path("api/logout/", api.logout_view, name="auth-logout"),
     path("api/register/", api.register_view, name="auth-register"),
+    path(
+        "api/verify-email/<str:key>/",
+        api.verify_email_view,
+        name="auth-verify-email",
+    ),
     path("api/session/", api.SessionView.as_view(), name="auth-session"),
     path("api/whoami/", api.WhoAmIView.as_view(), name="auth-whoami"),
     path("api-auth/", include("rest_framework.urls")),

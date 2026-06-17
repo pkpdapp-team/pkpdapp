@@ -8,6 +8,7 @@
 
 from .login import login_view, logout_view, get_csrf, SessionView, WhoAmIView
 from .register import register_view
+from .verify_email import verify_email_view
 from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,

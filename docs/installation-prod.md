@@ -57,19 +57,112 @@ The following variables are used for PrediLogin authentication:
 - `AUTH_PREDILOGIN_ADMIN_GROUP`: user must be in this group to be a superuser (e.g. `admin`)
 - `AUTH_PREDILOGIN_USER_GROUP`: authentication will only succeed if user is in this group (e.g. `user`)
 
+**Email/Password Sign Up & Verification:**
+
+When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password. Registration sends a verification email (handled by [django-allauth](https://docs.allauth.org/)); the user must click the verification link before they can log in. Configure email delivery so these emails can be sent (if `EMAIL_HOST` is unset, emails are printed to the console, which is only suitable for development):
+
+- `EMAIL_HOST`: SMTP server host name
+- `EMAIL_PORT`: SMTP server port (default `587`)
+- `EMAIL_HOST_USER`: SMTP username
+- `EMAIL_HOST_PASSWORD`: SMTP password
+- `EMAIL_USE_TLS`: use STARTTLS (default `true`; correct for port 587 and most providers including Amazon SES). If this is not set on a port-587 server you will see `530 Must issue a STARTTLS command first`.
+- `EMAIL_USE_SSL`: use implicit SSL instead, for port 465 (default `false`). Only one of `EMAIL_USE_TLS`/`EMAIL_USE_SSL` may be true.
+- `DEFAULT_FROM_EMAIL`: the "from" address used for verification emails
+
+The base URL that the verification link redirects back to is derived automatically from `HOST_NAME` (`https://<HOST_NAME>` in production). Set `FRONTEND_BASE_URL` only if you need to override this, e.g. when the frontend is served from a different host. The CSRF trusted origin is likewise derived from `HOST_NAME`; `CSRF_TRUSTED_ORIGINS` only needs setting to add extra origins.
+
+**Social Login (Optional):**
+
+Users can also sign up / log in via Google or GitHub. Register an OAuth app with each provider and set the following. The OAuth redirect (callback) URIs to register with the provider are `<host>/accounts/google/login/callback/` and `<host>/accounts/github/login/callback/`. Leave the variables unset to disable a provider.
+
+- `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`: Google OAuth credentials
+- `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET`: GitHub OAuth credentials
+
 ### Frontend Environment Variables
 
-There are also a number of frontend variables that can be set in `frontend-v2/.env`:
+The frontend is configured with a number of `VITE_` variables that are baked into the React build. **For the production Docker build, set these in the root `.env.prod` file** — the Dockerfile copies `.env.prod` to `frontend-v2/.env` before `yarn build`, so `.env.prod` is the single source of truth. (`frontend-v2/.env` is used only for local development outside Docker.)
 
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
-- `VITE_ENABLE_SIGNUP`: set to true to enable user sign up
+- `VITE_ENABLE_SIGNUP`: set to true to enable user sign up (should match the backend `ENABLE_SIGNUP`)
 - `VITE_APP_ACK_TXT`: Acknowledgment text for login and signup pages
 
 ## SSL Certificate
 
-The application uses SSL certificates for HTTPS. You will need to supply your own SSL certificate and key. These should be placed in the `.certs/` directory in the root folder (this folder needs to be created) and named `pkpdapp.crt` and `pkpdapp.key` respectively.
+The application's nginx terminates TLS on port 443. There are two supported ways to provide the certificate. Both use the same images and config; they differ only in where the certificate files come from.
+
+### Option 1: Supply your own certificate (manual)
+
+Place your certificate and key in a `.certs/` directory in the repository root (create it if needed), named `pkpdapp.crt` and `pkpdapp.key`. This is the default — no extra flags are needed when running the stack. To renew, replace the files and reload nginx (`docker compose exec app nginx -s reload`) or restart the container.
+
+### Option 2: Automatic Let's Encrypt certificates (certbot)
+
+This obtains and auto-renews a free certificate from Let's Encrypt using `certbot` on the host, with the app's nginx serving the ACME challenge over port 80. Use the `docker-compose.certbot.yml` override.
+
+Prerequisites:
+
+- A real domain name set as `HOST_NAME` in `.env.prod`, with a DNS A-record pointing at the server's public (Elastic) IP.
+- Ports **80 and 443** open to the internet in the security group (port 80 is required for the ACME challenge and the HTTP→HTTPS redirect).
+- `certbot` installed on the host (`sudo dnf install -y certbot` on Amazon Linux, `sudo apt install -y certbot` on Ubuntu).
+
+Note on `HOST_NAME`: the running app reads it from `.env.prod`, so you do **not** need it in your shell for `docker compose` to bring up the stack correctly. However, the one-off `openssl` and `certbot` commands in the bootstrap below use `${HOST_NAME}` as a host shell variable, so export it once in the shell you run them from (matching the value in `.env.prod`):
+
+```bash
+export HOST_NAME=your-domain.example
+```
+
+First-time bootstrap. There is a chicken-and-egg problem: nginx needs *some*
+certificate to start its 443 block, but the certbot override points nginx at
+`/etc/letsencrypt/live/${HOST_NAME}/`, which does not exist until the cert has
+been issued. So the **first boot must use the base compose only** (which reads
+the default `.certs/` path), where we place a throwaway self-signed cert. Only
+after the real cert exists do we switch to the certbot override.
+
+```bash
+mkdir -p certbot-webroot .certs
+# Throwaway self-signed cert so nginx can boot the first time, at the DEFAULT
+# cert path (.certs -> /etc/ssl/pkpdapp), i.e. NOT the certbot override path:
+openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+  -keyout .certs/pkpdapp.key -out .certs/pkpdapp.crt \
+  -subj "/CN=${HOST_NAME}"
+
+# nginx runs inside the container as the non-root www-data user, and a bind
+# mount preserves the host file permissions. openssl creates the key 0600
+# (owner-only), so make it readable or nginx cannot start ("permission denied"
+# reading pkpdapp.key):
+chmod 644 .certs/pkpdapp.crt .certs/pkpdapp.key
+
+# Start with the BASE compose only, so nginx uses the self-signed cert above
+# and answers on port 80 for the ACME challenge:
+docker compose up -d
+
+# Issue the real certificate via the webroot challenge. The deploy hook
+# (certbot-deploy-hook.sh) makes the new key readable by the container's nginx
+# group and reloads nginx; it re-runs automatically on every future renewal:
+sudo certbot certonly --webroot -w ./certbot-webroot -d "${HOST_NAME}" \
+  --deploy-hook "$(pwd)/certbot-deploy-hook.sh"
+
+# Now that /etc/letsencrypt/live/${HOST_NAME}/ exists, switch to the certbot
+# override so nginx reads the real Let's Encrypt cert. The self-signed files in
+# .certs are no longer used (you may delete them):
+docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
+```
+
+Why the deploy hook is needed: certbot writes the private key root-only, but the
+container's nginx runs as `www-data`, so without adjusting permissions nginx
+cannot read the Let's Encrypt key (the same "permission denied" problem as the
+self-signed key above). [certbot-deploy-hook.sh](../certbot-deploy-hook.sh)
+grants the container's group read access (group-only, not world-readable) and
+reloads nginx.
+
+Auto-renewal: certbot installs a systemd timer (or cron) that runs `certbot renew` twice daily; renewals reuse the `--deploy-hook` recorded above, so the permissions are re-applied and nginx is reloaded automatically. To be explicit you can add a cron entry instead:
+
+```cron
+0 3 * * * certbot renew --quiet --deploy-hook "/path/to/repo/certbot-deploy-hook.sh"
+```
+
+Verify with `sudo certbot renew --dry-run`.
 
 ## PostgreSQL Database
 
@@ -102,16 +195,16 @@ To build the containers, run the following command in the root directory of the 
 
 ### Run the Application
 
-You can run the container with:
+Run the container in the foreground with:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
-You should be able to see the web application at [127.0.0.1](127.0.0.1).
+To leave it running in the background, use `docker compose up -d`.
 
-To leave the container running in the background, use:
+If you are running the bundled PostgreSQL database (see the PostgreSQL section) and/or automatic Let's Encrypt certificates (see the SSL Certificate section), layer the corresponding override files, e.g.:
 
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.certbot.yml up -d
 ```

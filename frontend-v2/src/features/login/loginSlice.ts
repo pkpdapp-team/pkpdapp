@@ -81,10 +81,7 @@ interface LoginArgs {
 }
 
 interface SignupArgs {
-  username: string;
   password: string;
-  firstName: string;
-  lastName: string;
   email: string;
 }
 
@@ -117,19 +114,23 @@ export const login = createAsyncThunk<
   },
 );
 
+interface SignupResponse {
+  detail: string;
+}
+
 export const signup = createAsyncThunk<
-  Login,
+  SignupResponse,
   SignupArgs,
   { rejectValue: LoginErrorResponse }
 >(
   "login/signup",
-  async (
-    { username, password, firstName, lastName, email },
-    { getState, dispatch, rejectWithValue },
-  ) => {
+  async ({ password, email }, { getState, dispatch, rejectWithValue }) => {
     const csrf = (getState() as RootState).login.csrf;
 
-    // Use the register endpoint
+    // Use the register endpoint. Registration does NOT log the user in: the
+    // backend sends a verification email and the user must click the link in
+    // that email before they are allowed to log in. The email address is also
+    // used as the username.
     const response = await fetch("/api/register/", {
       method: "POST",
       credentials: "include",
@@ -138,17 +139,14 @@ export const signup = createAsyncThunk<
         "X-CSRFToken": csrf ? csrf : "",
       },
       body: JSON.stringify({
-        username: username,
         password: password,
-        first_name: firstName,
-        last_name: lastName,
         email: email,
       }),
     })
       .then(isResponseOk)
       .then((data) => {
         dispatch(fetchCsrf());
-        return { isAuthenticated: true, user: data.user };
+        return { detail: data.detail };
       })
       .catch((err) => {
         return rejectWithValue({ error: err.message });
@@ -178,6 +176,9 @@ interface LoginState {
   csrf: string | undefined;
   isAuthenticated: boolean;
   error: string | undefined;
+  // Message shown after a successful email/password registration, prompting
+  // the user to verify their email before logging in.
+  signupMessage: string | undefined;
 }
 
 const slice = createSlice({
@@ -187,6 +188,7 @@ const slice = createSlice({
     csrf: undefined,
     isAuthenticated: false,
     error: undefined,
+    signupMessage: undefined,
   } as LoginState,
   reducers: {
     setCredentials: (state, action) => {
@@ -216,12 +218,14 @@ const slice = createSlice({
       state.error = action.payload?.error;
     });
     builder.addCase(signup.fulfilled, (state, action) => {
-      state.isAuthenticated = action.payload.isAuthenticated;
-      state.user = action.payload.user;
+      // Registration succeeded but the user is NOT logged in yet; show the
+      // "verify your email" message instead.
+      state.signupMessage = action.payload.detail;
       state.error = undefined;
     });
     builder.addCase(signup.rejected, (state, action) => {
       state.error = action.payload?.error;
+      state.signupMessage = undefined;
     });
     builder.addCase(logout.fulfilled, (state, action) => {
       state.isAuthenticated = action.payload.isAuthenticated;
@@ -259,3 +263,5 @@ export const selectAuthHeaders = (state: RootState) => {
 export const isAuthenticated = (state: RootState) =>
   state.login.isAuthenticated;
 export const loginError = (state: RootState) => state.login.error;
+export const selectSignupMessage = (state: RootState) =>
+  state.login.signupMessage;
