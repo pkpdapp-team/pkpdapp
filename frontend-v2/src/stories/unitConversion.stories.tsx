@@ -2,14 +2,15 @@ import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 
 import { CompoundRead, UnitRead } from "../app/backendApi";
-import { units } from "../stories/generated-mocks/units.mock";
-import { compound } from "../stories/generated-mocks/project.mock";
+import { units } from "./generated-mocks/units.mock";
+import { compound } from "./generated-mocks/project.mock";
+import { unitCompatibility } from "./unitConversion.fixture";
 import {
   buildMolecularMassHelper,
   canConvert,
   conversionMultiplier,
   ConversionHelper,
-} from "./unitConversion";
+} from "../shared/unitConversion";
 
 // These tests have no UI; they exercise the pure conversion utilities against
 // the backend-generated unit mocks (which carry myokit-computed conversion
@@ -52,9 +53,18 @@ export const ParityWithBackend: Story = {
     expect(targetHelper).not.toBeNull();
     expect(target2Helper).not.toBeNull();
 
-    for (const from of allUnits) {
-      for (const c of from.compatible_units) {
-        const toId = parseInt(c.id as unknown as string, 10);
+    // `unitCompatibility` is a preserved snapshot of the backend-computed
+    // conversion factors (see unitConversion.fixture.ts); the SI exponents and
+    // multipliers come from the units mock, which the utility actually uses.
+    for (const entry of unitCompatibility) {
+      const from = allUnits.find((u) => u.id === entry.id);
+      expect(from, `unit id ${entry.id} not found in units mock`).toBeTruthy();
+      if (!from) {
+        continue;
+      }
+
+      for (const c of entry.compatible_units) {
+        const toId = c.id;
         const to = allUnits.find((u) => u.id === toId);
         expect(
           to,
