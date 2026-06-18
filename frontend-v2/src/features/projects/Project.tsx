@@ -33,6 +33,7 @@ import {
   useProjectAccessDestroyMutation,
   useDatasetCreateMutation,
 } from "../../app/backendApi";
+import { api } from "../../app/api";
 import UserAccess from "./UserAccess";
 import {
   decrementDirtyCount,
@@ -146,7 +147,14 @@ const ProjectEditorRow: FC<Props> = ({
         if (compound.name !== data.compound.name) {
           dispatch(incrementDirtyCount());
           updateCompound({ id: compound.id, compound: data.compound }).then(
-            () => dispatch(decrementDirtyCount()),
+            () => {
+              // a rename must refetch it explicitly to keep the
+              // Projects table's sort-by-compound names up to date.
+              dispatch(
+                api.util.invalidateTags([{ type: "Compound", id: "LIST" }]),
+              );
+              dispatch(decrementDirtyCount());
+            },
           );
         }
         if (isDirty) {

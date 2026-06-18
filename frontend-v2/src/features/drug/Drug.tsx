@@ -84,7 +84,6 @@ const DrugForm: FC<DrugFormProps> = ({
 }) => {
   const [updateCompound] = useCompoundUpdateMutation();
   const [createEfficacyExperiment] = useEfficacyExperimentCreateMutation();
-  const { refetch: refetchCompoundUnits } = useUnitListQuery({});
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -102,21 +101,13 @@ const DrugForm: FC<DrugFormProps> = ({
     async (data: Compound) => {
       if (compound?.id && isDirty) {
         reset(data);
-        const result = await updateCompound({
+        await updateCompound({
           id: compound.id,
           compound: data,
         });
-        if (result?.data) {
-          try {
-            reset(data);
-            refetchCompoundUnits();
-          } catch (error) {
-            console.error(error);
-          }
-        }
       }
     },
-    [compound, updateCompound, isDirty, reset, refetchCompoundUnits],
+    [compound, updateCompound, isDirty, reset],
   );
 
   useEffect(() => {

@@ -150,10 +150,7 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Compound", id }],
     },
     compoundUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Compound", id },
-        { type: "Compound", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Compound", id }],
     },
     compoundCreate: {
       invalidatesTags: [{ type: "Compound", id: "LIST" }],
