@@ -26,9 +26,10 @@ import {
   ProjectRead,
   ProtocolListApiResponse,
   VariableListApiResponse,
-  UnitListApiResponse,
   SubjectGroupRead,
 } from "../../app/backendApi";
+import { useUnits } from "../results/useUnits";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
 import HelpButton from "../../components/HelpButton";
@@ -103,8 +104,9 @@ function useApiQueries() {
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units, isLoading: unitsLoading } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
+  const units = useUnits();
+  const { isLoading: unitsLoading } = useUnitListQuery(
+    {},
     { skip: !project?.compound },
   );
 
@@ -130,7 +132,7 @@ interface ProtocolsProps {
   projectProtocols: ProtocolListApiResponse;
   refetchProtocols: () => void;
   variables?: VariableListApiResponse;
-  units: UnitListApiResponse;
+  units: UnitReadWithCompatible[];
   groups: SubjectGroupRead[];
   refetchGroups: () => void;
   isSharedWithMe: boolean;

@@ -4,9 +4,9 @@ import {
   CompoundRead,
   ProjectRead,
   ProjectSpeciesEnum,
-  UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import { Control } from "react-hook-form";
 import {
   Box,
@@ -58,7 +58,7 @@ interface Props {
   project: ProjectRead;
   control: Control<ModelFormData>;
   variables: VariableRead[];
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   compound: CompoundRead;
   onChange: () => void;
 }
@@ -191,19 +191,19 @@ const MapVariablesTab: FC<Props> = ({
     }
     const aIsConcentration =
       concentrationUnit?.compatible_units.find(
-        (unit) => parseInt(unit.id) === a.unit,
+        (unit) => unit.id === a.unit,
       ) !== undefined;
     const aIsAmount =
       amountUnit?.compatible_units.find(
-        (unit) => parseInt(unit.id) === a.unit,
+        (unit) => unit.id === a.unit,
       ) !== undefined;
     const bIsConcentration =
       concentrationUnit?.compatible_units.find(
-        (unit) => parseInt(unit.id) === b.unit,
+        (unit) => unit.id === b.unit,
       ) !== undefined;
     const bIsAmount =
       amountUnit?.compatible_units.find(
-        (unit) => parseInt(unit.id) === b.unit,
+        (unit) => unit.id === b.unit,
       ) !== undefined;
 
     const aValue = aIsConcentration ? 2 : aIsAmount ? 1 : 0;

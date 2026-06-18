@@ -4,11 +4,11 @@ import {
   CombinedModelRead,
   Simulate,
   useCombinedModelSimulateCreateMutation,
-  useUnitListQuery,
   useVariableListQuery,
   ProjectRead,
   SimulateResponse,
 } from "../../app/backendApi";
+import { useUnits } from "../results/useUnits";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 
@@ -59,10 +59,7 @@ export default function useExportSimulation({
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
-  );
+  const units = useUnits();
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
   const exportSimulation = () => {

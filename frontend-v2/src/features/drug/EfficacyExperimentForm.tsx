@@ -18,10 +18,10 @@ import TextField from "../../components/TextField";
 import {
   EfficacyExperimentRead,
   ProjectRead,
-  UnitListApiResponse,
   useEfficacyExperimentDestroyMutation,
   useEfficacyExperimentUpdateMutation,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { useForm, useFormState } from "react-hook-form";
 import { useCallback } from "react";
 import { RootState } from "../../app/store";
@@ -31,7 +31,7 @@ import { selectIsProjectShared } from "../login/loginSlice";
 interface Props {
   efficacyExperiment: EfficacyExperimentRead;
   project: ProjectRead;
-  units: UnitListApiResponse;
+  units: UnitReadWithCompatible[];
   isSelected: boolean;
   isEditing: boolean;
   disabled: boolean;
@@ -107,7 +107,7 @@ export function EfficacyExperimentForm({
     ].includes(unit.symbol),
   );
   const c50UnitOpt = c50Units
-    ? c50Units.map((unit: { [key: string]: string }) => {
+    ? c50Units.map((unit) => {
         return { value: unit.id, label: unit.symbol };
       })
     : [];

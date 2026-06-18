@@ -13,9 +13,9 @@ import {
   CombinedModelRead,
   CompoundRead,
   ProjectRead,
-  UnitRead,
   VariableRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import { ModelFormData } from "../modelFormState";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
@@ -30,7 +30,7 @@ interface Props {
   variable: VariableRead;
   control: Control<ModelFormData>;
   effectVariable: VariableRead | undefined;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   timeVariable: VariableRead | undefined;
   updateDosings: (key: number, value: boolean) => void;
   isAnyDosingSelected: boolean;
@@ -138,12 +138,12 @@ const VariableRow: FC<Props> = ({
 
   const isConcentration =
     concentrationUnit?.compatible_units.find(
-      (unit) => parseInt(unit.id) === variable.unit,
+      (unit) => unit.id === variable.unit,
     ) !== undefined;
   const isAmount =
     variableUnit?.symbol !== "" &&
     amountUnit?.compatible_units.find(
-      (unit) => parseInt(unit.id) === variable.unit,
+      (unit) => unit.id === variable.unit,
     ) !== undefined;
   const isT1Amount = isAmount && variable.name.includes("T1");
   const isT2Amount = isAmount && variable.name.includes("T2");

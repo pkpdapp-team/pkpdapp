@@ -1,13 +1,14 @@
 import { ReactElement } from "react";
 import { Control, FieldPath, FieldValues } from "react-hook-form";
 import { SelectProps, SxProps } from "@mui/material";
-import { Compound, UnitRead } from "../app/backendApi";
+import { Compound } from "../app/backendApi";
+import { UnitReadWithCompatible } from "../shared/unitConversion";
 import SelectField from "./SelectField";
 
 type Props<T extends FieldValues> = {
   label: string;
-  baseUnit?: UnitRead;
-  baseUnit2?: UnitRead;
+  baseUnit?: UnitReadWithCompatible;
+  baseUnit2?: UnitReadWithCompatible;
   name: FieldPath<T>;
   control: Control<T>;
   rules?: Record<string, unknown>;
@@ -41,7 +42,7 @@ function UnitField<T extends FieldValues>({
     : allCompatibleUnits;
 
   const options = compatibleUnits
-    ? compatibleUnits.map((unit: { [key: string]: string }) => {
+    ? compatibleUnits.map((unit) => {
       return { value: unit.id, label: unit.symbol };
     })
     : [];

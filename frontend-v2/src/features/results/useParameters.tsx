@@ -1,10 +1,10 @@
 import {
   SimulateResponse,
   TimeIntervalRead,
-  UnitListApiResponse,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import {
   formattedNumber,
   timeOverThreshold,
@@ -32,7 +32,7 @@ function useNormalisedIntervals(intervals: TimeIntervalRead[]) {
     const hourUnit = intervalUnit?.compatible_units.find(
       (u) => u.symbol === "h",
     );
-    const conversionFactor = parseFloat(hourUnit?.conversion_factor || "1");
+    const conversionFactor = hourUnit?.conversion_factor ?? 1;
     const start_time = interval.start_time * conversionFactor;
     const end_time = interval.end_time * conversionFactor;
     return {
@@ -50,11 +50,9 @@ function useNormalisedVariables(variables: VariableListApiResponse) {
       (unit) => unit.id === variable.secondary_unit,
     );
     const simulationUnit = displayUnit?.compatible_units.find(
-      (u) => +u.id === variable.unit,
+      (u) => u.id === variable.unit,
     );
-    const conversionFactor = parseFloat(
-      simulationUnit?.conversion_factor || "1",
-    );
+    const conversionFactor = simulationUnit?.conversion_factor ?? 1;
     const lower_threshold = variable.lower_threshold
       ? variable.lower_threshold * conversionFactor
       : null;
@@ -98,16 +96,16 @@ const timeOverLowerThresholdPerInterval = (
 
 function variableConversionFactor(
   variable: VariableRead,
-  units: UnitListApiResponse,
+  units: UnitReadWithCompatible[],
 ) {
   const modelUnit = units?.find((unit) => unit.id === variable.unit);
   const displayUnit = modelUnit?.compatible_units.find(
-    (u) => +u.id === variable.secondary_unit,
+    (u) => u.id === variable.secondary_unit,
   );
   if (!displayUnit) {
     return 1.0;
   }
-  const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
+  const conversionFactor = displayUnit?.conversion_factor ?? 1;
   return conversionFactor;
 }
 
@@ -122,13 +120,13 @@ const timeOverUpperThresholdPerInterval = (
 
 function timeConversionFactor(
   interval: TimeIntervalRead,
-  units: UnitListApiResponse,
+  units: UnitReadWithCompatible[],
 ) {
   const modelUnit = units?.find((unit) => unit.symbol === "h");
   const displayUnit = modelUnit?.compatible_units.find(
-    (u) => +u.id === interval.unit,
+    (u) => u.id === interval.unit,
   );
-  const conversionFactor = parseFloat(displayUnit?.conversion_factor || "1");
+  const conversionFactor = displayUnit?.conversion_factor ?? 1;
   return conversionFactor;
 }
 

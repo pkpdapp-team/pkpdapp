@@ -951,7 +951,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/unit/`,
         params: {
-          compound_id: queryArg.compoundId,
           ordering: queryArg.ordering,
         },
       }),
@@ -966,9 +965,6 @@ const injectedRtkApi = api.injectEndpoints({
     unitRetrieve: build.query<UnitRetrieveApiResponse, UnitRetrieveApiArg>({
       query: (queryArg) => ({
         url: `/api/unit/${queryArg.id}/`,
-        params: {
-          compound_id: queryArg.compoundId,
-        },
       }),
     }),
     unitUpdate: build.mutation<UnitUpdateApiResponse, UnitUpdateApiArg>({
@@ -1690,8 +1686,6 @@ export type TagDestroyApiArg = {
 };
 export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
-  /** Enable conversions based on compound information */
-  compoundId?: number;
   /** Which field to use when ordering the results. */
   ordering?: string;
 };
@@ -1701,8 +1695,6 @@ export type UnitCreateApiArg = {
 };
 export type UnitRetrieveApiResponse = /** status 200  */ UnitRead;
 export type UnitRetrieveApiArg = {
-  /** Enable conversions based on compound information */
-  compoundId?: number;
   /** A unique integer value identifying this unit. */
   id: number;
 };
@@ -3610,9 +3602,6 @@ export type Unit = {
 };
 export type UnitRead = {
   id: number;
-  compatible_units: {
-    [key: string]: string;
-  }[];
   /** symbol for unit display */
   symbol: string;
   /** grams exponent */
@@ -3654,9 +3643,6 @@ export type PatchedUnit = {
 };
 export type PatchedUnitRead = {
   id?: number;
-  compatible_units?: {
-    [key: string]: string;
-  }[];
   /** symbol for unit display */
   symbol?: string;
   /** grams exponent */

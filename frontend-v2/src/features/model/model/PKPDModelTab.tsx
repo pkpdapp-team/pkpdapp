@@ -6,8 +6,8 @@ import {
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
   CompoundRead,
-  UnitRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import { Control } from "react-hook-form";
 import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
 import FloatField from "../../../components/FloatField";
@@ -36,7 +36,7 @@ interface Props {
   modelControl: Control<ModelFormData>;
   projectControl: Control<ProjectFormData>;
   compound: CompoundRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 // Maps of model name to documentation image filename (to be filled later)

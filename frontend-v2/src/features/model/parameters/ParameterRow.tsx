@@ -14,11 +14,11 @@ import {
 import {
   useVariableUpdateMutation,
   ProjectRead,
-  UnitRead,
   VariableRead,
   CombinedModelRead,
   useVariableRetrieveQuery,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import UnitField from "../../../components/UnitField";
 import Checkbox from "../../../components/Checkbox";
 import useDirty from "../../../hooks/useDirty";
@@ -35,7 +35,7 @@ interface Props {
   project: ProjectRead;
   variable_from_list: VariableRead;
   variables: VariableRead[];
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   modelControl: Control<ModelFormData>;
 }
 

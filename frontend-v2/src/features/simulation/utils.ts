@@ -11,13 +11,12 @@ import {
   SimulationSlider,
   SimulationYAxis,
   SubjectGroupRead,
-  UnitListApiResponse,
-  UnitRead,
   VariableRead,
   Y2ScaleEnum,
 } from "../../app/backendApi";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
 
@@ -134,7 +133,7 @@ type YAxisOptions = {
 export function getYAxisOptions(
   compound: CompoundRead,
   variable: VariableRead,
-  units: UnitListApiResponse,
+  units: UnitReadWithCompatible[],
 ): YAxisOptions {
   if (!variable.name.startsWith("C")) {
     return {
@@ -168,7 +167,7 @@ export function getYAxisOptions(
     };
   }
   return {
-    unit: parseInt(concentrationUnit.id),
+    unit: concentrationUnit.id,
     scale: "lg10",
   };
 }
@@ -311,15 +310,15 @@ export function ranges(
 }
 
 export function genIcLines(
-  units: UnitRead[],
+  units: UnitReadWithCompatible[],
   plot: FieldArrayWithId<Simulation, "plots", "id">,
   exp: EfficacyExperimentRead | undefined,
-  concentrationUnit: UnitRead,
+  concentrationUnit: UnitReadWithCompatible,
 ) {
   let icLines: number[] = [];
 
   const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
-    parseInt(unit.id),
+    unit.id,
   );
   const yAxisIsConcentration = plot.y_unit
     ? concentrationUnitIds.includes(plot.y_unit)
@@ -330,10 +329,10 @@ export function genIcLines(
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
       const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
       const compatibleUnit = c50Unit?.compatible_units.find(
-        (u) => parseInt(u.id) === yAxisUnit?.id,
+        (u) => u.id === yAxisUnit?.id,
       );
       const factor = compatibleUnit
-        ? parseFloat(compatibleUnit.conversion_factor)
+        ? compatibleUnit.conversion_factor
         : 1.0;
       icLines = plot.cx_lines.map((cx_line) => {
         const hc = exp.hill_coefficient || 1.0;
@@ -356,7 +355,7 @@ export function generatePlotData(
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
-  units: UnitRead[],
+  units: UnitReadWithCompatible[],
   model: CombinedModelRead,
   variables: VariableRead[],
   xConversionFactor: number,
@@ -375,7 +374,7 @@ export function generatePlotData(
     ? units.find((u) => u.id === plot.y_unit2)
     : units.find((u) => u.id === plot.y_unit);
   const yCompatibleUnit = variableUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === yaxisUnit?.id,
+    (u) => u.id === yaxisUnit?.id,
   );
 
   const starts_with_A = model.is_library_model
@@ -394,13 +393,11 @@ export function generatePlotData(
   const is_target2 = starts_with_C_or_A && has_target_2 && !has_drug;
 
   const yConversionFactor = yCompatibleUnit
-    ? parseFloat(
-        is_target
-          ? yCompatibleUnit.target_conversion_factor
-          : is_target2
-            ? yCompatibleUnit.target2_conversion_factor
-            : yCompatibleUnit.conversion_factor,
-      )
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : is_target2
+        ? yCompatibleUnit.target2_conversion_factor
+        : yCompatibleUnit.conversion_factor
     : 1.0;
 
   const name = variableValues
@@ -434,7 +431,7 @@ export function generateUncertaintyBandData(
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
-  units: UnitRead[],
+  units: UnitReadWithCompatible[],
   model: CombinedModelRead,
   variables: VariableRead[],
   xConversionFactor: number,
@@ -457,18 +454,16 @@ export function generateUncertaintyBandData(
     ? units.find((u) => u.id === plot.y_unit2)
     : units.find((u) => u.id === plot.y_unit);
   const yCompatibleUnit = variableUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === yaxisUnit?.id,
+    (u) => u.id === yaxisUnit?.id,
   );
 
   const is_target = model.is_library_model
     ? variableName?.includes("CT1") || variableName?.includes("AT1")
     : false;
   const yConversionFactor = yCompatibleUnit
-    ? parseFloat(
-        is_target
-          ? yCompatibleUnit.target_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-      )
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : yCompatibleUnit.conversion_factor
     : 1.0;
 
   const x = uncertainty.time.map((t) => t * xConversionFactor);
@@ -545,7 +540,7 @@ type PlotProps = {
   isReference?: boolean;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   visibleGroups: string[];
   xConversionFactor: number;
@@ -594,7 +589,7 @@ type PlotsProps = {
   groups: SubjectGroupRead[] | undefined;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   visibleGroups: string[];
   xConversionFactor: number;
@@ -724,7 +719,7 @@ export const getDefaultAxisTitles = ({
   y2AxisVariableNames,
 }: {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   yAxisVariableNames: (string | undefined)[];
   y2AxisVariableNames: (string | undefined)[];
 }) => {
@@ -996,7 +991,7 @@ type ScatterPlotsProps = {
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   subjectBiomarkers: SubjectBiomarker[][] | undefined;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   visibleGroups: string[];
   y_axis: SimulationYAxis;
 };
@@ -1025,23 +1020,21 @@ export const generateScatterPlots: (
   const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
   const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
   const yCompatibleUnit = unit?.compatible_units.find(
-    (u) => parseInt(u.id) === yAxisUnit?.id,
+    (u) => u.id === yAxisUnit?.id,
   );
   const timeCompatibleUnit = timeUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === xAxisUnit?.id,
+    (u) => u.id === xAxisUnit?.id,
   );
   const timeConversionFactor = timeCompatibleUnit
-    ? parseFloat(timeCompatibleUnit.conversion_factor)
+    ? timeCompatibleUnit.conversion_factor
     : 1.0;
   const is_target = model.is_library_model
     ? qname?.includes("CT1") || qname?.includes("AT1")
     : false;
   const yConversionFactor = yCompatibleUnit
-    ? parseFloat(
-        is_target
-          ? yCompatibleUnit.target_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-      )
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : yCompatibleUnit.conversion_factor
     : 1.0;
   return groups?.map((group, index) =>
     generateScatterPlot({

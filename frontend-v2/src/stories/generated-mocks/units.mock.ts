@@ -10059,14 +10059,8 @@ export const units = [
 ] as unknown as UnitRead[];
 
 export const unitHandlers = [
-  http.get("/api/unit", async ({ request }) => {
+  http.get("/api/unit", async () => {
     await delay();
-    const url = new URL(request.url);
-    const compoundId = url.searchParams.get("compound_id");
-    if (compoundId) {
-      // Filter logic can be added here if needed
-      return HttpResponse.json(units, { status: 200 });
-    }
     return HttpResponse.json(units, { status: 200 });
   }),
 ];

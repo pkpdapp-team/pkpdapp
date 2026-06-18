@@ -16,6 +16,7 @@ import {
 } from "../app/backendApi";
 import { simulationData } from "./simulations.mock";
 import { combinedModels, project, protocols, subjectGroups } from "./generated-mocks";
+import { computeCompatibleUnits } from "../shared/unitConversion";
 
 const baseSimulation = simulationData[0] as SimulateResponse;
 const outputIds = Object.keys(baseSimulation.outputs);
@@ -40,19 +41,10 @@ const uncertaintyData: SimulateUncertaintyResponse[] = [
   },
 ];
 
-const units: UnitRead[] = [
+const baseUnits: UnitRead[] = [
   {
     id: 1,
     symbol: "pmol/L",
-    compatible_units: [
-      {
-        id: "1",
-        symbol: "pmol/L",
-        conversion_factor: "1.0",
-        target_conversion_factor: "1.0",
-        target2_conversion_factor: "1.0",
-      },
-    ],
     g: 0,
     m: -3,
     s: 0,
@@ -65,15 +57,6 @@ const units: UnitRead[] = [
   {
     id: 2,
     symbol: "h",
-    compatible_units: [
-      {
-        id: "2",
-        symbol: "h",
-        conversion_factor: "1.0",
-        target_conversion_factor: "1.0",
-        target2_conversion_factor: "1.0",
-      },
-    ],
     g: 0,
     m: 0,
     s: 1,
@@ -171,6 +154,8 @@ const model = {
 const compound = {
   use_efficacy: null,
 } as CompoundRead;
+
+const units = computeCompatibleUnits(baseUnits, compound);
 
 const PlotHarness = () => {
   const { control, setValue } = useForm<Simulation>({

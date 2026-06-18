@@ -19,7 +19,6 @@ import {
   CompoundRead,
   EfficacyExperimentRead,
   ProjectRead,
-  UnitListApiResponse,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useEfficacyExperimentCreateMutation,
@@ -27,6 +26,8 @@ import {
   useProjectRetrieveQuery,
   useUnitListQuery,
 } from "../../app/backendApi";
+import { useUnits } from "../results/useUnits";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { useForm, useFormState } from "react-hook-form";
 import FloatField from "../../components/FloatField";
 import { FC, useCallback, useEffect, useState } from "react";
@@ -72,7 +73,7 @@ export const DOUBLE_TABLE_SECOND_BREAKPOINTS = [
 interface DrugFormProps {
   project: ProjectRead;
   compound: CompoundRead;
-  units: UnitListApiResponse;
+  units: UnitReadWithCompatible[];
   efficacyExperiments: EfficacyExperimentRead[];
 }
 const DrugForm: FC<DrugFormProps> = ({
@@ -83,9 +84,7 @@ const DrugForm: FC<DrugFormProps> = ({
 }) => {
   const [updateCompound] = useCompoundUpdateMutation();
   const [createEfficacyExperiment] = useEfficacyExperimentCreateMutation();
-  const { refetch: refetchCompoundUnits } = useUnitListQuery({
-    compoundId: compound.id,
-  });
+  const { refetch: refetchCompoundUnits } = useUnitListQuery({});
 
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
@@ -213,7 +212,7 @@ const DrugForm: FC<DrugFormProps> = ({
     unit.symbol.endsWith("/mol"),
   );
   const molMassUnitOpt = molMassUnits
-    ? molMassUnits.map((unit: { [key: string]: string }) => {
+    ? molMassUnits.map((unit) => {
         // add (Da) and (kDa) for clarity
         if (unit.symbol === "g/mol") {
           return { value: unit.id, label: `${unit.symbol} (Da)` };
@@ -443,8 +442,9 @@ const Drug: FC = () => {
       },
       { skip: !project?.compound },
     );
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
+  const units = useUnits();
+  const { isLoading: isLoadingUnits } = useUnitListQuery(
+    {},
     { skip: !project?.compound },
   );
 

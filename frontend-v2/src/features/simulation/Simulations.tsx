@@ -19,7 +19,6 @@ import {
   SimulationRead,
   SimulationSliderRead,
   SubjectGroupRead,
-  UnitRead,
   VariableRead,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
@@ -61,6 +60,8 @@ import {
   renameVariable,
 } from "./utils";
 import useSliderSettings from "./useSliderSettings";
+import { useUnits } from "../results/useUnits";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 
 interface ErrorObject {
   error: string;
@@ -81,7 +82,7 @@ interface UseSimulationDataProps {
   sliderValues?: Map<number, number>;
   getSliderValue?: (variableId: number, variable?: VariableRead) => number;
   variables?: VariableRead[];
-  units?: UnitRead[];
+  units?: UnitReadWithCompatible[];
   showReference?: boolean;
   useLegacySolver?: boolean;
 }
@@ -100,10 +101,10 @@ function useSimulationData({
   const getTimeMax = (sim: SimulationRead): number => {
     const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
     const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
-      (u) => parseInt(u.id) === model?.time_unit,
+      (u) => u.id === model?.time_unit,
     );
     const timeMaxConversionFactor = compatibleTimeUnit
-      ? parseFloat(compatibleTimeUnit.conversion_factor)
+      ? compatibleTimeUnit.conversion_factor
       : 1.0;
     const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
     return timeMax;
@@ -161,7 +162,7 @@ interface SimulationsTabProps {
   model: CombinedModelRead;
   variables: VariableRead[];
   simulation: SimulationRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const SimulationsTab: FC<SimulationsTabProps> = ({
@@ -385,7 +386,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       return;
     }
     const defaultXUnit =
-      units?.find((unit: UnitRead) => unit.symbol === "h")?.id || 0;
+      units?.find((unit: UnitReadWithCompatible) => unit.symbol === "h")?.id ||
+      0;
     const { unit: defaultYUnit, scale: defaultYScale } = getYAxisOptions(
       compound,
       variable,
@@ -760,9 +762,10 @@ const Simulations: FC = () => {
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
-  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
+  const units = useUnits();
+  const { isLoading: isUnitsLoading } = useUnitListQuery(
+    {},
+    { skip: !project },
   );
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(
