@@ -24,11 +24,11 @@ For a more detailed manual setup, follow the instructions below.
 
 ### Virtual Environment
 
-Create a Python virtual environment in the `env` folder:
+Create a Python virtual environment in the `venv` folder:
 
 ```bash
-python3 -m venv env
-source env/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 Always use this virtual environment when working with the backend.

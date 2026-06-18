@@ -179,7 +179,7 @@ To add tutorial videos to the application, you will need to create a csv file wi
 
 This file should be placed in the `pkpdapp/static/` directory and named `tutorial_videos.csv`.
 
-To link to an external help page url, set the `REACT_APP_HELP_URL` variable in the `.env.prod` file to the url of the help page.
+To link to an external help page url, set the `VITE_APP_HELP_URL` variable in the `.env.prod` file to the url of the help page.
 
 ## Docker Deployment
 
