@@ -19,6 +19,7 @@ from pkpdapp.models import (
     SubjectGroup,
     Simulation,
     ResultsTable,
+    Compound,
 )
 
 queryset_model_not_recognised_text = "queryset model {} not recognised"
@@ -33,6 +34,8 @@ class UserAccessFilter(filters.BaseFilterBackend):
         user = request.user
         if queryset.model == Project:
             queryset = queryset.filter(users=user)
+        elif queryset.model == Compound:
+            queryset = queryset.filter(project__users=user)
         else:
             raise RuntimeError(queryset_model_not_recognised_text)
         return queryset
