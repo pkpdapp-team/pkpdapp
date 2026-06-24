@@ -35,7 +35,6 @@ const OPTIMISE_METHOD_OPTIONS = [
   { value: "nelder-mead", label: "Nelder-Mead" },
   { value: "gradient_descent", label: "Gradient Descent" },
   { value: "adam", label: "Adam" },
-  { value: "irprop", label: "iRprop-" },
 ] as const;
 const DEFAULT_OPTIMISE_METHOD = "pso";
 

@@ -122,8 +122,8 @@ function useSimulationData({
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-        return acc || dv.type === "AUC";
-      }, false)
+      return acc || dv.type === "AUC";
+    }, false)
     : false;
 
   const {
@@ -237,7 +237,6 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   );
   const { optimiseModel, loadingOptimise } = useOptimise(model);
   const { biomarkerTypes } = useDataset(project.id);
-  console.log("biomarkerTypes", biomarkerTypes);
 
   const defaultSimulation: SimulationRead = {
     id: 0,

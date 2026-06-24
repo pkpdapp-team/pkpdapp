@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 from scipy.linalg import svd
+from django.db.models import Max
 
 from pkpdapp.models.simulate_context import (
     OutputContext,
@@ -18,6 +19,10 @@ from pkpdapp.models.simulate_context import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Lower bound applied to model predictions before taking their logarithm in the
+# multiplicative-noise error model.
+_MULTIPLICATIVE_NOISE_FLOOR = 1e-5
 
 
 @dataclass(frozen=True)
@@ -55,9 +60,9 @@ class OptimiseContext(SimulateContext):
             variables=variables,
             dynamic_inputs=optimise_inputs,
             use_diffsol=use_diffsol,
-            time_max=time_max,
             build_simulation_groups=False,
             discard_database_state=False,
+            time_max=time_max,
         )
         self._validate_optimise_inputs(
             optimise_inputs,
@@ -69,6 +74,7 @@ class OptimiseContext(SimulateContext):
             biomarker_types,
             subject_groups,
         )
+
         self._discard_database_state()
 
     def _optimise_predict(
@@ -191,8 +197,9 @@ class OptimiseContext(SimulateContext):
                 prediction = y[record.output_index, record.time_index]
                 observed = record.value
                 if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
+                    if observed <= 0:
                         return np.inf
+                    prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                 else:
                     residual = prediction - observed
@@ -259,8 +266,9 @@ class OptimiseContext(SimulateContext):
                 prediction = y[record.time_index, record.output_index]
                 observed = record.value
                 if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
+                    if observed <= 0:
                         return np.inf, np.zeros(n_params), 0.0, 0
+                    prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                     gradient_row = (
                         y_prime[record.time_index, record.output_index, :] / prediction
@@ -364,10 +372,11 @@ class OptimiseContext(SimulateContext):
                 observed = record.value
 
                 if use_multiplicative_noise:
-                    if prediction <= 0 or observed <= 0:
+                    if observed <= 0:
                         residual = np.nan
                         jac_row = np.full(n_params, np.nan)
                     else:
+                        prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                         residual = np.log(prediction) - np.log(observed)
                         jac_row = y_prime[t_idx, o_idx, :] / prediction
                     residual_for_output = residual / sigma
@@ -490,6 +499,10 @@ class OptimiseContext(SimulateContext):
         )
         if len(group_ids) == 0:
             raise ValueError("No biomarker data were found for optimisation.")
+
+        # override time max from the simulation context with the maximum time
+        # across all optimisation groups
+        self.time_max = biomarkers.aggregate(Max("time"))["time__max"] or self.time_max
 
         groups = []
         for group_id in group_ids:

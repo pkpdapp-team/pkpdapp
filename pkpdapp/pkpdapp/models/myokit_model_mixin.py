@@ -343,39 +343,27 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         """
         Fits the model against the data indicated
 
-                two different noise models are supported: gaussian additive
-                (i.e. sum of squares)
-        and log-normal multiplicative.
-                    return None
-                For each subject group:
-                        1. all variable outputs mapped to biomarker types are found;
-                            these
-               the requested outputs for the simulation for that subject group
-                            group and
-               biomarker types, this is collected in a (a) list of time points and
-               (b) 2D array where columns are timepoints and the rows arre outputs
-               (same order as the requested outputs in 1.).
-            3. a diffsol Ode model is contructed using the outputs from 1.
+        two different noise models are supported: gaussian additive
+        (i.e. sum of squares) and log-normal multiplicative.
 
-                Then fitting is performed. The loss function is the negative
-                log-likelihood
+        The loss function is the negative log-likelihood
 
-                    nll = N * log_sigma + SSR / (2 * sigma^2)
+            nll = N * log_sigma + SSR / (2 * sigma^2)
 
-                where N is the number of observations, SSR is the sum of squared
-                residuals, and sigma = exp(log_sigma) is the noise standard
-                deviation. Both additive and log-normal multiplicative noise
-                models are supported.
+        where N is the number of observations, SSR is the sum of squared
+        residuals, and sigma = exp(log_sigma) is the noise standard
+        deviation. Both additive and log-normal multiplicative noise
+        models are supported.
 
-                The package Pints is used for optimisation
-                (https://pints.readthedocs.io/en/stable/optimisers/index.html).
-                The optimisation method is chosen by the ``method`` argument.
-                Gradient-free methods (cmaes, pso, nelder-mead) only require the
-                loss function. Gradient-based methods (gradient_descent) also require
-                sensitivities, computed via forward sensitivity analysis using
-                ``solve_fwd_sens``. The methods ``adam`` and ``irprop`` are provided
-                for future compatibility but require a newer pints version exposing
-                ``pints.Adam`` / ``pints.IRPropMinus``.
+        The package Pints is used for optimisation
+        (https://pints.readthedocs.io/en/stable/optimisers/index.html).
+        The optimisation method is chosen by the ``method`` argument.
+        Gradient-free methods (cmaes, pso, nelder-mead) only require the
+        loss function. Gradient-based methods (gradient_descent) also require
+        sensitivities, computed via forward sensitivity analysis using
+        ``solve_fwd_sens``. The methods ``adam`` and ``irprop`` are provided
+        for future compatibility but require a newer pints version exposing
+        ``pints.Adam`` / ``pints.IRPropMinus``.
 
         Arguments
         ---------
