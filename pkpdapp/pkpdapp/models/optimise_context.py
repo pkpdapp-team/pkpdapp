@@ -52,6 +52,7 @@ class OptimiseContext(SimulateContext):
         outputs: list[str] | None = None,
         variables: dict[str, float] | None = None,
         use_diffsol: bool = False,
+        time_max: float | None = None,
     ):
         super().__init__(
             model=model,
@@ -61,6 +62,7 @@ class OptimiseContext(SimulateContext):
             use_diffsol=use_diffsol,
             build_simulation_groups=False,
             discard_database_state=False,
+            time_max=time_max,
         )
         self._validate_optimise_inputs(
             optimise_inputs,
@@ -72,7 +74,7 @@ class OptimiseContext(SimulateContext):
             biomarker_types,
             subject_groups,
         )
-        
+
         self._discard_database_state()
 
     def _optimise_predict(
@@ -498,7 +500,8 @@ class OptimiseContext(SimulateContext):
         if len(group_ids) == 0:
             raise ValueError("No biomarker data were found for optimisation.")
 
-        # override time max from the simulation context with the maximum time across all optimisation groups
+        # override time max from the simulation context with the maximum time
+        # across all optimisation groups
         self.time_max = biomarkers.aggregate(Max("time"))["time__max"] or self.time_max
 
         groups = []
