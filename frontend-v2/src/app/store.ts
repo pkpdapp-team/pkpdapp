@@ -5,6 +5,7 @@ import storageSession from "redux-persist/lib/storage/session";
 
 import loginReducer from "../features/login/loginSlice";
 import mainReducer from "../features/main/mainSlice";
+import chatReducer from "../features/chat/chatSlice";
 import { api } from "../app/api";
 
 const persistConfig = {
@@ -18,6 +19,7 @@ export const store = configureStore({
   reducer: {
     main: persistedMainReducer,
     login: loginReducer,
+    chat: chatReducer,
     [api.reducerPath]: api.reducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,
