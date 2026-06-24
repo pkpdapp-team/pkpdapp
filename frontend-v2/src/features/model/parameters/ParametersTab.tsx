@@ -134,7 +134,16 @@ const ParametersTab: FC<Props> = ({
                 <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
               </TableCell>
               <TableCell>
-                <div style={{ ...defaultHeaderSx }}>Nonlinearity</div>
+                <div style={{ ...defaultHeaderSx }}>
+                  Nonlinearity{" "}
+                  <HelpButton title="Nonlinearity">
+                    Make this parameter vary instead of staying constant.
+                    Michaelis-Menten options make it concentration-dependent,
+                    while the dose- and time-dependent options (Emax, Imax,
+                    power increase/decrease, time increase/decrease) make it
+                    change with dose or over time.
+                  </HelpButton>{" "}
+                </div>
               </TableCell>
             </TableRow>
           </TableHead>
