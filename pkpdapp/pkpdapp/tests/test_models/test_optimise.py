@@ -554,23 +554,27 @@ class TestOptimise(TestCase):
         self.assertEqual(loss, np.inf)
         self.assertTrue(np.array_equal(gradient, np.zeros(len(values_by_id))))
 
-        non_positive_group = replace(
+        # non-positive observed values still yield an infinite loss.
+        non_positive_obs_group = replace(
             group,
             diffsol_ode=FakeDiffsolOde(
-                np.zeros((n_outputs, n_times), dtype=float),
+                finite_y,
                 sens=self._fake_sens(context, group),
+            ),
+            records=tuple(
+                replace(record, value=0.0) for record in group.records
             ),
         )
         self.assertEqual(
             context.optimise_loss(
-                (non_positive_group,),
+                (non_positive_obs_group,),
                 values_by_id,
                 use_multiplicative_noise=True,
             ),
             np.inf,
         )
         loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
-            (non_positive_group,),
+            (non_positive_obs_group,),
             values_by_id,
             use_multiplicative_noise=True,
         )
