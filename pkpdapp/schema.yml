@@ -161,6 +161,16 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/chatbot/:
+    post:
+      operationId: chatbot_create
+      tags:
+      - chatbot
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/combined_model/:
     get:
       operationId: combined_model_list
@@ -428,6 +438,48 @@ paths:
           description: ''
         '404':
           description: No response body
+  /api/combined_model/{id}/simulate_uncertainty:
+    post:
+      operationId: combined_model_simulate_uncertainty_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - combined_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          description: No response body
   /api/compound/:
     get:
       operationId: compound_list
@@ -569,22 +621,17 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/correlation/:
+  /api/conversations/:
     get:
-      operationId: correlation_list
+      operationId: conversations_list
       parameters:
-      - in: query
-        name: dosed_pk_model_id
-        schema:
-          type: integer
-        description: Filter results by dosed_pk_model ID
       - in: query
         name: project_id
         schema:
           type: integer
-        description: Filter results by project ID
+        description: Filter conversations by project ID
       tags:
-      - correlation
+      - conversations
       security:
       - cookieAuth: []
       responses:
@@ -594,24 +641,23 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Correlation'
+                  $ref: '#/components/schemas/Conversation'
           description: ''
     post:
-      operationId: correlation_create
+      operationId: conversations_create
       tags:
-      - correlation
+      - conversations
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Correlation'
+              $ref: '#/components/schemas/Conversation'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Correlation'
+              $ref: '#/components/schemas/Conversation'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Correlation'
-        required: true
+              $ref: '#/components/schemas/Conversation'
       security:
       - cookieAuth: []
       responses:
@@ -619,20 +665,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Correlation'
+                $ref: '#/components/schemas/Conversation'
           description: ''
-  /api/correlation/{id}/:
+  /api/conversations/{id}/:
     get:
-      operationId: correlation_retrieve
+      operationId: conversations_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this correlation.
+        description: A unique integer value identifying this conversation.
         required: true
       tags:
-      - correlation
+      - conversations
       security:
       - cookieAuth: []
       responses:
@@ -640,82 +686,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Correlation'
-          description: ''
-    put:
-      operationId: correlation_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this correlation.
-        required: true
-      tags:
-      - correlation
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Correlation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Correlation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Correlation'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Correlation'
-          description: ''
-    patch:
-      operationId: correlation_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this correlation.
-        required: true
-      tags:
-      - correlation
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedCorrelation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedCorrelation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedCorrelation'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Correlation'
+                $ref: '#/components/schemas/Conversation'
           description: ''
     delete:
-      operationId: correlation_destroy
+      operationId: conversations_destroy
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this correlation.
+        description: A unique integer value identifying this conversation.
         required: true
       tags:
-      - correlation
+      - conversations
       security:
       - cookieAuth: []
       responses:
@@ -1189,6 +1172,50 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/messages/:
+    get:
+      operationId: messages_list
+      parameters:
+      - in: query
+        name: conversation_id
+        schema:
+          type: integer
+        description: Filter messages by conversation ID
+        required: true
+      tags:
+      - messages
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+          description: ''
+  /api/messages/{id}/:
+    get:
+      operationId: messages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this message.
+        required: true
+      tags:
+      - messages
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: ''
   /api/nca/:
     post:
       operationId: nca_create
@@ -1427,6 +1454,48 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SimulateResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          description: No response body
+  /api/pharmacodynamic/{id}/simulate_uncertainty:
+    post:
+      operationId: pharmacodynamic_simulate_uncertainty_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pharmacodynamic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulateUncertainty'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
           description: ''
         '400':
           content:
@@ -3612,28 +3681,34 @@ components:
       description: |-
         * `SM` - Small Molecule
         * `LM` - Large Molecule
-    Correlation:
+    Conversation:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
-        distribution_1:
+        project:
           type: integer
-          description: first distribution of the correlated pair
-        distribution_2:
-          type: integer
-          description: second distribution of the correlated pair
-        coefficient:
-          type: number
-          format: double
-          maximum: 1.0
-          minimum: -1.0
-          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
+          nullable: true
+        title:
+          type: string
+          maxLength: 200
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_message_preview:
+          type: string
+          readOnly: true
       required:
-      - distribution_1
-      - distribution_2
+      - created_at
       - id
+      - last_message_preview
+      - updated_at
     Dataset:
       type: object
       properties:
@@ -3724,8 +3799,6 @@ components:
             * `EMM` - Extended Michaelis-Menten
             * `EMX` - Emax
             * `IMX` - Imax
-            * `TEM` - Time Emax
-            * `TIM` - Time Imax
             * `POW` - Power
             * `NPW` - Negative Power
             * `TDI` - Exponential Decay
@@ -3767,27 +3840,6 @@ components:
       - inputs
       - outputs
       - state_indices
-    Distribution:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        pdf:
-          allOf:
-          - $ref: '#/components/schemas/PdfEnum'
-          description: |-
-            probability density function
-
-            * `normal` - Normal
-            * `lognormal` - Log-normal
-            * `logit` - Logit-normal
-        variance:
-          type: number
-          format: double
-          description: variance of the ETA (normal random effect)
-      required:
-      - id
     Dose:
       type: object
       properties:
@@ -3886,6 +3938,26 @@ components:
       description: |-
         * `MS` - Microsomes
         * `HC` - Hepatocytes
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        content:
+          type: string
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - id
+      - role
     ModelTypeEnum:
       enum:
       - PK
@@ -3933,16 +4005,6 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
-    NoiseModelsEnum:
-      enum:
-      - additive
-      - multiplicative
-      - combined
-      type: string
-      description: |-
-        * `additive` - additive
-        * `multiplicative` - multiplicative
-        * `combined` - combined
     NullEnum:
       enum:
       - null
@@ -3980,61 +4042,26 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        noise_models:
-          type: array
-          items:
-            $ref: '#/components/schemas/NoiseModelsEnum'
-          nullable: true
+        use_multiplicative_noise:
+          type: boolean
+          default: true
         method:
           type: string
           default: pso
-        sigma_start:
-          type: array
-          items:
-            type: number
-            format: double
-          nullable: true
+        log_sigma:
+          type: number
+          format: double
+          default: 0.0
         sigma_bounds:
           type: array
           items:
-            type: array
-            items:
-              type: number
-              format: double
-            maxItems: 2
-            minItems: 2
-          nullable: true
-        sigma_use_log_space:
-          type: array
-          items:
-            type: boolean
-          nullable: true
-        sigma_mult_start:
-          type: array
-          items:
             type: number
             format: double
-          nullable: true
-        sigma_bounds_mult:
-          type: array
-          items:
-            type: array
-            items:
-              type: number
-              format: double
-            maxItems: 2
-            minItems: 2
-          nullable: true
-        sigma_mult_use_log_space:
-          type: array
-          items:
-            type: boolean
-          nullable: true
-        use_log_space:
-          type: array
-          items:
-            type: boolean
-          nullable: true
+          default:
+          - -20.0
+          - 20.0
+          maxItems: 2
+          minItems: 2
       required:
       - bounds
       - inputs
@@ -4053,15 +4080,8 @@ components:
         reason:
           type: string
         sigma:
-          type: array
-          items:
-            type: number
-            format: double
-        sigma_mult:
-          type: array
-          items:
-            type: number
-            format: double
+          type: number
+          format: double
           nullable: true
         inputs:
           type: array
@@ -4092,10 +4112,8 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        noise_models:
-          type: array
-          items:
-            type: string
+        use_multiplicative_noise:
+          type: boolean
         method:
           type: string
         predictions:
@@ -4105,12 +4123,6 @@ components:
             additionalProperties: {}
           nullable: true
         residuals:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-          nullable: true
-        observations:
           type: array
           items:
             type: object
@@ -4128,90 +4140,32 @@ components:
           type: number
           format: double
           nullable: true
-        neg2ll:
+        log_sigma:
           type: number
           format: double
-          nullable: true
-        aic:
-          type: number
-          format: double
-          nullable: true
-        bic:
-          type: number
-          format: double
-          nullable: true
-        filtered_observations:
-          type: integer
-          nullable: true
-        sigma_variables:
-          type: array
-          items:
-            type: integer
-          nullable: true
-        sigma_start:
-          type: array
-          items:
-            type: number
-            format: double
           nullable: true
         sigma_bounds:
           type: array
           items:
-            type: array
-            items:
-              type: number
-              format: double
-          nullable: true
-        sigma_use_log_space:
-          type: array
-          items:
-            type: boolean
-          nullable: true
-        sigma_mult_start:
-          type: array
-          items:
             type: number
             format: double
           nullable: true
-        sigma_bounds_mult:
-          type: array
-          items:
-            type: array
-            items:
-              type: number
-              format: double
-          nullable: true
-        sigma_mult_use_log_space:
-          type: array
-          items:
-            type: boolean
-          nullable: true
       required:
-      - aic
-      - bic
       - bounds
       - condition_number
       - covariance
       - inputs
+      - log_sigma
       - loss
       - method
-      - neg2ll
-      - noise_models
-      - observations
       - optimal
       - predictions
       - reason
       - residuals
       - sigma
       - sigma_bounds
-      - sigma_bounds_mult
-      - sigma_mult
-      - sigma_mult_start
-      - sigma_mult_use_log_space
-      - sigma_start
-      - sigma_use_log_space
-      - sigma_variables
       - starting
+      - use_multiplicative_noise
     PatchedBiomarkerType:
       type: object
       properties:
@@ -4474,24 +4428,6 @@ components:
         dissociation_unit:
           type: integer
           description: unit for dissociation constant
-    PatchedCorrelation:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        distribution_1:
-          type: integer
-          description: first distribution of the correlated pair
-        distribution_2:
-          type: integer
-          description: second distribution of the correlated pair
-        coefficient:
-          type: number
-          format: double
-          maximum: 1.0
-          minimum: -1.0
-          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
     PatchedDataset:
       type: object
       properties:
@@ -5119,10 +5055,6 @@ components:
           items:
             type: integer
           readOnly: true
-        distribution:
-          allOf:
-          - $ref: '#/components/schemas/Distribution'
-          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -5229,16 +5161,6 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
-    PdfEnum:
-      enum:
-      - normal
-      - lognormal
-      - logit
-      type: string
-      description: |-
-        * `normal` - Normal
-        * `lognormal` - Log-normal
-        * `logit` - Logit-normal
     Pharmacodynamic:
       type: object
       properties:
@@ -5635,6 +5557,18 @@ components:
       - id
       - name
       - rows
+    RoleEnum:
+      enum:
+      - user
+      - assistant
+      - tool_call
+      - tool_result
+      type: string
+      description: |-
+        * `user` - User
+        * `assistant` - Assistant
+        * `tool_call` - Tool Call
+        * `tool_result` - Tool Result
     RowsEnum:
       enum:
       - parameters
@@ -5665,11 +5599,58 @@ components:
         use_diffsol:
           type: boolean
           default: true
+      required:
+      - outputs
+      - variables
+    SimulateResponse:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: number
+            format: double
+        group:
+          type: integer
+          nullable: true
+        outputs:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+              format: double
+      required:
+      - outputs
+      - time
+    SimulateUncertainty:
+      type: object
+      properties:
+        outputs:
+          type: array
+          items:
+            type: string
+        variables:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        variable_distributions:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {}
+        time_max:
+          type: number
+          format: double
         sample_count:
           type: integer
           minimum: 1
         seed:
           type: integer
+        use_diffsol:
+          type: boolean
+          default: true
         quantiles:
           type: array
           items:
@@ -5679,8 +5660,7 @@ components:
             minimum: 0.0
       required:
       - outputs
-      - variables
-    SimulateResponse:
+    SimulateUncertaintyResponse:
       type: object
       properties:
         time:
@@ -6031,8 +6011,6 @@ components:
       - EMM
       - EMX
       - IMX
-      - TEM
-      - TIM
       - POW
       - NPW
       - TDI
@@ -6048,8 +6026,6 @@ components:
         * `EMM` - Extended Michaelis-Menten
         * `EMX` - Emax
         * `IMX` - Imax
-        * `TEM` - Time Emax
-        * `TIM` - Time Imax
         * `POW` - Power
         * `NPW` - Negative Power
         * `TDI` - Exponential Decay
@@ -6171,10 +6147,6 @@ components:
           items:
             type: integer
           readOnly: true
-        distribution:
-          allOf:
-          - $ref: '#/components/schemas/Distribution'
-          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored

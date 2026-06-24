@@ -60,6 +60,12 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    chatbotCreate: build.mutation<
+      ChatbotCreateApiResponse,
+      ChatbotCreateApiArg
+    >({
+      query: () => ({ url: `/api/chatbot/`, method: "POST" }),
+    }),
     combinedModelList: build.query<
       CombinedModelListApiResponse,
       CombinedModelListApiArg
@@ -149,6 +155,16 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.simulate,
       }),
     }),
+    combinedModelSimulateUncertaintyCreate: build.mutation<
+      CombinedModelSimulateUncertaintyCreateApiResponse,
+      CombinedModelSimulateUncertaintyCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/simulate_uncertainty`,
+        method: "POST",
+        body: queryArg.simulateUncertainty,
+      }),
+    }),
     compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
       query: () => ({ url: `/api/compound/` }),
     }),
@@ -197,60 +213,39 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
-    correlationList: build.query<
-      CorrelationListApiResponse,
-      CorrelationListApiArg
+    conversationsList: build.query<
+      ConversationsListApiResponse,
+      ConversationsListApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/correlation/`,
+        url: `/api/conversations/`,
         params: {
-          dosed_pk_model_id: queryArg.dosedPkModelId,
           project_id: queryArg.projectId,
         },
       }),
     }),
-    correlationCreate: build.mutation<
-      CorrelationCreateApiResponse,
-      CorrelationCreateApiArg
+    conversationsCreate: build.mutation<
+      ConversationsCreateApiResponse,
+      ConversationsCreateApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/correlation/`,
+        url: `/api/conversations/`,
         method: "POST",
-        body: queryArg.correlation,
+        body: queryArg.conversation,
       }),
     }),
-    correlationRetrieve: build.query<
-      CorrelationRetrieveApiResponse,
-      CorrelationRetrieveApiArg
+    conversationsRetrieve: build.query<
+      ConversationsRetrieveApiResponse,
+      ConversationsRetrieveApiArg
     >({
-      query: (queryArg) => ({ url: `/api/correlation/${queryArg.id}/` }),
+      query: (queryArg) => ({ url: `/api/conversations/${queryArg.id}/` }),
     }),
-    correlationUpdate: build.mutation<
-      CorrelationUpdateApiResponse,
-      CorrelationUpdateApiArg
+    conversationsDestroy: build.mutation<
+      ConversationsDestroyApiResponse,
+      ConversationsDestroyApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/correlation/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.correlation,
-      }),
-    }),
-    correlationPartialUpdate: build.mutation<
-      CorrelationPartialUpdateApiResponse,
-      CorrelationPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/correlation/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedCorrelation,
-      }),
-    }),
-    correlationDestroy: build.mutation<
-      CorrelationDestroyApiResponse,
-      CorrelationDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/correlation/${queryArg.id}/`,
+        url: `/api/conversations/${queryArg.id}/`,
         method: "DELETE",
       }),
     }),
@@ -411,6 +406,20 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    messagesList: build.query<MessagesListApiResponse, MessagesListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/messages/`,
+        params: {
+          conversation_id: queryArg.conversationId,
+        },
+      }),
+    }),
+    messagesRetrieve: build.query<
+      MessagesRetrieveApiResponse,
+      MessagesRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/messages/${queryArg.id}/` }),
+    }),
     ncaCreate: build.mutation<NcaCreateApiResponse, NcaCreateApiArg>({
       query: () => ({ url: `/api/nca/`, method: "POST" }),
     }),
@@ -493,6 +502,16 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
         method: "POST",
         body: queryArg.simulate,
+      }),
+    }),
+    pharmacodynamicSimulateUncertaintyCreate: build.mutation<
+      PharmacodynamicSimulateUncertaintyCreateApiResponse,
+      PharmacodynamicSimulateUncertaintyCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/pharmacodynamic/${queryArg.id}/simulate_uncertainty`,
+        method: "POST",
+        body: queryArg.simulateUncertainty,
       }),
     }),
     pharmacokineticList: build.query<
@@ -1164,6 +1183,8 @@ export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
+export type ChatbotCreateApiResponse = unknown;
+export type ChatbotCreateApiArg = void;
 export type CombinedModelListApiResponse =
   /** status 200  */ CombinedModelRead[];
 export type CombinedModelListApiArg = {
@@ -1221,6 +1242,12 @@ export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
 };
+export type CombinedModelSimulateUncertaintyCreateApiResponse =
+  /** status 200  */ SimulateUncertaintyResponse[];
+export type CombinedModelSimulateUncertaintyCreateApiArg = {
+  id: number;
+  simulateUncertainty: SimulateUncertainty;
+};
 export type CompoundListApiResponse = /** status 200  */ CompoundRead[];
 export type CompoundListApiArg = void;
 export type CompoundCreateApiResponse = /** status 201  */ CompoundRead;
@@ -1249,38 +1276,26 @@ export type CompoundDestroyApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
 };
-export type CorrelationListApiResponse = /** status 200  */ CorrelationRead[];
-export type CorrelationListApiArg = {
-  /** Filter results by dosed_pk_model ID */
-  dosedPkModelId?: number;
-  /** Filter results by project ID */
+export type ConversationsListApiResponse =
+  /** status 200  */ ConversationRead[];
+export type ConversationsListApiArg = {
+  /** Filter conversations by project ID */
   projectId?: number;
 };
-export type CorrelationCreateApiResponse = /** status 201  */ CorrelationRead;
-export type CorrelationCreateApiArg = {
-  correlation: Correlation;
+export type ConversationsCreateApiResponse =
+  /** status 201  */ ConversationRead;
+export type ConversationsCreateApiArg = {
+  conversation: Conversation;
 };
-export type CorrelationRetrieveApiResponse = /** status 200  */ CorrelationRead;
-export type CorrelationRetrieveApiArg = {
-  /** A unique integer value identifying this correlation. */
+export type ConversationsRetrieveApiResponse =
+  /** status 200  */ ConversationRead;
+export type ConversationsRetrieveApiArg = {
+  /** A unique integer value identifying this conversation. */
   id: number;
 };
-export type CorrelationUpdateApiResponse = /** status 200  */ CorrelationRead;
-export type CorrelationUpdateApiArg = {
-  /** A unique integer value identifying this correlation. */
-  id: number;
-  correlation: Correlation;
-};
-export type CorrelationPartialUpdateApiResponse =
-  /** status 200  */ CorrelationRead;
-export type CorrelationPartialUpdateApiArg = {
-  /** A unique integer value identifying this correlation. */
-  id: number;
-  patchedCorrelation: PatchedCorrelation;
-};
-export type CorrelationDestroyApiResponse = unknown;
-export type CorrelationDestroyApiArg = {
-  /** A unique integer value identifying this correlation. */
+export type ConversationsDestroyApiResponse = unknown;
+export type ConversationsDestroyApiArg = {
+  /** A unique integer value identifying this conversation. */
   id: number;
 };
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
@@ -1384,6 +1399,16 @@ export type EfficacyExperimentDestroyApiArg = {
   /** A unique integer value identifying this efficacy experiment. */
   id: number;
 };
+export type MessagesListApiResponse = /** status 200  */ MessageRead[];
+export type MessagesListApiArg = {
+  /** Filter messages by conversation ID */
+  conversationId: number;
+};
+export type MessagesRetrieveApiResponse = /** status 200  */ MessageRead;
+export type MessagesRetrieveApiArg = {
+  /** A unique integer value identifying this message. */
+  id: number;
+};
 export type NcaCreateApiResponse = unknown;
 export type NcaCreateApiArg = void;
 export type PharmacodynamicListApiResponse =
@@ -1438,6 +1463,12 @@ export type PharmacodynamicSimulateCreateApiResponse =
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
+};
+export type PharmacodynamicSimulateUncertaintyCreateApiResponse =
+  /** status 200  */ SimulateUncertaintyResponse[];
+export type PharmacodynamicSimulateUncertaintyCreateApiArg = {
+  id: number;
+  simulateUncertainty: SimulateUncertainty;
 };
 export type PharmacokineticListApiResponse =
   /** status 200  */ PharmacokineticRead[];
@@ -1974,8 +2005,6 @@ export type TypeEnum =
   | "EMM"
   | "EMX"
   | "IMX"
-  | "TEM"
-  | "TIM"
   | "POW"
   | "NPW"
   | "TDI"
@@ -1996,8 +2025,6 @@ export type DerivedVariable = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
-    * `TEM` - Time Emax
-    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
@@ -2027,8 +2054,6 @@ export type DerivedVariableRead = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
-    * `TEM` - Time Emax
-    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
@@ -2291,15 +2316,14 @@ export type OptimiseResponse = {
   optimal: number[];
   loss: number;
   reason: string;
-  sigma: number[];
-  sigma_mult: number[] | null;
+  sigma: number | null;
   inputs: number[];
   starting: number[];
   bounds: number[][];
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  noise_models: string[];
+  use_multiplicative_noise: boolean;
   method: string;
   predictions:
     | {
@@ -2311,29 +2335,14 @@ export type OptimiseResponse = {
         [key: string]: any;
       }[]
     | null;
-  observations:
-    | {
-        [key: string]: any;
-      }[]
-    | null;
   covariance: number[][] | null;
   condition_number: number | null;
-  neg2ll: number | null;
-  aic: number | null;
-  bic: number | null;
-  filtered_observations?: number | null;
-  sigma_variables: number[] | null;
-  sigma_start: number[] | null;
-  sigma_bounds: number[][] | null;
-  sigma_use_log_space: boolean[] | null;
-  sigma_mult_start: number[] | null;
-  sigma_bounds_mult: number[][] | null;
-  sigma_mult_use_log_space: boolean[] | null;
+  log_sigma: number | null;
+  sigma_bounds: number[] | null;
 };
 export type ErrorResponse = {
   error: string;
 };
-export type NoiseModelsEnum = "additive" | "multiplicative" | "combined";
 export type Optimise = {
   inputs: number[];
   starting: number[];
@@ -2341,29 +2350,16 @@ export type Optimise = {
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  noise_models?: NoiseModelsEnum[] | null;
+  use_multiplicative_noise?: boolean;
   method?: string;
-  sigma_start?: number[] | null;
-  sigma_bounds?: number[][] | null;
-  sigma_use_log_space?: boolean[] | null;
-  sigma_mult_start?: number[] | null;
-  sigma_bounds_mult?: number[][] | null;
-  sigma_mult_use_log_space?: boolean[] | null;
-  use_log_space?: boolean[] | null;
-};
-export type UncertaintySummary = {
-  mean: number[];
-  std: number[];
-  quantiles: {
-    [key: string]: number[];
-  };
+  log_sigma?: number;
+  sigma_bounds?: number[];
 };
 export type SimulateResponse = {
   time: number[];
   group?: number | null;
-  sample_count: number;
   outputs: {
-    [key: string]: UncertaintySummary;
+    [key: string]: number[];
   };
 };
 export type Simulate = {
@@ -2373,8 +2369,36 @@ export type Simulate = {
   };
   time_max?: number;
   use_diffsol?: boolean;
+};
+export type UncertaintySummary = {
+  mean: number[];
+  std: number[];
+  quantiles: {
+    [key: string]: number[];
+  };
+};
+export type SimulateUncertaintyResponse = {
+  time: number[];
+  group?: number | null;
+  sample_count: number;
+  outputs: {
+    [key: string]: UncertaintySummary;
+  };
+};
+export type SimulateUncertainty = {
+  outputs: string[];
+  variables?: {
+    [key: string]: number;
+  };
+  variable_distributions?: {
+    [key: string]: {
+      [key: string]: any;
+    };
+  };
+  time_max?: number;
   sample_count?: number;
   seed?: number;
+  use_diffsol?: boolean;
   quantiles?: number[];
 };
 export type CompoundTypeEnum = "SM" | "LM";
@@ -2545,39 +2569,17 @@ export type PatchedCompoundRead = {
   /** unit for dissociation constant */
   dissociation_unit?: number;
 };
-export type Correlation = {
-  /** first distribution of the correlated pair */
-  distribution_1: number;
-  /** second distribution of the correlated pair */
-  distribution_2: number;
-  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
-  coefficient?: number;
+export type Conversation = {
+  project?: number | null;
+  title?: string;
 };
-export type CorrelationRead = {
+export type ConversationRead = {
   id: number;
-  /** first distribution of the correlated pair */
-  distribution_1: number;
-  /** second distribution of the correlated pair */
-  distribution_2: number;
-  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
-  coefficient?: number;
-};
-export type PatchedCorrelation = {
-  /** first distribution of the correlated pair */
-  distribution_1?: number;
-  /** second distribution of the correlated pair */
-  distribution_2?: number;
-  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
-  coefficient?: number;
-};
-export type PatchedCorrelationRead = {
-  id?: number;
-  /** first distribution of the correlated pair */
-  distribution_1?: number;
-  /** second distribution of the correlated pair */
-  distribution_2?: number;
-  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
-  coefficient?: number;
+  project?: number | null;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+  last_message_preview: string;
 };
 export type Dataset = {
   /** name of the dataset */
@@ -2835,6 +2837,19 @@ export type PatchedEfficacyExperimentRead = {
   c50_unit?: number;
   /** compound for efficacy experiment */
   compound?: number;
+};
+export type RoleEnum = "user" | "assistant" | "tool_call" | "tool_result";
+export type Message = {
+  role: RoleEnum;
+  content: string;
+  metadata?: any;
+};
+export type MessageRead = {
+  id: number;
+  role: RoleEnum;
+  content: string;
+  metadata?: any;
+  created_at: string;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
 export type BlankEnum = "";
@@ -3801,30 +3816,7 @@ export type PatchedUserRead = {
   profile?: ProfileRead;
   project_set?: number[];
 };
-export type PdfEnum = "normal" | "lognormal" | "logit";
-export type Distribution = {
-  /** probability density function
-    
-    * `normal` - Normal
-    * `lognormal` - Log-normal
-    * `logit` - Logit-normal */
-  pdf?: PdfEnum;
-  /** variance of the ETA (normal random effect) */
-  variance?: number;
-};
-export type DistributionRead = {
-  id: number;
-  /** probability density function
-    
-    * `normal` - Normal
-    * `lognormal` - Log-normal
-    * `logit` - Logit-normal */
-  pdf?: PdfEnum;
-  /** variance of the ETA (normal random effect) */
-  variance?: number;
-};
 export type Variable = {
-  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3878,7 +3870,6 @@ export type Variable = {
 export type VariableRead = {
   id: number;
   protocols: number[];
-  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3930,7 +3921,6 @@ export type VariableRead = {
   dosed_pk_model?: number | null;
 };
 export type PatchedVariable = {
-  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3984,7 +3974,6 @@ export type PatchedVariable = {
 export type PatchedVariableRead = {
   id?: number;
   protocols?: number[];
-  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4043,6 +4032,7 @@ export const {
   useBiomarkerTypeUpdateMutation,
   useBiomarkerTypePartialUpdateMutation,
   useBiomarkerTypeDestroyMutation,
+  useChatbotCreateMutation,
   useCombinedModelListQuery,
   useCombinedModelCreateMutation,
   useCombinedModelRetrieveQuery,
@@ -4052,18 +4042,17 @@ export const {
   useCombinedModelOptimiseCreateMutation,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelSimulateCreateMutation,
+  useCombinedModelSimulateUncertaintyCreateMutation,
   useCompoundListQuery,
   useCompoundCreateMutation,
   useCompoundRetrieveQuery,
   useCompoundUpdateMutation,
   useCompoundPartialUpdateMutation,
   useCompoundDestroyMutation,
-  useCorrelationListQuery,
-  useCorrelationCreateMutation,
-  useCorrelationRetrieveQuery,
-  useCorrelationUpdateMutation,
-  useCorrelationPartialUpdateMutation,
-  useCorrelationDestroyMutation,
+  useConversationsListQuery,
+  useConversationsCreateMutation,
+  useConversationsRetrieveQuery,
+  useConversationsDestroyMutation,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useDatasetRetrieveQuery,
@@ -4083,6 +4072,8 @@ export const {
   useEfficacyExperimentUpdateMutation,
   useEfficacyExperimentPartialUpdateMutation,
   useEfficacyExperimentDestroyMutation,
+  useMessagesListQuery,
+  useMessagesRetrieveQuery,
   useNcaCreateMutation,
   usePharmacodynamicListQuery,
   usePharmacodynamicCreateMutation,
@@ -4093,6 +4084,7 @@ export const {
   usePharmacodynamicMmtUpdateMutation,
   usePharmacodynamicSbmlUpdateMutation,
   usePharmacodynamicSimulateCreateMutation,
+  usePharmacodynamicSimulateUncertaintyCreateMutation,
   usePharmacokineticListQuery,
   usePharmacokineticCreateMutation,
   usePharmacokineticRetrieveQuery,
