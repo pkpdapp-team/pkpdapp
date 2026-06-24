@@ -10,6 +10,7 @@ const normalisation = {
   Amount: ["amount", "amt"],
   "Amount Unit": [
     "amount unit",
+    "amount units",
     "amt_unit",
     "amt_units",
     "amtunit",
@@ -108,6 +109,7 @@ const normalisation = {
   Time: ["time", "t", "ivar", "hour_actual", "afrlt"],
   "Time Unit": [
     "time unit",
+    "time units",
     "time_unit",
     "time_units",
     "t_units",
