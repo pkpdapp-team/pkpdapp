@@ -38,3 +38,4 @@ from .simulation import (
     SimulationSliderSerializer,
 )
 from .tag import TagSerializer
+from .conversation import ConversationSerializer, MessageSerializer

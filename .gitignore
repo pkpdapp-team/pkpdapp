@@ -22,6 +22,7 @@ pkpdapp/static
 frontend/node_modules
 
 logfile.log*
+chatbot.log*
 
 .vscode
 
