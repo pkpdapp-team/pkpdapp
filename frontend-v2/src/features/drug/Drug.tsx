@@ -34,6 +34,7 @@ import { FC, useCallback, useEffect, useState } from "react";
 import SelectField from "../../components/SelectField";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
+import HelpButton from "../../components/HelpButton";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import useDirty from "../../hooks/useDirty";
@@ -204,22 +205,39 @@ const DrugForm: FC<DrugFormProps> = ({
   );
   const molMassUnitOpt = molMassUnits
     ? molMassUnits.map((unit) => {
-        // add (Da) and (kDa) for clarity
-        if (unit.symbol === "g/mol") {
-          return { value: unit.id, label: `${unit.symbol} (Da)` };
-        }
-        if (unit.symbol === "kg/mol") {
-          return { value: unit.id, label: `${unit.symbol} (kDa)` };
-        }
-        return { value: unit.id, label: unit.symbol };
-      })
+      // add (Da) and (kDa) for clarity
+      if (unit.symbol === "g/mol") {
+        return { value: unit.id, label: `${unit.symbol} (Da)` };
+      }
+      if (unit.symbol === "kg/mol") {
+        return { value: unit.id, label: `${unit.symbol} (kDa)` };
+      }
+      return { value: unit.id, label: unit.symbol };
+    })
     : [];
 
   const defaultProps = { disabled: isSharedWithMe };
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <TableHeader variant="h4" label="Drug & Target" />
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <TableHeader variant="h4" label="Drug & Target" />
+        <HelpButton title="Drug & Target">
+          <p>
+            Set the physical properties of the drug and its target(s) used
+            throughout the project.
+          </p>
+          <p>
+            <strong>Drug Properties:</strong> the molecular mass of the
+            compound, used to convert between mass and molar concentrations.
+          </p>
+          <p>
+            <strong>Target Properties:</strong> the molecular mass of each
+            target, used for unit conversion in target-mediated drug
+            disposition models.
+          </p>
+        </HelpButton>
+      </Box>
       <div
         style={{ display: "flex", paddingTop: "1rem", flexDirection: "column" }}
       >
@@ -338,15 +356,21 @@ const DrugForm: FC<DrugFormProps> = ({
             xs: 7,
           }}
         >
-          <Box sx={{ display: "flex" }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <Typography
               id="efficacy-heading"
               variant="h6"
               component="h2"
-              gutterBottom
             >
               Efficacy-Safety Data
             </Typography>
+            <HelpButton title="Efficacy-Safety Data">
+              <p>
+                C50 and Hill-coefficient values describing the drug&apos;s
+                efficacy or safety response. This data can be used to draw
+                &quot;Cx&quot; reference lines on concentration plots.
+              </p>
+            </HelpButton>
             <Tooltip
               arrow
               title={
@@ -362,7 +386,7 @@ const DrugForm: FC<DrugFormProps> = ({
                   variant="contained"
                   onClick={addNewEfficacyExperiment}
                   disabled={isSharedWithMe || isEditIndex !== null}
-                  sx={{ marginBottom: "0.35em", marginLeft: ".5rem" }}
+                  sx={{ marginLeft: ".5rem" }}
                 >
                   Add new
                 </Button>

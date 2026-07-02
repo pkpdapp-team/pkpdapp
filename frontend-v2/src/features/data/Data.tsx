@@ -7,12 +7,22 @@ import {
   useVariableListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Grid, Tab, Tabs, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import HelpOutline from "@mui/icons-material/HelpOutline";
 import LoadDataStepper from "./LoadDataStepper";
+import ExampleFormatsDialog from "./ExampleFormatsDialog";
 import useDataset from "../../hooks/useDataset";
 import generateCSV from "./generateCSV";
 import { getTableHeight } from "../../shared/calculateTableHeights";
@@ -99,6 +109,7 @@ const Data: FC = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
 
   function editDataset() {
     if (csv) {
@@ -264,6 +275,12 @@ const Data: FC = () => {
           sx={{ display: "flex", justifyContent: "flex-end" }}
           size="grow"
         >
+          <IconButton
+            onClick={() => setShowExamples(true)}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            <HelpOutline titleAccess="Example file formats" />
+          </IconButton>
           <Button
             variant="outlined"
             onClick={handleNewUpload}
@@ -388,6 +405,10 @@ const Data: FC = () => {
           )}
         </Box>
       )}
+      <ExampleFormatsDialog
+        open={showExamples}
+        onClose={() => setShowExamples(false)}
+      />
     </>
   );
 };

@@ -223,47 +223,51 @@ const MapVariablesTab: FC<Props> = ({
   const dosingCompartmentHelp = (
     <>
       <p>
-        IV dosing: A1 for PK models and A1_f (full TMDD models) or A1_t (for QSS
-        models)
+        IV dosing: <strong>A1</strong> for PK models, <strong>A1_f</strong> for
+        full TMDD models, or <strong>A1_t</strong> for QSS TMDD models
       </p>
-      <p>PO/SC dosing: Aa</p>
-      <p>For custom-made models, please consult your tM&S expert</p>
+      <p>
+        PO/SC dosing: <strong>Aa</strong>
+      </p>
     </>
   );
 
   const aucHelp = (
     <p>
-      Calculate secondary parameters for this variable (see &quot;Secondary
-      Parameters&quot; tab)
+      Calculate secondary parameters (e.g. <strong>AUC</strong>) for this
+      variable (see &quot;Secondary Parameters&quot; tab)
     </p>
   );
   const sROHelp = (
     <p>
-      The receptor occupancy for SM and LM (calc_RO) is calculated from the
-      total drug concentration (typcially C1 or Ce), the total target
-      concentration and the KD value of drug-target binding
+      The receptor occupancy for SM and LM (<strong>calc_RO</strong>) is
+      calculated from the total drug concentration (typically{" "}
+      <strong>C1</strong> or <strong>Ce</strong>), the total target
+      concentration and the <strong>KD</strong> value of drug-target binding
     </p>
   );
 
   const unboundHelp = (
     <p>
       For SM, the unbound concentration in plasma is calculated by multiplying
-      the central drug concentration (typically C1) by fup (see Parameter tab)
+      the central drug concentration (typically <strong>C1</strong>) by{" "}
+      <strong>fup</strong> (see Parameter tab)
     </p>
   );
 
   const bloodHelp = (
     <p>
-      For SM, the total concentration in blood is calculated by dividing the
-      central drug concentration (typically C1) by BP (see Parameter tab)
+      For SM, the total concentration in blood is calculated by multiplying the
+      central drug concentration (typically <strong>C1</strong>) by{" "}
+      <strong>BP</strong> (see Parameter tab)
     </p>
   );
 
   const lagTimeHelp = (
     <p>
-      Adds a tlag parameter to the model, which is the time delay between the
-      dosing into the chosen compartment and the first observation of drug in
-      this compartment
+      Adds a <strong>tlag</strong> parameter to the model, which is the time
+      delay between the dosing into the chosen compartment and the first
+      observation of drug in this compartment
     </p>
   );
 
@@ -393,76 +397,76 @@ const MapVariablesTab: FC<Props> = ({
               <TableCell>
                 <span style={{ ...defaultHeaderSx }}>Name</span>
               </TableCell>
-            {model?.pd_model && (
+              {model?.pd_model && (
+                <Tooltip
+                  placement="top-start"
+                  title="Select drug concentration that drives PD effects"
+                >
+                  <TableCell>
+                    <span style={{ ...defaultHeaderSx }}>
+                      <p>
+                        Link to PD <span style={{ color: "red" }}>*</span>
+                      </p>
+                    </span>
+                  </TableCell>
+                </Tooltip>
+              )}
               <Tooltip
                 placement="top-start"
-                title="Select drug concentration that drives PD effects"
+                title="Calculate secondary parameters."
               >
                 <TableCell>
                   <span style={{ ...defaultHeaderSx }}>
-                    <p>
-                      Link to PD <span style={{ color: "red" }}>*</span>
-                    </p>
+                    Secondary parameters
+                    <HelpButton title={"Secondary Parameters"}>
+                      {aucHelp}
+                    </HelpButton>
                   </span>
                 </TableCell>
               </Tooltip>
-            )}
-            <Tooltip
-              placement="top-start"
-              title="Calculate secondary parameters."
-            >
-              <TableCell>
-                <span style={{ ...defaultHeaderSx }}>
-                  Secondary parameters
-                  <HelpButton title={"Secondary Parameters"}>
-                    {aucHelp}
-                  </HelpButton>
-                </span>
-              </TableCell>
-            </Tooltip>
-            <Tooltip
-              placement="top-start"
-              title="Select drug concentration that drives RO"
-            >
-              <TableCell>
-                <span style={{ ...defaultHeaderSx }}>
-                  Link to Static Receptor Occupancy
-                  <HelpButton title={"Link to Static Receptor Occupancy"}>
-                    {sROHelp}
-                  </HelpButton>
-                </span>
-              </TableCell>
-            </Tooltip>
-            {compound.compound_type === "SM" && (
-              <>
-                <Tooltip
-                  placement="top-start"
-                  title="Unbound concentration is calculated"
-                >
-                  <TableCell>
-                    <span style={{ ...defaultHeaderSx }}>
-                      Unbound Concentration
-                      <HelpButton title={"Unbound Concentration"}>
-                        {unboundHelp}
-                      </HelpButton>
-                    </span>
-                  </TableCell>
-                </Tooltip>
-                <Tooltip
-                  placement="top-start"
-                  title="Blood concentration is calculated"
-                >
-                  <TableCell>
-                    <span style={{ ...defaultHeaderSx }}>
-                      Blood Concentration
-                      <HelpButton title={"Blood concentration"}>
-                        {bloodHelp}
-                      </HelpButton>
-                    </span>
-                  </TableCell>
-                </Tooltip>
-              </>
-            )}
+              <Tooltip
+                placement="top-start"
+                title="Select drug concentration that drives RO"
+              >
+                <TableCell>
+                  <span style={{ ...defaultHeaderSx }}>
+                    Link to Static Receptor Occupancy
+                    <HelpButton title={"Link to Static Receptor Occupancy"}>
+                      {sROHelp}
+                    </HelpButton>
+                  </span>
+                </TableCell>
+              </Tooltip>
+              {compound.compound_type === "SM" && (
+                <>
+                  <Tooltip
+                    placement="top-start"
+                    title="Unbound concentration is calculated"
+                  >
+                    <TableCell>
+                      <span style={{ ...defaultHeaderSx }}>
+                        Unbound Concentration
+                        <HelpButton title={"Unbound Concentration"}>
+                          {unboundHelp}
+                        </HelpButton>
+                      </span>
+                    </TableCell>
+                  </Tooltip>
+                  <Tooltip
+                    placement="top-start"
+                    title="Blood concentration is calculated"
+                  >
+                    <TableCell>
+                      <span style={{ ...defaultHeaderSx }}>
+                        Blood Concentration
+                        <HelpButton title={"Blood concentration"}>
+                          {bloodHelp}
+                        </HelpButton>
+                      </span>
+                    </TableCell>
+                  </Tooltip>
+                </>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>

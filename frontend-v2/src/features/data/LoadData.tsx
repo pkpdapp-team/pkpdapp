@@ -1,9 +1,13 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
+import HelpOutline from "@mui/icons-material/HelpOutline";
 import Papa from "papaparse";
-import { FC, useCallback, useEffect } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
+  defaultGroupColumn,
+  groupedHeaders,
+  headerTypeDescriptions,
   normalisedFieldsFromData,
   normaliseFields,
   validateDosingRows,
@@ -17,12 +21,62 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
 import { isExcelFile, readExcelFile, readFileAsText, truncateFileName } from "./fileUtils";
+import ExampleFormatsDialog from "./ExampleFormatsDialog";
 
 export type Row = {
   [key: string]: string;
 };
 export type Data = Row[];
 export type Field = string;
+
+const MAP_HEADER_HELP = (
+  <>
+    <p>
+      The column types, which are automatically suggested based on the headers
+      in the data, can be customized in the table by selecting the desired type
+      from the dropdown lists.
+    </p>
+    <p>The column types you can map are:</p>
+    {Object.entries(groupedHeaders).map(([group, headers]) => (
+      <div key={group}>
+        <p style={{ marginBottom: 0 }}>
+          <strong>{group}</strong>
+        </p>
+        <ul style={{ marginTop: "0.25rem" }}>
+          {headers.map((header) => (
+            <li key={header}>
+              <strong>{header}</strong> – {headerTypeDescriptions[header]?.short}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+    <p style={{ marginBottom: 0 }}>
+      <strong>Dosing rows and observation rows</strong>
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      Each row is treated as a dose if it has a value in the Amount column (or an
+      Administration ID), and as an observation if it has a numeric value in an
+      Observation column. A single row can be both a dose and an observation at
+      the same time. Every row needs a valid, non-negative time; observations
+      flagged as censored or ignored (MDV) are dropped.
+    </p>
+    <p style={{ marginBottom: 0 }}>
+      <strong>Long and wide formats</strong>
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      In long format there is a single Observation column together with an
+      Observation ID column that identifies which output each row belongs to.
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      In wide format there is a separate Observation column for each output. Map
+      each of those columns as Observation and they are automatically combined
+      into long format, using each column&apos;s header as its Observation ID. When
+      wide columns are combined, the dose Amount is kept only against the first
+      observation column so doses are not counted more than once.
+    </p>
+  </>
+);
 
 const ALLOWED_TYPES = [
   "text/csv",
@@ -133,6 +187,7 @@ function useApiQueries() {
 const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
+  const [showExamples, setShowExamples] = useState(false);
 
   const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
@@ -147,7 +202,11 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     // Check if Group column exists in the actual data
     // This prevents re-creating Group column when user manually changes other mappings
     const hasGroupInData = state.data.length > 0 && "Group" in state.data[0];
-    if (!normalisedHeaders.includes("Cat Covariate") && !hasGroupInData) {
+    if (
+      !normalisedHeaders.includes("Cat Covariate") &&
+      !normalisedHeaders.includes("Group ID") &&
+      !hasGroupInData
+    ) {
       createDefaultSubjectGroup(state);
     }
 
@@ -184,10 +243,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       const fieldValidation = validateState(csvState);
       state.hasDosingRows = validateDosingRows(csvState);
       state.data = fieldValidation.data as Data;
-      const groupColumn =
-        fields.find(
-          (field) => normalisedFields.get(field) === "Cat Covariate",
-        ) || "Group";
+      const groupColumn = defaultGroupColumn(fields, normalisedFields);
       const errors = csvData.errors
         .map((e) => e.message)
         .concat(fieldValidation.errors);
@@ -257,10 +313,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
-    const groupColumn =
-      state.fields.find(
-        (field) => normalisedFields.get(field) === "Group ID",
-      ) || "Group";
+    const groupColumn = defaultGroupColumn(state.fields, normalisedFields);
     state.normalisedFields = normalisedFields;
     const { errors, warnings, data } = validateState({
       ...state,
@@ -288,6 +341,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           <Box {...getRootProps({ style: style.dropArea })}>
             <input aria-label="Upload CSV or Excel" {...getInputProps()} />
             <Typography
+              component="div"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -295,20 +349,35 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
               }}
             >
               Drag &amp; drop CSV or Excel files here, or click to select files
-              <Button
-                variant="outlined"
-                startIcon={<FileDownloadOutlinedIcon />}
-                style={{ marginTop: ".5rem" }}
-                onClick={open}
-                onKeyDown={open}
-                disabled={isSharedWithMe || isProjectLoading}
+              <Box
+                sx={{ display: "flex", alignItems: "center", mt: ".5rem" }}
               >
-                Upload Dataset
-              </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<FileDownloadOutlinedIcon />}
+                  onClick={open}
+                  onKeyDown={open}
+                  disabled={isSharedWithMe || isProjectLoading}
+                >
+                  Upload Dataset
+                </Button>
+                <IconButton
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShowExamples(true);
+                  }}
+                >
+                  <HelpOutline titleAccess="Example file formats" />
+                </IconButton>
+              </Box>
             </Typography>
           </Box>
         </Box>
       )}
+      <ExampleFormatsDialog
+        open={showExamples}
+        onClose={() => setShowExamples(false)}
+      />
       <Box component="div">
         {showData && (
           <div
@@ -321,9 +390,8 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
             <TableHeader
               id="imported-data-table-header"
               label="Imported Data Table"
-              tooltip="The column types, which are automatically suggested based on the
-              headers in the data, can be customized in the table by selecting
-              the desired type from the dropdown lists."
+              tooltip={MAP_HEADER_HELP}
+              tooltipMaxWidth="32rem"
             />
             <MapHeaders
               data={state.data}

@@ -31,6 +31,7 @@ import { useUnits } from "../../results/useUnits";
 import { useModelTimeIntervals } from "../../../hooks/useModelTimeIntervals";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { getAucVariable, getCompositeAucUnit } from "./utils";
+import HelpButton from "../../../components/HelpButton";
 
 const TABLE_BREAKPOINTS = [
   {
@@ -279,7 +280,7 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
 
   return (
     <>
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
         <Typography
           id="time-intervals-heading"
           variant="h5"
@@ -288,6 +289,21 @@ const TimeIntervalsTable: FC<TableProps> = (props) => {
         >
           Define time intervals
         </Typography>
+        <HelpButton title="Define time intervals">
+          <p>
+            Define time windows (start and end times) over which secondary
+            parameters such as AUC and the time spent above the variable
+            thresholds are calculated.
+          </p>
+          <p>
+            Add as many intervals as you need. The time unit set on the first
+            interval applies to all intervals.
+          </p>
+          <p>
+            The time unit selected here determines the time unit used to
+            calculate secondary parameters in the Results tables.
+          </p>
+        </HelpButton>
         <Button
           size="small"
           variant="contained"

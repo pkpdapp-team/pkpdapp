@@ -1,9 +1,11 @@
-import { Box, Tooltip, Typography, TypographyTypeMap } from "@mui/material";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { Box, Typography, TypographyTypeMap } from "@mui/material";
+import { ReactNode } from "react";
+import HelpButton from "./HelpButton";
 
 type TableHeaderType = {
   label: string;
-  tooltip?: string;
+  tooltip?: ReactNode;
+  tooltipMaxWidth?: string;
   variant?: TypographyTypeMap["props"]["variant"];
   id?: string;
 };
@@ -12,30 +14,23 @@ export const TableHeader = ({
   id,
   label,
   tooltip,
+  tooltipMaxWidth,
   variant = "h5",
 }: TableHeaderType) =>
-  tooltip?.length ? (
+  tooltip ? (
     <Box
       sx={{
         display: "flex",
         width: "fit-content",
         alignItems: "center",
-        transform: "scale(0.85)",
       }}
     >
       <Typography id={id} variant={variant}>
         {label}
       </Typography>
-      <Tooltip
-        title={tooltip}
-        arrow
-        placement="right"
-        slotProps={{
-          popper: { sx: { marginLeft: "4px" } },
-        }}
-      >
-        <HelpOutlineIcon sx={{ marginLeft: "8px", color: "dimgray" }} />
-      </Tooltip>
+      <HelpButton title={label} maxWidth={tooltipMaxWidth}>
+        {tooltip}
+      </HelpButton>
     </Box>
   ) : (
     <Typography id={id} variant={variant}>
