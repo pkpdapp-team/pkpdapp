@@ -16,6 +16,49 @@ BASE_URL_DATASETS = "https://raw.githubusercontent.com/pkpdapp-team/pkpdapp-data
 
 
 class TestDataParser(TestCase):
+    def test_per_body_weight_boolean_parsing(self):
+        # The per body weight flag should accept common truthy representations
+        # case-insensitively, including the uppercase TRUE/FALSE that Excel
+        # exports produce.
+        raw_values = [
+            "TRUE",
+            "FALSE",
+            "true",
+            "false",
+            "True",
+            "False",
+            "1",
+            "0",
+            "yes",
+            "no",
+        ]
+        expected = [
+            True,
+            False,
+            True,
+            False,
+            True,
+            False,
+            True,
+            False,
+            True,
+            False,
+        ]
+        header = "id,time,amount,observation,per_body_weight"
+        rows = [
+            "{subject},0,10,1.5,{flag}".format(subject=index + 1, flag=value)
+            for index, value in enumerate(raw_values)
+        ]
+        csv_str = "\n".join([header] + rows)
+
+        parser = DataParser()
+        data = parser.parse_from_str(csv_str)
+
+        self.assertEqual(
+            data["PER_BODY_WEIGHT_KG"].tolist(),
+            expected,
+        )
+
     def test_parse(self):
         for filename in [
             "datasets/TCB4dataset.csv",

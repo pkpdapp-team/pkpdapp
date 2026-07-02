@@ -4,6 +4,8 @@ import { FC, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
+  groupedHeaders,
+  headerTypeDescriptions,
   normalisedFieldsFromData,
   normaliseFields,
   validateDosingRows,
@@ -23,6 +25,55 @@ export type Row = {
 };
 export type Data = Row[];
 export type Field = string;
+
+const MAP_HEADER_HELP = (
+  <>
+    <p>
+      The column types, which are automatically suggested based on the headers
+      in the data, can be customized in the table by selecting the desired type
+      from the dropdown lists.
+    </p>
+    <p>The column types you can map are:</p>
+    {Object.entries(groupedHeaders).map(([group, headers]) => (
+      <div key={group}>
+        <p style={{ marginBottom: 0 }}>
+          <strong>{group}</strong>
+        </p>
+        <ul style={{ marginTop: "0.25rem" }}>
+          {headers.map((header) => (
+            <li key={header}>
+              <strong>{header}</strong> – {headerTypeDescriptions[header]?.short}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+    <p style={{ marginBottom: 0 }}>
+      <strong>Dosing rows and observation rows</strong>
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      Each row is treated as a dose if it has a value in the Amount column (or an
+      Administration ID), and as an observation if it has a numeric value in an
+      Observation column. A single row can be both a dose and an observation at
+      the same time. Every row needs a valid, non-negative time; observations
+      flagged as censored or ignored (MDV) are dropped.
+    </p>
+    <p style={{ marginBottom: 0 }}>
+      <strong>Long and wide formats</strong>
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      In long format there is a single Observation column together with an
+      Observation ID column that identifies which output each row belongs to.
+    </p>
+    <p style={{ marginTop: "0.25rem" }}>
+      In wide format there is a separate Observation column for each output. Map
+      each of those columns as Observation and they are automatically combined
+      into long format, using each column&apos;s header as its Observation ID. When
+      wide columns are combined, the dose Amount is kept only against the first
+      observation column so doses are not counted more than once.
+    </p>
+  </>
+);
 
 const ALLOWED_TYPES = [
   "text/csv",
@@ -321,9 +372,8 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
             <TableHeader
               id="imported-data-table-header"
               label="Imported Data Table"
-              tooltip="The column types, which are automatically suggested based on the
-              headers in the data, can be customized in the table by selecting
-              the desired type from the dropdown lists."
+              tooltip={MAP_HEADER_HELP}
+              tooltipMaxWidth="32rem"
             />
             <MapHeaders
               data={state.data}

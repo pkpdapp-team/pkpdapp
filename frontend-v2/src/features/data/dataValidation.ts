@@ -152,6 +152,119 @@ export const groupedHeaders = {
   ],
 };
 
+// Short descriptions are shown in the "Imported Data Table" header help, which
+// lists every available column type. Long descriptions are shown in the help
+// button next to each mapped column's type selector.
+export const headerTypeDescriptions: Record<
+  string,
+  { short: string; long: string }
+> = {
+  Ignore: {
+    short: "exclude this column from the import.",
+    long: "Exclude this column from the import. It will not be used in the model, simulations or fitting.",
+  },
+  ID: {
+    short: "unique identifier for each subject/individual.",
+    long: "The unique identifier for each subject or individual. Rows sharing the same ID belong to the same individual. If no ID column is provided, subjects are inferred automatically whenever the time column resets to an earlier value.",
+  },
+  Time: {
+    short: "time of each observation or dose.",
+    long: "The time of each observation or dose, relative to the start of the study for that subject. Must be non-negative and is normally increasing within each subject.",
+  },
+  "Time Unit": {
+    short: "unit of the time column (e.g. h, day).",
+    long: "The unit of the values in the time column (for example h, day or week). Used to convert times to the model's time unit.",
+  },
+  Observation: {
+    short: "a measured value, such as a concentration or PD response.",
+    long: "A measured value such as a drug concentration or PD response. These data points are plotted against the simulated data, and are the data points the model is fitted to.",
+  },
+  "Observation Unit": {
+    short: "unit of the observation values.",
+    long: "The unit of the observation values (for example ng/mL or nmol/L). Used to convert observations to the model's output unit.",
+  },
+  Amount: {
+    short: "the dose amount administered.",
+    long: "The dose amount administered at the given time. Rows with an amount are treated as dosing events.",
+  },
+  "Amount Unit": {
+    short: "unit of the dose amount.",
+    long: "The unit of the dose amount (for example mg or nmol). Used to convert doses to the model's amount unit. If the dose amount is specified per kg of body weight (for example mg/kg), the unit should be the absolute amount (mg) and the 'Per Body Weight(kg)' column should be set to 1 for all rows.",
+  },
+  "Per Body Weight(kg)": {
+    short: "marks the dose amount as given per kg of body weight.",
+    long: "Marks the dose amount as being specified per kilogram of body weight (for example mg/kg) rather than as an absolute amount. If the dose amount unit is mg/kg, this column should be set to 1 for all rows and the 'Amount Unit' column should be set to the absolute amount (mg).",
+  },
+  "Administration ID": {
+    short: "groups doses into separate dosing protocols (e.g. cmt, adm).",
+    long: "A key (for example cmt or adm) that groups doses into separate dosing protocols, so doses to different compartments or routes are kept distinct. Defaults to a single protocol if not provided.",
+  },
+  "Administration Name": {
+    short: "the route label; 'IV' means direct dosing (e.g. route).",
+    long: "The administration route label. A value of 'IV' makes the dose direct (administered straight into the compartment); any other value makes it indirect (via an absorption/depot compartment). Defaults to 'IV' if not provided.",
+  },
+  "Additional Doses": {
+    short: "number of repeated doses to add automatically (addl).",
+    long: "The number of additional identical doses to add automatically after the given dose (NONMEM-style addl). Used together with the interdose interval to expand repeated dosing.",
+  },
+  "Infusion Rate": {
+    short: "the rate of an infusion.",
+    long: "The rate at which an infusion dose is administered. The infusion duration is derived from the dose amount and this rate.",
+  },
+  "Infusion Duration": {
+    short: "the duration over which a dose is infused.",
+    long: "The duration over which a dose is infused. A duration of zero would be a bolus; zero durations are replaced with a small minimum duration so the dose is treated as a short infusion.",
+  },
+  "Interdose Interval": {
+    short: "the time between repeated doses (tau/ii).",
+    long: "The time between repeated doses (tau/ii). Used with additional doses to define a regular dosing schedule.",
+  },
+  "Observation ID": {
+    short: "identifies which output an observation belongs to (ytype/dvid).",
+    long: "Identifies which model output an observation belongs to (ytype/dvid). Use this when a dataset contains observations for more than one output.",
+  },
+  Censoring: {
+    short: "flags below-limit-of-quantification values (blq/lloq).",
+    long: "Flags observations that are censored, such as values below the limit of quantification (blq/lloq).",
+  },
+  "Ignored Observation": {
+    short: "marks observations to be excluded from fitting (mdv).",
+    long: "Marks individual observations that should be excluded from fitting (missing dependent value, mdv). The rows remain in the dataset but are not used as data points.",
+  },
+  "Amount Variable": {
+    short: "maps the dose amount to a model variable.",
+    long: "Maps the dose amount in this column to a specific amount variable in the model, when the automatic mapping is not sufficient.",
+  },
+  "Observation Variable": {
+    short: "maps the observation to a model variable.",
+    long: "Maps the observations in this column to a specific output variable in the model, when the automatic mapping is not sufficient.",
+  },
+  "Cat Covariate": {
+    short: "a categorical covariate (e.g. sex, cohort).",
+    long: "A categorical covariate such as sex, cohort or study. Categorical covariates can be used to stratify subjects into groups.",
+  },
+  "Cont Covariate": {
+    short: "a continuous covariate (e.g. weight, age).",
+    long: "A continuous covariate such as body weight or age. Continuous covariates can be used in the model and for stratification.",
+  },
+  "Event ID": {
+    short: "a NONMEM-style event identifier (evid).",
+    long: "A NONMEM-style event identifier (evid) distinguishing doses, observations and other event types within the dataset.",
+  },
+  "Group ID": {
+    short: "assigns rows to a subject group.",
+    long: "Assigns rows to a predefined subject group. Groups are used to organise subjects for simulation and analysis.",
+  },
+  Occasion: {
+    short: "an occasion identifier for repeated study periods (occ).",
+    long: "An occasion identifier (occ) marking repeated study periods within a subject, for example different dosing occasions.",
+  },
+  Regressor: {
+    short: "an additional time-varying input to the model.",
+    long: "An additional time-varying input (regressor) supplied to the model, for quantities that change over time but are not doses or observations.",
+  },
+};
+
 export const manditoryHeaders = ["Time", "Observation"];
 
 export const normalisedHeaders = Object.keys(normalisation);

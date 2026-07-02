@@ -368,7 +368,7 @@ const DrugForm: FC<DrugFormProps> = ({
               <p>
                 C50 and Hill-coefficient values describing the drug&apos;s
                 efficacy or safety response. This data can be used to draw
-                "Cx" reference lines on concentration plots.
+                &quot;Cx&quot; reference lines on concentration plots.
               </p>
             </HelpButton>
             <Tooltip

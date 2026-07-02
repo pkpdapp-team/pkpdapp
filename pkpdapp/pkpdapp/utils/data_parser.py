@@ -293,10 +293,15 @@ class DataParser:
         if "PER_BODY_WEIGHT_KG" not in found_cols:
             data["PER_BODY_WEIGHT_KG"] = False
 
-        # convert per body weight to boolean
-        data["PER_BODY_WEIGHT_KG"] = data["PER_BODY_WEIGHT_KG"].apply(
-            lambda x: x in [1, "1", True, "True", "true"]
-        )
+        # convert per body weight to boolean. Accept common truthy
+        # representations case-insensitively, including the uppercase TRUE/FALSE
+        # that Excel exports produce.
+        def to_bool(x):
+            if isinstance(x, bool):
+                return x
+            return str(x).strip().lower() in ("1", "true", "yes", "y", "t")
+
+        data["PER_BODY_WEIGHT_KG"] = data["PER_BODY_WEIGHT_KG"].apply(to_bool)
 
         # check that time is set for all rows
         if pd.to_numeric(data["TIME"], errors="coerce").isna().any():
