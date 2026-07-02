@@ -149,7 +149,7 @@ def _log_io(req_id, label, content):
             + f"\n... [truncated, full length {len(content)} chars]"
         )
     sep = "─" * 60
-    logger.info("\n%s\n[%s] %s\n%s\n%s", sep, req_id, label, body, sep)
+    logger.debug("\n%s\n[%s] %s\n%s\n%s", sep, req_id, label, body, sep)
 
 
 _KNOWN_STREAM_EVENTS = {

@@ -80,7 +80,7 @@ LOGGING = {
         },
         "pkpdapp.utils.chatbot": {
             "handlers": ["console", "chatbot_file"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
     },
