@@ -93,11 +93,12 @@ export default function Sidebar() {
   );
 
   const [intervals] = useModelTimeIntervals();
-  const { VITE_APP_ROCHE } = import.meta.env;
+  const { VITE_APP_ROCHE, VITE_ENABLE_CHATBOT } = import.meta.env;
   const isRocheLogo =
     typeof VITE_APP_ROCHE === "string"
       ? VITE_APP_ROCHE === "true"
       : VITE_APP_ROCHE;
+  const isChatbotEnabled = VITE_ENABLE_CHATBOT === "true";
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
@@ -522,7 +523,7 @@ export default function Sidebar() {
             </Box>
           )}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <ChatButton />
+            {isChatbotEnabled && <ChatButton />}
             <Typography
               variant="subtitle1"
               noWrap
