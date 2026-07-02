@@ -218,7 +218,7 @@ def _build_input_items(conversation, max_messages=40):
     Only user and assistant messages are replayed.
     """
     db_messages = list(
-        conversation.messages.order_by("created_at")
+        conversation.messages.order_by("id")
     )
     if len(db_messages) > max_messages:
         db_messages = db_messages[-max_messages:]
