@@ -310,7 +310,10 @@ def stream_chat_response(
         yield _sse({"type": "finish-step"})
         yield _sse({"type": "finish"})
         yield _sse("[DONE]")
-        _save_assistant_message(conversation, assistant_text_parts)
+        try:
+            conversation.save_assistant_message(assistant_text_parts)
+        except Exception:
+            logger.exception("[chatbot] [%s] error saving assistant message", req_id)
         _log_io(req_id, "ASSISTANT FINAL", "".join(assistant_text_parts))
         logger.info("[chatbot] [%s] done", req_id)
 
@@ -321,17 +324,3 @@ def stream_chat_response(
             "errorText": "An error occurred. Please try again.",
         })
         yield _sse("[DONE]")
-
-
-def _save_assistant_message(conversation, text_parts):
-    """Persist the accumulated assistant text response to the database."""
-    content = "".join(text_parts)
-    if content.strip():
-        try:
-            ConvMessage.objects.create(
-                conversation=conversation,
-                role="assistant",
-                content=content,
-            )
-        except Exception:
-            logger.exception("[chatbot] failed to save assistant message")

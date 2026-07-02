@@ -37,6 +37,15 @@ class Conversation(models.Model):
     def get_project(self):
         return self.project
 
+    def save_assistant_message(self, text_parts):
+        """Persist accumulated assistant text to the database."""
+        content = "".join(text_parts)
+        if content.strip():
+            Message.objects.create(
+                conversation=self,
+                role="assistant",
+                content=content,
+            )
 
 class Message(models.Model):
     # The full role set is declared up front. Basic chat only ever writes
