@@ -1,9 +1,11 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
+import HelpOutline from "@mui/icons-material/HelpOutline";
 import Papa from "papaparse";
-import { FC, useCallback, useEffect } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import MapHeaders from "./MapHeaders";
 import {
+  defaultGroupColumn,
   groupedHeaders,
   headerTypeDescriptions,
   normalisedFieldsFromData,
@@ -19,6 +21,7 @@ import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useProjectRetrieveQuery } from "../../app/backendApi";
 import { isExcelFile, readExcelFile, readFileAsText, truncateFileName } from "./fileUtils";
+import ExampleFormatsDialog from "./ExampleFormatsDialog";
 
 export type Row = {
   [key: string]: string;
@@ -184,6 +187,7 @@ function useApiQueries() {
 const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   const showData = state.data.length > 0 && state.fields.length > 0;
   const normalisedHeaders = state.normalisedHeaders;
+  const [showExamples, setShowExamples] = useState(false);
 
   const { isProjectLoading, isSharedWithMe } = useApiQueries();
 
@@ -198,7 +202,11 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
     // Check if Group column exists in the actual data
     // This prevents re-creating Group column when user manually changes other mappings
     const hasGroupInData = state.data.length > 0 && "Group" in state.data[0];
-    if (!normalisedHeaders.includes("Cat Covariate") && !hasGroupInData) {
+    if (
+      !normalisedHeaders.includes("Cat Covariate") &&
+      !normalisedHeaders.includes("Group ID") &&
+      !hasGroupInData
+    ) {
       createDefaultSubjectGroup(state);
     }
 
@@ -235,10 +243,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
       const fieldValidation = validateState(csvState);
       state.hasDosingRows = validateDosingRows(csvState);
       state.data = fieldValidation.data as Data;
-      const groupColumn =
-        fields.find(
-          (field) => normalisedFields.get(field) === "Cat Covariate",
-        ) || "Group";
+      const groupColumn = defaultGroupColumn(fields, normalisedFields);
       const errors = csvData.errors
         .map((e) => e.message)
         .concat(fieldValidation.errors);
@@ -308,10 +313,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
   });
 
   const setNormalisedFields = (normalisedFields: Map<Field, string>) => {
-    const groupColumn =
-      state.fields.find(
-        (field) => normalisedFields.get(field) === "Group ID",
-      ) || "Group";
+    const groupColumn = defaultGroupColumn(state.fields, normalisedFields);
     state.normalisedFields = normalisedFields;
     const { errors, warnings, data } = validateState({
       ...state,
@@ -339,6 +341,7 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
           <Box {...getRootProps({ style: style.dropArea })}>
             <input aria-label="Upload CSV or Excel" {...getInputProps()} />
             <Typography
+              component="div"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -346,20 +349,35 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
               }}
             >
               Drag &amp; drop CSV or Excel files here, or click to select files
-              <Button
-                variant="outlined"
-                startIcon={<FileDownloadOutlinedIcon />}
-                style={{ marginTop: ".5rem" }}
-                onClick={open}
-                onKeyDown={open}
-                disabled={isSharedWithMe || isProjectLoading}
+              <Box
+                sx={{ display: "flex", alignItems: "center", mt: ".5rem" }}
               >
-                Upload Dataset
-              </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<FileDownloadOutlinedIcon />}
+                  onClick={open}
+                  onKeyDown={open}
+                  disabled={isSharedWithMe || isProjectLoading}
+                >
+                  Upload Dataset
+                </Button>
+                <IconButton
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShowExamples(true);
+                  }}
+                >
+                  <HelpOutline titleAccess="Example file formats" />
+                </IconButton>
+              </Box>
             </Typography>
           </Box>
         </Box>
       )}
+      <ExampleFormatsDialog
+        open={showExamples}
+        onClose={() => setShowExamples(false)}
+      />
       <Box component="div">
         {showData && (
           <div

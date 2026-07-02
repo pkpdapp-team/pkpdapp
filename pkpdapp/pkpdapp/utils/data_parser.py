@@ -117,7 +117,7 @@ class DataParser:
         "COMPOUND": ["compound"],
         "ADMINISTRATION_NAME": ["administration name", "route"],
         "INFUSION_TIME": ["infusion duration", "tinf", "infusion_time", "infusiontime"],
-        "GROUP_ID": ["group id", "group_id", "group", "cohort"],
+        "GROUP_ID": ["group id", "group_id", "group", "cohort", "groupid"],
         "ADDITIONAL_DOSES": ["additional doses", "addl", "additional_doses"],
         "INTERDOSE_INTERVAL": ["interdose interval", "ii", "infusion_interval"],
         "EVENT_ID": ["event id", "event_id", "eventid", "evid"],

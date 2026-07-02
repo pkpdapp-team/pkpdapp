@@ -57,8 +57,8 @@ const normalisation = {
     "dose",
     "dosea",
   ],
-  "Event ID": ["event id", "evid"],
-  "Group ID": ["group id"],
+  "Event ID": ["event id", "evid", "eventid", "event_id"],
+  "Group ID": ["group id", "groupid", "group_id"],
   ID: ["id", "subject", "animal number", "subject_id", "subjid", "usubjid"],
   "Ignored Observation": ["ignored observation", "mdv"],
   "Infusion Duration": [
@@ -361,6 +361,23 @@ export function validateGroupMembers(groups: Group[]) {
   });
   return Object.values(subjectMemberships).every(
     (groups) => groups.length === 1,
+  );
+}
+
+/**
+ * Choose the default grouping column for stratification. A column mapped to
+ * "Group ID" takes precedence, then the first "Cat Covariate", and finally the
+ * auto-created "Group" column. Used on upload and when mappings change so both
+ * paths agree on the default primary covariate.
+ */
+export function defaultGroupColumn(
+  fields: string[],
+  normalisedFields: Map<string, string>,
+): string {
+  return (
+    fields.find((field) => normalisedFields.get(field) === "Group ID") ||
+    fields.find((field) => normalisedFields.get(field) === "Cat Covariate") ||
+    "Group"
   );
 }
 
