@@ -235,7 +235,16 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
-  const { optimiseModel, loadingOptimise } = useOptimise(model);
+  const {
+    optimiseModel,
+    loadingOptimise,
+    method,
+    setMethod,
+    noiseModel,
+    setNoiseModel,
+    maxIterations,
+    setMaxIterations,
+  } = useOptimise(model);
   const { biomarkerTypes } = useDataset(project.id);
 
   const defaultSimulation: SimulationRead = {
@@ -522,6 +531,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         plots,
         biomarkerTypes,
         subjectGroups: visibleSubjectGroupIds,
+        noiseModel,
+        method,
+        maxIterations,
       }),
     );
   }, [
@@ -532,6 +544,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     plots,
     biomarkerTypes,
     visibleSubjectGroupIds,
+    noiseModel,
+    method,
+    maxIterations,
     handleOptimiseWithInputs,
   ]);
 
@@ -620,6 +635,12 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         handleOptimiseWithInputs={handleOptimiseWithInputs}
         visibleSubjectGroupIds={visibleSubjectGroupIds}
         loadingOptimise={loadingOptimise}
+        optimiseMethod={method}
+        setOptimiseMethod={setMethod}
+        noiseModel={noiseModel}
+        setNoiseModel={setNoiseModel}
+        maxIterations={maxIterations}
+        setMaxIterations={setMaxIterations}
         optimiseResult={optimiseResult}
         exportSimulation={exportSimulation}
         showReference={showReference}
