@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -16,6 +16,7 @@ import {
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import {
@@ -26,7 +27,7 @@ import {
   SubjectGroupRead,
   VariableRead,
 } from "../../app/backendApi";
-import { getDefaultOptimiseInputs } from "./utils";
+import { getDefaultOptimiseInputs, getSigmaVariables } from "./utils";
 
 const DEFAULT_MAX_ITERATIONS = 100;
 const OPTIMISE_METHOD_OPTIONS = [
@@ -79,8 +80,21 @@ const OptimisationSettings = ({
   const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
-  const [logSigma, setLogSigma] = useState<number>(0);
-  const [sigmaBounds, setSigmaBounds] = useState<[number, number]>([-20, 20]);
+  // Per-output-variable noise sigma, keyed by model output variable id.
+  const [logSigmaByVar, setLogSigmaByVar] = useState<Record<number, number>>({});
+  const [sigmaBoundsByVar, setSigmaBoundsByVar] = useState<
+    Record<number, [number, number]>
+  >({});
+
+  // The distinct output variables to fit a sigma for follow the selected
+  // observations, in the same canonical (ascending id) order as the backend.
+  const sigmaVariables = useMemo(
+    () =>
+      getSigmaVariables(
+        biomarkerTypes.filter((bt) => selectedBiomarkerTypeIds.includes(bt.id)),
+      ),
+    [biomarkerTypes, selectedBiomarkerTypeIds],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -105,8 +119,11 @@ const OptimisationSettings = ({
     setMethod(DEFAULT_OPTIMISE_METHOD);
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
-    setLogSigma(defaultOptimiseInputs.log_sigma ?? 0);
-    setSigmaBounds(defaultOptimiseInputs.sigma_bounds ?? [-20, 20]);
+
+    // Per-variable sigma starts at the defaults (log σ = 0, bounds [-20, 20]);
+    // the render/payload fall back to these when a variable has no entry.
+    setLogSigmaByVar({});
+    setSigmaBoundsByVar({});
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -136,11 +153,28 @@ const OptimisationSettings = ({
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
-      log_sigma: logSigma,
-      sigma_bounds: sigmaBounds,
+      // log_sigma / sigma_bounds are ordered by sigmaVariables (ascending
+      // variable id), matching the backend's canonical output ordering.
+      log_sigma: sigmaVariables.map((varId) => logSigmaByVar[varId] ?? 0),
+      sigma_bounds: sigmaVariables.map(
+        (varId) => sigmaBoundsByVar[varId] ?? [-20, 20],
+      ),
     });
     onClose();
   };
+
+  const optimiseDisabled =
+    loadingOptimise ||
+    orderedSliders.length < 1 ||
+    selectedBiomarkerTypeIds.length === 0;
+  // Explain why optimising is disabled (and how to enable it) via a tooltip.
+  // Empty while loading or enabled so no tooltip is shown then.
+  const optimiseDisabledReason =
+    orderedSliders.length < 1
+      ? "Add at least one parameter slider to fit."
+      : selectedBiomarkerTypeIds.length === 0
+        ? "Select at least one observation to fit against."
+        : "";
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
@@ -212,38 +246,69 @@ const OptimisationSettings = ({
           <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
             Noise standard deviation (log scale)
           </Typography>
-          <Stack direction="row" spacing={1}>
-            <TextField
-              label="Log sigma"
-              type="number"
-              size="small"
-              value={logSigma}
-              onChange={(event) => setLogSigma(Number(event.target.value))}
-              fullWidth
-            />
-            <TextField
-              label="Min bound"
-              type="number"
-              size="small"
-              value={sigmaBounds[0]}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setSigmaBounds((current) => [value, current[1]]);
-              }}
-              fullWidth
-            />
-            <TextField
-              label="Max bound"
-              type="number"
-              size="small"
-              value={sigmaBounds[1]}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setSigmaBounds((current) => [current[0], value]);
-              }}
-              fullWidth
-            />
-          </Stack>
+          {sigmaVariables.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Select at least one observation to configure its noise.
+            </Typography>
+          )}
+          {sigmaVariables.map((varId) => {
+            const variable = variables.find((item) => item.id === varId);
+            const label = variable?.description
+              ? `${variable.name} (${variable.description})`
+              : variable?.name || `Variable ${varId}`;
+            const bounds = sigmaBoundsByVar[varId] ?? [-20, 20];
+            return (
+              <Box key={varId}>
+                <Typography variant="body2" sx={{ marginBottom: ".25rem" }}>
+                  {label}
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    label="Log sigma"
+                    type="number"
+                    size="small"
+                    value={logSigmaByVar[varId] ?? 0}
+                    onChange={(event) => {
+                      const value = Number(event.target.value);
+                      setLogSigmaByVar((current) => ({
+                        ...current,
+                        [varId]: value,
+                      }));
+                    }}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Min bound"
+                    type="number"
+                    size="small"
+                    value={bounds[0]}
+                    onChange={(event) => {
+                      const value = Number(event.target.value);
+                      setSigmaBoundsByVar((current) => ({
+                        ...current,
+                        [varId]: [value, (current[varId] ?? [-20, 20])[1]],
+                      }));
+                    }}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Max bound"
+                    type="number"
+                    size="small"
+                    value={bounds[1]}
+                    onChange={(event) => {
+                      const value = Number(event.target.value);
+                      setSigmaBoundsByVar((current) => ({
+                        ...current,
+                        [varId]: [(current[varId] ?? [-20, 20])[0], value],
+                      }));
+                    }}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+            );
+          })}
           <Divider />
           <Stack direction="row" spacing={4}>
             <Box>
@@ -347,14 +412,18 @@ const OptimisationSettings = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={handleCustomOptimise}
-          disabled={loadingOptimise || orderedSliders.length < 1}
-          data-cy="optimise-custom-parameters"
-        >
-          Optimise
-        </Button>
+        <Tooltip title={optimiseDisabledReason} placement="top">
+          <span>
+            <Button
+              variant="contained"
+              onClick={handleCustomOptimise}
+              disabled={optimiseDisabled}
+              data-cy="optimise-custom-parameters"
+            >
+              Optimise
+            </Button>
+          </span>
+        </Tooltip>
       </DialogActions>
     </Dialog>
   );

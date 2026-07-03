@@ -77,6 +77,46 @@ class TestOptimiseView(APITestCase):
         self.assertAlmostEqual(optimal[0], TRUE_K, delta=0.04)
         self.assertAlmostEqual(optimal[1], TRUE_SCALE, delta=0.18)
 
+    def test_optimise_returns_per_output_sigma(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 25,
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_var_id = self.biomarker_type.variable.id
+        self.assertEqual(response.data["sigma_variables"], [response_var_id])
+        self.assertEqual(len(response.data["sigma"]), 1)
+        self.assertEqual(len(response.data["log_sigma"]), 1)
+        self.assertEqual(len(response.data["sigma_bounds"]), 1)
+        self.assertEqual(len(response.data["sigma_bounds"][0]), 2)
+
+    def test_optimise_accepts_explicit_per_variable_sigma(self):
+        response_var_id = self.biomarker_type.variable.id
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 25,
+            "log_sigma": [-1.0],
+            "sigma_bounds": [[-10.0, 10.0]],
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # sigma_variables is echoed back in the response (canonical order),
+        # derived from biomarker_types — it is not part of the request.
+        self.assertEqual(response.data["sigma_variables"], [response_var_id])
+        self.assertEqual(response.data["log_sigma"], [-1.0])
+        self.assertEqual(response.data["sigma_bounds"], [[-10.0, 10.0]])
+
     def test_optimise_404_for_unknown_model(self):
         data = {
             "inputs": [self.k_var.id, self.scale_var.id],

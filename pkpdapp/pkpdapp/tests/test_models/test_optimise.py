@@ -20,8 +20,11 @@ from pkpdapp.models import (
     Variable,
 )
 from pkpdapp.tests.optimise_fixtures import (
+    DOSE_SPECS,
     SELECTED_TIMES,
+    TRUE_K,
     create_exponential_data,
+    exponential_response,
 )
 
 
@@ -477,6 +480,76 @@ class TestOptimise(TestCase):
         self.assertEqual([record.time_index for record in amount_records], [0, 1])
         self.assertEqual([record.value for record in amount_records], [1.0, 2.0])
 
+        # There should be one canonical sigma per distinct output variable, in
+        # ascending variable-id order and shared across groups.
+        response_id = setup["biomarker_type"].variable.id
+        amount_id = amount.id
+        self.assertEqual(
+            context.sigma_output_variable_ids,
+            tuple(sorted((response_id, amount_id))),
+        )
+        self.assertEqual(len(context.sigma_output_qnames), 2)
+        self.assertIn("Central.response", context.sigma_output_qnames)
+        self.assertIn("Central.amount", context.sigma_output_qnames)
+        # The amount records resolve to the amount variable's canonical index.
+        expected_amount_index = context.sigma_output_variable_ids.index(amount_id)
+        for record in amount_records:
+            self.assertEqual(
+                context._sigma_index_for_record(grouped, record),
+                expected_amount_index,
+            )
+
+    def test_optimise_fits_one_sigma_per_output_variable(self):
+        setup = create_exponential_data(
+            name_prefix="optimise_multi_sigma",
+            group_name_prefix="MultiSigma",
+        )
+        model = setup["model"]
+        dataset = setup["dataset"]
+        amount = model.variables.get(qname="Central.amount")
+        response_id = setup["biomarker_type"].variable.id
+        unit_mg = Unit.objects.get(symbol="mg")
+        amount_type = BiomarkerType.objects.create(
+            name="amount",
+            dataset=dataset,
+            stored_unit=unit_mg,
+            display_unit=unit_mg,
+            stored_time_unit=setup["biomarker_type"].stored_time_unit,
+            display_time_unit=setup["biomarker_type"].display_time_unit,
+            variable=amount,
+        )
+        # Add amount observations (response / scale) for each subject.
+        for group, doses in zip(setup["groups"], DOSE_SPECS):
+            subject = group.subjects.first()
+            amounts = exponential_response(SELECTED_TIMES, doses, TRUE_K, 1.0)
+            for t, value in zip(SELECTED_TIMES, amounts):
+                Biomarker.objects.create(
+                    time=float(t),
+                    subject=subject,
+                    biomarker_type=amount_type,
+                    value=float(max(value, 1e-6)),
+                )
+
+        result = model.optimise(
+            inputs=[variable.id for variable in setup["inputs"]],
+            starting=[0.27, 1.45],
+            bounds=([0.16, 1.2], [0.3, 2.1]),
+            biomarker_types=[setup["biomarker_type"].id, amount_type.id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=60,
+        )
+
+        expected_ids = sorted((response_id, amount.id))
+        self.assertEqual(result["sigma_variables"], expected_ids)
+        self.assertEqual(len(result["sigma"]), 2)
+        self.assertEqual(len(result["log_sigma"]), 2)
+        self.assertEqual(len(result["sigma_bounds"]), 2)
+        self.assertTrue(np.all(np.isfinite(result["sigma"])))
+        self.assertTrue(all(s > 0 for s in result["sigma"]))
+        # The two output variables have very different scales, so their fitted
+        # noise sigmas should differ.
+        self.assertNotAlmostEqual(result["sigma"][0], result["sigma"][1])
+
     def test_prediction_loss_and_gradient_failure_branches(self):
         setup = create_exponential_data(
             name_prefix="optimise_context_failures",
@@ -597,7 +670,15 @@ class TestOptimise(TestCase):
         self.assertIsNotNone(diagnostics["residuals"])
         self.assertIsNotNone(diagnostics["covariance"])
         self.assertIsNotNone(diagnostics["condition_number"])
-        self.assertIsInstance(diagnostics["sigma"], float)
+        self.assertIsInstance(diagnostics["sigma"], list)
+        self.assertTrue(all(isinstance(s, float) for s in diagnostics["sigma"]))
+        self.assertEqual(
+            diagnostics["sigma_variables"],
+            list(context.sigma_output_variable_ids),
+        )
+        self.assertEqual(
+            len(diagnostics["sigma"]), len(context.sigma_output_variable_ids)
+        )
 
         first_group = context.optimisation_groups[0]
         time_id = context.get_variable_context(context.time_qname).id
@@ -619,6 +700,7 @@ class TestOptimise(TestCase):
         )
         with mock.patch("pkpdapp.models.optimise_context.logger.exception"):
             failed = context.optimise_diagnostics(np.asarray(setup["true"]))
+        n_sigma = len(context.sigma_output_variable_ids)
         self.assertEqual(
             failed,
             {
@@ -626,7 +708,8 @@ class TestOptimise(TestCase):
                 "residuals": None,
                 "covariance": None,
                 "condition_number": None,
-                "sigma": 1.0,
+                "sigma": [1.0] * n_sigma,
+                "sigma_variables": list(context.sigma_output_variable_ids),
             },
         )
 

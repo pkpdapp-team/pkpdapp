@@ -74,8 +74,37 @@ class OptimiseContext(SimulateContext):
             biomarker_types,
             subject_groups,
         )
+        self._build_sigma_output_index()
 
         self._discard_database_state()
+
+    def _build_sigma_output_index(self):
+        """
+        Build a canonical ordering of the distinct model output variables across
+        all optimisation groups. Each distinct output variable gets one noise
+        sigma. The ordering (sorted by variable id) is shared by the optimiser
+        driver, the loss/gradient/diagnostics, and the API response, so all
+        per-output sigma arrays stay aligned.
+        """
+        outputs_by_id: dict[int, str] = {}
+        for group in self.optimisation_groups:
+            for output in group.outputs:
+                outputs_by_id[output.id] = output.qname
+
+        ordered_ids = sorted(outputs_by_id)
+        self.sigma_output_variable_ids = tuple(ordered_ids)
+        self.sigma_output_qnames = tuple(outputs_by_id[i] for i in ordered_ids)
+        self._sigma_index_by_qname = {
+            qname: index for index, qname in enumerate(self.sigma_output_qnames)
+        }
+
+    def _sigma_index_for_record(
+        self,
+        group: OptimisationGroupContext,
+        record: OptimisationRecordContext,
+    ) -> int:
+        qname = group.outputs[record.output_index].qname
+        return self._sigma_index_by_qname[qname]
 
     def _optimise_predict(
         self,
@@ -172,6 +201,17 @@ class OptimiseContext(SimulateContext):
     ):
         return self._optimise_predict_with_sens(group, values_by_id)
 
+    def _log_sigma_array(self, log_sigma) -> np.ndarray:
+        """
+        Normalise ``log_sigma`` to a 1-D array with one entry per distinct output
+        variable. A scalar is broadcast across all outputs (used by tests and as
+        a convenience default).
+        """
+        n_outputs = len(self.sigma_output_qnames)
+        return np.broadcast_to(
+            np.asarray(log_sigma, dtype=float), (n_outputs,)
+        ).astype(float, copy=True)
+
     def _optimise_loss(
         self,
         groups: tuple[OptimisationGroupContext, ...],
@@ -183,9 +223,11 @@ class OptimiseContext(SimulateContext):
         if not np.all(np.isfinite(values)):
             return np.inf
 
-        sigma2 = np.exp(2.0 * log_sigma)
-        ssr = 0.0
-        n_obs = 0
+        log_sigma_arr = self._log_sigma_array(log_sigma)
+        sigma2 = np.exp(2.0 * log_sigma_arr)
+        n_outputs = len(log_sigma_arr)
+        ssr_per = np.zeros(n_outputs, dtype=float)
+        n_obs_per = np.zeros(n_outputs, dtype=float)
         for group in groups:
             try:
                 y = self._optimise_predict(group, values_by_id)
@@ -194,6 +236,7 @@ class OptimiseContext(SimulateContext):
                 return np.inf
 
             for record in group.records:
+                k = self._sigma_index_for_record(group, record)
                 prediction = y[record.output_index, record.time_index]
                 observed = record.value
                 if use_multiplicative_noise:
@@ -203,13 +246,13 @@ class OptimiseContext(SimulateContext):
                     residual = np.log(prediction) - np.log(observed)
                 else:
                     residual = prediction - observed
-                ssr += residual * residual
-                n_obs += 1
+                ssr_per[k] += residual * residual
+                n_obs_per[k] += 1
 
-        if not np.isfinite(ssr):
+        if not np.all(np.isfinite(ssr_per)):
             return np.inf
-        nll = n_obs * log_sigma + ssr / (2.0 * sigma2)
-        return float(nll)
+        nll = float(np.sum(n_obs_per * log_sigma_arr + ssr_per / (2.0 * sigma2)))
+        return nll
 
     def optimise_loss(
         self,
@@ -230,26 +273,32 @@ class OptimiseContext(SimulateContext):
         use_multiplicative_noise=False,
     ):
         """
-        Returns (nll, ode_gradient, ssr, n_obs) across prepared groups, using
-        forward sensitivities for the requested input variables.
+        Returns (nll, ode_gradient, ssr_per, n_obs_per) across prepared groups,
+        using forward sensitivities for the requested input variables.
 
-        The negative log-likelihood is
+        ``ssr_per`` and ``n_obs_per`` are arrays with one entry per distinct
+        output variable. The negative log-likelihood is
 
-            nll = n_obs * log_sigma + ssr / (2 * sigma^2)
+            nll = Σ_k ( n_obs_per[k] * log_sigma[k] + ssr_per[k] / (2 * sigma_k^2) )
 
-        and the gradient w.r.t. the ODE parameters is scaled by 1/sigma^2.
-        The gradient w.r.t. log_sigma is not included here; the caller
-        computes it as ``n_obs - ssr / sigma^2``.
+        and each residual's contribution to the ODE-parameter gradient is scaled
+        by 1/sigma_k^2 for its output variable k. The gradient w.r.t. each
+        log_sigma[k] is not included here; the caller computes it as
+        ``n_obs_per[k] - ssr_per[k] / sigma_k^2``.
         """
         param_ids = tuple(values_by_id.keys())
+        n_params = len(param_ids)
+        log_sigma_arr = self._log_sigma_array(log_sigma)
+        sigma2 = np.exp(2.0 * log_sigma_arr)
+        n_outputs = len(log_sigma_arr)
+        zeros_ssr = np.zeros(n_outputs, dtype=float)
+
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
-            return np.inf, np.zeros(len(param_ids)), 0.0, 0
+            return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
 
-        n_params = len(param_ids)
-        sigma2 = np.exp(2.0 * log_sigma)
-        ssr = 0.0
-        n_obs = 0
+        ssr_per = np.zeros(n_outputs, dtype=float)
+        n_obs_per = np.zeros(n_outputs, dtype=float)
         total_gradient = np.zeros(n_params, dtype=float)
 
         for group in groups:
@@ -257,17 +306,18 @@ class OptimiseContext(SimulateContext):
                 y, y_prime = self._optimise_predict_with_sens(group, values_by_id)
             except Exception:
                 logger.exception("solve_fwd_sens failed during gradient computation.")
-                return np.inf, np.zeros(n_params), 0.0, 0
+                return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
 
             if y.shape != (len(group.t_eval), len(group.outputs)):
-                return np.inf, np.zeros(n_params), 0.0, 0
+                return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
 
             for record in group.records:
+                k = self._sigma_index_for_record(group, record)
                 prediction = y[record.time_index, record.output_index]
                 observed = record.value
                 if use_multiplicative_noise:
                     if observed <= 0:
-                        return np.inf, np.zeros(n_params), 0.0, 0
+                        return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                     gradient_row = (
@@ -277,16 +327,15 @@ class OptimiseContext(SimulateContext):
                     residual = prediction - observed
                     gradient_row = y_prime[record.time_index, record.output_index, :]
 
-                ssr += residual * residual
-                n_obs += 1
-                total_gradient += residual * gradient_row
+                ssr_per[k] += residual * residual
+                n_obs_per[k] += 1
+                total_gradient += (residual / sigma2[k]) * gradient_row
 
-        if not np.isfinite(ssr):
-            return np.inf, np.zeros(n_params), 0.0, 0
+        if not np.all(np.isfinite(ssr_per)):
+            return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
 
-        total_gradient /= sigma2
-        nll = n_obs * log_sigma + ssr / (2.0 * sigma2)
-        return float(nll), total_gradient, float(ssr), n_obs
+        nll = float(np.sum(n_obs_per * log_sigma_arr + ssr_per / (2.0 * sigma2)))
+        return nll, total_gradient, ssr_per, n_obs_per
 
     def optimise_loss_gradient(
         self,
@@ -327,13 +376,17 @@ class OptimiseContext(SimulateContext):
             dtype=float,
         )
 
-        sigma = np.exp(log_sigma)
+        log_sigma_arr = self._log_sigma_array(log_sigma)
+        sigma = np.exp(log_sigma_arr)
         sigma2 = sigma * sigma
+        sigma_list = [float(s) for s in sigma]
+        sigma_variables = list(self.sigma_output_variable_ids)
 
         predictions_list = []
         residuals_list = []
         jacobian_rows = []
         residual_values = []
+        weights = []
 
         time_context = self.get_variable_context(self.time_qname)
         time_conversion_factor = time_context.conversion_factor
@@ -348,7 +401,8 @@ class OptimiseContext(SimulateContext):
                     "residuals": None,
                     "covariance": None,
                     "condition_number": None,
-                    "sigma": float(sigma),
+                    "sigma": sigma_list,
+                    "sigma_variables": sigma_variables,
                 }
 
             t_eval = np.asarray(group.t_eval, dtype=float)
@@ -368,6 +422,7 @@ class OptimiseContext(SimulateContext):
             for record in group.records:
                 t_idx = record.time_index
                 o_idx = record.output_index
+                k = self._sigma_index_for_record(group, record)
                 prediction = y[t_idx, o_idx]
                 observed = record.value
 
@@ -379,16 +434,19 @@ class OptimiseContext(SimulateContext):
                         prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                         residual = np.log(prediction) - np.log(observed)
                         jac_row = y_prime[t_idx, o_idx, :] / prediction
-                    residual_for_output = residual / sigma
+                    residual_for_output = residual / sigma[k]
                 else:
                     residual = prediction - observed
                     output_conversion_factor = output_contexts[o_idx].conversion_factor
-                    residual_for_output = residual / (output_conversion_factor * sigma)
+                    residual_for_output = residual / (
+                        output_conversion_factor * sigma[k]
+                    )
                     jac_row = y_prime[t_idx, o_idx, :]
 
                 obs_residuals_per_output[o_idx].append(float(residual_for_output))
                 jacobian_rows.append(jac_row)
                 residual_values.append(float(residual))
+                weights.append(1.0 / sigma2[k])
 
             resid_dict = {"group_id": group.group_id}
             all_obs_times = sorted(
@@ -401,10 +459,12 @@ class OptimiseContext(SimulateContext):
 
         J = np.array(jacobian_rows)
         residual_arr = np.array(residual_values)
+        weight_arr = np.array(weights)
 
         valid_mask = np.isfinite(residual_arr) & np.all(np.isfinite(J), axis=1)
         J_valid = J[valid_mask]
         resid_valid = residual_arr[valid_mask]
+        w_valid = weight_arr[valid_mask]
         n_valid = len(resid_valid)
 
         if n_valid <= n_params:
@@ -413,12 +473,15 @@ class OptimiseContext(SimulateContext):
                 "residuals": residuals_list,
                 "covariance": None,
                 "condition_number": None,
-                "sigma": float(sigma),
+                "sigma": sigma_list,
+                "sigma_variables": sigma_variables,
             }
 
-        JtJ = J_valid.T @ J_valid
+        # Weighted (GLS) parameter covariance for heteroscedastic noise:
+        # Cov = (J^T W J)^-1 with W = diag(1/sigma_k^2) per residual row.
+        JtWJ = J_valid.T @ (w_valid[:, None] * J_valid)
         try:
-            cov_model = sigma2 * np.linalg.pinv(JtJ)
+            cov_model = np.linalg.pinv(JtWJ)
             inv_cf = np.diag(1.0 / conversion_factors)
             cov = inv_cf @ cov_model @ inv_cf
         except np.linalg.LinAlgError:
@@ -441,7 +504,8 @@ class OptimiseContext(SimulateContext):
             "residuals": residuals_list,
             "covariance": cov.tolist() if cov is not None else None,
             "condition_number": condition_number,
-            "sigma": float(sigma),
+            "sigma": sigma_list,
+            "sigma_variables": sigma_variables,
         }
 
     def _validate_optimise_inputs(

@@ -3253,6 +3253,9 @@ components:
             False otherwise
         color:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Color index associated with this biomarker type. For plotting
             purposes in the frontend
         axis:
@@ -3378,6 +3381,9 @@ components:
           description: whether the pk model has effect compartment
         number_of_effect_compartments:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of effect compartments
         has_lag:
           type: boolean
@@ -3691,6 +3697,9 @@ components:
             must be greater than 0.
         repeats:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: 'Number of times to repeat the dose. '
         repeat_interval:
           type: number
@@ -3854,6 +3863,22 @@ components:
         method:
           type: string
           default: pso
+        log_sigma:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          nullable: true
       required:
       - bounds
       - inputs
@@ -3871,6 +3896,12 @@ components:
           format: double
         reason:
           type: string
+        sigma:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
         inputs:
           type: array
           items:
@@ -3928,17 +3959,40 @@ components:
           type: number
           format: double
           nullable: true
+        sigma_variables:
+          type: array
+          items:
+            type: integer
+          nullable: true
+        log_sigma:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+          nullable: true
       required:
       - bounds
       - condition_number
       - covariance
       - inputs
+      - log_sigma
       - loss
       - method
       - optimal
       - predictions
       - reason
       - residuals
+      - sigma
+      - sigma_bounds
+      - sigma_variables
       - starting
       - use_multiplicative_noise
     PatchedBiomarkerType:
@@ -3974,6 +4028,9 @@ components:
             False otherwise
         color:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Color index associated with this biomarker type. For plotting
             purposes in the frontend
         axis:
@@ -4073,6 +4130,9 @@ components:
           description: whether the pk model has effect compartment
         number_of_effect_compartments:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of effect compartments
         has_lag:
           type: boolean
@@ -4263,6 +4323,9 @@ components:
             must be greater than 0.
         repeats:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: 'Number of times to repeat the dose. '
         repeat_interval:
           type: number
@@ -4472,6 +4535,9 @@ components:
           description: species weight
         version:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         compound:
           type: integer
         species_weight_unit:
@@ -4624,9 +4690,15 @@ components:
           maxLength: 100
         nrows:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of subplot rows
         ncols:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of subplot columns
         time_max:
           type: number
@@ -4656,9 +4728,15 @@ components:
           readOnly: true
         id_in_dataset:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: unique id in the dataset
         shape:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Shape index associated with this subject. For plotting purposes
             in the frontend
         display:
@@ -4879,6 +4957,9 @@ components:
             condition parameter (default is False)
         color:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Color index associated with this variable. For display purposes
             in the frontend
         display:
@@ -5133,6 +5214,9 @@ components:
           description: species weight
         version:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         compound:
           type: integer
         species_weight_unit:
@@ -5434,9 +5518,15 @@ components:
           maxLength: 100
         nrows:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of subplot rows
         ncols:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: number of subplot columns
         time_max:
           type: number
@@ -5494,6 +5584,9 @@ components:
             $ref: '#/components/schemas/SimulationCxLine'
         index:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: index of the plot in the simulation
         x_scale:
           allOf:
@@ -5607,9 +5700,15 @@ components:
           readOnly: true
         id_in_dataset:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: unique id in the dataset
         shape:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Shape index associated with this subject. For plotting purposes
             in the frontend
         display:
@@ -5938,6 +6037,9 @@ components:
             condition parameter (default is False)
         color:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
           description: Color index associated with this variable. For display purposes
             in the frontend
         display:
