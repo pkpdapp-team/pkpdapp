@@ -16,13 +16,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Conversation',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(blank=True, default='Untitled conversation', max_length=200)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),  # noqa: E501
+                ('title', models.CharField(blank=True, default='Untitled conversation', max_length=200)),  # noqa: E501
                 ('is_active', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='conversations', to='pkpdapp.project')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='conversations', to=settings.AUTH_USER_MODEL)),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='conversations', to='pkpdapp.project')),  # noqa: E501
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='conversations', to=settings.AUTH_USER_MODEL)),  # noqa: E501
             ],
             options={
                 'ordering': ['-updated_at'],
@@ -31,12 +31,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Message',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('role', models.CharField(choices=[('user', 'User'), ('assistant', 'Assistant'), ('tool_call', 'Tool Call'), ('tool_result', 'Tool Result')], max_length=20)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),  # noqa: E501
+                ('role', models.CharField(choices=[('user', 'User'), ('assistant', 'Assistant'), ('tool_call', 'Tool Call'), ('tool_result', 'Tool Result')], max_length=20)),  # noqa: E501
                 ('content', models.TextField()),
                 ('metadata', models.JSONField(blank=True, default=dict)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='pkpdapp.conversation')),
+                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='pkpdapp.conversation')),  # noqa: E501
             ],
             options={
                 'ordering': ['created_at'],

@@ -150,7 +150,9 @@ class ChatbotUtilsTestCase(TestCase):
                 "save_assistant_message",
                 side_effect=Exception("db error"),
             ):
-                chunks = list(chatbot.stream_chat_response(self.conversation, "question"))
+                chunks = list(
+                    chatbot.stream_chat_response(self.conversation, "question")
+                )
 
         # [DONE] was already yielded before save_assistant_message is called,
         # so the client sees a complete stream regardless.

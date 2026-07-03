@@ -47,6 +47,7 @@ class Conversation(models.Model):
                 content=content,
             )
 
+
 class Message(models.Model):
     # The full role set is declared up front. Basic chat only ever writes
     # "user" and "assistant" rows, but tool-calling (added in a later change)
