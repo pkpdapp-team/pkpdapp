@@ -231,6 +231,7 @@ def _build_input_items(conversation, max_messages=40):
             input_items.append({"role": "assistant", "content": m.content})
     return input_items
 
+done_token = "[DONE]"
 
 def stream_chat_response(
     conversation: Conversation, new_user_message: str, context=None
@@ -302,14 +303,14 @@ def stream_chat_response(
                     "Please try again."
                 ),
             })
-            yield _sse("[DONE]")
+            yield _sse(done_token)
             # Don't persist partial output — would confuse the model on
             # subsequent turns when fed back via _build_input_items.
             return
 
         yield _sse({"type": "finish-step"})
         yield _sse({"type": "finish"})
-        yield _sse("[DONE]")
+        yield _sse(done_token)
         try:
             conversation.save_assistant_message(assistant_text_parts)
         except Exception:
@@ -323,4 +324,4 @@ def stream_chat_response(
             "type": "error",
             "errorText": "An error occurred. Please try again.",
         })
-        yield _sse("[DONE]")
+        yield _sse(done_token)
