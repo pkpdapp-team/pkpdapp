@@ -17,7 +17,11 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import { useAppDispatch } from "../../app/hooks";
 import { RootState } from "../../app/store";
-import { useProjectRetrieveQuery } from "../../app/backendApi";
+import {
+  useProjectRetrieveQuery,
+  useMessagesListQuery,
+  MessageRead,
+} from "../../app/backendApi";
 import { api } from "../../app/api";
 import {
   selectChatOpen,
@@ -36,16 +40,7 @@ import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
 
-interface ApiMessage {
-  id: number;
-  role: "user" | "assistant" | "tool_call" | "tool_result";
-  content: string;
-}
-
-/**
- * Convert the flat DB message sequence into UIMessages for display.
- */
-function buildUIMessages(apiMessages: ApiMessage[]): UIMessage[] {
+function buildUIMessages(apiMessages: MessageRead[]): UIMessage[] {
   const result: UIMessage[] = [];
 
   for (const m of apiMessages) {
@@ -72,6 +67,10 @@ const ChatPanel: FC = () => {
   const isOpen = useSelector(selectChatOpen);
   const drawerWidth = useSelector(selectChatWidth);
   const activeConversationId = useSelector(selectActiveConversationId);
+  const { data: storedMessages } = useMessagesListQuery(
+    { conversationId: activeConversationId! },
+    { skip: !activeConversationId, refetchOnMountOrArgChange: true },
+  );
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
@@ -96,6 +95,10 @@ const ChatPanel: FC = () => {
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  useEffect(() => {
+    setMessages(storedMessages ? buildUIMessages(storedMessages) : []);
+  }, [storedMessages, activeConversationId]);
+
   // Invalidate conversation list cache after streaming completes
   // so last_message_preview updates immediately
   const prevStatusRef = useRef(status);
@@ -117,26 +120,15 @@ const ChatPanel: FC = () => {
         conversation: { project: selectedProject, title: "" },
       }).unwrap();
       dispatch(setActiveConversation(result.id));
-      setMessages([]);
       setShowConversationList(false);
     } catch (err) {
       console.error("Failed to create conversation:", err);
     }
   };
 
-  const handleSelectConversation = async (id: number) => {
+  const handleSelectConversation = (id: number) => {
     dispatch(setActiveConversation(id));
     setShowConversationList(false);
-    try {
-      const response = await fetch(`/api/messages/?conversation_id=${id}`, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to load messages");
-      const apiMessages: ApiMessage[] = await response.json();
-      setMessages(buildUIMessages(apiMessages));
-    } catch (err) {
-      console.error("Failed to load conversation messages:", err);
-    }
   };
 
   const handleSend = async () => {
