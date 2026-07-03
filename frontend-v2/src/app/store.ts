@@ -36,6 +36,10 @@ export const persistor = persistStore(store);
 // see `setupListeners` docs - takes an optional callback as the 2nd arg for customization
 setupListeners(store.dispatch);
 
+if (import.meta.env.DEV) {
+  (window as any).__pkpd_store__ = store;
+}
+
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppThunk<ReturnType = void> = ThunkAction<
