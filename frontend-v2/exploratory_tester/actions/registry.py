@@ -140,29 +140,109 @@ def generate_all_actions(snapshot: SimulationModelSnapshot) -> list[Action]:
 # Sub-model action generators
 # ---------------------------------------------------------------------------
 
-# Known PK model names from the backend
-# (from storybook mock data and existing cypress tests)
+# Known model names from the backend API's `name` field.
+# These match the option labels in the PK/PD Model tab dropdowns.
+# Both naming conventions are included (legacy snake_case + v3 descriptive).
+
 KNOWN_PK_MODELS = [
-    "one_compartment_preclinical",
-    "one_compartment_clinical",
-    "two_compartment_preclinical",
-    "two_compartment_clinical",
-    "three_compartment_preclinical",
-    "three_compartment_clinical",
+    # --- Classic disposition ---
+    "1-compartmental model",
+    "2-compartmental model",
+    "3-compartmental model",
+    "3-compartment catenary model",
+    # --- Full TMDD ---
+    "1-compartmental full TMDD model (1 binding site)",
+    "1-compartmental full TMDD model (1 binding site) - constant target",
+    "1-compartmental full TMDD model (1 binding site) "
+    "- constant target concentration",
+    "1-compartmental full TMDD model (1 binding site) - soluble target",
+    "1-compartmental full TMDD model (1 binding site) "
+    "- soluble target (catch and release)",
+    "1-compartmental full TMDD model (2 binding sites)",
+    "1-compartmental full TMDD model (2 binding sites) - constant target",
+    "1-compartmental full TMDD model (2 binding sites) - soluble target",
+    "2-compartmental full TMDD model (1 binding site)",
+    "2-compartmental full TMDD model (1 binding site) - constant target",
+    "2-compartmental full TMDD model (1 binding site) - soluble target",
+    "2-compartmental full TMDD model (1 binding site) "
+    "- soluble target (catch and release)",
+    "2-compartmental full TMDD model (2 binding sites)",
+    "2-compartmental full TMDD model (2 binding sites) - constant target",
+    "2-compartmental full TMDD model (2 binding sites) - soluble target",
+    # --- QSS TMDD ---
+    "1-compartmental QSS TMDD model (1 binding site)",
+    "1-compartmental QSS TMDD model (1 binding site) - constant target",
+    "1-compartmental QSS TMDD model (1 binding site) - soluble target",
+    "1-compartmental QSS TMDD model (1 binding site) "
+    "- soluble target (catch and release)",
+    "2-compartmental QSS TMDD model (1 binding site)",
+    "2-compartmental QSS TMDD model (1 binding site) - constant target",
+    "2-compartmental QSS TMDD model (1 binding site) - soluble target",
+    "2-compartmental QSS TMDD model (1 binding site) "
+    "- soluble target (catch and release)",
+    # --- Bispecific TMDD ---
+    "1-compartmental bispecific TMDD model",
+    "1-compartmental bispecific TMDD model - soluble targets",
+    "2-compartmental bispecific TMDD model",
+    "2-compartmental bispecific TMDD model - soluble targets",
+    # --- Michaelis-Menten TMDD ---
+    "1-compartmental extended Michaelis-Menten TMDD model",
+    "1-compartmental extended Michaelis-Menten TMDD model - constant target",
+    "2-compartmental extended Michaelis-Menten TMDD model",
+    "2-compartmental extended Michaelis-Menten TMDD model - constant target",
 ]
 
 KNOWN_PD_MODELS = [
-    "direct_effect_inhibitory",
-    "direct_effect_stimulatory",
-    "indirect_effects_stimulation_elimination",
-    "indirect_effects_stimulation_production",
-    "indirect_effects_inhibition_elimination",
-    "indirect_effects_inhibition_production",
+    # --- Direct effects ---
+    "Direct effect model (inhibitory)",
+    "Direct effect model (stimulatory)",
+    # --- Indirect effects ---
+    "Indirect effect model (inhibition of elimination)",
+    "Indirect effect model (inhibition of production)",
+    "Indirect effect model (stimulation of elimination)",
+    "Indirect effect model (stimulation of production)",
+    "Indirect effect model with precursor "
+    "(inhibition of precursor elimination)",
+    "Indirect effect model with precursor "
+    "(stimulation of precursor elimination)",
+    # --- Protein degradation ---
+    "Protein degradation model",
+    # --- DDI ---
+    "Competitive inhibition (DDI)",
+    "Time-dependent inhibition (DDI)",
+    "Time-dependent induction (DDI)",
+    "Time-dependent and competitive inhibition (DDI)",
+    # --- Tumour growth ---
+    "Tumor growth model (linear)",
+    "Tumor growth model (exponential)",
+    "Tumor growth model (Gompertz)",
+    "Tumor growth model (Simeoni)",
+    "Tumor growth model (Simeoni-logistic)",
 ]
 
-EFFECT_MODELS = [
-    "effect_compartment_ke0",
-    "effect_compartment_ke0_kp",
+KNOWN_PD2_MODELS = [
+    # --- Tumour growth inhibition ---
+    "TGI cell distribution model (conc prop kill)",
+    "TGI cell distribution model (Emax kill)",
+    "TGI cell distribution model (exp(conc) prop kill)",
+    "TGI signal distribution model (conc prop kill)",
+    "TGI signal distribution model (exp(conc) prop kill)",
+    "TGI signal distribution model (Emax kill)",
+]
+
+KNOWN_EFFECT_MODELS = [
+    "Effect compartment model",
+    "Effect compartment model (ke0 & Kp)",
+    "Effect compartment model (kin & kout)",
+]
+
+KNOWN_PK2_MODELS = [
+    "First order absorption model",
+    "First order absorption model (two absorption sites)",
+    "Transit compartments absorption model",
+    "Ocular PK model",
+    "Ocular PKPD bispecific (two different targets) model",
+    "Ocular PKPD VEGF (dimeric target) model",
 ]
 
 
@@ -173,19 +253,19 @@ def _add_submodel_actions(actions: list[Action]) -> None:
     for pk in KNOWN_PK_MODELS:
         actions.append(SelectSubModelAction("pk_model", pk, pk))
 
-    # PK model2 (extravascular), effect model — require PK first
-    for pk in KNOWN_PK_MODELS + [None]:
-        if pk is None:
+    # PK model2 (extravascular) — requires PK first
+    for pk2 in KNOWN_PK2_MODELS + [None]:
+        if pk2 is None:
             actions.append(SelectSubModelAction(
                 "pk_model2", "none", "None", requires_pk=True
             ))
         else:
             actions.append(SelectSubModelAction(
-                "pk_model2", pk, pk, requires_pk=True
+                "pk_model2", pk2, pk2, requires_pk=True
             ))
 
     # Effect model — requires PK first
-    for em in EFFECT_MODELS:
+    for em in KNOWN_EFFECT_MODELS:
         actions.append(SelectSubModelAction(
             "pk_effect_model", em, em, requires_pk=True
         ))
@@ -197,9 +277,9 @@ def _add_submodel_actions(actions: list[Action]) -> None:
         else:
             actions.append(SelectSubModelAction("pd_model", pd, pd))
 
-    # PD model2
-    for pd in KNOWN_PD_MODELS + [None]:
-        if pd is None:
+    # PD model2 (TGI)
+    for pd2 in KNOWN_PD2_MODELS + [None]:
+        if pd2 is None:
             actions.append(SelectSubModelAction("pd_model2", "none", "None"))
         else:
-            actions.append(SelectSubModelAction("pd_model2", pd, pd))
+            actions.append(SelectSubModelAction("pd_model2", pd2, pd2))

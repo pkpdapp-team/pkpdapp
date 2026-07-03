@@ -7,7 +7,11 @@ from playwright.async_api import Page
 
 from ..snapshot import SimulationModelSnapshot, SnapshotDiff
 from .base import Action, ResultExpectation
-from .navigation import navigate_to_page, select_dropdown_option
+from .navigation import (
+    navigate_to_page,
+    navigate_to_model_subtab,
+    select_dropdown_option,
+)
 
 
 class CreateProjectAction(Action):
@@ -108,7 +112,7 @@ class SetSpeciesAction(Action):
         return snapshot.has_project and snapshot.species != self._species
 
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
-        await navigate_to_page(page, "Projects")
+        await navigate_to_model_subtab(page, "PK/PD Model")
         await select_dropdown_option(page, "project.species", self._label)
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
