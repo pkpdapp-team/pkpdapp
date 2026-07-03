@@ -969,8 +969,12 @@ class TestOptimise(TestCase):
             lm = log_sigma.copy()
             lm[i] -= eps
             fd = (
-                context.optimise_loss(groups, values_by_id, lp, log_sigma_mult, "combined")
-                - context.optimise_loss(groups, values_by_id, lm, log_sigma_mult, "combined")
+                context.optimise_loss(
+                    groups, values_by_id, lp, log_sigma_mult, "combined"
+                )
+                - context.optimise_loss(
+                    groups, values_by_id, lm, log_sigma_mult, "combined"
+                )
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-6, atol=1e-8)
 

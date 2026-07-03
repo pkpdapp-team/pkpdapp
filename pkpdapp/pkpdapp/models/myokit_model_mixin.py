@@ -505,15 +505,24 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                     f"({n_outputs}), got {len(bounds)}."
                 )
             start = np.array(
-                [float(values[i]) if values is not None else 0.0 for i in range(n_outputs)],
+                [
+                    float(values[i]) if values is not None else 0.0
+                    for i in range(n_outputs)
+                ],
                 dtype=float,
             )
             lower = np.array(
-                [float(bounds[i][0]) if bounds is not None else -20.0 for i in range(n_outputs)],
+                [
+                    float(bounds[i][0]) if bounds is not None else -20.0
+                    for i in range(n_outputs)
+                ],
                 dtype=float,
             )
             upper = np.array(
-                [float(bounds[i][1]) if bounds is not None else 20.0 for i in range(n_outputs)],
+                [
+                    float(bounds[i][1]) if bounds is not None else 20.0
+                    for i in range(n_outputs)
+                ],
                 dtype=float,
             )
             return start, lower, upper
@@ -552,10 +561,16 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             [np.asarray(starting, dtype=float) * conversion_factors, sigma_start_block]
         )
         lower_bounds_model = np.concatenate(
-            [np.asarray(lower_bounds, dtype=float) * conversion_factors, sigma_lower_block]
+            [
+                np.asarray(lower_bounds, dtype=float) * conversion_factors,
+                sigma_lower_block,
+            ]
         )
         upper_bounds_model = np.concatenate(
-            [np.asarray(upper_bounds, dtype=float) * conversion_factors, sigma_upper_block]
+            [
+                np.asarray(upper_bounds, dtype=float) * conversion_factors,
+                sigma_upper_block,
+            ]
         )
 
         def split_sigma(sigma_block):
