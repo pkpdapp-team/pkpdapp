@@ -7,7 +7,6 @@ from playwright.async_api import Page
 from ..snapshot import SimulationModelSnapshot, SnapshotDiff
 from .base import Action, ResultExpectation
 from .navigation import (
-    click_data_cy,
     navigate_to_model_subtab,
     select_dropdown_option,
     toggle_checkbox,

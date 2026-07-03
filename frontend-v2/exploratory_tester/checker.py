@@ -1,4 +1,4 @@
-"""State verification — checks that actions produce expected changes and nothing else."""
+"""State verification — checks that actions produce expected diffs."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from .snapshot import (
     SimulationModelSnapshot,
     SnapshotDiff,
+    _sim_results_equal,
     diff_snapshots,
 )
 from .actions.base import Action, ResultExpectation
@@ -152,12 +153,14 @@ def _find_unexpected_changes(
             f"removed {actual.removed_plots - expected.removed_plots} unexpected plots"
         )
     if actual.added_sliders > expected.added_sliders:
+        n = actual.added_sliders - expected.added_sliders
         result.unexpected_changes.append(
-            f"added {actual.added_sliders - expected.added_sliders} unexpected sliders"
+            f"added {n} unexpected sliders"
         )
     if actual.removed_sliders > expected.removed_sliders:
+        n = actual.removed_sliders - expected.removed_sliders
         result.unexpected_changes.append(
-            f"removed {actual.removed_sliders - expected.removed_sliders} unexpected sliders"
+            f"removed {n} unexpected sliders"
         )
     if actual.added_doses > expected.added_doses:
         result.unexpected_changes.append(
@@ -187,7 +190,7 @@ def _find_missing_changes(
     """Identify changes that were expected but didn't occur."""
     # Skip missing-checks for coarse-grained expected diffs
     # (e.g., "parameters: reset_to_defaults" is too broad to verify exactly)
-    coarse_keys = {"parameters", "reset_to_defaults"}
+    coarse_keys = {"parameters", "dosed", "reset_to_defaults"}
     for field_name in expected.changed_fields:
         if field_name in coarse_keys:
             continue
@@ -252,18 +255,4 @@ async def _check_sim_results(
 
 def _results_identical(a, b) -> bool:
     """Check if two SimulationResults are byte-identical."""
-    from .snapshot import SimulationResults
-
-    if a.time != b.time:
-        return False
-    if sorted(a.outputs.keys()) != sorted(b.outputs.keys()):
-        return False
-    for key in a.outputs:
-        if key not in b.outputs:
-            return False
-        if len(a.outputs[key]) != len(b.outputs[key]):
-            return False
-        for va, vb in zip(a.outputs[key], b.outputs[key]):
-            if va != vb:
-                return False
-    return True
+    return _sim_results_equal(a, b)

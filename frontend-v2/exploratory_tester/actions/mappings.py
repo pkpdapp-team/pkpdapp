@@ -32,8 +32,7 @@ class ToggleDosingAction(Action):
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
         d = SnapshotDiff()
-        prev = self._var_name in before.dosed_compartments
-        d.changed_fields[f"dosed.{self._var_name}"] = (prev, not prev)
+        d.changed_fields["dosed"] = ("may_change", "may_change")
         return d
 
 

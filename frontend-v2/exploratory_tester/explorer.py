@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import random
-from typing import Sequence
 
 from .actions.base import Action
 from .snapshot import SimulationModelSnapshot
@@ -49,7 +48,7 @@ class CoverageGuidedExplorer:
         if not available:
             return None
 
-        snapshot_hash = str(snapshot.hash)
+        snapshot_hash = snapshot.hash
 
         # Split into unvisited vs visited
         unvisited = [

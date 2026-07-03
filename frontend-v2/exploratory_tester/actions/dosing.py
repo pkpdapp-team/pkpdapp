@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from playwright.async_api import Page
 
-from ..snapshot import SimulationModelSnapshot, DoseState, SnapshotDiff
+from ..snapshot import SimulationModelSnapshot, SnapshotDiff
 from .base import Action, ResultExpectation
 from .navigation import navigate_to_page
 

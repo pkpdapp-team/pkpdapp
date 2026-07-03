@@ -6,6 +6,7 @@ these frozen dataclasses for diffing and verification.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field, fields
 from pathlib import Path
@@ -160,9 +161,15 @@ class SimulationModelSnapshot:
     _error: str | None = None
 
     @property
-    def hash(self) -> int:
-        """Content-based hash for state graph deduplication."""
-        return hash(json.dumps(_snapshot_to_dict(self), sort_keys=True, default=str))
+    def hash(self) -> str:
+        """Content-based hash for state graph deduplication.
+
+        Uses SHA-256 for stable hashing across Python processes.
+        """
+        raw = json.dumps(
+            _snapshot_to_dict(self), sort_keys=True, default=str
+        )
+        return hashlib.sha256(raw.encode()).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +274,11 @@ def diff_snapshots(
     return d
 
 
-def _diff_scalar_fields(d: SnapshotDiff, before: SimulationModelSnapshot, after: SimulationModelSnapshot) -> None:
+def _diff_scalar_fields(
+    d: SnapshotDiff,
+    before: SimulationModelSnapshot,
+    after: SimulationModelSnapshot,
+) -> None:
     scalar_field_names = [
         "model_id", "species",
         "pk_model_id", "pk_model_id2", "pk_effect_model_id",
@@ -296,7 +307,11 @@ def _diff_scalar_fields(d: SnapshotDiff, before: SimulationModelSnapshot, after:
                     d.changed_fields[f"compound.{fc.name}"] = (ov, nv)
 
 
-def _diff_parameters(d: SnapshotDiff, before: SimulationModelSnapshot, after: SimulationModelSnapshot) -> None:
+def _diff_parameters(
+    d: SnapshotDiff,
+    before: SimulationModelSnapshot,
+    after: SimulationModelSnapshot,
+) -> None:
     old_keys = set(before.parameters.keys())
     new_keys = set(after.parameters.keys())
 
@@ -310,7 +325,11 @@ def _diff_parameters(d: SnapshotDiff, before: SimulationModelSnapshot, after: Si
             d.changed_parameters[qname] = (old_p.default_value, new_p.default_value)
 
 
-def _diff_lists(d: SnapshotDiff, before: SimulationModelSnapshot, after: SimulationModelSnapshot) -> None:
+def _diff_lists(
+    d: SnapshotDiff,
+    before: SimulationModelSnapshot,
+    after: SimulationModelSnapshot,
+) -> None:
     # Plots
     d.added_plots = max(0, len(after.plots) - len(before.plots))
     d.removed_plots = max(0, len(before.plots) - len(after.plots))
@@ -347,7 +366,11 @@ def _diff_lists(d: SnapshotDiff, before: SimulationModelSnapshot, after: Simulat
         d.derived_variables_changed = True
 
 
-def _diff_sim_results(d: SnapshotDiff, before: SimulationModelSnapshot, after: SimulationModelSnapshot) -> None:
+def _diff_sim_results(
+    d: SnapshotDiff,
+    before: SimulationModelSnapshot,
+    after: SimulationModelSnapshot,
+) -> None:
     if before.sim_results is None and after.sim_results is not None:
         d.sim_results_added = True
     elif before.sim_results is not None and after.sim_results is None:
@@ -378,15 +401,22 @@ def _sim_results_equal(a: SimulationResults, b: SimulationResults) -> bool:
 # Extraction from Playwright page
 # ---------------------------------------------------------------------------
 
-# Load the JS extractor
+# JS extractor path — loaded lazily on first call
 _JS_EXTRACTOR_PATH = Path(__file__).parent / "js_extractors" / "redux_snapshot.js"
-with open(_JS_EXTRACTOR_PATH, "r") as _f:
-    _EXTRACTOR_JS = _f.read()
+_EXTRACTOR_JS: str | None = None
+
+
+def _get_extractor_js() -> str:
+    """Return the injected JS extractor, loading from disk on first call."""
+    global _EXTRACTOR_JS
+    if _EXTRACTOR_JS is None:
+        _EXTRACTOR_JS = _JS_EXTRACTOR_PATH.read_text()
+    return _EXTRACTOR_JS
 
 
 async def snapshot_from_page(page: Page) -> SimulationModelSnapshot:
     """Inject JS into the page, extract Redux + DOM state, parse into snapshot."""
-    raw = await page.evaluate(_EXTRACTOR_JS)
+    raw = await page.evaluate(_get_extractor_js())
     data = json.loads(raw) if isinstance(raw, str) else raw
 
     if isinstance(data, dict) and data.get("error"):
@@ -437,7 +467,10 @@ def _parse_snapshot_data(data: dict) -> SimulationModelSnapshot:
 
     # --- Derived variables ---
     derived_variables = [
-        DerivedVarState(type=dv.get("type", ""), pk_variable_id=dv.get("pk_variable", 0))
+        DerivedVarState(
+            type=dv.get("type", ""),
+            pk_variable_id=dv.get("pk_variable", 0),
+        )
         for dv in (model.get("derived_variables") or [])
     ]
 
@@ -564,9 +597,17 @@ def _snapshot_to_dict(s: SimulationModelSnapshot) -> dict:
         "outputs": sorted(s.outputs.keys()),
         "pd_mappings": sorted(s.pd_mappings),
         "doses": sorted(
-            [(d.start_time, d.amount, d.duration, d.repeats, d.repeat_interval) for d in s.doses]
+            [
+                (
+                    d.start_time, d.amount, d.duration,
+                    d.repeats, d.repeat_interval,
+                )
+                for d in s.doses
+            ]
         ),
-        "derived_variables": sorted((dv.type, dv.pk_variable_id) for dv in s.derived_variables),
+        "derived_variables": sorted(
+            (dv.type, dv.pk_variable_id) for dv in s.derived_variables
+        ),
         "compound": s.compound.id if s.compound else None,
         "plots": sorted((p.id, p.y_variables) for p in s.plots),
         "sliders": sorted((sl.variable_id, sl.current_value) for sl in s.sliders),

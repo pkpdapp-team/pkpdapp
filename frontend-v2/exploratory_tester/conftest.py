@@ -13,7 +13,12 @@ import os
 from typing import AsyncIterator
 
 import pytest
-from playwright.async_api import Browser, BrowserContext, Page, async_playwright
+from playwright.async_api import (
+    Browser,
+    BrowserContext,
+    Page,
+    async_playwright,
+)
 
 
 def pytest_addoption(parser):

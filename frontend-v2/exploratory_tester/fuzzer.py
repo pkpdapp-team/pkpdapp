@@ -10,7 +10,7 @@ from typing import Callable
 
 from playwright.async_api import Page
 
-from .snapshot import snapshot_from_page
+from .snapshot import snapshot_from_page, diff_snapshots
 from .explorer import CoverageGuidedExplorer
 from .checker import check_action, CheckResult
 
@@ -84,22 +84,33 @@ async def run_fuzzer(
         try:
             await action.execute(page, snapshot)
         except Exception as exc:
-            logger.error("Execution error at step %d (%s): %s", step, action.key, exc)
+            logger.error(
+                "Execution error at step %d (%s): %s", step, action.key, exc
+            )
+            # Capture partial state changes even on failure
+            try:
+                new_snapshot = await snapshot_from_page(page)
+            except Exception:
+                new_snapshot = snapshot
             result = CheckResult(
                 action_key=action.key,
                 step=step,
                 before=snapshot,
-                after=snapshot,
+                after=new_snapshot,
                 expected=action.expected_diff(snapshot),
-                actual=None,  # type: ignore[arg-type]
+                actual=diff_snapshots(snapshot, new_snapshot),
                 passed=False,
             )
             result.ui_errors.append(f"Execution error: {exc}")
             report.findings.append(_check_result_to_dict(result))
             report.total_steps += 1
             report.failed += 1
+            explorer.record(
+                snapshot.hash, action.key, new_snapshot.hash,
+            )
             if stop_on_first_failure:
                 break
+            snapshot = new_snapshot
             continue
 
         # Wait for network to settle (ignore timeout)
@@ -123,7 +134,7 @@ async def run_fuzzer(
         if on_step:
             on_step(step, result)
 
-        explorer.record(str(snapshot.hash), action.key, str(new_snapshot.hash))
+        explorer.record(snapshot.hash, action.key, new_snapshot.hash)
         snapshot = new_snapshot
 
         if not result.passed and stop_on_first_failure:

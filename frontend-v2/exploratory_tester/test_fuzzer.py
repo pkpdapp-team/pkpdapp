@@ -9,8 +9,7 @@ Or against a deployed instance:
 """
 
 import logging
-import pytest
-from .fuzzer import run_fuzzer, FuzzerReport
+from .fuzzer import run_fuzzer
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,8 @@ async def test_exploratory_fuzzer(
 
     for finding in report.findings:
         logger.warning(
-            "Finding: step=%d action=%s passed=%s unexpected=%s missing=%s errors=%s sim=%s",
+            "Finding: step=%d action=%s passed=%s "
+            "unexpected=%s missing=%s errors=%s sim=%s",
             finding.get("step"),
             finding.get("action"),
             finding.get("passed"),
@@ -61,7 +61,8 @@ async def test_quick_smoke(page) -> None:
     assert snapshot._error is None, f"Snapshot error: {snapshot._error}"
 
     logger.info(
-        "Smoke snapshot: project=%s model=%s species=%s params=%d plots=%d sliders=%d sim=%s",
+        "Smoke snapshot: project=%s model=%s species=%s "
+        "params=%d plots=%d sliders=%d sim=%s",
         snapshot.has_project,
         snapshot.has_model,
         snapshot.species,

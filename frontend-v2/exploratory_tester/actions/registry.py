@@ -10,7 +10,6 @@ This module inspects the snapshot to produce concrete action instances:
 from __future__ import annotations
 
 import math
-from typing import Sequence
 
 from .base import Action
 from .project import CreateProjectAction, SetSpeciesAction
@@ -34,12 +33,16 @@ from .simulation import (
 from ..snapshot import SimulationModelSnapshot
 
 
-def _bucket_values(default: float, lower: float | None, upper: float | None) -> list[float]:
+def _bucket_values(
+    default: float, lower: float | None, upper: float | None
+) -> list[float]:
     """Generate 5 discrete values: default, default*0.5, default*1.5, lower, upper."""
-    values = [default]
-    if default is not None and default != 0:
-        values.append(round(default * 0.5, 6))
-        values.append(round(default * 1.5, 6))
+    values: list[float] = []
+    if default is not None:
+        values.append(default)
+        if default != 0:
+            values.append(round(default * 0.5, 6))
+            values.append(round(default * 1.5, 6))
     if lower is not None:
         values.append(lower)
     if upper is not None:
@@ -47,6 +50,9 @@ def _bucket_values(default: float, lower: float | None, upper: float | None) -> 
     # Deduplicate and keep values in a reasonable range
     values = [v for v in values if v is not None and math.isfinite(v)]
     values = sorted(set(round(v, 6) for v in values))
+    # Fallback: ensure at least one value
+    if not values:
+        values = [0.0]
     # Clamp to 5 max
     return values[:5]
 
@@ -134,7 +140,8 @@ def generate_all_actions(snapshot: SimulationModelSnapshot) -> list[Action]:
 # Sub-model action generators
 # ---------------------------------------------------------------------------
 
-# Known PK model names from the backend (from storybook mock data and existing cypress tests)
+# Known PK model names from the backend
+# (from storybook mock data and existing cypress tests)
 KNOWN_PK_MODELS = [
     "one_compartment_preclinical",
     "one_compartment_clinical",
@@ -169,16 +176,19 @@ def _add_submodel_actions(actions: list[Action]) -> None:
     # PK model2 (extravascular), effect model — require PK first
     for pk in KNOWN_PK_MODELS + [None]:
         if pk is None:
-            actions.append(SelectSubModelAction("pk_model2", "none", "None",
-                                                 requires_pk=True))
+            actions.append(SelectSubModelAction(
+                "pk_model2", "none", "None", requires_pk=True
+            ))
         else:
-            actions.append(SelectSubModelAction("pk_model2", pk, pk,
-                                                 requires_pk=True))
+            actions.append(SelectSubModelAction(
+                "pk_model2", pk, pk, requires_pk=True
+            ))
 
     # Effect model — requires PK first
     for em in EFFECT_MODELS:
-        actions.append(SelectSubModelAction("pk_effect_model", em, em,
-                                             requires_pk=True))
+        actions.append(SelectSubModelAction(
+            "pk_effect_model", em, em, requires_pk=True
+        ))
 
     # PD model — no prerequisites (but only interesting after PK)
     for pd in KNOWN_PD_MODELS + [None]:

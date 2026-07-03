@@ -62,7 +62,9 @@ async def toggle_checkbox(page: Page, data_cy: str) -> None:
     await page.wait_for_timeout(500)
 
 
-async def select_dropdown_option(page: Page, select_name: str, option_label: str) -> None:
+async def select_dropdown_option(
+    page: Page, select_name: str, option_label: str
+) -> None:
     """Open a SelectField dropdown and pick an option by label."""
     await page.locator(f'[data-cy="select-{select_name}"]').click(force=True)
     await page.wait_for_timeout(300)

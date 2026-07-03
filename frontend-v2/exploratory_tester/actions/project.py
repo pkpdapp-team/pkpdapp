@@ -7,7 +7,7 @@ from playwright.async_api import Page
 
 from ..snapshot import SimulationModelSnapshot, SnapshotDiff
 from .base import Action, ResultExpectation
-from .navigation import navigate_to_page
+from .navigation import navigate_to_page, select_dropdown_option
 
 
 class CreateProjectAction(Action):
@@ -47,7 +47,9 @@ class CreateProjectAction(Action):
                     return 'clicked';
                 }}
                 const text = {json.dumps(self._compound_type)};
-                const opts = document.querySelectorAll('[data-cy^="create-project-option"]');
+                const opts = document.querySelectorAll(
+                    '[data-cy^="create-project-option"]'
+                );
                 for (const o of opts) {{
                     if (o.textContent && o.textContent.includes(text)) {{
                         o.click();
@@ -64,7 +66,9 @@ class CreateProjectAction(Action):
         # Select the newly created project (click the first project radio)
         await page.evaluate(
             """() => {
-                const radios = document.querySelectorAll('[data-cy^="project-"] [type="radio"]');
+                const radios = document.querySelectorAll(
+                    '[data-cy^="project-"] [type="radio"]'
+                );
                 if (radios.length > 0) {
                     radios[0].click();
                     return 'selected';
