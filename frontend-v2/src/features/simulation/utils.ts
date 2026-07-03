@@ -17,8 +17,25 @@ import {
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
+import {
+  DEFAULT_MAX_ITERATIONS,
+  DEFAULT_NOISE_MODEL,
+  DEFAULT_OPTIMISE_METHOD,
+  NoiseModel,
+} from "./useOptimise";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
+
+// Coerce the max-iterations text field to a valid positive integer, falling
+// back to the default for empty/zero/negative/non-integer input. Guards both
+// optimise payloads so an invalid field can never reach the backend as 0
+// (which would run a no-op fit).
+export function sanitizeMaxIterations(value: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1
+    ? parsed
+    : Number(DEFAULT_MAX_ITERATIONS);
+}
 
 type GetDefaultOptimiseInputsProps = {
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
@@ -31,6 +48,9 @@ type GetDefaultOptimiseInputsProps = {
   plots: { y_axes: SimulationYAxis[] }[];
   biomarkerTypes: BiomarkerTypeRead[];
   subjectGroups: number[];
+  noiseModel?: NoiseModel;
+  method?: string;
+  maxIterations?: string;
 };
 
 export function getDefaultOptimiseInputs({
@@ -41,6 +61,9 @@ export function getDefaultOptimiseInputs({
   plots,
   biomarkerTypes,
   subjectGroups,
+  noiseModel = DEFAULT_NOISE_MODEL,
+  method = DEFAULT_OPTIMISE_METHOD,
+  maxIterations = DEFAULT_MAX_ITERATIONS,
 }: GetDefaultOptimiseInputsProps): Optimise {
   const inputs = orderedSliders.map((slider) => slider.variable);
   const starting = inputs.map((variableId) => {
@@ -72,9 +95,19 @@ export function getDefaultOptimiseInputs({
     bounds: [lowerBounds, upperBounds],
     biomarker_types,
     subject_groups: subjectGroups,
-    noise_model: "multiplicative",
+    noise_model: noiseModel,
+    method,
+    max_iterations: sanitizeMaxIterations(maxIterations),
     log_sigma,
     sigma_bounds,
+    // The combined noise model fits a second (proportional) sigma per output
+    // variable, mirroring the OptimisationSettings dialog payload.
+    ...(noiseModel === "combined"
+      ? {
+          log_sigma_mult: sigmaVariables.map(() => 0),
+          sigma_bounds_mult: sigmaVariables.map(() => [-20, 20]),
+        }
+      : {}),
   };
 }
 

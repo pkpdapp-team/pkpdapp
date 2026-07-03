@@ -27,9 +27,13 @@ import {
   SubjectGroupRead,
   VariableRead,
 } from "../../app/backendApi";
-import { getDefaultOptimiseInputs, getSigmaVariables } from "./utils";
+import {
+  getDefaultOptimiseInputs,
+  getSigmaVariables,
+  sanitizeMaxIterations,
+} from "./utils";
+import { NoiseModel } from "./useOptimise";
 
-const DEFAULT_MAX_ITERATIONS = 100;
 const OPTIMISE_METHOD_OPTIONS = [
   { value: "pso", label: "PSO" },
   { value: "cmaes", label: "CMA-ES" },
@@ -37,7 +41,6 @@ const OPTIMISE_METHOD_OPTIONS = [
   { value: "gradient_descent", label: "Gradient Descent" },
   { value: "adam", label: "Adam" },
 ] as const;
-const DEFAULT_OPTIMISE_METHOD = "pso";
 
 type OptimisationSettingsProps = {
   open: boolean;
@@ -52,6 +55,14 @@ type OptimisationSettingsProps = {
   biomarkerTypes: BiomarkerTypeRead[];
   groups: SubjectGroupRead[];
   visibleSubjectGroupIds: number[];
+  // Persisted optimisation settings, owned by useOptimise so they survive the
+  // dialog closing/reopening and are shared with the sidebar Fit button.
+  method: string;
+  setMethod: (method: string) => void;
+  noiseModel: NoiseModel;
+  setNoiseModel: (noiseModel: NoiseModel) => void;
+  maxIterations: string;
+  setMaxIterations: (maxIterations: string) => void;
 };
 
 type SigmaRowProps = {
@@ -112,17 +123,16 @@ const OptimisationSettings = ({
   biomarkerTypes,
   groups,
   visibleSubjectGroupIds,
+  method,
+  setMethod,
+  noiseModel,
+  setNoiseModel,
+  maxIterations,
+  setMaxIterations,
 }: OptimisationSettingsProps) => {
   const [customStarting, setCustomStarting] = useState<number[]>([]);
   const [customLowerBounds, setCustomLowerBounds] = useState<number[]>([]);
   const [customUpperBounds, setCustomUpperBounds] = useState<number[]>([]);
-  const [maxIterations, setMaxIterations] = useState<string>(
-    String(DEFAULT_MAX_ITERATIONS),
-  );
-  const [noiseModel, setNoiseModel] = useState<
-    "additive" | "multiplicative" | "combined"
-  >("multiplicative");
-  const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
   // Per-output-variable noise sigma, keyed by model output variable id. The
@@ -168,9 +178,8 @@ const OptimisationSettings = ({
     setCustomStarting(defaultOptimiseInputs.starting);
     setCustomLowerBounds(defaultOptimiseInputs.bounds[0]);
     setCustomUpperBounds(defaultOptimiseInputs.bounds[1]);
-    setMaxIterations(String(DEFAULT_MAX_ITERATIONS));
-    setNoiseModel("multiplicative");
-    setMethod(DEFAULT_OPTIMISE_METHOD);
+    // method / noiseModel / maxIterations are persisted in useOptimise and
+    // intentionally not reset here so they survive dialog open/close.
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
 
@@ -204,7 +213,7 @@ const OptimisationSettings = ({
       inputs,
       starting: customStarting,
       bounds: [customLowerBounds, customUpperBounds],
-      max_iterations: Number(maxIterations),
+      max_iterations: sanitizeMaxIterations(maxIterations),
       noise_model: noiseModel,
       method,
       biomarker_types: selectedBiomarkerTypeIds,
@@ -467,6 +476,13 @@ const OptimisationSettings = ({
               size="small"
               value={maxIterations}
               onChange={(event) => setMaxIterations(event.target.value)}
+              // Max iterations must be a positive integer. Snap an empty or
+              // out-of-range value back to a valid one on blur so the field
+              // reflects what will actually be sent.
+              onBlur={() =>
+                setMaxIterations(String(sanitizeMaxIterations(maxIterations)))
+              }
+              inputProps={{ min: 1, step: 1 }}
               fullWidth
             />
           </Stack>
