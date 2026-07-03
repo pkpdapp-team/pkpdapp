@@ -50,8 +50,7 @@ const optimiseHandler = http.post(
         biomarker_types: optimiseParams.biomarker_types || [],
         subject_groups: optimiseParams.subject_groups || [],
         max_iterations: optimiseParams.max_iterations || null,
-        use_multiplicative_noise:
-          optimiseParams.use_multiplicative_noise ?? true,
+        noise_model: optimiseParams.noise_model ?? "additive",
         method: optimiseParams.method || "pso",
         predictions: null,
         residuals: null,

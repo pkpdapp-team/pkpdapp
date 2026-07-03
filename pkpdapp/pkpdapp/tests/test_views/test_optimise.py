@@ -117,6 +117,43 @@ class TestOptimiseView(APITestCase):
         self.assertEqual(response.data["log_sigma"], [-1.0])
         self.assertEqual(response.data["sigma_bounds"], [[-10.0, 10.0]])
 
+    def test_optimise_combined_noise_returns_second_sigma(self):
+        response_var_id = self.biomarker_type.variable.id
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 25,
+            "noise_model": "combined",
+            "log_sigma": [-1.0],
+            "sigma_bounds": [[-10.0, 10.0]],
+            "log_sigma_mult": [-2.0],
+            "sigma_bounds_mult": [[-10.0, 10.0]],
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["noise_model"], "combined")
+        self.assertEqual(response.data["sigma_variables"], [response_var_id])
+        self.assertEqual(len(response.data["sigma"]), 1)
+        self.assertEqual(len(response.data["sigma_mult"]), 1)
+        self.assertEqual(response.data["log_sigma_mult"], [-2.0])
+        self.assertEqual(response.data["sigma_bounds_mult"], [[-10.0, 10.0]])
+
+    def test_optimise_400_for_invalid_noise_model(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "noise_model": "not-a-model",
+        }
+        response = self._post_optimise(data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_optimise_404_for_unknown_model(self):
         data = {
             "inputs": [self.k_var.id, self.scale_var.id],

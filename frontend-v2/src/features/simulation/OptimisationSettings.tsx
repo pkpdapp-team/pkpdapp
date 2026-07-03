@@ -54,6 +54,51 @@ type OptimisationSettingsProps = {
   visibleSubjectGroupIds: number[];
 };
 
+type SigmaRowProps = {
+  label: string;
+  logSigma: number;
+  onLogSigmaChange: (value: number) => void;
+  bounds: [number, number];
+  onBoundsChange: (bounds: [number, number]) => void;
+};
+
+// A single log-sigma value plus its [min, max] bounds. Shared by the additive
+// and (combined-model) proportional sigma rows.
+const SigmaRow = ({
+  label,
+  logSigma,
+  onLogSigmaChange,
+  bounds,
+  onBoundsChange,
+}: SigmaRowProps) => (
+  <Stack direction="row" spacing={1}>
+    <TextField
+      label={label}
+      type="number"
+      size="small"
+      value={logSigma}
+      onChange={(event) => onLogSigmaChange(Number(event.target.value))}
+      fullWidth
+    />
+    <TextField
+      label="Min bound"
+      type="number"
+      size="small"
+      value={bounds[0]}
+      onChange={(event) => onBoundsChange([Number(event.target.value), bounds[1]])}
+      fullWidth
+    />
+    <TextField
+      label="Max bound"
+      type="number"
+      size="small"
+      value={bounds[1]}
+      onChange={(event) => onBoundsChange([bounds[0], Number(event.target.value)])}
+      fullWidth
+    />
+  </Stack>
+);
+
 const OptimisationSettings = ({
   open,
   onClose,
@@ -74,17 +119,26 @@ const OptimisationSettings = ({
   const [maxIterations, setMaxIterations] = useState<string>(
     String(DEFAULT_MAX_ITERATIONS),
   );
-  const [noiseModel, setNoiseModel] = useState<"additive" | "multiplicative">(
-    "multiplicative",
-  );
+  const [noiseModel, setNoiseModel] = useState<
+    "additive" | "multiplicative" | "combined"
+  >("multiplicative");
   const [method, setMethod] = useState<string>(DEFAULT_OPTIMISE_METHOD);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
-  // Per-output-variable noise sigma, keyed by model output variable id.
+  // Per-output-variable noise sigma, keyed by model output variable id. The
+  // "*Mult" maps hold the second (proportional) sigma used by the combined
+  // noise model.
   const [logSigmaByVar, setLogSigmaByVar] = useState<Record<number, number>>({});
   const [sigmaBoundsByVar, setSigmaBoundsByVar] = useState<
     Record<number, [number, number]>
   >({});
+  const [logSigmaMultByVar, setLogSigmaMultByVar] = useState<
+    Record<number, number>
+  >({});
+  const [sigmaBoundsMultByVar, setSigmaBoundsMultByVar] = useState<
+    Record<number, [number, number]>
+  >({});
+  const isCombined = noiseModel === "combined";
 
   // The distinct output variables to fit a sigma for follow the selected
   // observations, in the same canonical (ascending id) order as the backend.
@@ -124,6 +178,8 @@ const OptimisationSettings = ({
     // the render/payload fall back to these when a variable has no entry.
     setLogSigmaByVar({});
     setSigmaBoundsByVar({});
+    setLogSigmaMultByVar({});
+    setSigmaBoundsMultByVar({});
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -149,7 +205,7 @@ const OptimisationSettings = ({
       starting: customStarting,
       bounds: [customLowerBounds, customUpperBounds],
       max_iterations: Number(maxIterations),
-      use_multiplicative_noise: noiseModel === "multiplicative",
+      noise_model: noiseModel,
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
@@ -159,6 +215,17 @@ const OptimisationSettings = ({
       sigma_bounds: sigmaVariables.map(
         (varId) => sigmaBoundsByVar[varId] ?? [-20, 20],
       ),
+      // The second (proportional) sigma is only sent for the combined model.
+      ...(isCombined
+        ? {
+            log_sigma_mult: sigmaVariables.map(
+              (varId) => logSigmaMultByVar[varId] ?? 0,
+            ),
+            sigma_bounds_mult: sigmaVariables.map(
+              (varId) => sigmaBoundsMultByVar[varId] ?? [-20, 20],
+            ),
+          }
+        : {}),
     });
     onClose();
   };
@@ -244,7 +311,9 @@ const OptimisationSettings = ({
           })}
           <Divider />
           <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
-            Noise standard deviation (log scale)
+            {isCombined
+              ? "Noise standard deviations (log scale): additive σ_a and proportional σ_m"
+              : "Noise standard deviation (log scale)"}
           </Typography>
           {sigmaVariables.length === 0 && (
             <Typography variant="body2" color="text.secondary">
@@ -256,56 +325,43 @@ const OptimisationSettings = ({
             const label = variable?.description
               ? `${variable.name} (${variable.description})`
               : variable?.name || `Variable ${varId}`;
-            const bounds = sigmaBoundsByVar[varId] ?? [-20, 20];
             return (
               <Box key={varId}>
                 <Typography variant="body2" sx={{ marginBottom: ".25rem" }}>
                   {label}
                 </Typography>
-                <Stack direction="row" spacing={1}>
-                  <TextField
-                    label="Log sigma"
-                    type="number"
-                    size="small"
-                    value={logSigmaByVar[varId] ?? 0}
-                    onChange={(event) => {
-                      const value = Number(event.target.value);
-                      setLogSigmaByVar((current) => ({
-                        ...current,
-                        [varId]: value,
-                      }));
-                    }}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Min bound"
-                    type="number"
-                    size="small"
-                    value={bounds[0]}
-                    onChange={(event) => {
-                      const value = Number(event.target.value);
-                      setSigmaBoundsByVar((current) => ({
-                        ...current,
-                        [varId]: [value, (current[varId] ?? [-20, 20])[1]],
-                      }));
-                    }}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Max bound"
-                    type="number"
-                    size="small"
-                    value={bounds[1]}
-                    onChange={(event) => {
-                      const value = Number(event.target.value);
-                      setSigmaBoundsByVar((current) => ({
-                        ...current,
-                        [varId]: [(current[varId] ?? [-20, 20])[0], value],
-                      }));
-                    }}
-                    fullWidth
-                  />
-                </Stack>
+                <SigmaRow
+                  label={isCombined ? "Log sigma (additive)" : "Log sigma"}
+                  logSigma={logSigmaByVar[varId] ?? 0}
+                  onLogSigmaChange={(value) =>
+                    setLogSigmaByVar((current) => ({ ...current, [varId]: value }))
+                  }
+                  bounds={sigmaBoundsByVar[varId] ?? [-20, 20]}
+                  onBoundsChange={(value) =>
+                    setSigmaBoundsByVar((current) => ({ ...current, [varId]: value }))
+                  }
+                />
+                {isCombined && (
+                  <Box sx={{ marginTop: ".5rem" }}>
+                    <SigmaRow
+                      label="Log sigma (proportional)"
+                      logSigma={logSigmaMultByVar[varId] ?? 0}
+                      onLogSigmaChange={(value) =>
+                        setLogSigmaMultByVar((current) => ({
+                          ...current,
+                          [varId]: value,
+                        }))
+                      }
+                      bounds={sigmaBoundsMultByVar[varId] ?? [-20, 20]}
+                      onBoundsChange={(value) =>
+                        setSigmaBoundsMultByVar((current) => ({
+                          ...current,
+                          [varId]: value,
+                        }))
+                      }
+                    />
+                  </Box>
+                )}
               </Box>
             );
           })}
@@ -392,11 +448,17 @@ const OptimisationSettings = ({
                 label="Noise model"
                 value={noiseModel}
                 onChange={(event) =>
-                  setNoiseModel(event.target.value as "additive" | "multiplicative")
+                  setNoiseModel(
+                    event.target.value as
+                      | "additive"
+                      | "multiplicative"
+                      | "combined",
+                  )
                 }
               >
                 <MenuItem value="additive">Additive</MenuItem>
                 <MenuItem value="multiplicative">Multiplicative</MenuItem>
+                <MenuItem value="combined">Combined</MenuItem>
               </Select>
             </FormControl>
             <TextField

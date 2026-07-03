@@ -587,7 +587,7 @@ class TestOptimise(TestCase):
                 context.optimise_loss((missing_ode_group,), values_by_id),
                 np.inf,
             )
-            loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
+            loss, gradient, sigma_gradient = context.optimise_loss_gradient(
                 (missing_ode_group,),
                 values_by_id,
             )
@@ -620,7 +620,7 @@ class TestOptimise(TestCase):
             ),
         )
         with mock.patch("pkpdapp.models.optimise_context.logger.exception"):
-            loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
+            loss, gradient, sigma_gradient = context.optimise_loss_gradient(
                 (sens_failure_group,),
                 values_by_id,
             )
@@ -642,14 +642,14 @@ class TestOptimise(TestCase):
             context.optimise_loss(
                 (non_positive_obs_group,),
                 values_by_id,
-                use_multiplicative_noise=True,
+                noise_model="multiplicative",
             ),
             np.inf,
         )
-        loss, gradient, ssr, n_obs = context.optimise_loss_gradient(
+        loss, gradient, sigma_gradient = context.optimise_loss_gradient(
             (non_positive_obs_group,),
             values_by_id,
-            use_multiplicative_noise=True,
+            noise_model="multiplicative",
         )
         self.assertEqual(loss, np.inf)
         self.assertTrue(np.array_equal(gradient, np.zeros(len(values_by_id))))
@@ -709,6 +709,7 @@ class TestOptimise(TestCase):
                 "covariance": None,
                 "condition_number": None,
                 "sigma": [1.0] * n_sigma,
+                "sigma_mult": None,
                 "sigma_variables": list(context.sigma_output_variable_ids),
             },
         )
@@ -740,7 +741,7 @@ class TestOptimise(TestCase):
         loss = context.optimise_loss(
             context.optimisation_groups,
             true_values_by_id,
-            use_multiplicative_noise=True,
+            noise_model="multiplicative",
         )
         self.assertEqual(loss, np.inf)
 
@@ -823,8 +824,9 @@ class TestOptimise(TestCase):
         self.assertTrue(np.all(np.isfinite(y)))
         self.assertTrue(np.all(np.isfinite(y_prime)))
 
-        # Verify that optimise_loss_gradient returns (nll, ode_gradient, ssr, n_obs).
-        total_loss, total_gradient, ssr, n_obs = context.optimise_loss_gradient(
+        # Verify that optimise_loss_gradient returns (nll, ode_gradient,
+        # sigma_gradient).
+        total_loss, total_gradient, sigma_gradient = context.optimise_loss_gradient(
             prepared_groups,
             starting_values_by_id,
         )
@@ -844,3 +846,353 @@ class TestOptimise(TestCase):
 
         self.assertTrue(np.isfinite(result["loss"]))
         self.assertLess(result["loss"], starting_loss)
+
+    def test_combined_noise_gradient_matches_finite_difference(self):
+        """The combined-noise analytic gradient matches finite differences for
+        both the ODE parameters and the two log-sigma parameters."""
+        setup = self._exponential_data()
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        context = self._build_optimise_context(setup, starting, bounds)
+        values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, starting
+        )
+        keys = list(values_by_id)
+        base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
+        n_outputs = len(context.sigma_output_variable_ids)
+        log_sigma = np.full(n_outputs, -0.5)
+        log_sigma_mult = np.full(n_outputs, -1.0)
+
+        nll, ode_gradient, sigma_gradient = context.optimise_loss_gradient(
+            context.optimisation_groups,
+            values_by_id,
+            log_sigma=log_sigma,
+            log_sigma_mult=log_sigma_mult,
+            noise_model="combined",
+        )
+        self.assertTrue(np.isfinite(nll))
+        self.assertEqual(len(sigma_gradient), 2 * n_outputs)
+
+        def loss_at(vals, ls, lsm):
+            return context.optimise_loss(
+                context.optimisation_groups,
+                {k: float(v) for k, v in zip(keys, vals)},
+                log_sigma=ls,
+                log_sigma_mult=lsm,
+                noise_model="combined",
+            )
+
+        eps = 1e-6
+        # ODE-parameter gradient (also exercises the forward sensitivities).
+        for i in range(len(base_vals)):
+            vp = base_vals.copy()
+            vp[i] += eps
+            vm = base_vals.copy()
+            vm[i] -= eps
+            fd = (
+                loss_at(vp, log_sigma, log_sigma_mult)
+                - loss_at(vm, log_sigma, log_sigma_mult)
+            ) / (2.0 * eps)
+            np.testing.assert_allclose(fd, ode_gradient[i], rtol=1e-2, atol=1e-3)
+
+        # The sigma gradients depend on the prediction y_hat (through the
+        # combined variance), and optimise_loss (solve_dense) vs
+        # optimise_loss_gradient (solve_fwd_sens) produce slightly different
+        # y_hat, so the finite-difference match is bounded by solver tolerance
+        # rather than machine precision. See the exact fake-solver check in
+        # test_combined_noise_sigma_gradient_exact for a tight formula check.
+        for i in range(n_outputs):
+            lp = log_sigma.copy()
+            lp[i] += eps
+            lm = log_sigma.copy()
+            lm[i] -= eps
+            fd = (
+                loss_at(base_vals, lp, log_sigma_mult)
+                - loss_at(base_vals, lm, log_sigma_mult)
+            ) / (2.0 * eps)
+            np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-2, atol=1e-3)
+
+        # log_sigma_m gradient.
+        for i in range(n_outputs):
+            mp = log_sigma_mult.copy()
+            mp[i] += eps
+            mm = log_sigma_mult.copy()
+            mm[i] -= eps
+            fd = (
+                loss_at(base_vals, log_sigma, mp)
+                - loss_at(base_vals, log_sigma, mm)
+            ) / (2.0 * eps)
+            np.testing.assert_allclose(
+                fd, sigma_gradient[n_outputs + i], rtol=1e-2, atol=1e-3
+            )
+
+    def test_combined_noise_sigma_gradient_exact(self):
+        """Exact check of the combined-noise sigma gradients using a fake solver
+        whose predictions are identical for the loss and gradient paths, so the
+        finite differences match the analytic formulas to near machine
+        precision."""
+        setup = self._exponential_data()
+        context = self._build_optimise_context(
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+        )
+        group = context.optimisation_groups[0]
+        values_by_id = self._starting_values_by_id(context, setup)
+        n_outputs = len(group.outputs)
+        n_times = len(group.t_eval)
+        # Distinct, positive predictions so y_hat^2 matters in the variance.
+        finite_y = np.linspace(0.5, 2.0, n_outputs * n_times).reshape(
+            n_outputs, n_times
+        )
+        fake_group = replace(
+            group,
+            diffsol_ode=FakeDiffsolOde(
+                finite_y, sens=self._fake_sens(context, group)
+            ),
+        )
+        groups = (fake_group,)
+        log_sigma = np.full(n_outputs, -0.3)
+        log_sigma_mult = np.full(n_outputs, -0.8)
+
+        _, _, sigma_gradient = context.optimise_loss_gradient(
+            groups,
+            values_by_id,
+            log_sigma=log_sigma,
+            log_sigma_mult=log_sigma_mult,
+            noise_model="combined",
+        )
+
+        eps = 1e-6
+        for i in range(n_outputs):
+            lp = log_sigma.copy()
+            lp[i] += eps
+            lm = log_sigma.copy()
+            lm[i] -= eps
+            fd = (
+                context.optimise_loss(groups, values_by_id, lp, log_sigma_mult, "combined")
+                - context.optimise_loss(groups, values_by_id, lm, log_sigma_mult, "combined")
+            ) / (2.0 * eps)
+            np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-6, atol=1e-8)
+
+            mp = log_sigma_mult.copy()
+            mp[i] += eps
+            mm = log_sigma_mult.copy()
+            mm[i] -= eps
+            fd = (
+                context.optimise_loss(groups, values_by_id, log_sigma, mp, "combined")
+                - context.optimise_loss(groups, values_by_id, log_sigma, mm, "combined")
+            ) / (2.0 * eps)
+            np.testing.assert_allclose(
+                fd, sigma_gradient[n_outputs + i], rtol=1e-6, atol=1e-8
+            )
+
+    def _combined_conversion_factors(self, context):
+        return np.array(
+            [
+                context.get_variable_context(
+                    context.get_input_name(input_id)
+                ).conversion_factor
+                for input_id in context.optimise_input_ids
+            ],
+            dtype=float,
+        )
+
+    def test_combined_noise_diagnostics_covariance_exact(self):
+        """The combined-noise diagnostics covariance equals an independently
+        computed GLS covariance (J^T W J)^-1 with W = diag(1/s_i^2), scaled by
+        the parameter conversion factors."""
+        setup = self._exponential_data()
+        context = self._build_optimise_context(
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+        )
+        input_ids = list(context.optimise_input_ids)
+        cf = self._combined_conversion_factors(context)
+        optimal_model = np.array(setup["true"], dtype=float) * cf
+        values_by_id = {i: float(v) for i, v in zip(input_ids, optimal_model)}
+        n_outputs = len(context.sigma_output_variable_ids)
+        log_sigma = np.full(n_outputs, np.log(0.4))
+        log_sigma_mult = np.full(n_outputs, np.log(0.1))
+
+        diag = context.optimise_diagnostics(
+            optimal_model,
+            log_sigma=log_sigma,
+            log_sigma_mult=log_sigma_mult,
+            noise_model="combined",
+        )
+        self.assertIsNotNone(diag["covariance"])
+        cov = np.array(diag["covariance"], dtype=float)
+
+        # Independently rebuild (J^T W J)^-1 from the model's own sensitivities.
+        sigma_a2 = np.exp(2.0 * log_sigma)
+        sigma_m2 = np.exp(2.0 * log_sigma_mult)
+        jac_rows = []
+        weights = []
+        for group in context.optimisation_groups:
+            y, y_prime = context.optimise_predict_with_sens(group, values_by_id)
+            for record in group.records:
+                k = context._sigma_index_for_record(group, record)
+                pred = y[record.time_index, record.output_index]
+                s2 = sigma_a2[k] + sigma_m2[k] * pred * pred
+                jac_rows.append(y_prime[record.time_index, record.output_index, :])
+                weights.append(1.0 / s2)
+        J = np.array(jac_rows)
+        W = np.array(weights)
+        cov_model = np.linalg.pinv(J.T @ (W[:, None] * J))
+        inv_cf = np.diag(1.0 / cf)
+        expected = inv_cf @ cov_model @ inv_cf
+
+        np.testing.assert_allclose(cov, expected, rtol=1e-9, atol=1e-12)
+
+    def test_combined_noise_diagnostics_covariance_matches_monte_carlo(self):
+        """Simulation-based check: generate many datasets from the combined
+        noise model at the true parameters, refit each, and confirm the
+        empirical parameter correlation and relative standard errors match the
+        covariance the diagnostics report. This validates that W = diag(1/s_i^2)
+        is the correct weighting for this noise model end-to-end."""
+        from scipy.optimize import minimize
+
+        setup = self._exponential_data()
+        context = self._build_optimise_context(
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+        )
+        input_ids = list(context.optimise_input_ids)
+        true_user = np.array(setup["true"], dtype=float)
+        cf = self._combined_conversion_factors(context)
+        true_model = true_user * cf
+        true_values_by_id = {i: float(v) for i, v in zip(input_ids, true_model)}
+
+        n_outputs = len(context.sigma_output_variable_ids)
+        sigma_a = 0.4
+        sigma_m = 0.1
+        log_sigma = np.full(n_outputs, np.log(sigma_a))
+        log_sigma_mult = np.full(n_outputs, np.log(sigma_m))
+
+        # Diagnostics covariance at the true parameters. The covariance depends
+        # only on the parameters and sigma (through predictions), not on the
+        # observed values, so this is the asymptotic sampling covariance the
+        # refits below should reproduce.
+        diag = context.optimise_diagnostics(
+            true_model,
+            log_sigma=log_sigma,
+            log_sigma_mult=log_sigma_mult,
+            noise_model="combined",
+        )
+        cov_diag = np.array(diag["covariance"], dtype=float)
+        d = np.sqrt(np.diag(cov_diag))
+        corr_diag = cov_diag / np.outer(d, d)
+        # Relative SE is invariant to the diagonal conversion-factor scaling, so
+        # it can be compared directly against the model-space empirical estimate.
+        rel_se_diag = d / np.abs(true_user)
+
+        # Predictions at the true parameters, used to generate synthetic data.
+        preds = [
+            context.optimise_predict(group, true_values_by_id)
+            for group in context.optimisation_groups
+        ]
+
+        rng = np.random.default_rng(20240703)
+        n_reps = 150
+        estimates = np.empty((n_reps, len(input_ids)), dtype=float)
+        for r in range(n_reps):
+            syn_groups = []
+            for group, y in zip(context.optimisation_groups, preds):
+                records = []
+                for record in group.records:
+                    pred = y[record.output_index, record.time_index]
+                    s = np.sqrt(sigma_a**2 + sigma_m**2 * pred * pred)
+                    noisy = float(pred + rng.normal(0.0, s))
+                    records.append(replace(record, value=noisy))
+                syn_groups.append(replace(group, records=tuple(records)))
+            syn_groups = tuple(syn_groups)
+
+            def objective(theta, groups=syn_groups):
+                values = {i: float(v) for i, v in zip(input_ids, theta)}
+                nll, ode_gradient, _ = context.optimise_loss_gradient(
+                    groups,
+                    values,
+                    log_sigma=log_sigma,
+                    log_sigma_mult=log_sigma_mult,
+                    noise_model="combined",
+                )
+                return nll, ode_gradient
+
+            result = minimize(objective, true_model, jac=True, method="BFGS")
+            estimates[r] = result.x
+
+        emp_cov = np.cov(estimates.T)
+        de = np.sqrt(np.diag(emp_cov))
+        emp_corr = emp_cov / np.outer(de, de)
+        rel_se_emp = de / np.abs(true_model)
+
+        # Off-diagonal correlation and per-parameter relative standard errors.
+        # At 150 replicates (fixed seed) the margins are comfortable: the
+        # correlation matches to ~0.02 (tol 0.1) and the relative SEs to ~1%
+        # (tol 20%).
+        np.testing.assert_allclose(
+            emp_corr[0, 1], corr_diag[0, 1], atol=0.1
+        )
+        np.testing.assert_allclose(rel_se_emp, rel_se_diag, rtol=0.2)
+
+    def test_optimise_combined_noise_returns_two_sigmas(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        group_ids = [group.id for group in setup["groups"]]
+        biomarker_type_ids = [setup["biomarker_type"].id]
+
+        result = model.optimise(
+            inputs=input_ids,
+            starting=starting,
+            bounds=bounds,
+            biomarker_types=biomarker_type_ids,
+            subject_groups=group_ids,
+            max_iterations=60,
+            noise_model="combined",
+        )
+
+        n_outputs = len(result["sigma_variables"])
+        self.assertTrue(np.isfinite(result["loss"]))
+        for key in (
+            "sigma",
+            "sigma_mult",
+            "log_sigma",
+            "log_sigma_mult",
+            "sigma_bounds",
+            "sigma_bounds_mult",
+        ):
+            self.assertIsNotNone(result[key], key)
+            self.assertEqual(len(result[key]), n_outputs, key)
+        self.assertAlmostEqual(result["optimal"][0], setup["true"][0], delta=0.06)
+
+    def test_optimise_additive_has_no_second_sigma(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        result = model.optimise(
+            inputs=input_ids,
+            starting=[0.27, 1.45],
+            bounds=([0.16, 1.2], [0.3, 2.1]),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=20,
+            noise_model="additive",
+        )
+        self.assertIsNone(result["sigma_mult"])
+        self.assertIsNone(result["log_sigma_mult"])
+        self.assertIsNone(result["sigma_bounds_mult"])
+
+    def test_optimise_rejects_unknown_noise_model(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        with self.assertRaisesMessage(ValueError, "Unknown noise model"):
+            model.optimise(
+                inputs=[variable.id for variable in setup["inputs"]],
+                starting=[0.27, 1.45],
+                bounds=([0.16, 1.2], [0.3, 2.1]),
+                biomarker_types=[setup["biomarker_type"].id],
+                subject_groups=[group.id for group in setup["groups"]],
+                max_iterations=1,
+                noise_model="not-a-model",
+            )

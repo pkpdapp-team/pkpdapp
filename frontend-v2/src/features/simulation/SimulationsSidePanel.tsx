@@ -653,6 +653,12 @@ export const SimulationsSidePanel = ({
                             noise standard deviation (fitted independently per variable), and
                             SSRₖ is its sum of squared residuals.
                           </p>
+                          <p>
+                            The <strong>combined</strong> noise model instead has a
+                            per-observation variance that depends on the prediction ŷ
+                            (σ_a² + σ_m²·ŷ²), so its NLL is accumulated point by point as
+                            Σ ( ½·log(σ²ᵢ) + rᵢ²/(2σ²ᵢ) ) rather than factored per variable.
+                          </p>
                           <p><strong>Parameters:</strong></p>
                           <p>
                             All the slider parameters are optimised jointly, please remove or add a slider if you want to change what model parameters are included in the optimisation.
@@ -668,10 +674,11 @@ export const SimulationsSidePanel = ({
                           <p>
                             The default configuration is indicated below with a *, you can change this in the optimisation settings by clicking the settings icon next to the Fit button.
                           </p>
-                          <p><strong>Noise models:</strong></p>
+                          <p><strong>Noise models:</strong> for an observation y with model prediction ŷ:</p>
                           <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
-                            <li><strong>Additive:</strong> residual = prediction − observed</li>
-                            <li><strong>Multiplicative (log-normal)*:</strong> residual = log(prediction) − log(observed)</li>
+                            <li><strong>Additive:</strong> y ~ N(ŷ, σ²) — constant noise, one σ per variable</li>
+                            <li><strong>Multiplicative (log-normal)*:</strong> log(y) ~ N(log(ŷ), σ²)</li>
+                            <li><strong>Combined:</strong> y ~ N(ŷ, σ_a² + σ_m²·ŷ²) — additive plus proportional noise</li>
                           </ul>
                           <p><strong>Available methods:</strong></p>
                           <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>

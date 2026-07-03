@@ -27,16 +27,33 @@ class OptimiseSerializer(serializers.Serializer):
         child=serializers.IntegerField(), required=False, allow_null=True
     )
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
-    use_multiplicative_noise = serializers.BooleanField(required=False, default=True)
+    noise_model = serializers.ChoiceField(
+        choices=["additive", "multiplicative", "combined"],
+        required=False,
+        default="additive",
+    )
     method = serializers.CharField(required=False, default="pso")
     # log_sigma and sigma_bounds carry one entry per fitted output variable, in
     # the canonical order the backend derives from biomarker_types (ascending
     # variable id). The corresponding variable ids are echoed back as
-    # sigma_variables in the response.
+    # sigma_variables in the response. log_sigma_mult / sigma_bounds_mult are the
+    # second (proportional) sigma, used only by the "combined" noise model.
     log_sigma = serializers.ListField(
         child=serializers.FloatField(), required=False, allow_null=True
     )
     sigma_bounds = serializers.ListField(
+        child=serializers.ListField(
+            child=serializers.FloatField(),
+            min_length=2,
+            max_length=2,
+        ),
+        required=False,
+        allow_null=True,
+    )
+    log_sigma_mult = serializers.ListField(
+        child=serializers.FloatField(), required=False, allow_null=True
+    )
+    sigma_bounds_mult = serializers.ListField(
         child=serializers.ListField(
             child=serializers.FloatField(),
             min_length=2,
@@ -52,6 +69,9 @@ class OptimiseResponseSerializer(serializers.Serializer):
     loss = serializers.FloatField()
     reason = serializers.CharField()
     sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
+    sigma_mult = serializers.ListField(
+        child=serializers.FloatField(), allow_null=True
+    )
     inputs = serializers.ListField(child=serializers.IntegerField())
     starting = serializers.ListField(child=serializers.FloatField())
     bounds = serializers.ListField(
@@ -64,7 +84,7 @@ class OptimiseResponseSerializer(serializers.Serializer):
         child=serializers.IntegerField(), required=False, allow_null=True
     )
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
-    use_multiplicative_noise = serializers.BooleanField()
+    noise_model = serializers.CharField()
     method = serializers.CharField()
     predictions = serializers.ListField(child=serializers.DictField(), allow_null=True)
     residuals = serializers.ListField(child=serializers.DictField(), allow_null=True)
@@ -78,6 +98,13 @@ class OptimiseResponseSerializer(serializers.Serializer):
     )
     log_sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
     sigma_bounds = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField()),
+        allow_null=True,
+    )
+    log_sigma_mult = serializers.ListField(
+        child=serializers.FloatField(), allow_null=True
+    )
+    sigma_bounds_mult = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,
     )
@@ -124,12 +151,12 @@ class OptimiseBaseView(views.APIView):
                     biomarker_types=data.get("biomarker_types"),
                     subject_groups=data.get("subject_groups"),
                     max_iterations=data.get("max_iterations"),
-                    use_multiplicative_noise=data.get(
-                        "use_multiplicative_noise", False
-                    ),
+                    noise_model=data.get("noise_model", "additive"),
                     method=data.get("method", "pso"),
                     log_sigma=data.get("log_sigma"),
                     sigma_bounds=data.get("sigma_bounds"),
+                    log_sigma_mult=data.get("log_sigma_mult"),
+                    sigma_bounds_mult=data.get("sigma_bounds_mult"),
                 )
             except (myokit.MyokitError, RuntimeError, ValueError) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})
@@ -148,9 +175,7 @@ class OptimiseBaseView(views.APIView):
                     "biomarker_types": data.get("biomarker_types"),
                     "subject_groups": data.get("subject_groups"),
                     "max_iterations": data.get("max_iterations"),
-                    "use_multiplicative_noise": data.get(
-                        "use_multiplicative_noise", False
-                    ),
+                    "noise_model": data.get("noise_model", "additive"),
                     "method": data.get("method", "pso"),
                 }
             )
