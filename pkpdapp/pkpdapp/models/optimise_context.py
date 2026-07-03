@@ -589,22 +589,21 @@ class OptimiseContext(SimulateContext):
                     weight = 1.0 / sigma2[k]
                 elif is_combined:
                     residual = prediction - observed
-                    # Per-point (heteroscedastic) variance and weight.
+                    # Per-point (heteroscedastic) variance and weight. The
+                    # standardised residual is dimensionless (residual and the
+                    # noise sd are both in model units), so no conversion factor
+                    # is applied.
                     s2 = self._combined_variance(
                         sigma2[k], sigma_mult2[k], prediction
                     )
-                    output_conversion_factor = output_contexts[o_idx].conversion_factor
-                    residual_for_output = residual / (
-                        output_conversion_factor * np.sqrt(s2)
-                    )
+                    residual_for_output = residual / np.sqrt(s2)
                     jac_row = y_prime[t_idx, o_idx, :]
                     weight = 1.0 / s2
                 else:
                     residual = prediction - observed
-                    output_conversion_factor = output_contexts[o_idx].conversion_factor
-                    residual_for_output = residual / (
-                        output_conversion_factor * sigma[k]
-                    )
+                    # Standardised (dimensionless) residual; no conversion factor
+                    # (residual and sigma are both in model units).
+                    residual_for_output = residual / sigma[k]
                     jac_row = y_prime[t_idx, o_idx, :]
                     weight = 1.0 / sigma2[k]
 
