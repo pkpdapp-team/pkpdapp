@@ -42,8 +42,13 @@ const chatSlice = createSlice({
   },
 });
 
-export const { toggleChat, openChat, closeChat, setChatWidth, setActiveConversation } =
-  chatSlice.actions;
+export const {
+  toggleChat,
+  openChat,
+  closeChat,
+  setChatWidth,
+  setActiveConversation,
+} = chatSlice.actions;
 
 export const selectChatOpen = (state: RootState) => state.chat.isOpen;
 export const selectChatWidth = (state: RootState) => state.chat.drawerWidth;

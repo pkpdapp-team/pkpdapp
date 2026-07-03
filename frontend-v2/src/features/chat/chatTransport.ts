@@ -10,9 +10,7 @@ const transport = new DefaultChatTransport({
     const lastMessage = messages.at(-1);
     const content =
       lastMessage?.parts
-        ?.filter(
-          (p): p is { type: "text"; text: string } => p.type === "text",
-        )
+        ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
         .map((p) => p.text)
         .join("") ?? "";
 

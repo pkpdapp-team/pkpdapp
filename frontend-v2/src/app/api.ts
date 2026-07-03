@@ -419,9 +419,7 @@ export const api = backendApi.enhanceEndpoints({
           : [{ type: "Conversation", id: "LIST" }],
     },
     conversationsRetrieve: {
-      providesTags: (result, error, { id }) => [
-        { type: "Conversation", id },
-      ],
+      providesTags: (result, error, { id }) => [{ type: "Conversation", id }],
     },
     conversationsCreate: {
       invalidatesTags: [{ type: "Conversation", id: "LIST" }],

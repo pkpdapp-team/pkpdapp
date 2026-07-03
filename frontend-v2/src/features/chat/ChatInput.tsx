@@ -87,9 +87,7 @@ const ChatInput: FC<ChatInputProps> = ({
                 size="small"
                 sx={{
                   bgcolor:
-                    value.trim() && !disabled
-                      ? "primary.main"
-                      : "transparent",
+                    value.trim() && !disabled ? "primary.main" : "transparent",
                   color:
                     value.trim() && !disabled
                       ? "primary.contrastText"

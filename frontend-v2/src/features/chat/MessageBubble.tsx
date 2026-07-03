@@ -15,16 +15,52 @@ const cursorBlink = keyframes`
 /* ---- Markdown component overrides ---- */
 const mdComponents: Partial<Components> = {
   blockquote: ({ children }) => (
-    <Box component="blockquote" sx={{ borderLeft: "3px solid", borderColor: "grey.400", my: 1, ml: 0, pl: 1.5, color: "text.secondary", fontStyle: "italic" }}>{children}</Box>
+    <Box
+      component="blockquote"
+      sx={{
+        borderLeft: "3px solid",
+        borderColor: "grey.400",
+        my: 1,
+        ml: 0,
+        pl: 1.5,
+        color: "text.secondary",
+        fontStyle: "italic",
+      }}
+    >
+      {children}
+    </Box>
   ),
   pre: ({ children }) => (
-    <Box component="pre" sx={{ bgcolor: "grey.100", borderRadius: 1, p: 1.5, overflowX: "auto", fontSize: "0.8rem", my: 1 }}>{children}</Box>
+    <Box
+      component="pre"
+      sx={{
+        bgcolor: "grey.100",
+        borderRadius: 1,
+        p: 1.5,
+        overflowX: "auto",
+        fontSize: "0.8rem",
+        my: 1,
+      }}
+    >
+      {children}
+    </Box>
   ),
   code: ({ children, className }) =>
     className ? (
       <code className={className}>{children}</code>
     ) : (
-      <Box component="code" sx={{ fontSize: "0.8rem", fontFamily: "monospace", bgcolor: "grey.100", px: 0.5, borderRadius: 0.5 }}>{children}</Box>
+      <Box
+        component="code"
+        sx={{
+          fontSize: "0.8rem",
+          fontFamily: "monospace",
+          bgcolor: "grey.100",
+          px: 0.5,
+          borderRadius: 0.5,
+        }}
+      >
+        {children}
+      </Box>
     ),
 };
 
@@ -38,14 +74,18 @@ const TextPart: FC<{
 }> = ({ text, showCursor }) => {
   return (
     <Box
-      sx={showCursor ? {
-        "& > *:last-child::after": {
-          content: '"▋"',
-          ml: "1px",
-          animation: `${cursorBlink} 0.7s step-end infinite`,
-          color: "text.secondary",
-        },
-      } : undefined}
+      sx={
+        showCursor
+          ? {
+              "& > *:last-child::after": {
+                content: '"▋"',
+                ml: "1px",
+                animation: `${cursorBlink} 0.7s step-end infinite`,
+                color: "text.secondary",
+              },
+            }
+          : undefined
+      }
     >
       <Markdown components={mdComponents} rehypePlugins={rehypePlugins}>
         {text}

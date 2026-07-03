@@ -159,10 +159,7 @@ const ChatPanel: FC = () => {
       }
     }
 
-    sendMessage(
-      { text: trimmed },
-      { body: { conversationId: convId } },
-    );
+    sendMessage({ text: trimmed }, { body: { conversationId: convId } });
   };
 
   const handleDragStart = useCallback(
@@ -362,9 +359,7 @@ const ChatPanel: FC = () => {
               startIcon={<ForumOutlinedIcon sx={{ fontSize: 16 }} />}
               onClick={() => setShowConversationList((v) => !v)}
               sx={{
-                color: showConversationList
-                  ? "white"
-                  : "rgba(255,255,255,0.7)",
+                color: showConversationList ? "white" : "rgba(255,255,255,0.7)",
                 borderColor: showConversationList
                   ? "rgba(255,255,255,0.5)"
                   : "rgba(255,255,255,0.3)",
@@ -436,9 +431,7 @@ const ChatPanel: FC = () => {
                 >
                   {!selectedProject ? (
                     <>
-                      <FolderOutlinedIcon
-                        sx={{ fontSize: 36, opacity: 0.4 }}
-                      />
+                      <FolderOutlinedIcon sx={{ fontSize: 36, opacity: 0.4 }} />
                       <Typography
                         variant="body2"
                         color="text.secondary"

@@ -33,12 +33,21 @@ function formatRelativeDate(dateStr: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const time = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const time = date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   if (diffDays === 0) return `Today ${time}`;
   if (diffDays === 1) return `Yesterday ${time}`;
   if (diffDays < 7) return `${diffDays} days ago, ${time}`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) + ` ${time}`;
+  return (
+    date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }) + ` ${time}`
+  );
 }
 
 const ConversationList: FC<ConversationListProps> = ({
@@ -52,11 +61,18 @@ const ConversationList: FC<ConversationListProps> = ({
   const { conversations, destroy, isLoading } = useConversations(projectId);
 
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
-  const [menuConversationId, setMenuConversationId] = useState<number | null>(null);
+  const [menuConversationId, setMenuConversationId] = useState<number | null>(
+    null,
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [conversationToDelete, setConversationToDelete] = useState<number | null>(null);
+  const [conversationToDelete, setConversationToDelete] = useState<
+    number | null
+  >(null);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, conversationId: number) => {
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    conversationId: number,
+  ) => {
     event.stopPropagation();
     setMenuAnchorEl(event.currentTarget);
     setMenuConversationId(conversationId);
@@ -96,7 +112,11 @@ const ConversationList: FC<ConversationListProps> = ({
     <Stack direction="column" sx={{ height: "100%", overflow: "hidden" }}>
       {/* Header row */}
       <Stack sx={{ px: 2, py: 1.5 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Typography sx={{ fontSize: "1.1rem", fontWeight: 600 }}>
             Conversations
           </Typography>
@@ -111,7 +131,9 @@ const ConversationList: FC<ConversationListProps> = ({
           </IconButton>
         </Stack>
         {projectName && (
-          <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: 0.25 }}>
+          <Typography
+            sx={{ fontSize: "0.75rem", color: "text.secondary", mt: 0.25 }}
+          >
             Project: {projectName}
           </Typography>
         )}
@@ -129,15 +151,17 @@ const ConversationList: FC<ConversationListProps> = ({
             ))}
           </Stack>
         ) : conversations.length === 0 ? (
-          <Stack
-            alignItems="center"
-            spacing={1}
-            sx={{ mt: 6, px: 2 }}
-          >
+          <Stack alignItems="center" spacing={1} sx={{ mt: 6, px: 2 }}>
             <Typography sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
               No conversations yet
             </Typography>
-            <Typography sx={{ fontSize: "0.8rem", color: "text.secondary", textAlign: "center" }}>
+            <Typography
+              sx={{
+                fontSize: "0.8rem",
+                color: "text.secondary",
+                textAlign: "center",
+              }}
+            >
               Start a new conversation to begin chatting.
             </Typography>
           </Stack>
@@ -165,7 +189,9 @@ const ConversationList: FC<ConversationListProps> = ({
                     </IconButton>
                   }
                   sx={{
-                    borderLeft: isActive ? "3px solid" : "3px solid transparent",
+                    borderLeft: isActive
+                      ? "3px solid"
+                      : "3px solid transparent",
                     borderLeftColor: isActive ? "primary.main" : "transparent",
                     bgcolor: isActive ? "grey.50" : "transparent",
                     minHeight: 44,
@@ -184,8 +210,14 @@ const ConversationList: FC<ConversationListProps> = ({
                     <ListItemText
                       primary={conversation.title || "Untitled conversation"}
                       secondary={
-                        <Box component="span" sx={{ display: "flex", flexDirection: "column" }}>
-                          <Box component="span" sx={{ fontSize: "0.8rem", color: "text.secondary" }}>
+                        <Box
+                          component="span"
+                          sx={{ display: "flex", flexDirection: "column" }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{ fontSize: "0.8rem", color: "text.secondary" }}
+                          >
                             {formatRelativeDate(conversation.updated_at)}
                           </Box>
                           {conversation.last_message_preview && (
