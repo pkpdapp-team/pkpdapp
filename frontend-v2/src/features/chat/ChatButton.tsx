@@ -14,9 +14,12 @@ const ChatButton: FC = () => {
       variant="outlined"
       size="small"
       startIcon={<ChatOutlinedIcon sx={{ fontSize: 16 }} />}
+      aria-expanded={isOpen}
       onClick={() => dispatch(toggleChat())}
       sx={(theme) => {
         const hoverGradient = `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.dark} 100%)`;
+        const openButtonBackground = `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.main} 100%)`;
+        const closedButtonBackground = `${theme.palette.primary.main}0A`;
         return {
           textTransform: "none",
           borderRadius: 1,
@@ -30,9 +33,7 @@ const ChatButton: FC = () => {
           zIndex: 0,
           borderColor: isOpen ? "transparent" : "primary.light",
           color: isOpen ? "white" : "primary.main",
-          background: isOpen
-            ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.main} 100%)`
-            : `${theme.palette.primary.main}0A`,
+          background: isOpen ? openButtonBackground : closedButtonBackground,
           boxShadow: isOpen
             ? `0 2px 6px ${theme.palette.primary.main}40`
             : "none",
@@ -50,9 +51,7 @@ const ChatButton: FC = () => {
           "&:hover": {
             borderColor: "primary.light",
             color: "white",
-            background: isOpen
-              ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.main} 60%, ${theme.palette.primary.main} 100%)`
-              : `${theme.palette.primary.main}0A`,
+            background: isOpen ? openButtonBackground : closedButtonBackground,
             boxShadow: `0 3px 14px ${theme.palette.primary.main}73`,
             transform: "translateY(-1px)",
             "&::after": {
