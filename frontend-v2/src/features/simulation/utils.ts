@@ -72,6 +72,7 @@ export function getDefaultOptimiseInputs({
     bounds: [lowerBounds, upperBounds],
     biomarker_types,
     subject_groups: subjectGroups,
+    noise_model: "multiplicative",
     log_sigma,
     sigma_bounds,
   };

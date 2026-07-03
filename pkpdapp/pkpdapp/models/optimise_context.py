@@ -24,6 +24,15 @@ logger = logging.getLogger(__name__)
 # multiplicative-noise error model.
 _MULTIPLICATIVE_NOISE_FLOOR = 1e-5
 
+# Supported noise (error) models. See the loss/gradient/diagnostics methods for
+# the residual definition of each:
+#   - "additive":       y ~ N(y_hat, sigma_a^2)          (one sigma per output)
+#   - "multiplicative": log(y) ~ N(log(y_hat), sigma^2)  (log-normal, one sigma)
+#   - "combined":       y ~ N(y_hat, sigma_a^2 + sigma_m^2 * y_hat^2)
+#                       (two sigmas per output: additive sigma_a and
+#                        proportional sigma_m)
+NOISE_MODELS = ("additive", "multiplicative", "combined")
+
 
 @dataclass(frozen=True)
 class OptimisationRecordContext:
@@ -212,22 +221,68 @@ class OptimiseContext(SimulateContext):
             np.asarray(log_sigma, dtype=float), (n_outputs,)
         ).astype(float, copy=True)
 
+    def _log_sigma_mult_array(self, log_sigma_mult) -> np.ndarray:
+        """
+        Like ``_log_sigma_array`` for the combined model's second (proportional)
+        sigma, defaulting a missing value to 0.0 (sigma_m = 1).
+        """
+        return self._log_sigma_array(
+            0.0 if log_sigma_mult is None else log_sigma_mult
+        )
+
+    @staticmethod
+    def _combined_variance(sigma_a2_k, sigma_m2_k, prediction):
+        """Per-observation variance of the combined noise model:
+        s^2 = sigma_a^2 + sigma_m^2 * prediction^2."""
+        return sigma_a2_k + sigma_m2_k * prediction * prediction
+
+    @staticmethod
+    def _combined_nll_term(variance, residual):
+        """Per-observation negative log-likelihood contribution of the combined
+        noise model (dropping the constant 0.5*log(2*pi))."""
+        return 0.5 * np.log(variance) + residual * residual / (2.0 * variance)
+
     def _optimise_loss(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
         log_sigma: float = 0.0,
-        use_multiplicative_noise=False,
+        log_sigma_mult=None,
+        noise_model: str = "additive",
     ):
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
             return np.inf
 
         log_sigma_arr = self._log_sigma_array(log_sigma)
+
+        if noise_model == "combined":
+            # Heteroscedastic: per-point variance depends on the prediction, so
+            # the loss cannot be factored into per-output SSR/sigma^2 terms.
+            sigma_a2 = np.exp(2.0 * log_sigma_arr)
+            sigma_m2 = np.exp(2.0 * self._log_sigma_mult_array(log_sigma_mult))
+            nll = 0.0
+            for group in groups:
+                try:
+                    y = self._optimise_predict(group, values_by_id)
+                except Exception:
+                    logger.exception("diffsol solve failed during optimisation.")
+                    return np.inf
+                for record in group.records:
+                    k = self._sigma_index_for_record(group, record)
+                    prediction = y[record.output_index, record.time_index]
+                    residual = prediction - record.value
+                    s2 = self._combined_variance(sigma_a2[k], sigma_m2[k], prediction)
+                    nll += self._combined_nll_term(s2, residual)
+            if not np.isfinite(nll):
+                return np.inf
+            return float(nll)
+
         sigma2 = np.exp(2.0 * log_sigma_arr)
         n_outputs = len(log_sigma_arr)
         ssr_per = np.zeros(n_outputs, dtype=float)
         n_obs_per = np.zeros(n_outputs, dtype=float)
+        use_multiplicative_noise = noise_model == "multiplicative"
         for group in groups:
             try:
                 y = self._optimise_predict(group, values_by_id)
@@ -259,10 +314,11 @@ class OptimiseContext(SimulateContext):
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
         log_sigma: float = 0.0,
-        use_multiplicative_noise=False,
+        log_sigma_mult=None,
+        noise_model: str = "additive",
     ):
         return self._optimise_loss(
-            groups, values_by_id, log_sigma, use_multiplicative_noise
+            groups, values_by_id, log_sigma, log_sigma_mult, noise_model
         )
 
     def _optimise_loss_gradient(
@@ -270,46 +326,63 @@ class OptimiseContext(SimulateContext):
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
         log_sigma: float = 0.0,
-        use_multiplicative_noise=False,
+        log_sigma_mult=None,
+        noise_model: str = "additive",
     ):
         """
-        Returns (nll, ode_gradient, ssr_per, n_obs_per) across prepared groups,
+        Returns (nll, ode_gradient, sigma_gradient) across prepared groups,
         using forward sensitivities for the requested input variables.
 
-        ``ssr_per`` and ``n_obs_per`` are arrays with one entry per distinct
-        output variable. The negative log-likelihood is
+        ``ode_gradient`` is the gradient of the negative log-likelihood w.r.t.
+        the optimised ODE input variables. ``sigma_gradient`` is the gradient
+        w.r.t. the log-sigma block: length ``n_outputs`` for the additive and
+        multiplicative models, or ``2 * n_outputs`` for the combined model,
+        ordered as ``[log_sigma_a block, log_sigma_m block]``. The caller simply
+        concatenates ``[ode_gradient, sigma_gradient]`` to form the full
+        parameter gradient.
 
-            nll = Σ_k ( n_obs_per[k] * log_sigma[k] + ssr_per[k] / (2 * sigma_k^2) )
+        For the additive/multiplicative models the negative log-likelihood is
 
-        and each residual's contribution to the ODE-parameter gradient is scaled
-        by 1/sigma_k^2 for its output variable k. The gradient w.r.t. each
-        log_sigma[k] is not included here; the caller computes it as
-        ``n_obs_per[k] - ssr_per[k] / sigma_k^2``.
+            nll = Σ_k ( N_k * log_sigma[k] + SSR_k / (2 * sigma_k^2) )
+
+        and ``sigma_gradient[k] = N_k - SSR_k / sigma_k^2``. For the combined
+        model the per-observation variance depends on the prediction, so the
+        gradient is accumulated point-by-point (see below).
         """
         param_ids = tuple(values_by_id.keys())
         n_params = len(param_ids)
         log_sigma_arr = self._log_sigma_array(log_sigma)
-        sigma2 = np.exp(2.0 * log_sigma_arr)
         n_outputs = len(log_sigma_arr)
-        zeros_ssr = np.zeros(n_outputs, dtype=float)
+
+        if noise_model == "combined":
+            zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
+        else:
+            zeros_sigma = np.zeros(n_outputs, dtype=float)
 
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
-            return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
+            return np.inf, np.zeros(n_params), zeros_sigma
 
+        if noise_model == "combined":
+            return self._combined_loss_gradient(
+                groups, values_by_id, log_sigma_arr, log_sigma_mult
+            )
+
+        sigma2 = np.exp(2.0 * log_sigma_arr)
         ssr_per = np.zeros(n_outputs, dtype=float)
         n_obs_per = np.zeros(n_outputs, dtype=float)
         total_gradient = np.zeros(n_params, dtype=float)
+        use_multiplicative_noise = noise_model == "multiplicative"
 
         for group in groups:
             try:
                 y, y_prime = self._optimise_predict_with_sens(group, values_by_id)
             except Exception:
                 logger.exception("solve_fwd_sens failed during gradient computation.")
-                return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
+                return np.inf, np.zeros(n_params), zeros_sigma
 
             if y.shape != (len(group.t_eval), len(group.outputs)):
-                return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
+                return np.inf, np.zeros(n_params), zeros_sigma
 
             for record in group.records:
                 k = self._sigma_index_for_record(group, record)
@@ -317,7 +390,7 @@ class OptimiseContext(SimulateContext):
                 observed = record.value
                 if use_multiplicative_noise:
                     if observed <= 0:
-                        return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
+                        return np.inf, np.zeros(n_params), zeros_sigma
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                     gradient_row = (
@@ -332,30 +405,97 @@ class OptimiseContext(SimulateContext):
                 total_gradient += (residual / sigma2[k]) * gradient_row
 
         if not np.all(np.isfinite(ssr_per)):
-            return np.inf, np.zeros(n_params), zeros_ssr, zeros_ssr.copy()
+            return np.inf, np.zeros(n_params), zeros_sigma
 
         nll = float(np.sum(n_obs_per * log_sigma_arr + ssr_per / (2.0 * sigma2)))
-        return nll, total_gradient, ssr_per, n_obs_per
+        sigma_gradient = n_obs_per - ssr_per / sigma2
+        return nll, total_gradient, sigma_gradient
+
+    def _combined_loss_gradient(
+        self,
+        groups: tuple[OptimisationGroupContext, ...],
+        values_by_id: dict[int, float],
+        log_sigma_arr: np.ndarray,
+        log_sigma_mult,
+    ):
+        """
+        Gradient of the combined-noise negative log-likelihood. For each
+        observation of output ``k`` with prediction ``p`` and residual
+        ``r = p - observed``, the variance is ``s2 = sigma_a_k^2 + sigma_m_k^2 *
+        p^2`` and ``nll_i = 0.5*log(s2) + r^2/(2*s2)``. With
+        ``c = 0.5/s2 - r^2/(2*s2^2)`` and ``d(s2)/dp = 2*sigma_m_k^2*p``:
+
+            d nll_i / dp   = r/s2 + c * d(s2)/dp
+            d nll_i / da_k = c * 2*sigma_a_k^2       (a_k = log sigma_a_k)
+            d nll_i / dm_k = c * 2*sigma_m_k^2 * p^2 (m_k = log sigma_m_k)
+        """
+        param_ids = tuple(values_by_id.keys())
+        n_params = len(param_ids)
+        n_outputs = len(log_sigma_arr)
+        zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
+
+        sigma_a2 = np.exp(2.0 * log_sigma_arr)
+        sigma_m2 = np.exp(2.0 * self._log_sigma_mult_array(log_sigma_mult))
+
+        nll = 0.0
+        total_gradient = np.zeros(n_params, dtype=float)
+        grad_a = np.zeros(n_outputs, dtype=float)
+        grad_m = np.zeros(n_outputs, dtype=float)
+
+        for group in groups:
+            try:
+                y, y_prime = self._optimise_predict_with_sens(group, values_by_id)
+            except Exception:
+                logger.exception("solve_fwd_sens failed during gradient computation.")
+                return np.inf, np.zeros(n_params), zeros_sigma
+
+            if y.shape != (len(group.t_eval), len(group.outputs)):
+                return np.inf, np.zeros(n_params), zeros_sigma
+
+            for record in group.records:
+                k = self._sigma_index_for_record(group, record)
+                prediction = y[record.time_index, record.output_index]
+                residual = prediction - record.value
+                gradient_row = y_prime[record.time_index, record.output_index, :]
+
+                s2 = self._combined_variance(sigma_a2[k], sigma_m2[k], prediction)
+                common = 0.5 / s2 - residual * residual / (2.0 * s2 * s2)
+                ds2_dp = 2.0 * sigma_m2[k] * prediction
+                dnll_dp = residual / s2 + common * ds2_dp
+
+                total_gradient += dnll_dp * gradient_row
+                grad_a[k] += common * (2.0 * sigma_a2[k])
+                grad_m[k] += common * (2.0 * sigma_m2[k] * prediction * prediction)
+                nll += self._combined_nll_term(s2, residual)
+
+        if not np.isfinite(nll):
+            return np.inf, np.zeros(n_params), zeros_sigma
+
+        sigma_gradient = np.concatenate([grad_a, grad_m])
+        return float(nll), total_gradient, sigma_gradient
 
     def optimise_loss_gradient(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
         log_sigma: float = 0.0,
-        use_multiplicative_noise=False,
+        log_sigma_mult=None,
+        noise_model: str = "additive",
     ):
         return self._optimise_loss_gradient(
             groups,
             values_by_id,
             log_sigma,
-            use_multiplicative_noise,
+            log_sigma_mult,
+            noise_model,
         )
 
     def optimise_diagnostics(
         self,
         optimal_model: np.ndarray,
         log_sigma: float = 0.0,
-        use_multiplicative_noise=False,
+        log_sigma_mult=None,
+        noise_model: str = "additive",
     ):
         input_ids = self.optimise_input_ids
         n_params = len(input_ids)
@@ -376,11 +516,21 @@ class OptimiseContext(SimulateContext):
             dtype=float,
         )
 
+        use_multiplicative_noise = noise_model == "multiplicative"
+        is_combined = noise_model == "combined"
+
         log_sigma_arr = self._log_sigma_array(log_sigma)
         sigma = np.exp(log_sigma_arr)
         sigma2 = sigma * sigma
         sigma_list = [float(s) for s in sigma]
         sigma_variables = list(self.sigma_output_variable_ids)
+
+        if is_combined:
+            sigma_mult = np.exp(self._log_sigma_mult_array(log_sigma_mult))
+            sigma_mult2 = sigma_mult * sigma_mult
+            sigma_mult_list: list[float] | None = [float(s) for s in sigma_mult]
+        else:
+            sigma_mult_list = None
 
         predictions_list = []
         residuals_list = []
@@ -402,6 +552,7 @@ class OptimiseContext(SimulateContext):
                     "covariance": None,
                     "condition_number": None,
                     "sigma": sigma_list,
+                    "sigma_mult": sigma_mult_list,
                     "sigma_variables": sigma_variables,
                 }
 
@@ -435,18 +586,31 @@ class OptimiseContext(SimulateContext):
                         residual = np.log(prediction) - np.log(observed)
                         jac_row = y_prime[t_idx, o_idx, :] / prediction
                     residual_for_output = residual / sigma[k]
+                    weight = 1.0 / sigma2[k]
+                elif is_combined:
+                    residual = prediction - observed
+                    # Per-point (heteroscedastic) variance and weight. The
+                    # standardised residual is dimensionless (residual and the
+                    # noise sd are both in model units), so no conversion factor
+                    # is applied.
+                    s2 = self._combined_variance(
+                        sigma2[k], sigma_mult2[k], prediction
+                    )
+                    residual_for_output = residual / np.sqrt(s2)
+                    jac_row = y_prime[t_idx, o_idx, :]
+                    weight = 1.0 / s2
                 else:
                     residual = prediction - observed
-                    output_conversion_factor = output_contexts[o_idx].conversion_factor
-                    residual_for_output = residual / (
-                        output_conversion_factor * sigma[k]
-                    )
+                    # Standardised (dimensionless) residual; no conversion factor
+                    # (residual and sigma are both in model units).
+                    residual_for_output = residual / sigma[k]
                     jac_row = y_prime[t_idx, o_idx, :]
+                    weight = 1.0 / sigma2[k]
 
                 obs_residuals_per_output[o_idx].append(float(residual_for_output))
                 jacobian_rows.append(jac_row)
                 residual_values.append(float(residual))
-                weights.append(1.0 / sigma2[k])
+                weights.append(weight)
 
             resid_dict = {"group_id": group.group_id}
             all_obs_times = sorted(
@@ -474,6 +638,7 @@ class OptimiseContext(SimulateContext):
                 "covariance": None,
                 "condition_number": None,
                 "sigma": sigma_list,
+                "sigma_mult": sigma_mult_list,
                 "sigma_variables": sigma_variables,
             }
 
@@ -505,6 +670,7 @@ class OptimiseContext(SimulateContext):
             "covariance": cov.tolist() if cov is not None else None,
             "condition_number": condition_number,
             "sigma": sigma_list,
+            "sigma_mult": sigma_mult_list,
             "sigma_variables": sigma_variables,
         }
 

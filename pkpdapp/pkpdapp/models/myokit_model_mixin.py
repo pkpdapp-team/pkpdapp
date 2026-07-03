@@ -15,7 +15,7 @@ from django.core.cache import cache
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
 
-from pkpdapp.models.optimise_context import OptimiseContext
+from pkpdapp.models.optimise_context import NOISE_MODELS, OptimiseContext
 from pkpdapp.models.simulate_context import SimulateContext
 from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
@@ -335,26 +335,35 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         biomarker_types=None,
         subject_groups=None,
         max_iterations=None,
-        use_multiplicative_noise=True,
+        noise_model="additive",
         method="pso",
         log_sigma=None,
         sigma_bounds=None,
+        log_sigma_mult=None,
+        sigma_bounds_mult=None,
     ):
         """
         Fits the model against the data indicated
 
-        two different noise models are supported: gaussian additive
-        (i.e. sum of squares) and log-normal multiplicative.
+        Three noise models are supported, selected by ``noise_model``:
+          - "additive":       y ~ N(y_hat, sigma_a^2)
+          - "multiplicative": log(y) ~ N(log(y_hat), sigma^2) (log-normal)
+          - "combined":       y ~ N(y_hat, sigma_a^2 + sigma_m^2 * y_hat^2)
 
-        The loss function is the negative log-likelihood with one noise standard
-        deviation sigma_k per distinct model output variable being fitted:
+        For the additive and multiplicative models the loss function is the
+        negative log-likelihood with one noise standard deviation sigma_k per
+        distinct model output variable being fitted:
 
             nll = Σ_k ( N_k * log_sigma_k + SSR_k / (2 * sigma_k^2) )
 
         where N_k is the number of observations of output variable k, SSR_k is
         the sum of squared residuals for that variable, and
-        sigma_k = exp(log_sigma_k). Both additive and log-normal multiplicative
-        noise models are supported.
+        sigma_k = exp(log_sigma_k).
+
+        The combined model fits *two* sigmas per output variable (sigma_a from
+        ``log_sigma`` and sigma_m from ``log_sigma_mult``); its per-observation
+        variance depends on the prediction so the loss is accumulated
+        point-by-point rather than factored per output.
 
         The package Pints is used for optimisation
         (https://pints.readthedocs.io/en/stable/optimisers/index.html).
@@ -380,21 +389,28 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             list of subject groups (ids) to optimise against, None for all
         max_iterations: int (optional)
             maximum number of iterations of the opimisation algorithm (default 100)
-        use_multiplicative_noise: bool (optional)
-            if False (default) use additive noise (sum of squares loss), if True,
-            use multiplicative noise (log-normal noise)
+        noise_model: str (optional)
+            noise model, one of "additive" (default), "multiplicative", or
+            "combined"
         method: str (optional)
             optimisation method, one of "cmaes", "pso" (default), "nelder-mead",
             "gradient_descent", "adam", "irprop"
         log_sigma: list (optional)
-            initial values for log(sigma), one per fitted output variable in the
-            canonical order (ascending variable id) derived from
+            initial values for log(sigma_a), one per fitted output variable in
+            the canonical order (ascending variable id) derived from
             ``biomarker_types`` and reported as ``sigma_variables``. If omitted,
             all default to 0.0; if given, must match the number of outputs.
         sigma_bounds: list of (float, float) (optional)
             lower and upper bounds for each log_sigma, parallel to ``log_sigma``.
             If omitted, all default to (-20.0, 20.0); if given, must match the
             number of outputs.
+        log_sigma_mult: list (optional)
+            initial values for log(sigma_m), parallel to ``log_sigma``. Only used
+            by the "combined" noise model. Same defaults/validation as
+            ``log_sigma``.
+        sigma_bounds_mult: list of (float, float) (optional)
+            bounds for each log_sigma_mult, parallel to ``log_sigma_mult``. Only
+            used by the "combined" noise model. Same defaults as ``sigma_bounds``.
 
         Returns
         -------
@@ -402,11 +418,17 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             - "optimal": (list) optimal input values (same order as inputs)
             - "loss": (float) value of loss function at optimal
             - "reason": (str) stopping reason
-            - "sigma": (list) estimated noise standard deviation per output
-              variable, in the canonical order given by "sigma_variables"
+            - "sigma": (list) estimated (additive) noise standard deviation per
+              output variable, in the canonical order given by "sigma_variables"
+            - "sigma_mult": (list or None) estimated proportional noise standard
+              deviation per output variable (combined model only, else None)
             - "sigma_variables": (list) output variable ids for the sigma arrays
-            - "log_sigma": (list) starting log(sigma) per output variable
+            - "log_sigma": (list) starting log(sigma_a) per output variable
             - "sigma_bounds": (list of [lo, hi]) log_sigma bounds per output
+            - "log_sigma_mult": (list or None) starting log(sigma_m) per output
+              variable (combined model only, else None)
+            - "sigma_bounds_mult": (list of [lo, hi] or None) log_sigma_mult
+              bounds per output (combined model only, else None)
             - "predictions": (list of dicts) simulated values at the optimal
               parameters, one dict per subject group. Each dict has the same
               format as the dicts returned by ``simulate``: keys are
@@ -439,6 +461,12 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 "Please upgrade pints."
             )
 
+        if noise_model not in NOISE_MODELS:
+            raise ValueError(
+                f"Unknown noise model '{noise_model}'. "
+                f"Choose from: {list(NOISE_MODELS)}"
+            )
+
         if max_iterations is None:
             max_iterations = 100
 
@@ -464,38 +492,61 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         output_variable_ids = context.sigma_output_variable_ids
         n_outputs = len(output_variable_ids)
 
-        if log_sigma is not None and len(log_sigma) != n_outputs:
-            raise ValueError(
-                f"log_sigma must have one entry per fitted output variable "
-                f"({n_outputs}), got {len(log_sigma)}."
+        def _sigma_block(values, bounds, name):
+            """Validate and expand a per-output (start, lower, upper) sigma block."""
+            if values is not None and len(values) != n_outputs:
+                raise ValueError(
+                    f"{name} must have one entry per fitted output variable "
+                    f"({n_outputs}), got {len(values)}."
+                )
+            if bounds is not None and len(bounds) != n_outputs:
+                raise ValueError(
+                    f"{name}_bounds must have one entry per fitted output variable "
+                    f"({n_outputs}), got {len(bounds)}."
+                )
+            start = np.array(
+                [
+                    float(values[i]) if values is not None else 0.0
+                    for i in range(n_outputs)
+                ],
+                dtype=float,
             )
-        if sigma_bounds is not None and len(sigma_bounds) != n_outputs:
-            raise ValueError(
-                f"sigma_bounds must have one entry per fitted output variable "
-                f"({n_outputs}), got {len(sigma_bounds)}."
+            lower = np.array(
+                [
+                    float(bounds[i][0]) if bounds is not None else -20.0
+                    for i in range(n_outputs)
+                ],
+                dtype=float,
             )
+            upper = np.array(
+                [
+                    float(bounds[i][1]) if bounds is not None else 20.0
+                    for i in range(n_outputs)
+                ],
+                dtype=float,
+            )
+            return start, lower, upper
 
-        log_sigma_start = np.array(
-            [
-                float(log_sigma[i]) if log_sigma is not None else 0.0
-                for i in range(n_outputs)
-            ],
-            dtype=float,
+        log_sigma_start, sigma_lower, sigma_upper = _sigma_block(
+            log_sigma, sigma_bounds, "log_sigma"
         )
-        sigma_lower = np.array(
-            [
-                float(sigma_bounds[i][0]) if sigma_bounds is not None else -20.0
-                for i in range(n_outputs)
-            ],
-            dtype=float,
-        )
-        sigma_upper = np.array(
-            [
-                float(sigma_bounds[i][1]) if sigma_bounds is not None else 20.0
-                for i in range(n_outputs)
-            ],
-            dtype=float,
-        )
+
+        is_combined = noise_model == "combined"
+        if is_combined:
+            log_sigma_mult_start, sigma_mult_lower, sigma_mult_upper = _sigma_block(
+                log_sigma_mult, sigma_bounds_mult, "log_sigma_mult"
+            )
+            sigma_start_block = np.concatenate([log_sigma_start, log_sigma_mult_start])
+            sigma_lower_block = np.concatenate([sigma_lower, sigma_mult_lower])
+            sigma_upper_block = np.concatenate([sigma_upper, sigma_mult_upper])
+        else:
+            sigma_start_block = log_sigma_start
+            sigma_lower_block = sigma_lower
+            sigma_upper_block = sigma_upper
+
+        # Number of sigma parameters appended to the ODE-input vector: one per
+        # output (additive/multiplicative) or two per output (combined).
+        n_sigma = len(sigma_start_block)
 
         conversion_factors = np.asarray(
             [
@@ -507,14 +558,30 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             dtype=float,
         )
         starting_model = np.concatenate(
-            [np.asarray(starting, dtype=float) * conversion_factors, log_sigma_start]
+            [np.asarray(starting, dtype=float) * conversion_factors, sigma_start_block]
         )
         lower_bounds_model = np.concatenate(
-            [np.asarray(lower_bounds, dtype=float) * conversion_factors, sigma_lower]
+            [
+                np.asarray(lower_bounds, dtype=float) * conversion_factors,
+                sigma_lower_block,
+            ]
         )
         upper_bounds_model = np.concatenate(
-            [np.asarray(upper_bounds, dtype=float) * conversion_factors, sigma_upper]
+            [
+                np.asarray(upper_bounds, dtype=float) * conversion_factors,
+                sigma_upper_block,
+            ]
         )
+
+        def split_sigma(sigma_block):
+            """Split the appended sigma block into (log_sigma_a, log_sigma_m).
+
+            log_sigma_m is None unless the combined model is in use.
+            """
+            sigma_block = np.asarray(sigma_block, dtype=float)
+            if is_combined:
+                return sigma_block[:n_outputs], sigma_block[n_outputs:]
+            return sigma_block, None
 
         class OptimiseError(pints.ErrorMeasure):
             def values_by_id(self, values):
@@ -527,16 +594,17 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 }
 
             def n_parameters(self):
-                return n_inputs + n_outputs
+                return n_inputs + n_sigma
 
             def __call__(self, x):
                 ode_values = x[:n_inputs]
-                log_s = np.asarray(x[n_inputs:], dtype=float)
+                log_s, log_s_mult = split_sigma(x[n_inputs:])
                 loss = context.optimise_loss(
                     context.optimisation_groups,
                     self.values_by_id(ode_values),
                     log_sigma=log_s,
-                    use_multiplicative_noise=use_multiplicative_noise,
+                    log_sigma_mult=log_s_mult,
+                    noise_model=noise_model,
                 )
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = float(loss)
@@ -545,24 +613,23 @@ class MyokitModelMixin(UncertaintySimulationMixin):
 
             def evaluateS1(self, x):
                 ode_values = x[:n_inputs]
-                log_s = np.asarray(x[n_inputs:], dtype=float)
+                log_s, log_s_mult = split_sigma(x[n_inputs:])
                 try:
                     result = context.optimise_loss_gradient(
                         context.optimisation_groups,
                         self.values_by_id(ode_values),
                         log_sigma=log_s,
-                        use_multiplicative_noise=use_multiplicative_noise,
+                        log_sigma_mult=log_s_mult,
+                        noise_model=noise_model,
                     )
-                    nll, ode_gradient, ssr_per, n_obs_per = result
+                    nll, ode_gradient, sigma_gradient = result
                 except Exception:
                     logger.exception(
                         "solve_fwd_sens failed during gradient computation."
                     )
-                    return np.inf, np.zeros(n_inputs + n_outputs)
+                    return np.inf, np.zeros(n_inputs + n_sigma)
                 if not np.isfinite(nll):
-                    return np.inf, np.zeros(n_inputs + n_outputs)
-                sigma2 = np.exp(2.0 * log_s)
-                sigma_gradient = n_obs_per - ssr_per / sigma2
+                    return np.inf, np.zeros(n_inputs + n_sigma)
                 total_gradient = np.concatenate([ode_gradient, sigma_gradient])
                 loss = float(nll)
                 if np.isfinite(loss) and loss < self.best_loss:
@@ -607,16 +674,17 @@ class MyokitModelMixin(UncertaintySimulationMixin):
 
         optimal = np.asarray(optimal, dtype=float)
         ode_optimal = optimal[:n_inputs]
-        log_s = np.asarray(optimal[n_inputs:], dtype=float)
+        log_s, log_s_mult = split_sigma(optimal[n_inputs:])
         diagnostics = context.optimise_diagnostics(
             optimal_model=ode_optimal,
             log_sigma=log_s,
-            use_multiplicative_noise=use_multiplicative_noise,
+            log_sigma_mult=log_s_mult,
+            noise_model=noise_model,
         )
 
         optimal_user = ode_optimal / conversion_factors
 
-        return {
+        result = {
             "optimal": np.asarray(optimal_user, dtype=float).tolist(),
             "loss": float(loss),
             "reason": str(reason),
@@ -625,5 +693,14 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             "sigma_bounds": [
                 [float(lo), float(hi)] for lo, hi in zip(sigma_lower, sigma_upper)
             ],
+            "log_sigma_mult": None,
+            "sigma_bounds_mult": None,
             **diagnostics,
         }
+        if is_combined:
+            result["log_sigma_mult"] = log_sigma_mult_start.tolist()
+            result["sigma_bounds_mult"] = [
+                [float(lo), float(hi)]
+                for lo, hi in zip(sigma_mult_lower, sigma_mult_upper)
+            ]
+        return result

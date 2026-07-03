@@ -3820,6 +3820,16 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
+    NoiseModelEnum:
+      enum:
+      - additive
+      - multiplicative
+      - combined
+      type: string
+      description: |-
+        * `additive` - additive
+        * `multiplicative` - multiplicative
+        * `combined` - combined
     NullEnum:
       enum:
       - null
@@ -3857,9 +3867,10 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        use_multiplicative_noise:
-          type: boolean
-          default: true
+        noise_model:
+          allOf:
+          - $ref: '#/components/schemas/NoiseModelEnum'
+          default: additive
         method:
           type: string
           default: pso
@@ -3870,6 +3881,22 @@ components:
             format: double
           nullable: true
         sigma_bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          nullable: true
+        log_sigma_mult:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds_mult:
           type: array
           items:
             type: array
@@ -3897,6 +3924,12 @@ components:
         reason:
           type: string
         sigma:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_mult:
           type: array
           items:
             type: number
@@ -3931,8 +3964,8 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        use_multiplicative_noise:
-          type: boolean
+        noise_model:
+          type: string
         method:
           type: string
         predictions:
@@ -3978,23 +4011,40 @@ components:
               type: number
               format: double
           nullable: true
+        log_sigma_mult:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds_mult:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+          nullable: true
       required:
       - bounds
       - condition_number
       - covariance
       - inputs
       - log_sigma
+      - log_sigma_mult
       - loss
       - method
+      - noise_model
       - optimal
       - predictions
       - reason
       - residuals
       - sigma
       - sigma_bounds
+      - sigma_bounds_mult
+      - sigma_mult
       - sigma_variables
       - starting
-      - use_multiplicative_noise
     PatchedBiomarkerType:
       type: object
       properties:

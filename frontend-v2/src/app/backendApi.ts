@@ -2227,13 +2227,14 @@ export type OptimiseResponse = {
   loss: number;
   reason: string;
   sigma: number[] | null;
+  sigma_mult: number[] | null;
   inputs: number[];
   starting: number[];
   bounds: number[][];
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  use_multiplicative_noise: boolean;
+  noise_model: string;
   method: string;
   predictions:
     | {
@@ -2250,10 +2251,13 @@ export type OptimiseResponse = {
   sigma_variables: number[] | null;
   log_sigma: number[] | null;
   sigma_bounds: number[][] | null;
+  log_sigma_mult: number[] | null;
+  sigma_bounds_mult: number[][] | null;
 };
 export type ErrorResponse = {
   error: string;
 };
+export type NoiseModelEnum = "additive" | "multiplicative" | "combined";
 export type Optimise = {
   inputs: number[];
   starting: number[];
@@ -2261,10 +2265,12 @@ export type Optimise = {
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  use_multiplicative_noise?: boolean;
+  noise_model?: NoiseModelEnum;
   method?: string;
   log_sigma?: number[] | null;
   sigma_bounds?: number[][] | null;
+  log_sigma_mult?: number[] | null;
+  sigma_bounds_mult?: number[][] | null;
 };
 export type SimulateResponse = {
   time: number[];

@@ -134,7 +134,9 @@ const OptimisationView = ({
                     <strong>Log sigma</strong> is the log of the noise standard deviation
                     parameter (σ = exp(log_sigma)) that is jointly optimised with the
                     model parameters. One σ is fitted per observed output variable, so
-                    there is a row for each.
+                    there is a row for each. The <strong>combined</strong> noise model
+                    fits two σ per output — an additive σ_a and a proportional σ_m
+                    (variance = σ_a² + σ_m²·prediction²) — shown as separate rows.
                   </p>
                 </HelpButton>
               </Stack>
@@ -174,19 +176,46 @@ const OptimisationView = ({
                     optimiseResult.sigma_variables.map((varId, i) => {
                       const variable = variables.find((v) => v.id === varId);
                       const name = variable?.name ?? String(varId);
+                      const isCombined = optimiseResult.noise_model === "combined";
                       const bounds = optimiseResult.sigma_bounds![i];
                       const optimalLogSigma = Math.log(optimiseResult.sigma![i]);
-                      return (
+                      const additiveLabel = isCombined
+                        ? `Log sigma additive (${name})`
+                        : `Log sigma (${name})`;
+                      const rows = [
                         <TableRow key={`sigma-${varId}`}>
-                          <TableCell>Log sigma ({name})</TableCell>
+                          <TableCell>{additiveLabel}</TableCell>
                           <TableCell>{formatNum(optimiseResult.log_sigma![i])}</TableCell>
                           <TableCell>{formatNum(bounds[0])}</TableCell>
                           <TableCell>{formatNum(bounds[1])}</TableCell>
                           <TableCell sx={isNearBound(optimalLogSigma, bounds[0], bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
                             {formatNum(optimalLogSigma)}
                           </TableCell>
-                        </TableRow>
-                      );
+                        </TableRow>,
+                      ];
+                      if (
+                        isCombined &&
+                        optimiseResult.sigma_mult != null &&
+                        optimiseResult.log_sigma_mult != null &&
+                        optimiseResult.sigma_bounds_mult != null
+                      ) {
+                        const boundsM = optimiseResult.sigma_bounds_mult![i];
+                        const optimalLogSigmaM = Math.log(
+                          optimiseResult.sigma_mult![i],
+                        );
+                        rows.push(
+                          <TableRow key={`sigma-mult-${varId}`}>
+                            <TableCell>Log sigma proportional ({name})</TableCell>
+                            <TableCell>{formatNum(optimiseResult.log_sigma_mult![i])}</TableCell>
+                            <TableCell>{formatNum(boundsM[0])}</TableCell>
+                            <TableCell>{formatNum(boundsM[1])}</TableCell>
+                            <TableCell sx={isNearBound(optimalLogSigmaM, boundsM[0], boundsM[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                              {formatNum(optimalLogSigmaM)}
+                            </TableCell>
+                          </TableRow>,
+                        );
+                      }
+                      return rows;
                     })}
                 </TableBody>
               </Table>
@@ -200,7 +229,7 @@ const OptimisationView = ({
                   </Typography>
                 )}
                 <Typography variant="body2">
-                  <strong>Noise model:</strong> {optimiseResult.use_multiplicative_noise ? "multiplicative" : "additive"}
+                  <strong>Noise model:</strong> {optimiseResult.noise_model}
                 </Typography>
               </Stack>
               {optimiseResult.biomarker_types && optimiseResult.biomarker_types.length > 0 && (
@@ -245,6 +274,9 @@ const OptimisationView = ({
                       </p>
                       <p>
                         For <strong>multiplicative noise</strong>: residual = (log(prediction) − log(observed)) / σ
+                      </p>
+                      <p>
+                        For <strong>combined noise</strong>: residual = (prediction − observed) / √(σ_a² + σ_m²·prediction²)
                       </p>
                       <p>
                         Well-fitted models should show residuals randomly scattered around
