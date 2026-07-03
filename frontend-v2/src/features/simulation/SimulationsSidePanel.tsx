@@ -47,6 +47,7 @@ import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import OptimisationSettings from "./OptimisationSettings";
 import OptimisationView from "./OptimisationView";
+import { getPlottedBiomarkerTypes } from "./utils";
 import "../../App.css";
 
 type SimulationsSidePanelType = {
@@ -228,6 +229,28 @@ export const SimulationsSidePanel = ({
   );
   const { dataset, subjectBiomarkers } = useDataset(selectedProject);
   const hasData = !!dataset && subjectBiomarkers.some((bm) => bm.length > 0);
+  // Whether any observed variable is plotted — i.e. the default optimisation
+  // observation set is non-empty. Without this, "Fit" would call the backend
+  // with zero observations and error out.
+  const hasObservationsToFit =
+    getPlottedBiomarkerTypes(plots, biomarkerTypes).length > 0;
+  const fitDisabled =
+    isSharedWithMe ||
+    loadingOptimise ||
+    orderedSliders.length < 1 ||
+    !hasData ||
+    !hasObservationsToFit;
+  // Explain why fitting is disabled (and how to enable it) via a tooltip.
+  // Empty while loading or enabled so no tooltip is shown then.
+  const fitDisabledReason = isSharedWithMe
+    ? "This project is read-only, so optimisation is disabled."
+    : orderedSliders.length < 1
+      ? "Add at least one parameter slider to fit."
+      : !hasData
+        ? "This project has no observation data to fit against. Add a dataset with observations."
+        : !hasObservationsToFit
+          ? "No observed variables are plotted. Add an observed variable to a plot y-axis to fit against it."
+          : "";
   const portalRoot = document.getElementById(portalId);
   const [collapseLayout, setCollapseLayout] = useState(false);
   const [collapseOptions, setCollapseOptions] = useState(false);
@@ -578,25 +601,24 @@ export const SimulationsSidePanel = ({
                         alignItems="center"
                         sx={{ marginTop: ".5rem" }}
                       >
-                        <Button
-                          variant="outlined"
-                          onClick={handleOptimise}
-                          disabled={isSharedWithMe || loadingOptimise || orderedSliders.length < 1 || !hasData}
-                          data-cy="optimise-parameters"
-                        >
-                          Fit
-                        </Button>
+                        <Tooltip title={fitDisabledReason} placement="top">
+                          <span>
+                            <Button
+                              variant="outlined"
+                              onClick={handleOptimise}
+                              disabled={fitDisabled}
+                              data-cy="optimise-parameters"
+                            >
+                              Fit
+                            </Button>
+                          </span>
+                        </Tooltip>
                         <Tooltip title="Optimisation settings" placement="top">
                           <span>
                             <IconButton
                               aria-label="Open optimisation settings"
                               onClick={() => setOptimiseSettingsOpen(true)}
-                              disabled={
-                                isSharedWithMe ||
-                                loadingOptimise ||
-                                orderedSliders.length < 1 ||
-                                !hasData
-                              }
+                              disabled={fitDisabled}
                               sx={{ border: "1px solid #DBD7D3", borderRadius: "4px" }}
                               data-cy="optimise-settings"
                             >
@@ -623,11 +645,13 @@ export const SimulationsSidePanel = ({
                             negative log-likelihood (NLL):
                           </p>
                           <p style={{ fontFamily: "monospace", margin: "0.5rem 0" }}>
-                            NLL = N · log(σ) + SSR / (2σ²)
+                            NLL = Σₖ ( Nₖ · log(σₖ) + SSRₖ / (2σₖ²) )
                           </p>
                           <p>
-                            where N is the number of observations, σ = exp(log_sigma) is the noise
-                            standard deviation, and SSR is the sum of squared residuals.
+                            where the sum is over each observed output variable k, Nₖ is the
+                            number of observations of variable k, σₖ = exp(log_sigmaₖ) is its
+                            noise standard deviation (fitted independently per variable), and
+                            SSRₖ is its sum of squared residuals.
                           </p>
                           <p><strong>Parameters:</strong></p>
                           <p>
@@ -661,7 +685,7 @@ export const SimulationsSidePanel = ({
                           <p><strong>Diagnostics (click the eye icon):</strong></p>
                           <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
                             <li>Parameters near bounds are highlighted in red</li>
-                            <li>Covariance matrix estimated as σ² · (JᵀJ)⁻¹ where J is the Jacobian</li>
+                            <li>Covariance matrix estimated as (Jᵀ W J)⁻¹ where J is the Jacobian and W = diag(1/σₖ²) weights each observation by its output variable&apos;s noise</li>
                             <li>%RSE (relative standard error) shown on diagonal</li>
                             <li>Correlation matrix computed as Corr[i,j] = Cov[i,j] / (√Cov[i,i] · √Cov[j,j]), shown off-diagonal</li>
                             <li>Condition number (κ = s_max / s_min from SVD of correlation matrix) indicates parameter identifiability</li>

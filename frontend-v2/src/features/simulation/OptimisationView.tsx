@@ -133,7 +133,8 @@ const OptimisationView = ({
                   <p>
                     <strong>Log sigma</strong> is the log of the noise standard deviation
                     parameter (σ = exp(log_sigma)) that is jointly optimised with the
-                    model parameters.
+                    model parameters. One σ is fitted per observed output variable, so
+                    there is a row for each.
                   </p>
                 </HelpButton>
               </Stack>
@@ -166,17 +167,27 @@ const OptimisationView = ({
                       </TableRow>
                     );
                   })}
-                  {optimiseResult.log_sigma != null && optimiseResult.sigma_bounds != null && optimiseResult.sigma != null && (
-                    <TableRow>
-                      <TableCell>Log sigma</TableCell>
-                      <TableCell>{formatNum(optimiseResult.log_sigma)}</TableCell>
-                      <TableCell>{formatNum(optimiseResult.sigma_bounds[0])}</TableCell>
-                      <TableCell>{formatNum(optimiseResult.sigma_bounds[1])}</TableCell>
-                      <TableCell sx={isNearBound(Math.log(optimiseResult.sigma), optimiseResult.sigma_bounds[0], optimiseResult.sigma_bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
-                        {formatNum(Math.log(optimiseResult.sigma))}
-                      </TableCell>
-                    </TableRow>
-                  )}
+                  {optimiseResult.sigma_variables != null &&
+                    optimiseResult.log_sigma != null &&
+                    optimiseResult.sigma_bounds != null &&
+                    optimiseResult.sigma != null &&
+                    optimiseResult.sigma_variables.map((varId, i) => {
+                      const variable = variables.find((v) => v.id === varId);
+                      const name = variable?.name ?? String(varId);
+                      const bounds = optimiseResult.sigma_bounds![i];
+                      const optimalLogSigma = Math.log(optimiseResult.sigma![i]);
+                      return (
+                        <TableRow key={`sigma-${varId}`}>
+                          <TableCell>Log sigma ({name})</TableCell>
+                          <TableCell>{formatNum(optimiseResult.log_sigma![i])}</TableCell>
+                          <TableCell>{formatNum(bounds[0])}</TableCell>
+                          <TableCell>{formatNum(bounds[1])}</TableCell>
+                          <TableCell sx={isNearBound(optimalLogSigma, bounds[0], bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                            {formatNum(optimalLogSigma)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
               <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
@@ -194,9 +205,15 @@ const OptimisationView = ({
               </Stack>
               {optimiseResult.biomarker_types && optimiseResult.biomarker_types.length > 0 && (
                 <Typography variant="body2">
-                  <strong>Biomarker types:</strong>{" "}
+                  <strong>Observations:</strong>{" "}
                   {optimiseResult.biomarker_types
-                    .map((id) => biomarkerTypes.find((b) => b.id === id)?.name ?? String(id))
+                    .map((id) => {
+                      const bt = biomarkerTypes.find((b) => b.id === id);
+                      const variable = variables.find((v) => v.id === bt?.variable);
+                      return variable?.description
+                        ? `${variable.name} (${variable.description})`
+                        : variable?.name || bt?.name || String(id);
+                    })
                     .join(", ")}
                 </Typography>
               )}
@@ -221,7 +238,7 @@ const OptimisationView = ({
                     <HelpButton title="Residual Diagnostics">
                       <p>
                         Residuals are the normalised differences between model predictions
-                        and observed data, divided by the estimated σ.
+                        and observed data, divided by that variable&apos;s estimated σ.
                       </p>
                       <p>
                         For <strong>additive noise</strong>: residual = (prediction − observed) / σ
@@ -262,10 +279,11 @@ const OptimisationView = ({
                     <HelpButton title="Parameter Uncertainty" maxWidth="500px">
                       <p>
                         The covariance matrix is estimated from the Jacobian (J) of
-                        residuals at the optimum:
+                        residuals at the optimum, weighted by each observation&apos;s noise
+                        variance (W = diag(1/σ²) per output variable):
                       </p>
                       <p style={{ fontFamily: "monospace", margin: "0.5rem 0" }}>
-                        Cov = σ² · (JᵀJ)⁻¹
+                        Cov = (Jᵀ W J)⁻¹
                       </p>
                       <p>
                         The <strong>correlation matrix</strong> is derived from the covariance

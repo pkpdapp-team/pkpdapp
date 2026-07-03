@@ -56,12 +56,15 @@ export function getDefaultOptimiseInputs({
 
   // Determine which biomarker types are shown in the simulation plots
   // by matching plot y-axis variable IDs to biomarker type variable IDs
-  const plottedVariableIds = new Set(
-    plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
-  );
-  const biomarker_types = biomarkerTypes
-    .filter((bt) => bt.variable != null && plottedVariableIds.has(bt.variable))
-    .map((bt) => bt.id);
+  const selectedBiomarkerTypes = getPlottedBiomarkerTypes(plots, biomarkerTypes);
+  const biomarker_types = selectedBiomarkerTypes.map((bt) => bt.id);
+
+  // One noise sigma per distinct output variable being fitted, in the same
+  // canonical (ascending variable id) order the backend derives from
+  // biomarker_types.
+  const sigmaVariables = getSigmaVariables(selectedBiomarkerTypes);
+  const log_sigma = sigmaVariables.map(() => 0);
+  const sigma_bounds = sigmaVariables.map(() => [-20, 20]);
 
   return {
     inputs,
@@ -69,9 +72,39 @@ export function getDefaultOptimiseInputs({
     bounds: [lowerBounds, upperBounds],
     biomarker_types,
     subject_groups: subjectGroups,
-    log_sigma: 0,
-    sigma_bounds: [-20, 20],
+    log_sigma,
+    sigma_bounds,
   };
+}
+
+/**
+ * The biomarker types whose model variable appears on a plot y-axis. These are
+ * the observations the optimiser fits against by default.
+ */
+export function getPlottedBiomarkerTypes(
+  plots: { y_axes: SimulationYAxis[] }[],
+  biomarkerTypes: BiomarkerTypeRead[],
+): BiomarkerTypeRead[] {
+  const plottedVariableIds = new Set(
+    plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
+  );
+  return biomarkerTypes.filter(
+    (bt) => bt.variable != null && plottedVariableIds.has(bt.variable),
+  );
+}
+
+/**
+ * The distinct model output variable ids for a set of biomarker types, in a
+ * stable order (ascending variable id) that matches the backend's canonical
+ * sigma ordering. Each distinct output variable gets one noise sigma.
+ */
+export function getSigmaVariables(
+  biomarkerTypes: BiomarkerTypeRead[],
+): number[] {
+  const variableIds = biomarkerTypes
+    .map((bt) => bt.variable)
+    .filter((v): v is number => v != null);
+  return Array.from(new Set(variableIds)).sort((a, b) => a - b);
 }
 
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16

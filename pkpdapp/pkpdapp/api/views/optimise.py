@@ -29,13 +29,21 @@ class OptimiseSerializer(serializers.Serializer):
     max_iterations = serializers.IntegerField(required=False, allow_null=True)
     use_multiplicative_noise = serializers.BooleanField(required=False, default=True)
     method = serializers.CharField(required=False, default="pso")
-    log_sigma = serializers.FloatField(required=False, default=0.0)
+    # log_sigma and sigma_bounds carry one entry per fitted output variable, in
+    # the canonical order the backend derives from biomarker_types (ascending
+    # variable id). The corresponding variable ids are echoed back as
+    # sigma_variables in the response.
+    log_sigma = serializers.ListField(
+        child=serializers.FloatField(), required=False, allow_null=True
+    )
     sigma_bounds = serializers.ListField(
-        child=serializers.FloatField(),
-        min_length=2,
-        max_length=2,
+        child=serializers.ListField(
+            child=serializers.FloatField(),
+            min_length=2,
+            max_length=2,
+        ),
         required=False,
-        default=(-20.0, 20.0),
+        allow_null=True,
     )
 
 
@@ -43,7 +51,7 @@ class OptimiseResponseSerializer(serializers.Serializer):
     optimal = serializers.ListField(child=serializers.FloatField())
     loss = serializers.FloatField()
     reason = serializers.CharField()
-    sigma = serializers.FloatField(allow_null=True)
+    sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
     inputs = serializers.ListField(child=serializers.IntegerField())
     starting = serializers.ListField(child=serializers.FloatField())
     bounds = serializers.ListField(
@@ -65,9 +73,13 @@ class OptimiseResponseSerializer(serializers.Serializer):
         allow_null=True,
     )
     condition_number = serializers.FloatField(allow_null=True)
-    log_sigma = serializers.FloatField(allow_null=True)
+    sigma_variables = serializers.ListField(
+        child=serializers.IntegerField(), allow_null=True
+    )
+    log_sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
     sigma_bounds = serializers.ListField(
-        child=serializers.FloatField(), allow_null=True
+        child=serializers.ListField(child=serializers.FloatField()),
+        allow_null=True,
     )
 
 
@@ -116,8 +128,8 @@ class OptimiseBaseView(views.APIView):
                         "use_multiplicative_noise", False
                     ),
                     method=data.get("method", "pso"),
-                    log_sigma=data.get("log_sigma", 0.0),
-                    sigma_bounds=data.get("sigma_bounds", (-20.0, 20.0)),
+                    log_sigma=data.get("log_sigma"),
+                    sigma_bounds=data.get("sigma_bounds"),
                 )
             except (myokit.MyokitError, RuntimeError, ValueError) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})
@@ -125,6 +137,8 @@ class OptimiseBaseView(views.APIView):
                     serialized_result.data, status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # sigma_variables / log_sigma / sigma_bounds come back from result in
+            # the backend's canonical output ordering so all sigma arrays align.
             serialized_result = OptimiseResponseSerializer(
                 {
                     **result,
@@ -138,10 +152,6 @@ class OptimiseBaseView(views.APIView):
                         "use_multiplicative_noise", False
                     ),
                     "method": data.get("method", "pso"),
-                    "log_sigma": data.get("log_sigma", 0.0),
-                    "sigma_bounds": list(data.get(
-                        "sigma_bounds", (-20.0, 20.0)
-                    )),
                 }
             )
             return Response(serialized_result.data)
