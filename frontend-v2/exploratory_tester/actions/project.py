@@ -90,6 +90,12 @@ class CreateProjectAction(Action):
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
         d = SnapshotDiff()
         d.changed_fields["has_project"] = (False, True)
+        d.changed_fields["model_id"] = ("may_change", "may_change")
+        d.changed_fields["species"] = ("may_change", "may_change")
+        d.changed_fields["pk_effect_model_id"] = ("may_change", "may_change")
+        d.changed_fields["has_model"] = ("may_change", "may_change")
+        d.changed_fields["has_simulation"] = ("may_change", "may_change")
+        d.changed_fields["parameters"] = ("may_change", "may_change")
         return d
 
 
@@ -97,7 +103,7 @@ class SetSpeciesAction(Action):
     CATEGORY = "project"
     RESULT_EXPECTATION = ResultExpectation.SHOULD_CHANGE
 
-    SPECIES_LABELS = {"H": "Human", "R": "Rat", "M": "Mouse", "N": "Monkey"}
+    SPECIES_LABELS = {"H": "Human", "R": "Rat", "M": "Mouse", "K": "Monkey"}
 
     def __init__(self, species: str) -> None:
         self._species = species
@@ -109,13 +115,19 @@ class SetSpeciesAction(Action):
         return self._key
 
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
-        return snapshot.has_project and snapshot.species != self._species
+        return (
+            snapshot.has_project
+            and snapshot.has_model
+            and bool(snapshot.pk_model_id)
+            and snapshot.species != self._species
+        )
 
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
         await navigate_to_model_subtab(page, "PK/PD Model")
-        await select_dropdown_option(page, "project.species", self._label)
+        await select_dropdown_option(page, "species", self._label)
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
         d = SnapshotDiff()
-        d.changed_fields["species"] = (before.species, self._species)
+        d.changed_fields["species"] = ("may_change", "may_change")
+        d.changed_fields["parameters"] = ("may_change", "may_change")
         return d

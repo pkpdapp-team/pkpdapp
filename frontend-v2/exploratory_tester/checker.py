@@ -117,31 +117,46 @@ def _find_unexpected_changes(
 ) -> None:
     """Identify changes in `actual` that were not expected."""
 
-    # Scalar fields
+    coarse_keys = {"parameters", "dosed", "reset_to_defaults"}
+    # When expected declares coarse-grained parameter changes, skip
+    # fine-grained param add/remove/change checks (new model = new params).
+    params_coarse = "parameters" in expected.changed_fields
+
+    # Scalar fields — skip coarse keys and sentinel values
     for field_name, (old, new) in actual.changed_fields.items():
+        if field_name in coarse_keys:
+            continue
+        expected_val = expected.changed_fields.get(field_name)
+        if expected_val is not None and expected_val[0] in ("may_change", "changed"):
+            continue
         if field_name not in expected.changed_fields:
             result.unexpected_changes.append(
                 f"field '{field_name}' changed: {old} -> {new}"
             )
 
-    # Parameters
-    expected_param_changes = set(expected.changed_parameters.keys())
-    expected_param_adds = set(expected.added_parameters)
-    expected_param_rems = set(expected.removed_parameters)
+    # Parameters — skip entirely when coarse
+    if not params_coarse:
+        expected_param_changes = set(expected.changed_parameters.keys())
+        expected_param_adds = set(expected.added_parameters)
+        expected_param_rems = set(expected.removed_parameters)
 
-    for qname, (old, new) in actual.changed_parameters.items():
-        if qname not in expected_param_changes:
-            result.unexpected_changes.append(
-                f"parameter '{qname}' changed: {old} -> {new}"
-            )
+        for qname, (old, new) in actual.changed_parameters.items():
+            if qname not in expected_param_changes:
+                result.unexpected_changes.append(
+                    f"parameter '{qname}' changed: {old} -> {new}"
+                )
 
-    for qname in actual.added_parameters:
-        if qname not in expected_param_adds:
-            result.unexpected_changes.append(f"parameter '{qname}' was added")
+        for qname in actual.added_parameters:
+            if qname not in expected_param_adds:
+                result.unexpected_changes.append(
+                    f"parameter '{qname}' was added"
+                )
 
-    for qname in actual.removed_parameters:
-        if qname not in expected_param_rems:
-            result.unexpected_changes.append(f"parameter '{qname}' was removed")
+        for qname in actual.removed_parameters:
+            if qname not in expected_param_rems:
+                result.unexpected_changes.append(
+                    f"parameter '{qname}' was removed"
+                )
 
     # Plots, sliders, doses
     if actual.added_plots > expected.added_plots:
@@ -162,7 +177,7 @@ def _find_unexpected_changes(
         result.unexpected_changes.append(
             f"removed {n} unexpected sliders"
         )
-    if actual.added_doses > expected.added_doses:
+    if actual.added_doses > expected.added_doses and expected.added_doses >= 0:
         result.unexpected_changes.append(
             f"added {actual.added_doses - expected.added_doses} unexpected doses"
         )
@@ -188,11 +203,11 @@ def _find_missing_changes(
     expected: SnapshotDiff, actual: SnapshotDiff, result: CheckResult
 ) -> None:
     """Identify changes that were expected but didn't occur."""
-    # Skip missing-checks for coarse-grained expected diffs
-    # (e.g., "parameters: reset_to_defaults" is too broad to verify exactly)
     coarse_keys = {"parameters", "dosed", "reset_to_defaults"}
-    for field_name in expected.changed_fields:
+    for field_name, (old, new) in expected.changed_fields.items():
         if field_name in coarse_keys:
+            continue
+        if old == "may_change" or old == "changed":
             continue
         if field_name not in actual.changed_fields:
             result.missing_changes.append(

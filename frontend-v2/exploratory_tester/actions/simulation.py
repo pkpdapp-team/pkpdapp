@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import random
+
 from playwright.async_api import Page
 
 from ..snapshot import SimulationModelSnapshot, SnapshotDiff
@@ -10,29 +12,33 @@ from .navigation import navigate_to_page
 
 
 class AddPlotAction(Action):
-    """Add a simulation plot for a given output variable."""
+    """Add a simulation plot. Discovers available outputs at execution time."""
 
     CATEGORY = "simulation"
     RESULT_EXPECTATION = ResultExpectation.SHOULD_NOT_CHANGE
 
-    def __init__(self, variable_name: str) -> None:
-        self._var_name = variable_name
-        self._key = f"add_plot:{variable_name}"
+    _key = "add_plot"
 
     @property
     def key(self) -> str:
         return self._key
 
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
-        return snapshot.has_model and snapshot.has_simulation
+        return (
+            snapshot.has_model
+            and snapshot.has_simulation
+            and snapshot.has_dosing
+        )
 
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
         await navigate_to_page(page, "Simulations")
         await page.locator('[data-cy="add-plot"]').click(force=True)
         await page.wait_for_timeout(400)
-        await page.locator(f'[data-cy^="add-plot-option-{self._var_name}"]').click(
-            force=True
-        )
+        opts = page.locator('[data-cy^="add-plot-option-"]')
+        count = await opts.count()
+        if count == 0:
+            return
+        await opts.nth(random.randint(0, count - 1)).click(force=True)
         await page.wait_for_timeout(500)
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
@@ -81,21 +87,23 @@ class RemovePlotAction(Action):
 
 
 class AddSliderAction(Action):
-    """Add a parameter slider to the simulation page."""
+    """Add a parameter slider. Discovers available parameters at execution."""
 
     CATEGORY = "simulation"
     RESULT_EXPECTATION = ResultExpectation.SHOULD_NOT_CHANGE
 
-    def __init__(self, variable_name: str) -> None:
-        self._var_name = variable_name
-        self._key = f"add_slider:{variable_name}"
+    _key = "add_slider"
 
     @property
     def key(self) -> str:
         return self._key
 
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
-        return snapshot.has_model and snapshot.has_simulation
+        return (
+            snapshot.has_model
+            and snapshot.has_simulation
+            and snapshot.has_dosing
+        )
 
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
         await navigate_to_page(page, "Simulations")
@@ -104,10 +112,11 @@ class AddSliderAction(Action):
         await add_btn.click(force=True)
         await page.wait_for_timeout(400)
 
-        option = page.locator(
-            f'[data-cy="add-parameter-slider-option-{self._var_name}"]'
-        )
-        await option.click(force=True)
+        opts = page.locator('[data-cy^="add-parameter-slider-option-"]')
+        count = await opts.count()
+        if count == 0:
+            return
+        await opts.nth(random.randint(0, count - 1)).click(force=True)
         await page.wait_for_timeout(500)
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
@@ -166,6 +175,8 @@ class SetSliderValueAction(Action):
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
         if not snapshot.sliders:
             return False
+        if not snapshot.has_dosing:
+            return False
         for sl in snapshot.sliders:
             for param in snapshot.parameters.values():
                 if param.id == sl.variable_id and param.name == self._var_name:
@@ -215,11 +226,16 @@ class SetTimeMaxAction(Action):
         return self._key
 
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
-        return snapshot.has_simulation and snapshot.time_max != self._value
+        return (
+            snapshot.has_simulation
+            and snapshot.has_dosing
+            and snapshot.time_max != self._value
+        )
 
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
         await navigate_to_page(page, "Simulations")
-        field = page.locator('[data-cy="time-max"] input')
+        field = page.locator('[data-cy="float-field-time_max"] input')
+        await field.wait_for(state="visible", timeout=10000)
         await field.click(force=True)
         await field.fill(str(self._value))
         await field.blur()

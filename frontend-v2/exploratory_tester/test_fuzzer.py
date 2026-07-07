@@ -73,4 +73,4 @@ async def test_quick_smoke(page) -> None:
     )
 
     # Basic sanity
-    assert snapshot.species in ("", "H", "R", "M", "N")
+    assert snapshot.species in ("", "H", "R", "M", "K")

@@ -31,6 +31,12 @@ class SetParameterAction(Action):
     def preconditions(self, snapshot: SimulationModelSnapshot) -> bool:
         if not snapshot.has_model:
             return False
+        if not snapshot.pk_model_id:
+            return False
+        if not snapshot.has_dosing:
+            return False
+        if snapshot.pd_model_id and not snapshot.pd_mappings:
+            return False
         param = snapshot.parameters.get(self._qname)
         if param is None:
             return False

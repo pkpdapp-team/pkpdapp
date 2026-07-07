@@ -161,6 +161,11 @@ class SimulationModelSnapshot:
     _error: str | None = None
 
     @property
+    def has_dosing(self) -> bool:
+        """True if dosing compartments are configured (any dose defined)."""
+        return bool(self.dosed_compartments or self.doses)
+
+    @property
     def hash(self) -> str:
         """Content-based hash for state graph deduplication.
 
@@ -286,6 +291,7 @@ def _diff_scalar_fields(
         "number_of_effect_compartments",
         "has_lag", "has_anti_drug_antibodies", "has_bioavailability",
         "time_max", "has_project", "has_model", "has_simulation",
+        "has_dosing",
     ]
     for name in scalar_field_names:
         old_val = getattr(before, name)
@@ -615,4 +621,5 @@ def _snapshot_to_dict(s: SimulationModelSnapshot) -> dict:
         "has_project": s.has_project,
         "has_model": s.has_model,
         "has_simulation": s.has_simulation,
+        "has_dosing": s.has_dosing,
     }

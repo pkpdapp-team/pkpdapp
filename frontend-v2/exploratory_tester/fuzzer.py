@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field as dc_field, asdict
 from pathlib import Path
 from typing import Callable
 
@@ -24,8 +24,8 @@ class FuzzerReport:
     total_steps: int = 0
     passed: int = 0
     failed: int = 0
-    findings: list[dict] = field(default_factory=list)
-    coverage: dict = field(default_factory=dict)
+    findings: list[dict] = dc_field(default_factory=list)
+    coverage: dict = dc_field(default_factory=dict)
     elapsed_seconds: float = 0.0
 
     @property
@@ -64,6 +64,10 @@ async def run_fuzzer(
         return report
 
     explorer = CoverageGuidedExplorer()
+
+    # Auto-accept any native confirm/alert dialogs (e.g. "Delete linked
+    # protocols and dosing variables?")
+    page.on("dialog", lambda dialog: dialog.accept())
     logger.info(
         "Starting fuzzer: model=%s, params=%d, plots=%d, sliders=%d, sim=%s",
         snapshot.model_id,
@@ -118,7 +122,8 @@ async def run_fuzzer(
             await page.wait_for_load_state("networkidle", timeout=10000)
         except Exception:
             pass
-        await page.wait_for_timeout(500)
+        # Extra wait for Redux cache invalidation + re-fetch to complete
+        await page.wait_for_timeout(1500)
 
         new_snapshot = await snapshot_from_page(page)
 

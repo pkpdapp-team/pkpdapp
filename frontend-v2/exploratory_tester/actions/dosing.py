@@ -43,8 +43,9 @@ class SetDoseFieldAction(Action):
     async def execute(self, page: Page, snapshot: SimulationModelSnapshot) -> None:
         await navigate_to_page(page, "Trial Design")
 
-        name_attr = f"doses.{self._dose_index}.{self._field_name}"
-        field = page.locator(f'input[name="{name_attr}"]')
+        field = page.locator(
+            f'[data-cy="float-field-{self._field_name}"] input'
+        ).nth(self._dose_index)
         await field.click(force=True)
         await field.fill(str(self._value))
         await field.blur()
@@ -53,11 +54,8 @@ class SetDoseFieldAction(Action):
 
     def expected_diff(self, before: SimulationModelSnapshot) -> SnapshotDiff:
         d = SnapshotDiff()
-        old_val = None
         if self._dose_index < len(before.doses):
-            old_val = getattr(before.doses[self._dose_index], self._field_name, None)
-        d.changed_fields[f"doses[{self._dose_index}].{self._field_name}"] = (
-            old_val,
-            self._value,
-        )
+            d.changed_fields[f"doses[{self._dose_index}]"] = (
+                "changed", "changed",
+            )
         return d

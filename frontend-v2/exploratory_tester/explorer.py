@@ -25,10 +25,8 @@ class CoverageGuidedExplorer:
     """
 
     def __init__(self, seed: int | None = None) -> None:
-        self._visited: set[tuple[str, str]] = set()  # (snapshot_hash, action_key)
-        self._state_graph: dict[str, dict[str, str]] = (
-            {}
-        )  # hash -> {action_key -> next_hash}
+        self._visited: set[tuple[str, str]] = set()
+        self._state_graph: dict[str, dict[str, str]] = {}
         self._rng = random.Random(seed)
 
     @property
