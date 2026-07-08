@@ -3992,6 +3992,9 @@ components:
           type: number
           format: double
           nullable: true
+        filtered_observations:
+          type: integer
+          nullable: true
         sigma_variables:
           type: array
           items:

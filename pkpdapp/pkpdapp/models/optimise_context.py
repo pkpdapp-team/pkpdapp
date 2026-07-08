@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 # multiplicative-noise error model.
 _MULTIPLICATIVE_NOISE_FLOOR = 1e-5
 
+# Observations at or below this value are dropped from a multiplicative-noise fit,
+# because log(observed) is undefined / numerically unstable near zero. The count
+# of dropped observations is reported back as ``filtered_observations``.
+_MULTIPLICATIVE_OBSERVED_FLOOR = 1e-5
+
 # Supported noise (error) models. See the loss/gradient/diagnostics methods for
 # the residual definition of each:
 #   - "additive":       y ~ N(y_hat, sigma_a^2)          (one sigma per output)
@@ -231,6 +236,17 @@ class OptimiseContext(SimulateContext):
         )
 
     @staticmethod
+    def _is_filtered_observation(observed) -> bool:
+        """Whether an observation is dropped from a multiplicative-noise fit.
+
+        Multiplicative noise takes ``log(observed)``, which is undefined /
+        unstable at or near zero, so such observations are filtered out rather
+        than aborting the whole fit. Only meaningful for the multiplicative
+        model; other noise models never filter.
+        """
+        return observed <= _MULTIPLICATIVE_OBSERVED_FLOOR
+
+    @staticmethod
     def _combined_variance(sigma_a2_k, sigma_m2_k, prediction):
         """Per-observation variance of the combined noise model:
         s^2 = sigma_a^2 + sigma_m^2 * prediction^2."""
@@ -295,8 +311,8 @@ class OptimiseContext(SimulateContext):
                 prediction = y[record.output_index, record.time_index]
                 observed = record.value
                 if use_multiplicative_noise:
-                    if observed <= 0:
-                        return np.inf
+                    if self._is_filtered_observation(observed):
+                        continue
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                 else:
@@ -389,8 +405,8 @@ class OptimiseContext(SimulateContext):
                 prediction = y[record.time_index, record.output_index]
                 observed = record.value
                 if use_multiplicative_noise:
-                    if observed <= 0:
-                        return np.inf, np.zeros(n_params), zeros_sigma
+                    if self._is_filtered_observation(observed):
+                        continue
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
                     gradient_row = (
@@ -537,6 +553,7 @@ class OptimiseContext(SimulateContext):
         jacobian_rows = []
         residual_values = []
         weights = []
+        n_filtered = 0
 
         time_context = self.get_variable_context(self.time_qname)
         time_conversion_factor = time_context.conversion_factor
@@ -554,6 +571,7 @@ class OptimiseContext(SimulateContext):
                     "sigma": sigma_list,
                     "sigma_mult": sigma_mult_list,
                     "sigma_variables": sigma_variables,
+                    "filtered_observations": 0,
                 }
 
             t_eval = np.asarray(group.t_eval, dtype=float)
@@ -578,13 +596,12 @@ class OptimiseContext(SimulateContext):
                 observed = record.value
 
                 if use_multiplicative_noise:
-                    if observed <= 0:
-                        residual = np.nan
-                        jac_row = np.full(n_params, np.nan)
-                    else:
-                        prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
-                        residual = np.log(prediction) - np.log(observed)
-                        jac_row = y_prime[t_idx, o_idx, :] / prediction
+                    if self._is_filtered_observation(observed):
+                        n_filtered += 1
+                        continue
+                    prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
+                    residual = np.log(prediction) - np.log(observed)
+                    jac_row = y_prime[t_idx, o_idx, :] / prediction
                     residual_for_output = residual / sigma[k]
                     weight = 1.0 / sigma2[k]
                 elif is_combined:
@@ -640,6 +657,7 @@ class OptimiseContext(SimulateContext):
                 "sigma": sigma_list,
                 "sigma_mult": sigma_mult_list,
                 "sigma_variables": sigma_variables,
+                "filtered_observations": n_filtered,
             }
 
         # Weighted (GLS) parameter covariance for heteroscedastic noise:
@@ -672,6 +690,7 @@ class OptimiseContext(SimulateContext):
             "sigma": sigma_list,
             "sigma_mult": sigma_mult_list,
             "sigma_variables": sigma_variables,
+            "filtered_observations": n_filtered,
         }
 
     def _validate_optimise_inputs(

@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -112,6 +113,16 @@ const OptimisationView = ({
               </Stack>
               <Typography>Loss: {formatNum(optimiseResult.loss)}</Typography>
               <Typography>Reason: {optimiseResult.reason}</Typography>
+              {optimiseResult.filtered_observations != null &&
+                optimiseResult.filtered_observations > 0 && (
+                  <Alert severity="warning" sx={{ mt: 1 }}>
+                    {optimiseResult.filtered_observations} observation
+                    {optimiseResult.filtered_observations === 1 ? "" : "s"} with
+                    values at or below the threshold (close to zero) were excluded
+                    from this fit. The multiplicative noise model takes the
+                    logarithm of each observation, which is undefined near zero.
+                  </Alert>
+                )}
             </Stack>
 
             <Divider />
