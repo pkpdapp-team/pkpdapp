@@ -21,7 +21,7 @@ import {
   CompatibleUnit,
   UnitReadWithCompatible,
 } from "../../../shared/unitConversion";
-import { validateState } from "../dataValidation";
+import { isDoseRow, validateState } from "../dataValidation";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
 import { generateAdministrationIds } from "./generateAdministrationIds";
@@ -67,13 +67,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const addlDosesField = findFieldByType("Additional Doses", state);
   const interDoseField = findFieldByType("Interdose Interval", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
-  const dosingRows: Row[] = amountField
-    ? state.data.filter(
-      (row) =>
-        (row[amountField] && row[amountField] !== ".") ||
-        parseInt(row[administrationIdField]),
-    )
-    : state.data.filter((row) => parseInt(row[administrationIdField]));
+  const dosingRows: Row[] = state.data.filter((row) =>
+    isDoseRow(row, state.normalisedFields, true),
+  );
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(

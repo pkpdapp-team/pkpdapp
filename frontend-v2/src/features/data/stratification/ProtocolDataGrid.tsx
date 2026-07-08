@@ -1,6 +1,7 @@
 import { FC, useState } from "react";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { StepperState } from "../LoadDataStepper";
+import { isDoseRow } from "../dataValidation";
 import SubjectGroupForm from "./SubjectGroupForm";
 
 type SubjectGroup = {
@@ -33,10 +34,7 @@ const ProtocolDataGrid: FC<IProtocolDataGrid> = ({ group, state }) => {
   const outputColumns = fields.filter((field) =>
     ROW_COLS.has(normalisedFields.get(field)),
   );
-  const amountField =
-    fields.find((field) => normalisedFields.get(field) === "Amount") ||
-    "Amount";
-  const dosingRows = data.filter((row) => row[amountField] !== ".");
+  const dosingRows = data.filter((row) => isDoseRow(row, normalisedFields));
   const subjectRows = subjects
     .map((subject) => {
       const row = dosingRows.find((row) => idField && row[idField] === subject);
