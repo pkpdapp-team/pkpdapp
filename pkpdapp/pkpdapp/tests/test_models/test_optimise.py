@@ -627,7 +627,9 @@ class TestOptimise(TestCase):
         self.assertEqual(loss, np.inf)
         self.assertTrue(np.array_equal(gradient, np.zeros(len(values_by_id))))
 
-        # non-positive observed values still yield an infinite loss.
+        # Under the multiplicative model, non-positive observed values are
+        # filtered out rather than aborting the fit. When every observation is
+        # filtered the loss and gradient contributions are simply zero.
         non_positive_obs_group = replace(
             group,
             diffsol_ode=FakeDiffsolOde(
@@ -644,14 +646,14 @@ class TestOptimise(TestCase):
                 values_by_id,
                 noise_model="multiplicative",
             ),
-            np.inf,
+            0.0,
         )
         loss, gradient, sigma_gradient = context.optimise_loss_gradient(
             (non_positive_obs_group,),
             values_by_id,
             noise_model="multiplicative",
         )
-        self.assertEqual(loss, np.inf)
+        self.assertEqual(loss, 0.0)
         self.assertTrue(np.array_equal(gradient, np.zeros(len(values_by_id))))
 
     def test_optimise_diagnostics_serializes_results_and_handles_failure(self):
@@ -711,10 +713,11 @@ class TestOptimise(TestCase):
                 "sigma": [1.0] * n_sigma,
                 "sigma_mult": None,
                 "sigma_variables": list(context.sigma_output_variable_ids),
+                "filtered_observations": 0,
             },
         )
 
-    def test_multiplicative_noise_rejects_non_positive_data(self):
+    def test_multiplicative_noise_filters_non_positive_data(self):
         setup = self._exponential_data()
         setup["biomarker_type"].biomarkers.first().delete()
         subject = setup["groups"][0].subjects.first()
@@ -738,12 +741,47 @@ class TestOptimise(TestCase):
             input_ids,
             setup["true"],
         )
+        # The single non-positive observation is filtered out rather than
+        # aborting the fit, so the loss is finite.
         loss = context.optimise_loss(
             context.optimisation_groups,
             true_values_by_id,
             noise_model="multiplicative",
         )
-        self.assertEqual(loss, np.inf)
+        self.assertTrue(np.isfinite(loss))
+
+        # The diagnostics report exactly one filtered observation.
+        diagnostics = context.optimise_diagnostics(
+            np.asarray(setup["true"]),
+            noise_model="multiplicative",
+        )
+        self.assertEqual(diagnostics["filtered_observations"], 1)
+
+    def test_only_multiplicative_noise_filters_near_zero_data(self):
+        setup = self._exponential_data()
+        # Set two observations at or below the observed-value floor.
+        near_zero = list(setup["biomarker_type"].biomarkers.all()[:2])
+        for biomarker in near_zero:
+            biomarker.value = 0.0
+            biomarker.save()
+
+        context = self._build_optimise_context(
+            setup,
+            [0.27, 1.45],
+            ([0.16, 1.2], [0.3, 2.1]),
+        )
+        optimal = np.asarray(setup["true"])
+
+        # Multiplicative drops the two near-zero observations.
+        mult = context.optimise_diagnostics(optimal, noise_model="multiplicative")
+        self.assertEqual(mult["filtered_observations"], 2)
+
+        # Additive and combined models take no logarithm of the observation, so
+        # near-zero values are valid and nothing is filtered.
+        additive = context.optimise_diagnostics(optimal, noise_model="additive")
+        self.assertEqual(additive["filtered_observations"], 0)
+        combined = context.optimise_diagnostics(optimal, noise_model="combined")
+        self.assertEqual(combined["filtered_observations"], 0)
 
     def test_optimise_pso(self):
         """Particle Swarm Optimisation method should converge to the true values."""

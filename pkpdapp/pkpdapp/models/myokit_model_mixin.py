@@ -445,6 +445,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             - "condition_number": (float or None) condition number of the
               covariance matrix computed from its singular values. ``None`` if
               the covariance matrix is not available.
+            - "filtered_observations": (int) number of observations dropped from
+              the fit. Non-zero only for the "multiplicative" noise model, which
+              cannot use observations at or below a small floor near zero (since
+              it takes log(observed)). Always 0 for the additive and combined
+              models.
         """
 
         if method not in self._OPTIMISE_METHODS:
@@ -681,6 +686,21 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             log_sigma_mult=log_s_mult,
             noise_model=noise_model,
         )
+
+        # Under the multiplicative noise model, observations at or below the
+        # observed-value floor are dropped (log(observed) is undefined near zero).
+        # If every observation was filtered there is nothing left to fit.
+        if noise_model == "multiplicative":
+            total_observations = sum(
+                len(group.records) for group in context.optimisation_groups
+            )
+            if diagnostics.get("filtered_observations", 0) >= total_observations:
+                raise ValueError(
+                    "All observations were filtered out because they are at or "
+                    "below the multiplicative-noise threshold "
+                    "(values close to zero). The multiplicative noise model "
+                    "cannot be used with this data."
+                )
 
         optimal_user = ode_optimal / conversion_factors
 

@@ -93,6 +93,7 @@ class OptimiseResponseSerializer(serializers.Serializer):
         allow_null=True,
     )
     condition_number = serializers.FloatField(allow_null=True)
+    filtered_observations = serializers.IntegerField(required=False, allow_null=True)
     sigma_variables = serializers.ListField(
         child=serializers.IntegerField(), allow_null=True
     )
