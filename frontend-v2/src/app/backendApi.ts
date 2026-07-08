@@ -2248,6 +2248,7 @@ export type OptimiseResponse = {
     | null;
   covariance: number[][] | null;
   condition_number: number | null;
+  filtered_observations?: number | null;
   sigma_variables: number[] | null;
   log_sigma: number[] | null;
   sigma_bounds: number[][] | null;
