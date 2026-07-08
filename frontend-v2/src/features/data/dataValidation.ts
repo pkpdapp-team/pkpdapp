@@ -272,6 +272,81 @@ export const normalisedHeaders = Object.keys(normalisation);
 const validTime = (time: number) => !isNaN(time) && time >= 0;
 const invalidTime = (time: number) => isNaN(time) || time < 0;
 
+// Parse a NONMEM-style Event ID (evid) cell to an integer.
+// Returns null when there is no Event ID column, or the cell is blank/"."/
+// non-integer. "1.0" is rejected to match Python's int() (used by the backend),
+// so the frontend and backend agree on which cells "parse".
+const parseEventId = (
+  row: Record<string, string>,
+  normalisedFields: Map<string, string>,
+): number | null => {
+  const fields = [...normalisedFields.keys()];
+  const eventIdField = fields.find(
+    (field) => normalisedFields.get(field) === "Event ID",
+  );
+  if (!eventIdField) {
+    return null;
+  }
+  const raw = row[eventIdField];
+  if (raw === undefined || raw === "" || raw === "." || !/^[-+]?\d+$/.test(raw.trim())) {
+    return null;
+  }
+  return parseInt(raw, 10);
+};
+
+// True when a row represents a dose. Mirrors the backend (dataset.py): if an
+// Event ID cell parses to an integer, the row is a dose iff evid is 1 or 4;
+// otherwise fall back to the presence of an Amount value (and, when
+// allowAdministrationId is set, a non-zero Administration ID).
+export const isDoseRow = (
+  row: Record<string, string>,
+  normalisedFields: Map<string, string>,
+  allowAdministrationId = false,
+): boolean => {
+  const evid = parseEventId(row, normalisedFields);
+  if (evid !== null) {
+    return evid === 1 || evid === 4;
+  }
+  const fields = [...normalisedFields.keys()];
+  const amountField =
+    fields.find((field) => normalisedFields.get(field) === "Amount") ||
+    "Amount";
+  const amount = row[amountField];
+  if (amount !== undefined && amount !== "" && amount !== ".") {
+    return true;
+  }
+  if (allowAdministrationId) {
+    const administrationIdField = fields.find(
+      (field) => normalisedFields.get(field) === "Administration ID",
+    );
+    if (administrationIdField && parseInt(row[administrationIdField])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// True when a row represents an observation. Mirrors the backend (dataset.py):
+// if an Event ID cell parses to an integer, the row is an observation iff evid
+// is 0; otherwise fall back to the presence of an Observation value.
+export const isObservationRow = (
+  row: Record<string, string>,
+  normalisedFields: Map<string, string>,
+): boolean => {
+  const evid = parseEventId(row, normalisedFields);
+  if (evid !== null) {
+    return evid === 0;
+  }
+  const fields = [...normalisedFields.keys()];
+  const observationField =
+    fields.find((field) => normalisedFields.get(field) === "Observation") ||
+    "Observation";
+  const observation = row[observationField];
+  return (
+    observation !== undefined && observation !== "" && observation !== "."
+  );
+};
+
 export const validateDataRow = (
   row: Record<string, string>,
   normalisedFields: Map<string, string>,
@@ -281,28 +356,24 @@ export const validateDataRow = (
     (field) => normalisedFields.get(field) === "Time",
   );
 
-  const amountField =
-    fields.find((field) => normalisedFields.get(field) === "Amount") ||
-    "Amount";
-  const amount = parseFloat(row[amountField]);
-  const hasAmount = !isNaN(amount);
-
   const observationField =
     fields.find((field) => normalisedFields.get(field) === "Observation") ||
     "Observation";
   const observation = parseFloat(row[observationField]);
   const hasObservation = !isNaN(observation);
 
+  const notDose = !isDoseRow(row, normalisedFields);
+
   const censorField = fields.find(
     (field) => normalisedFields.get(field) === "Censoring",
   );
   const censoredRow =
-    !hasAmount && censorField && parseInt(row[censorField]) === 1;
+    notDose && censorField && parseInt(row[censorField]) === 1;
 
   const mdvField = fields.find(
     (field) => normalisedFields.get(field) === "Ignored Observation",
   );
-  const ignoreMDV = !hasAmount && mdvField && parseInt(row[mdvField]) === 1;
+  const ignoreMDV = notDose && mdvField && parseInt(row[mdvField]) === 1;
 
   if (!timeField) {
     return false;
@@ -416,13 +487,7 @@ function validateCatCovariates(state: StepperState) {
 }
 
 export function validateDosingRows(state: StepperState) {
-  const amountField = state.fields.find(
-    (field) => state.normalisedFields.get(field) === "Amount",
-  );
-  return (
-    amountField !== undefined &&
-    state.data.some((row) => row[amountField] !== ".")
-  );
+  return state.data.some((row) => isDoseRow(row, state.normalisedFields));
 }
 
 export const validateState = (state: StepperState) => {

@@ -2,6 +2,7 @@ import { StepperState } from "../LoadDataStepper";
 import { ProjectRead } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { findFieldByType } from "../findFieldByType";
+import { isDoseRow } from "../dataValidation";
 import { generateAdministrationIds } from "./generateAdministrationIds";
 
 /**
@@ -116,9 +117,10 @@ export function normaliseCSVData(
 
   let _data = state.data;
   let _normalisedFields = state.normalisedFields;
-  // ignore rows with no amount and administration ID set to 0.
+  // classify dose rows honouring Event ID, falling back to amount /
+  // administration ID presence (see isDoseRow).
   const dosingRows = (data: Row[]) =>
-    data.filter((row) => parseInt(row[administrationIdField]));
+    data.filter((row) => isDoseRow(row, _normalisedFields, true));
 
   if (!amountField) {
     const newNormalisedFields = new Map([
