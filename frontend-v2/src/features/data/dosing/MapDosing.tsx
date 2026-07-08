@@ -12,6 +12,7 @@ import {
 } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { findFieldByType } from "../findFieldByType";
+import { isDoseRow } from "../dataValidation";
 import { normaliseUnitSymbol } from "../unitUtils";
 import { useUnits } from "../../results/useUnits";
 
@@ -66,16 +67,11 @@ const MapDosing: FC<IMapDosing> = ({
   notificationsInfo,
 }: IMapDosing) => {
   // Derived state from the uploaded CSV data.
-  const amountField = findFieldByType("Amount", state);
   const amountUnitField = findFieldByType("Amount Unit", state);
   const administrationIdField = findFieldByType("Administration ID", state);
-  const dosingRows: Row[] = amountField
-    ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
-    : state.data.filter((row) => parseInt(row[administrationIdField]));
+  const dosingRows: Row[] = state.data.filter((row) =>
+    isDoseRow(row, state.normalisedFields, true),
+  );
 
   // Fetch API data.
   const { isLoading, amountUnit, project, projectProtocols, units, variables } =

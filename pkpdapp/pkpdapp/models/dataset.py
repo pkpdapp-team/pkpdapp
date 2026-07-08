@@ -290,7 +290,7 @@ class Dataset(models.Model):
             try:
                 event_id_int = int(event_id)
                 is_dosing_event = event_id_int == 1 or event_id_int == 4
-            except ValueError:
+            except (ValueError, TypeError):
                 is_dosing_event = has_amount
 
             if is_dosing_event and has_amount:
@@ -322,7 +322,7 @@ class Dataset(models.Model):
             try:
                 event_id_int = int(event_id)
                 is_observation_event = event_id_int == 0
-            except ValueError:
+            except (ValueError, TypeError):
                 is_observation_event = has_observation
             if is_observation_event and has_observation:  # measurement observation
                 try:

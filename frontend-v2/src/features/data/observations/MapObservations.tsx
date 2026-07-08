@@ -24,7 +24,7 @@ import {
 import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import { useUnits } from "../../results/useUnits";
 import useObservationRows from "./useObservationRows";
-import { validateState } from "../dataValidation";
+import { isObservationRow, validateState } from "../dataValidation";
 import {
   calculateTableHeights,
   DOUBLE_TABLE_FIRST_BREAKPOINTS,
@@ -158,7 +158,8 @@ const MapObservations: FC<IMapObservations> = ({
             ? row[observationIdField] === id
             : observationField in row &&
               row[observationField] !== "." &&
-              row[observationField] !== "",
+              row[observationField] !== "" &&
+              isObservationRow(row, state.normalisedFields),
         )
         .forEach((row) => {
           row[observationVariableField] = value;

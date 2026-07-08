@@ -8,7 +8,7 @@ import codecs
 from django.utils import timezone
 import urllib.request
 from django.test import TestCase
-from pkpdapp.models import Dataset
+from pkpdapp.models import Dataset, Dose, Biomarker
 from pkpdapp.utils import DataParser
 
 django.setup()
@@ -57,6 +57,80 @@ class TestDataParser(TestCase):
         self.assertEqual(
             data["PER_BODY_WEIGHT_KG"].tolist(),
             expected,
+        )
+
+    # A CSV where the amount column is populated on every row (dose *and*
+    # observation rows) and an event id column distinguishes them: evid 1 =
+    # dose, evid 0 = observation. Two subjects, each with one dose row at t=0
+    # and two observation rows at t=1, t=2.
+    EVENT_ID_CSV_ROWS = [
+        # id, time, amount, observation, event_id, amount_var
+        "1,0,100,.,1,central",
+        "1,1,100,5.0,0,central",
+        "1,2,100,3.0,0,central",
+        "2,0,100,.,1,central",
+        "2,1,100,6.0,0,central",
+        "2,2,100,4.0,0,central",
+    ]
+
+    def _import(self, header, rows, name):
+        csv_str = "\n".join([header] + rows)
+        data = DataParser().parse_from_str(csv_str)
+        dataset = Dataset.objects.create(name=name, datetime=timezone.now())
+        dataset.replace_data(data)
+        return dataset, data
+
+    def test_event_id_classifies_doses_and_observations(self):
+        # Even though every row has an amount, only the evid==1 rows should
+        # become doses and only the evid==0 rows should become observations.
+        header = "id,time,amount,observation,event_id,amount_var"
+        dataset, _ = self._import(header, self.EVENT_ID_CSV_ROWS, "evid dataset")
+
+        self.assertEqual(
+            Dose.objects.filter(protocol__dataset=dataset).count(), 2
+        )
+        self.assertEqual(
+            Biomarker.objects.filter(subject__dataset=dataset).count(), 4
+        )
+
+    def test_missing_event_id_falls_back_to_amount(self):
+        # With no event id column, classification falls back to the presence of
+        # an amount / observation value. Because every row has an amount, every
+        # row is treated as a dose, and rows with an observation value are also
+        # observations. This must not raise (regression test for int(None)).
+        header = "id,time,amount,observation,amount_var"
+        rows = [",".join(r.split(",")[:4] + [r.split(",")[5]])
+                for r in self.EVENT_ID_CSV_ROWS]
+        dataset, _ = self._import(header, rows, "no evid dataset")
+
+        self.assertEqual(
+            Dose.objects.filter(protocol__dataset=dataset).count(), 6
+        )
+        self.assertEqual(
+            Biomarker.objects.filter(subject__dataset=dataset).count(), 4
+        )
+
+    def test_none_event_id_does_not_crash(self):
+        # Defensive: a None-valued EVENT_ID column reaching replace_data must
+        # fall back to the amount/observation heuristic rather than raising
+        # TypeError from int(None).
+        header = "id,time,amount,observation,amount_var"
+        rows = [",".join(r.split(",")[:4] + [r.split(",")[5]])
+                for r in self.EVENT_ID_CSV_ROWS]
+        csv_str = "\n".join([header] + rows)
+        data = DataParser().parse_from_str(csv_str)
+        data["EVENT_ID"] = None
+
+        dataset = Dataset.objects.create(
+            name="none evid dataset", datetime=timezone.now()
+        )
+        dataset.replace_data(data)  # should not raise
+
+        self.assertEqual(
+            Dose.objects.filter(protocol__dataset=dataset).count(), 6
+        )
+        self.assertEqual(
+            Biomarker.objects.filter(subject__dataset=dataset).count(), 4
         )
 
     def test_parse(self):
