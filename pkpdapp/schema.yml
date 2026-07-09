@@ -3992,6 +3992,18 @@ components:
           type: number
           format: double
           nullable: true
+        neg2ll:
+          type: number
+          format: double
+          nullable: true
+        aic:
+          type: number
+          format: double
+          nullable: true
+        bic:
+          type: number
+          format: double
+          nullable: true
         filtered_observations:
           type: integer
           nullable: true
@@ -4029,6 +4041,8 @@ components:
               format: double
           nullable: true
       required:
+      - aic
+      - bic
       - bounds
       - condition_number
       - covariance
@@ -4037,6 +4051,7 @@ components:
       - log_sigma_mult
       - loss
       - method
+      - neg2ll
       - noise_model
       - optimal
       - predictions

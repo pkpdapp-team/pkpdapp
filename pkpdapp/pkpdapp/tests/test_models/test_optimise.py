@@ -714,8 +714,75 @@ class TestOptimise(TestCase):
                 "sigma_mult": None,
                 "sigma_variables": list(context.sigma_output_variable_ids),
                 "filtered_observations": 0,
+                "neg2ll": None,
+                "aic": None,
+                "bic": None,
             },
         )
+
+    def test_optimise_diagnostics_information_criteria(self):
+        """neg2ll / AIC / BIC are the absolute deviance and standard criteria."""
+        setup = create_exponential_data(
+            name_prefix="optimise_context_info_criteria",
+            group_name_prefix="InfoCriteria",
+        )
+        input_ids = [variable.id for variable in setup["inputs"]]
+        context = self._build_optimise_context(
+            setup,
+            [0.27, 1.45],
+            ([0.16, 1.2], [0.3, 2.1]),
+        )
+        optimal = np.asarray(setup["true"])
+        values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, setup["true"]
+        )
+
+        n_obs = sum(len(g.records) for g in context.optimisation_groups)
+        self.assertGreater(n_obs, 0)
+
+        for noise_model in ("additive", "multiplicative", "combined"):
+            diagnostics = context.optimise_diagnostics(
+                optimal, noise_model=noise_model
+            )
+            nll = context.optimise_loss(
+                context.optimisation_groups,
+                values_by_id,
+                noise_model=noise_model,
+            )
+
+            n_sigma = len(context.sigma_output_variable_ids) * (
+                2 if noise_model == "combined" else 1
+            )
+            k = len(input_ids) + n_sigma
+
+            expected_neg2ll = 2.0 * nll + n_obs * np.log(2.0 * np.pi)
+            if noise_model == "multiplicative":
+                sum_log_obs = sum(
+                    float(np.log(record.value))
+                    for group in context.optimisation_groups
+                    for record in group.records
+                )
+                expected_neg2ll += 2.0 * sum_log_obs
+
+            expected_aic = 2.0 * k + expected_neg2ll
+            expected_bic = k * np.log(n_obs) + expected_neg2ll
+
+            self.assertAlmostEqual(
+                diagnostics["neg2ll"], expected_neg2ll, places=6, msg=noise_model
+            )
+            self.assertAlmostEqual(
+                diagnostics["aic"], expected_aic, places=6, msg=noise_model
+            )
+            self.assertAlmostEqual(
+                diagnostics["bic"], expected_bic, places=6, msg=noise_model
+            )
+            # AIC and BIC differ only by the parameter penalty term.
+            self.assertAlmostEqual(
+                diagnostics["bic"] - diagnostics["aic"],
+                k * (np.log(n_obs) - 2.0),
+                places=6,
+                msg=noise_model,
+            )
 
     def test_multiplicative_noise_filters_non_positive_data(self):
         setup = self._exponential_data()
