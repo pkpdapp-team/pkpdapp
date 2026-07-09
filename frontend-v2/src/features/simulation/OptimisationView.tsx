@@ -101,18 +101,36 @@ const OptimisationView = ({
                 <Typography variant="subtitle1" fontWeight="bold">Summary</Typography>
                 <HelpButton title="Summary">
                   <p>
-                    <strong>Loss:</strong> The minimised negative log-likelihood (NLL)
-                    value at the optimal parameters. Lower is better.
-                  </p>
-                  <p>
                     <strong>Reason:</strong> Why the optimiser stopped — either
                     convergence was achieved or the maximum number of iterations was
                     reached.
                   </p>
+                  <p>
+                    <strong>−2·ln(L):</strong> twice the absolute
+                    negative log-likelihood. AIC and
+                    BIC are built directly from this quantity.
+                  </p>
+                  <p>
+                    <strong>AIC</strong> = 2k − 2·ln(L) and{" "}
+                    <strong>BIC</strong> = k·ln(n) − 2·ln(L), where k is the number
+                    of free parameters (model inputs plus noise σ) and n is the
+                    number of observations. Lower is better; both penalise the
+                    number of free parameters (BIC more strongly for larger
+                    datasets) and are useful for comparing candidate models fit to
+                    the same data.
+                  </p>
                 </HelpButton>
               </Stack>
-              <Typography>Loss: {formatNum(optimiseResult.loss)}</Typography>
               <Typography>Reason: {optimiseResult.reason}</Typography>
+              {optimiseResult.neg2ll != null && (
+                <Typography>−2·ln(L): {formatNum(optimiseResult.neg2ll)}</Typography>
+              )}
+              {optimiseResult.aic != null && (
+                <Typography>AIC: {formatNum(optimiseResult.aic)}</Typography>
+              )}
+              {optimiseResult.bic != null && (
+                <Typography>BIC: {formatNum(optimiseResult.bic)}</Typography>
+              )}
               {optimiseResult.filtered_observations != null &&
                 optimiseResult.filtered_observations > 0 && (
                   <Alert severity="warning" sx={{ mt: 1 }}>

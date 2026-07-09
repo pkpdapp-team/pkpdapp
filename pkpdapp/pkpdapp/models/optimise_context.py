@@ -554,6 +554,10 @@ class OptimiseContext(SimulateContext):
         residual_values = []
         weights = []
         n_filtered = 0
+        # Sum of log(observed) over non-filtered observations, used to restore the
+        # change-of-variables Jacobian of the log-space (multiplicative) likelihood
+        # when reporting the absolute deviance / information criteria.
+        sum_log_obs = 0.0
 
         time_context = self.get_variable_context(self.time_qname)
         time_conversion_factor = time_context.conversion_factor
@@ -572,6 +576,9 @@ class OptimiseContext(SimulateContext):
                     "sigma_mult": sigma_mult_list,
                     "sigma_variables": sigma_variables,
                     "filtered_observations": 0,
+                    "neg2ll": None,
+                    "aic": None,
+                    "bic": None,
                 }
 
             t_eval = np.asarray(group.t_eval, dtype=float)
@@ -604,6 +611,7 @@ class OptimiseContext(SimulateContext):
                     jac_row = y_prime[t_idx, o_idx, :] / prediction
                     residual_for_output = residual / sigma[k]
                     weight = 1.0 / sigma2[k]
+                    sum_log_obs += float(np.log(observed))
                 elif is_combined:
                     residual = prediction - observed
                     # Per-point (heteroscedastic) variance and weight. The
@@ -638,6 +646,24 @@ class OptimiseContext(SimulateContext):
                 resid_dict[output.id] = obs_residuals_per_output[i]
             residuals_list.append(resid_dict)
 
+        # Information criteria (AIC/BIC) from the absolute deviance -2*ln(L).
+        # The internal NLL drops the per-observation 0.5*log(2*pi) constant, and
+        # the multiplicative model additionally works in log-space (so it omits the
+        # -sum(log(observed)) change-of-variables Jacobian). Both are restored here
+        # so the reported values are on the standard absolute scale and comparable
+        # across noise models. Free parameters k = optimised inputs + noise sigmas
+        # (one sigma per output, or two per output for the combined model).
+        info_criteria = self._information_criteria(
+            values_by_id=values_by_id,
+            log_sigma=log_sigma,
+            log_sigma_mult=log_sigma_mult,
+            noise_model=noise_model,
+            n_params=n_params,
+            n_filtered=n_filtered,
+            sum_log_obs=sum_log_obs,
+            is_combined=is_combined,
+        )
+
         J = np.array(jacobian_rows)
         residual_arr = np.array(residual_values)
         weight_arr = np.array(weights)
@@ -658,6 +684,7 @@ class OptimiseContext(SimulateContext):
                 "sigma_mult": sigma_mult_list,
                 "sigma_variables": sigma_variables,
                 "filtered_observations": n_filtered,
+                **info_criteria,
             }
 
         # Weighted (GLS) parameter covariance for heteroscedastic noise:
@@ -691,6 +718,60 @@ class OptimiseContext(SimulateContext):
             "sigma_mult": sigma_mult_list,
             "sigma_variables": sigma_variables,
             "filtered_observations": n_filtered,
+            **info_criteria,
+        }
+
+    def _information_criteria(
+        self,
+        *,
+        values_by_id: dict[int, float],
+        log_sigma,
+        log_sigma_mult,
+        noise_model: str,
+        n_params: int,
+        n_filtered: int,
+        sum_log_obs: float,
+        is_combined: bool,
+    ) -> dict[str, float | None]:
+        """Compute the absolute deviance -2*ln(L) and the AIC/BIC information
+        criteria at the optimal parameters.
+
+        Returns ``{"neg2ll": ..., "aic": ..., "bic": ...}``. All three are ``None``
+        when the likelihood is non-finite or there are no observations to fit.
+        """
+        none_result = {"neg2ll": None, "aic": None, "bic": None}
+
+        n_obs = (
+            sum(len(group.records) for group in self.optimisation_groups) - n_filtered
+        )
+        if n_obs <= 0:
+            return none_result
+
+        nll = self._optimise_loss(
+            self.optimisation_groups,
+            values_by_id,
+            log_sigma,
+            log_sigma_mult,
+            noise_model,
+        )
+        if not np.isfinite(nll):
+            return none_result
+
+        n_sigma = len(self.sigma_output_variable_ids) * (2 if is_combined else 1)
+        k = n_params + n_sigma
+
+        # -2*ln(L): restore the dropped 0.5*log(2*pi) constant (per observation) and,
+        # for the multiplicative model, the -sum(log(observed)) log-space Jacobian.
+        neg2ll = 2.0 * nll + n_obs * np.log(2.0 * np.pi)
+        if noise_model == "multiplicative":
+            neg2ll += 2.0 * sum_log_obs
+
+        aic = 2.0 * k + neg2ll
+        bic = k * np.log(n_obs) + neg2ll
+        return {
+            "neg2ll": float(neg2ll),
+            "aic": float(aic),
+            "bic": float(bic),
         }
 
     def _validate_optimise_inputs(
