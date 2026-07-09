@@ -1,12 +1,26 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-basic-dist-min";
 import { Data } from "plotly.js";
-import { Box } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { SimulateResponse, SubjectGroupRead, VariableRead } from "../../app/backendApi";
 import { plotColours } from "./utils";
 
 const Plot = createPlotlyComponent(Plotly);
+
+// A normal QQ plot is only meaningful with enough data; hide it below this many
+// residuals (summed across all group × variable series).
+const QQ_MIN_POINTS = 30;
+
+// Smallest positive value in an array, or undefined if none are positive. Used
+// to anchor a reference line on a log x-axis, where non-positive x is invalid.
+function minPositive(values: number[]): number | undefined {
+  let min: number | undefined;
+  for (const v of values) {
+    if (v > 0 && (min === undefined || v < min)) min = v;
+  }
+  return min;
+}
 
 interface ResidualPoint {
   predicted: number;
@@ -85,6 +99,9 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   variables,
   groups,
 }) => {
+  const [logTime, setLogTime] = useState(false);
+  const [logPred, setLogPred] = useState(false);
+
   // Build matched (predicted, residual) pairs per (group × variable).
   // residuals[i] has the same group as predictions[i].
   // residuals[i].time lists the observed time-points; predictions[i].time is the
@@ -149,17 +166,20 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
 
   const allTimes = seriesEntries.flatMap(([, pts]) => pts.map((p) => p.time));
   if (allTimes.length > 0) {
-    const minT = Math.min(...allTimes);
+    // On a log axis, anchor the line at the smallest positive value.
+    const minT = logTime ? minPositive(allTimes) : Math.min(...allTimes);
     const maxT = Math.max(...allTimes);
-    residVsTimeTraces.push({
-      type: "scatter",
-      mode: "lines",
-      name: "y = 0",
-      x: [minT, maxT],
-      y: [0, 0],
-      line: { color: "#888", dash: "dash", width: 1 },
-      showlegend: false,
-    } as Partial<Data>);
+    if (minT !== undefined) {
+      residVsTimeTraces.push({
+        type: "scatter",
+        mode: "lines",
+        name: "y = 0",
+        x: [minT, maxT],
+        y: [0, 0],
+        line: { color: "#888", dash: "dash", width: 1 },
+        showlegend: false,
+      } as Partial<Data>);
+    }
   }
 
   // --- Residuals vs Predictions traces ---
@@ -175,20 +195,28 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   // Zero reference line spanning data range
   const allPredicted = seriesEntries.flatMap(([, pts]) => pts.map((p) => p.predicted));
   if (allPredicted.length > 0) {
-    const minX = Math.min(...allPredicted);
+    // On a log axis, anchor the line at the smallest positive value.
+    const minX = logPred ? minPositive(allPredicted) : Math.min(...allPredicted);
     const maxX = Math.max(...allPredicted);
-    residVsPredTraces.push({
-      type: "scatter",
-      mode: "lines",
-      name: "y = 0",
-      x: [minX, maxX],
-      y: [0, 0],
-      line: { color: "#888", dash: "dash", width: 1 },
-      showlegend: false,
-    } as Partial<Data>);
+    if (minX !== undefined) {
+      residVsPredTraces.push({
+        type: "scatter",
+        mode: "lines",
+        name: "y = 0",
+        x: [minX, maxX],
+        y: [0, 0],
+        line: { color: "#888", dash: "dash", width: 1 },
+        showlegend: false,
+      } as Partial<Data>);
+    }
   }
 
   // --- QQ plot traces ---
+  // Only meaningful with enough data — show it only when the total residual
+  // count (across all series) meets the threshold.
+  const totalPoints = allPredicted.length;
+  const showQQ = totalPoints >= QQ_MIN_POINTS;
+
   // Collect all residuals per series, compute theoretical quantiles.
   const qqTraces: Partial<Data>[] = seriesEntries.map(([label, points], i) => {
     const sorted = points.map((p) => p.residual).sort((a, b) => a - b);
@@ -238,12 +266,24 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
           layout={{
             ...commonLayout,
             title: { text: "Residuals vs Time" },
-            xaxis: { title: { text: "Time" } },
+            xaxis: { title: { text: "Time" }, type: logTime ? "log" : "linear" },
             yaxis: { title: { text: "Residual" }, exponentformat: "power" },
           }}
           style={{ width: "100%", height: 380 }}
           useResizeHandler
         />
+        <Box sx={{ display: "flex", justifyContent: "center", mt: -1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={logTime}
+                onChange={(e) => setLogTime(e.target.checked)}
+              />
+            }
+            label={<Typography variant="caption">Log x-axis</Typography>}
+          />
+        </Box>
       </Box>
       <Box sx={{ flex: 1, minWidth: 300 }}>
         <Plot
@@ -251,25 +291,58 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
           layout={{
             ...commonLayout,
             title: { text: "Residuals vs Predicted" },
-            xaxis: { title: { text: "Predicted" }, exponentformat: "power" },
+            xaxis: {
+              title: { text: "Predicted" },
+              exponentformat: "power",
+              type: logPred ? "log" : "linear",
+            },
             yaxis: { title: { text: "Residual" }, exponentformat: "power" },
           }}
           style={{ width: "100%", height: 380 }}
           useResizeHandler
         />
+        <Box sx={{ display: "flex", justifyContent: "center", mt: -1 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={logPred}
+                onChange={(e) => setLogPred(e.target.checked)}
+              />
+            }
+            label={<Typography variant="caption">Log x-axis</Typography>}
+          />
+        </Box>
       </Box>
       <Box sx={{ flex: 1, minWidth: 300 }}>
-        <Plot
-          data={qqTraces}
-          layout={{
-            ...commonLayout,
-            title: { text: "Normal QQ Plot of Residuals" },
-            xaxis: { title: { text: "Theoretical quantiles" } },
-            yaxis: { title: { text: "Sample quantiles" } },
-          }}
-          style={{ width: "100%", height: 380 }}
-          useResizeHandler
-        />
+        {showQQ ? (
+          <Plot
+            data={qqTraces}
+            layout={{
+              ...commonLayout,
+              title: { text: "Normal QQ Plot of Residuals" },
+              xaxis: { title: { text: "Theoretical quantiles" } },
+              yaxis: { title: { text: "Sample quantiles" } },
+            }}
+            style={{ width: "100%", height: 380 }}
+            useResizeHandler
+          />
+        ) : (
+          <Box
+            sx={{
+              height: 380,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: 2,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary" align="center">
+              QQ plot hidden — requires at least {QQ_MIN_POINTS} residuals (have{" "}
+              {totalPoints}).
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

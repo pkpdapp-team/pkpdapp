@@ -744,7 +744,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
               severity="success"
               onClose={() => setOptimiseResultOpen(false)}
             >
-              Optimisation complete. Loss: {optimiseResult?.loss.toFixed(4)}.{" "}
+              Optimisation complete. Objective: {optimiseResult?.loss.toFixed(4)}.{" "}
               {optimiseResult?.reason}
             </Alert>
           </Snackbar>

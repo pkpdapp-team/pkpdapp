@@ -277,7 +277,7 @@ export const OptimiseSingleParameter: Story = {
       );
     });
     expect(successAlert).toHaveTextContent(
-      "Optimisation complete. Loss: 0.0123. Stopped after 8 iterations.",
+      "Optimisation complete. Objective: 0.0123. Stopped after 8 iterations.",
     );
 
     // The optimised value should be written back to the slider input.
