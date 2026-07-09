@@ -11,7 +11,7 @@ export type NoiseModel = "additive" | "multiplicative" | "combined";
 
 export const DEFAULT_OPTIMISE_METHOD = "pso";
 export const DEFAULT_NOISE_MODEL: NoiseModel = "multiplicative";
-export const DEFAULT_MAX_ITERATIONS = "100";
+export const DEFAULT_MAX_ITERATIONS = "1000";
 
 interface ErrorObject {
   error: string;

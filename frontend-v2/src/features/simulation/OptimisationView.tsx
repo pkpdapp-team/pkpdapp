@@ -316,6 +316,12 @@ const OptimisationView = ({
                         <li>Increasing spread suggesting heteroscedasticity</li>
                         <li>Clusters of large residuals suggesting outliers</li>
                       </ul>
+                      <p>
+                        Each residual scatter plot has its own <strong>Log x-axis</strong>{" "}
+                        toggle for data spanning several orders of magnitude. The
+                        Normal QQ plot is shown only when at least 30 residuals are
+                        available, below which it is not informative.
+                      </p>
                     </HelpButton>
                   </Stack>
                   <OptimisationResidualPlots

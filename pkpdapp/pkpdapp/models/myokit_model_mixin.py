@@ -673,9 +673,34 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         if np.isfinite(error.best_loss) and error.best_loss < float(loss):
             optimal = error.best_values
             loss = error.best_loss
-        reason = optimiser.optimiser().stop()
-        if not reason:
-            reason = f"Maximum iterations ({optimiser.iterations()}) reached."
+        # Work out why the optimiser stopped. pints' OptimisationController
+        # halts on several criteria; ``optimiser().stop()`` only reports the
+        # optimiser's own internal criterion. When it stops before reaching
+        # ``max_iterations`` this is almost always the "max unchanged
+        # iterations" convergence criterion (the objective function value stopped
+        # improving), so report that rather than misattributing it to the
+        # iteration cap.
+        iters = optimiser.iterations()
+        stop_error = optimiser.optimiser().stop()
+        if stop_error:
+            reason = f"Converged: {stop_error}"
+        elif max_iterations is not None and iters >= max_iterations:
+            reason = f"Maximum iterations ({iters}) reached."
+        else:
+            unchanged_iters, unchanged_threshold = (
+                optimiser.max_unchanged_iterations()
+                if hasattr(optimiser, "max_unchanged_iterations")
+                else (None, None)
+            )
+            if unchanged_iters is not None:
+                reason = (
+                    f"Converged after {iters} iterations: the objective "
+                    f"function value changed by less than "
+                    f"{unchanged_threshold:g} for {unchanged_iters} "
+                    f"consecutive iterations."
+                )
+            else:
+                reason = f"Converged after {iters} iterations."
 
         optimal = np.asarray(optimal, dtype=float)
         ode_optimal = optimal[:n_inputs]
