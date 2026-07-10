@@ -61,6 +61,28 @@ class Dataset(models.Model):
             project=new_project,
         )
 
+        # copy groups and subjects directly, rather than relying on them being
+        # recreated as a side effect of copying protocols. This ensures subjects
+        # that are not attached to any protocol (e.g. observation-only subjects,
+        # or subjects with no group) are still copied across. Protocols are
+        # copied later (during model/variable copy), so subject protocols are
+        # linked at that point (see Protocol.copy).
+        group_map = {}
+        for group in self.groups.all():
+            group_map[group.id] = SubjectGroup.objects.create(
+                name=group.name,
+                id_in_dataset=group.id_in_dataset,
+                dataset=new_dataset,
+                project=new_project,
+            )
+
+        for subject in self.subjects.all():
+            subject.copy(
+                new_protocol=None,
+                new_dataset=new_dataset,
+                new_group=group_map.get(subject.group_id),
+            )
+
         return new_dataset
 
     def __str__(self):
