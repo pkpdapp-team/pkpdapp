@@ -9,6 +9,7 @@ import numpy as np
 
 class UncertaintySimulationMixin:
     DEFAULT_SIMULATION_QUANTILES = [0.05, 0.5, 0.95]
+    DISTRIBUTION_TYPES = ("normal", "lognormal", "logitnormal")
 
     def _validate_quantiles(self, quantiles):
         if quantiles is None:
@@ -45,11 +46,49 @@ class UncertaintySimulationMixin:
 
         return float(mean), float(std)
 
+    def _get_distribution_params(self, qname, distribution):
+        """Validate a distribution dict and return (type, mean, std).
+
+        ``mean`` is the typical parameter value P; ``std`` is the standard
+        deviation of the ETA (the underlying normal random effect). The optional
+        ``type`` key selects the sampling distribution and defaults to "normal".
+        """
+        dist_type = distribution.get("type", "normal")
+        if dist_type not in self.DISTRIBUTION_TYPES:
+            raise ValueError(
+                f"distribution for {qname} has unknown type '{dist_type}'; "
+                f"must be one of {list(self.DISTRIBUTION_TYPES)}"
+            )
+
+        mean, std = self._get_distribution_std(qname, distribution)
+
+        if dist_type == "lognormal" and mean <= 0:
+            raise ValueError(
+                f"log-normal distribution for {qname} requires mean > 0"
+            )
+        if dist_type == "logitnormal" and not (0 < mean < 1):
+            raise ValueError(
+                f"logit-normal distribution for {qname} requires 0 < mean < 1"
+            )
+
+        return dist_type, mean, std
+
     def _sample_variables(self, variables, variable_distributions, rng):
         sampled_variables = {**variables}
         for qname, distribution in variable_distributions.items():
-            mean, std = self._get_distribution_std(qname, distribution)
-            sampled_variables[qname] = float(rng.normal(mean, std))
+            dist_type, mean, std = self._get_distribution_params(qname, distribution)
+            if dist_type == "lognormal":
+                # log(Pi) = log(P) + ETA, ETA ~ N(0, variance)
+                eta = rng.normal(0.0, std)
+                value = mean * np.exp(eta)
+            elif dist_type == "logitnormal":
+                # Pi = exp(ETA)*P / (exp(ETA)*P - P + 1), ETA ~ N(0, variance)
+                eta = rng.normal(0.0, std)
+                e = np.exp(eta) * mean
+                value = e / (e - mean + 1.0)
+            else:  # normal (default, unchanged behaviour)
+                value = rng.normal(mean, std)
+            sampled_variables[qname] = float(value)
         return sampled_variables
 
     def _aggregate_sampled_outputs(self, sampled_outputs, quantiles):
@@ -86,6 +125,21 @@ class UncertaintySimulationMixin:
         use_diffsol=True,
         quantiles=None,
     ):
+        """Simulate the model over a Monte-Carlo population of parameter samples.
+
+        ``variable_distributions`` maps a variable qname to a distribution dict.
+        Each dict carries the typical value in ``mean`` and the ETA spread in
+        ``variance`` or ``std``, plus an optional ``type`` selecting how the
+        parameter Pi is drawn (default "normal"):
+
+          - "normal":      Pi ~ N(mean, std^2)
+          - "lognormal":   log(Pi) = log(P) + ETA, ETA ~ N(0, variance); P = mean
+          - "logitnormal": Pi = exp(ETA)*P / (exp(ETA)*P - P + 1),
+                           ETA ~ N(0, variance); P = mean. Output lies in (0, 1),
+                           so mean must satisfy 0 < mean < 1.
+
+        log-normal requires mean > 0.
+        """
         if sample_count <= 0:
             raise ValueError("sample_count must be greater than 0")
 

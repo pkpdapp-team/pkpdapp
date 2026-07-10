@@ -195,3 +195,120 @@ class TestSimulateView(APITestCase):
         }
         response = self.client.post(url, invalid_variance_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def _uncertainty_model(self):
+        pd = PharmacodynamicModel.objects.get(
+            name='tumour_growth_gompertz',
+            read_only=False,
+        )
+        pk = PharmacokineticModel.objects.get(
+            name='one_compartment_clinical',
+        )
+        return CombinedModel.objects.create(
+            name='my wonderful model',
+            pd_model=pd,
+            pk_model=pk,
+            project=self.project,
+        )
+
+    def _assert_valid_uncertainty_response(self, response):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for sim in response.data:
+            self.assertTrue(len(sim['time']) > 0)
+            for summary in sim['outputs'].values():
+                self.assertIn('mean', summary)
+                self.assertIn('std', summary)
+                self.assertIn('quantiles', summary)
+                self.assertEqual(len(summary['mean']), len(sim['time']))
+
+    def test_simulate_uncertainty_lognormal(self):
+        m = self._uncertainty_model()
+        url = reverse('simulate-uncertainty-combined-model', args=(m.pk,))
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'type': 'lognormal',
+                    'mean': 1.1,
+                    'variance': 0.04,
+                }
+            },
+            'sample_count': 20,
+            'seed': 42,
+        }
+
+        response = self.client.post(url, data, format='json')
+        self._assert_valid_uncertainty_response(response)
+
+        # reproducible with the same seed
+        repeated = self.client.post(url, data, format='json')
+        self.assertEqual(repeated.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, repeated.data)
+
+        # log-normal requires mean > 0
+        invalid = {
+            **data,
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'type': 'lognormal',
+                    'mean': 0.0,
+                    'variance': 0.04,
+                }
+            },
+        }
+        response = self.client.post(url, invalid, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_simulate_uncertainty_logitnormal(self):
+        m = self._uncertainty_model()
+        url = reverse('simulate-uncertainty-combined-model', args=(m.pk,))
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'type': 'logitnormal',
+                    'mean': 0.4,
+                    'variance': 0.09,
+                }
+            },
+            'sample_count': 20,
+            'seed': 42,
+        }
+
+        response = self.client.post(url, data, format='json')
+        self._assert_valid_uncertainty_response(response)
+
+        # logit-normal requires 0 < mean < 1
+        for bad_mean in (0.0, 1.0, 1.5):
+            invalid = {
+                **data,
+                'variable_distributions': {
+                    'PDCompartment.TS0': {
+                        'type': 'logitnormal',
+                        'mean': bad_mean,
+                        'variance': 0.09,
+                    }
+                },
+            }
+            response = self.client.post(url, invalid, format='json')
+            self.assertEqual(
+                response.status_code, status.HTTP_400_BAD_REQUEST
+            )
+
+    def test_simulate_uncertainty_unknown_type(self):
+        m = self._uncertainty_model()
+        url = reverse('simulate-uncertainty-combined-model', args=(m.pk,))
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variable_distributions': {
+                'PDCompartment.TS0': {
+                    'type': 'not-a-distribution',
+                    'mean': 1.1,
+                    'variance': 0.01,
+                }
+            },
+            'sample_count': 20,
+            'seed': 42,
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
