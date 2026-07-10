@@ -428,48 +428,6 @@ paths:
           description: ''
         '404':
           description: No response body
-  /api/combined_model/{id}/simulate_uncertainty:
-    post:
-      operationId: combined_model_simulate_uncertainty_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - combined_model
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: ''
-        '404':
-          description: No response body
   /api/compound/:
     get:
       operationId: compound_list
@@ -1317,48 +1275,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SimulateResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: ''
-        '404':
-          description: No response body
-  /api/pharmacodynamic/{id}/simulate_uncertainty:
-    post:
-      operationId: pharmacodynamic_simulate_uncertainty_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - pharmacodynamic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
           description: ''
         '400':
           content:
@@ -3675,6 +3591,27 @@ components:
       - inputs
       - outputs
       - state_indices
+    Distribution:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        pdf:
+          allOf:
+          - $ref: '#/components/schemas/PdfEnum'
+          description: |-
+            probability density function
+
+            * `normal` - Normal
+            * `lognormal` - Log-normal
+            * `logit` - Logit-normal
+        variance:
+          type: number
+          format: double
+          description: variance of the ETA (normal random effect)
+      required:
+      - id
     Dose:
       type: object
       properties:
@@ -4952,6 +4889,10 @@ components:
           items:
             type: integer
           readOnly: true
+        distribution:
+          allOf:
+          - $ref: '#/components/schemas/Distribution'
+          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -5058,6 +4999,16 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
+    PdfEnum:
+      enum:
+      - normal
+      - lognormal
+      - logit
+      type: string
+      description: |-
+        * `normal` - Normal
+        * `lognormal` - Log-normal
+        * `logit` - Logit-normal
     Pharmacodynamic:
       type: object
       properties:
@@ -5484,58 +5435,11 @@ components:
         use_diffsol:
           type: boolean
           default: true
-      required:
-      - outputs
-      - variables
-    SimulateResponse:
-      type: object
-      properties:
-        time:
-          type: array
-          items:
-            type: number
-            format: double
-        group:
-          type: integer
-          nullable: true
-        outputs:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: number
-              format: double
-      required:
-      - outputs
-      - time
-    SimulateUncertainty:
-      type: object
-      properties:
-        outputs:
-          type: array
-          items:
-            type: string
-        variables:
-          type: object
-          additionalProperties:
-            type: number
-            format: double
-        variable_distributions:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties: {}
-        time_max:
-          type: number
-          format: double
         sample_count:
           type: integer
           minimum: 1
         seed:
           type: integer
-        use_diffsol:
-          type: boolean
-          default: true
         quantiles:
           type: array
           items:
@@ -5545,7 +5449,8 @@ components:
             minimum: 0.0
       required:
       - outputs
-    SimulateUncertaintyResponse:
+      - variables
+    SimulateResponse:
       type: object
       properties:
         time:
@@ -6032,6 +5937,10 @@ components:
           items:
             type: integer
           readOnly: true
+        distribution:
+          allOf:
+          - $ref: '#/components/schemas/Distribution'
+          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored

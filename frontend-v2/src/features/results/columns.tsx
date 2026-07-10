@@ -1,8 +1,5 @@
-import {
-  SimulateResponse,
-  TimeIntervalRead,
-  VariableRead,
-} from "../../app/backendApi";
+import { TimeIntervalRead, VariableRead } from "../../app/backendApi";
+import { MeanSimulateResponse } from "../simulation/types";
 
 import { Parameter } from "./useParameters";
 
@@ -10,8 +7,8 @@ interface ParametersProps {
   variable?: VariableRead;
   aucVariable?: VariableRead;
   concentrationVariables?: VariableRead[];
-  simulation?: SimulateResponse;
-  simulations: SimulateResponse[];
+  simulation?: MeanSimulateResponse;
+  simulations: MeanSimulateResponse[];
   parameter?: Parameter;
   parameters: Parameter[];
   interval?: TimeIntervalRead;

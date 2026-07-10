@@ -1,9 +1,9 @@
 import {
-  SimulateResponse,
   TimeIntervalRead,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
+import { MeanSimulateResponse } from "../simulation/types";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import {
   formattedNumber,
@@ -19,7 +19,7 @@ export type Parameter = {
   name: string | JSX.Element;
   value: (
     interval: TimeIntervalRead,
-    simulation: SimulateResponse,
+    simulation: MeanSimulateResponse,
     variable: VariableRead,
     aucVariable?: VariableRead,
   ) => string;
@@ -70,7 +70,7 @@ function useNormalisedVariables(variables: VariableListApiResponse) {
 const variablePerInterval = (
   intervals: TimeIntervalRead[],
   variable: VariableRead,
-  simulation: SimulateResponse,
+  simulation: MeanSimulateResponse,
   interval: TimeIntervalRead,
 ) => {
   const variableValuesPerInterval = valuesPerInterval(
@@ -158,7 +158,7 @@ export function useParameters() {
       name: "Start",
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         variable: VariableRead,
       ) {
         const [intervalValues] = variablePerInterval(
@@ -177,7 +177,7 @@ export function useParameters() {
       name: "End",
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         variable: VariableRead,
       ) {
         const [intervalValues] = variablePerInterval(
@@ -196,7 +196,7 @@ export function useParameters() {
       name: "Min",
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         variable: VariableRead,
       ) {
         const [intervalValues] = variablePerInterval(
@@ -214,7 +214,7 @@ export function useParameters() {
       name: "Max",
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         variable: VariableRead,
       ) {
         const [intervalValues] = variablePerInterval(
@@ -231,7 +231,7 @@ export function useParameters() {
       name: "AUC",
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         variable: VariableRead,
       ) {
         const [compartmentName, name] = variable.qname.split(".");
@@ -254,7 +254,7 @@ export function useParameters() {
       ),
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         baseVariable: VariableRead,
       ) {
         const variable = variables.find((v) => v.id === baseVariable.id);
@@ -286,7 +286,7 @@ export function useParameters() {
       ),
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         baseVariable: VariableRead,
       ) {
         const variable = variables.find((v) => v.id === baseVariable.id);
@@ -318,7 +318,7 @@ export function useParameters() {
       ),
       value(
         interval: TimeIntervalRead,
-        simulation: SimulateResponse,
+        simulation: MeanSimulateResponse,
         baseVariable: VariableRead,
       ) {
         const variable = variables.find((v) => v.id === baseVariable.id);

@@ -15,6 +15,8 @@ import {
   useVariableUpdateMutation,
   ProjectRead,
   VariableRead,
+  DistributionRead,
+  PdfEnum,
   CombinedModelRead,
   useVariableRetrieveQuery,
 } from "../../../app/backendApi";
@@ -54,6 +56,8 @@ const ParameterRow: FC<Props> = ({
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { isDirty },
   } = useForm<VariableRead>({
     defaultValues: variable || { name: "" },
@@ -237,6 +241,30 @@ const ParameterRow: FC<Props> = ({
 
   const variable_name = parameterDisplayName(variable, model);
 
+  const distribution = watch("distribution");
+  const distributionOptions: { value: PdfEnum | ""; label: string }[] = [
+    { value: "", label: "None" },
+    { value: "normal", label: "Normal" },
+    { value: "lognormal", label: "Log-normal" },
+    { value: "logit", label: "Logit-normal" },
+  ];
+  const handleDistributionChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value as PdfEnum | "";
+    if (!value) {
+      setValue("distribution", null, { shouldDirty: true });
+    } else {
+      setValue(
+        "distribution",
+        {
+          ...distribution,
+          pdf: value,
+          variance: distribution?.variance ?? 0,
+        } as DistributionRead,
+        { shouldDirty: true },
+      );
+    }
+  };
+
   return (
     <TableRow>
       <TableCell size="small" sx={{ width: "5rem" }}>
@@ -278,6 +306,34 @@ const ParameterRow: FC<Props> = ({
           label="Upper"
           textFieldProps={defaultProps}
         />
+      </TableCell>
+      <TableCell size="small" sx={{ width: "12rem" }}>
+        <Stack direction="row" spacing={1}>
+          <Select
+            size="small"
+            sx={{ minWidth: "6rem" }}
+            value={distribution?.pdf ?? ""}
+            onChange={handleDistributionChange}
+            displayEmpty
+            {...defaultProps}
+          >
+            {distributionOptions.map((option) => (
+              <MenuItem value={option.value} key={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+          {distribution && (
+            <FloatField
+              sx={{ minWidth: "5rem" }}
+              size="small"
+              name="distribution.variance"
+              control={control}
+              label="Variance"
+              textFieldProps={defaultProps}
+            />
+          )}
+        </Stack>
       </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
         <UnitField

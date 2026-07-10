@@ -6,8 +6,9 @@ import {
   useCombinedModelSimulateCreateMutation,
   useVariableListQuery,
   ProjectRead,
-  SimulateResponse,
 } from "../../app/backendApi";
+import { MeanSimulateResponse } from "./types";
+import { simulateResponseToMean } from "./utils";
 import { useUnits } from "../results/useUnits";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
@@ -19,7 +20,7 @@ interface iExportSimulation {
 }
 
 const parseResponse = (
-  data: SimulateResponse,
+  data: MeanSimulateResponse,
   timeCol: number,
   label: string,
 ) => {
@@ -86,7 +87,8 @@ export default function useExportSimulation({
           return [`${key} (${unit?.symbol || ""})`, simInputs.variables[key]];
         });
         if (response?.data) {
-          const cols = Object.keys(response.data[0].outputs);
+          const meanData = simulateResponseToMean(response.data);
+          const cols = Object.keys(meanData[0].outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
@@ -106,7 +108,7 @@ export default function useExportSimulation({
           rows = [
             ...rows,
             [...varNames, "Group"],
-            ...response.data.flatMap((data, index) => {
+            ...meanData.flatMap((data, index) => {
               const label =
                 index === 0
                   ? "Sim-Group 1"

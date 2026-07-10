@@ -1,9 +1,9 @@
 import { createContext } from "react";
-import { SimulateResponse } from "../app/backendApi";
+import { MeanSimulateResponse } from "../features/simulation/types";
 
 interface SimulationContextType {
-  simulations: SimulateResponse[];
-  setSimulations: (simulations: SimulateResponse[]) => void;
+  simulations: MeanSimulateResponse[];
+  setSimulations: (simulations: MeanSimulateResponse[]) => void;
 }
 export const SimulationContext = createContext<SimulationContextType>({
   simulations: [],

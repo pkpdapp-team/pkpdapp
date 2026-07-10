@@ -5,12 +5,11 @@ import { SimulationContext } from "../../contexts/SimulationContext";
 import {
   CombinedModelRead,
   Simulate,
-  SimulateUncertainty,
-  SimulateUncertaintyResponse,
   SimulateResponse,
   useCombinedModelSimulateCreateMutation,
-  useCombinedModelSimulateUncertaintyCreateMutation,
 } from "../../app/backendApi";
+import { MeanSimulateResponse } from "./types";
+import { simulateResponseToMean } from "./utils";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { PageName } from "../main/mainSlice";
@@ -20,62 +19,35 @@ interface ErrorObject {
 
 const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 
-type SimulateRequest = Simulate & Partial<SimulateUncertainty>;
+type SimulateRequest = Simulate;
 
-const hasUncertaintyRequest = (simInputs: SimulateRequest): boolean => {
-  const distributions = simInputs.variable_distributions;
-  return Boolean(distributions && Object.keys(distributions).length > 0);
-};
-
-const uncertaintyToSimulateResponse = (
-  response: SimulateUncertaintyResponse[],
-): SimulateResponse[] => {
-  return response.map((scenario) => ({
-    time: scenario.time,
-    group: scenario.group ?? null,
-    outputs: Object.fromEntries(
-      Object.entries(scenario.outputs).map(([variableId, summary]) => [
-        variableId,
-        summary.mean,
-      ]),
-    ),
-  }));
-};
+// The response carries spread (and so warrants uncertainty bands) only when more
+// than one sample was drawn, i.e. when at least one variable had a distribution.
+const hasUncertainty = (response: SimulateResponse[]): boolean =>
+  response.some((scenario) => scenario.sample_count > 1);
 
 function useFetchSimulations() {
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
-  const [simulateUncertainty, { error: simulateUncertaintyErrorBase }] =
-    useCombinedModelSimulateUncertaintyCreateMutation();
 
   const fetchSimulation = useCallback(
     (model: CombinedModelRead, simInputs: SimulateRequest) => {
-      if (hasUncertaintyRequest(simInputs)) {
-        return simulateUncertainty({
-          id: model.id,
-          simulateUncertainty: simInputs,
-        });
-      }
-
       return simulate({
         id: model.id,
         simulate: simInputs,
       });
     },
-    [simulate, simulateUncertainty],
+    [simulate],
   );
 
   return {
     fetchSimulation,
-    simulateErrorBase: simulateUncertaintyErrorBase || simulateErrorBase,
+    simulateErrorBase,
   };
 }
 
-const simulationCache = new Map<string, SimulateResponse[]>();
-const uncertaintySimulationCache = new Map<
-  string,
-  SimulateUncertaintyResponse[]
->();
+const simulationCache = new Map<string, MeanSimulateResponse[]>();
+const uncertaintySimulationCache = new Map<string, SimulateResponse[]>();
 
 export default function useSimulation(
   simInputs: SimulateRequest,
@@ -85,10 +57,10 @@ export default function useSimulation(
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
-  const [data, setData] = useState<SimulateResponse[]>([]);
-  const [uncertaintyData, setUncertaintyData] = useState<
-    SimulateUncertaintyResponse[]
-  >([]);
+  const [data, setData] = useState<MeanSimulateResponse[]>([]);
+  const [uncertaintyData, setUncertaintyData] = useState<SimulateResponse[]>(
+    [],
+  );
   const { fetchSimulation, simulateErrorBase } = useFetchSimulations();
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase
@@ -110,20 +82,16 @@ export default function useSimulation(
       const response = await fetchSimulation(model, simInputs);
       if (!ignore) {
         if ("data" in response) {
-          if (hasUncertaintyRequest(simInputs)) {
-            const responseData = response.data as SimulateUncertaintyResponse[];
-            const meanData = uncertaintyToSimulateResponse(responseData);
-            setData(meanData);
+          const responseData = response.data as SimulateResponse[];
+          const meanData = simulateResponseToMean(responseData);
+          setData(meanData);
+          setSimulations(meanData);
+          simulationCache.set(cacheKey, meanData);
+          if (hasUncertainty(responseData)) {
             setUncertaintyData(responseData);
-            setSimulations(meanData);
-            simulationCache.set(cacheKey, meanData);
             uncertaintySimulationCache.set(cacheKey, responseData);
           } else {
-            const responseData = response.data as SimulateResponse[];
-            setData(responseData);
             setUncertaintyData([]);
-            setSimulations(responseData);
-            simulationCache.set(cacheKey, responseData);
             uncertaintySimulationCache.delete(cacheKey);
           }
         }

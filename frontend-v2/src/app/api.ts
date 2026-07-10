@@ -279,10 +279,12 @@ export const api = backendApi.enhanceEndpoints({
             (draftVariables) => {
               const index = draftVariables.findIndex((v) => v.id === id);
               if (index !== -1) {
+                // `variable` is the write shape (distribution has no id); cast the
+                // optimistic merge to the read shape. The real response replaces it.
                 draftVariables[index] = {
                   ...draftVariables[index],
                   ...variable,
-                };
+                } as (typeof draftVariables)[number];
               }
             },
             true,

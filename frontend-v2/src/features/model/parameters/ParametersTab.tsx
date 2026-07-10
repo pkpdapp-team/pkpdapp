@@ -121,6 +121,17 @@ const ParametersTab: FC<Props> = ({
               </TableCell>
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>
+                  Variability{" "}
+                  <HelpButton title="Variability">
+                    Give this parameter a distribution to run a population
+                    (Monte-Carlo) simulation. The parameter value is the typical
+                    value; the variance sets the spread of the random effect.
+                    Log-normal keeps values positive; logit keeps them in (0, 1).
+                  </HelpButton>{" "}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div style={{ ...defaultHeaderSx }}>
                   {" "}
                   Unit{" "}
                   <HelpButton title="Unit Column">
@@ -150,7 +161,7 @@ const ParametersTab: FC<Props> = ({
           <TableBody>
             {constVariables.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>No variables found</TableCell>
+                <TableCell colSpan={9}>No variables found</TableCell>
               </TableRow>
             )}
             {constVariables.map((variable) => (
