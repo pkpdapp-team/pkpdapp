@@ -18,8 +18,6 @@ from .views import (
     SimulateCombinedView,
     SimulatePdView,
     OptimiseCombinedView,
-    SimulateUncertaintyCombinedView,
-    SimulateUncertaintyPdView,
     UnitView,
     BiomarkerTypeView,
     VariableView,

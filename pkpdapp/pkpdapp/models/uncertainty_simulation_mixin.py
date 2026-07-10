@@ -4,12 +4,16 @@
 # copyright notice and full license details.
 #
 
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
+
+if TYPE_CHECKING:
+    from pkpdapp.models import Distribution
 
 
 class UncertaintySimulationMixin:
     DEFAULT_SIMULATION_QUANTILES = [0.05, 0.5, 0.95]
-    DISTRIBUTION_TYPES = ("normal", "lognormal", "logitnormal")
 
     def _validate_quantiles(self, quantiles):
         if quantiles is None:
@@ -24,71 +28,26 @@ class UncertaintySimulationMixin:
 
         return sorted(set(quantiles))
 
-    def _get_distribution_std(self, qname, distribution):
-        mean = distribution.get("mean")
-        variance = distribution.get("variance")
-        std = distribution.get("std")
+    def _validate_variable_distributions(self, variables, variable_distributions):
+        """Validate every distribution before any sampling happens.
 
-        if mean is None:
-            raise ValueError(f"distribution for {qname} is missing mean")
-
-        if variance is None and std is None:
-            raise ValueError(f"distribution for {qname} must define variance or std")
-
-        if variance is not None and variance < 0:
-            raise ValueError(f"distribution for {qname} has negative variance")
-
-        if std is not None and std < 0:
-            raise ValueError(f"distribution for {qname} has negative std")
-
-        if std is None:
-            std = float(np.sqrt(variance))
-
-        return float(mean), float(std)
-
-    def _get_distribution_params(self, qname, distribution):
-        """Validate a distribution dict and return (type, mean, std).
-
-        ``mean`` is the typical parameter value P; ``std`` is the standard
-        deviation of the ETA (the underlying normal random effect). The optional
-        ``type`` key selects the sampling distribution and defaults to "normal".
+        ``simulate`` runs this up front so the sampling pipeline below can assume
+        every distribution is valid. The typical value P for each variable is read
+        from ``variables``. Raises ``ValueError`` (surfaced as HTTP 400) naming the
+        offending variable.
         """
-        dist_type = distribution.get("type", "normal")
-        if dist_type not in self.DISTRIBUTION_TYPES:
-            raise ValueError(
-                f"distribution for {qname} has unknown type '{dist_type}'; "
-                f"must be one of {list(self.DISTRIBUTION_TYPES)}"
-            )
-
-        mean, std = self._get_distribution_std(qname, distribution)
-
-        if dist_type == "lognormal" and mean <= 0:
-            raise ValueError(
-                f"log-normal distribution for {qname} requires mean > 0"
-            )
-        if dist_type == "logitnormal" and not (0 < mean < 1):
-            raise ValueError(
-                f"logit-normal distribution for {qname} requires 0 < mean < 1"
-            )
-
-        return dist_type, mean, std
+        for qname, distribution in variable_distributions.items():
+            try:
+                distribution.validate(variables[qname])
+            except ValueError as e:
+                raise ValueError(f"distribution for {qname}: {e}")
 
     def _sample_variables(self, variables, variable_distributions, rng):
         sampled_variables = {**variables}
         for qname, distribution in variable_distributions.items():
-            dist_type, mean, std = self._get_distribution_params(qname, distribution)
-            if dist_type == "lognormal":
-                # log(Pi) = log(P) + ETA, ETA ~ N(0, variance)
-                eta = rng.normal(0.0, std)
-                value = mean * np.exp(eta)
-            elif dist_type == "logitnormal":
-                # Pi = exp(ETA)*P / (exp(ETA)*P - P + 1), ETA ~ N(0, variance)
-                eta = rng.normal(0.0, std)
-                e = np.exp(eta) * mean
-                value = e / (e - mean + 1.0)
-            else:  # normal (default, unchanged behaviour)
-                value = rng.normal(mean, std)
-            sampled_variables[qname] = float(value)
+            # distributions are validated up front by simulate(); the typical value
+            # P is the variable's value in ``variables``.
+            sampled_variables[qname] = distribution.sample(variables[qname], rng)
         return sampled_variables
 
     def _aggregate_sampled_outputs(self, sampled_outputs, quantiles):
@@ -116,29 +75,24 @@ class UncertaintySimulationMixin:
 
     def simulate_uncertainty(
         self,
-        outputs=None,
-        variables=None,
-        time_max=None,
-        variable_distributions=None,
-        sample_count=200,
-        seed=None,
-        use_diffsol=True,
-        quantiles=None,
-    ):
+        outputs: list[str] | None = None,
+        variables: dict[str, float] | None = None,
+        time_max: float | None = None,
+        variable_distributions: dict[str, "Distribution"] | None = None,
+        sample_count: int = 200,
+        seed: int | None = None,
+        use_diffsol: bool = True,
+        quantiles: list[float] | None = None,
+    ) -> list[dict[str, Any]]:
         """Simulate the model over a Monte-Carlo population of parameter samples.
 
-        ``variable_distributions`` maps a variable qname to a distribution dict.
-        Each dict carries the typical value in ``mean`` and the ETA spread in
-        ``variance`` or ``std``, plus an optional ``type`` selecting how the
-        parameter Pi is drawn (default "normal"):
-
-          - "normal":      Pi ~ N(mean, std^2)
-          - "lognormal":   log(Pi) = log(P) + ETA, ETA ~ N(0, variance); P = mean
-          - "logitnormal": Pi = exp(ETA)*P / (exp(ETA)*P - P + 1),
-                           ETA ~ N(0, variance); P = mean. Output lies in (0, 1),
-                           so mean must satisfy 0 < mean < 1.
-
-        log-normal requires mean > 0.
+        ``variable_distributions`` maps a variable qname to a
+        :class:`~pkpdapp.models.Distribution` instance. The typical value P for
+        each distributed variable is taken from ``variables`` (which ``simulate``
+        fills with the variable's default when not overridden). Distributions are
+        assumed to be already validated (see
+        ``_validate_variable_distributions``); each sample is drawn by
+        ``Distribution.sample``.
         """
         if sample_count <= 0:
             raise ValueError("sample_count must be greater than 0")
