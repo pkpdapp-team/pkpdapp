@@ -121,12 +121,13 @@ const ParametersTab: FC<Props> = ({
               </TableCell>
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>
-                  Variability{" "}
-                  <HelpButton title="Variability">
-                    Give this parameter a distribution to run a population
+                  Population{" "}
+                  <HelpButton title="Population">
+                    Tick to make this a population parameter and run a population
                     (Monte-Carlo) simulation. The parameter value is the typical
-                    value; the variance sets the spread of the random effect.
-                    Log-normal keeps values positive; logit keeps them in (0, 1).
+                    value; the variance sets the spread of the random effect. The
+                    distribution defaults from the bounds (logit for a parameter
+                    bounded to 0–1, otherwise log-normal) and can be changed.
                   </HelpButton>{" "}
                 </div>
               </TableCell>
