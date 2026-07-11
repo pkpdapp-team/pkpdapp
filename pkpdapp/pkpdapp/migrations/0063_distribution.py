@@ -7,22 +7,69 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0062_remove_inference'),
+        ("pkpdapp", "0062_remove_inference"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Distribution',
+            name="Distribution",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('read_only', models.BooleanField(default=False, help_text='true if object has been stored')),
-                ('datetime', models.DateTimeField(blank=True, help_text='datetime the object was stored.', null=True)),
-                ('pdf', models.CharField(choices=[('normal', 'Normal'), ('lognormal', 'Log-normal'), ('logit', 'Logit-normal')], default='normal', help_text='probability density function', max_length=10)),
-                ('variance', models.FloatField(default=0.0, help_text='variance of the ETA (normal random effect)')),
-                ('variable', models.OneToOneField(help_text='variable this distribution applies to', on_delete=django.db.models.deletion.CASCADE, related_name='distribution', to='pkpdapp.variable')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "read_only",
+                    models.BooleanField(
+                        default=False,
+                        help_text="true if object has been stored",
+                    ),
+                ),
+                (
+                    "datetime",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="datetime the object was stored.",
+                        null=True,
+                    ),
+                ),
+                (
+                    "pdf",
+                    models.CharField(
+                        choices=[
+                            ("normal", "Normal"),
+                            ("lognormal", "Log-normal"),
+                            ("logit", "Logit-normal"),
+                        ],
+                        default="normal",
+                        help_text="probability density function",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "variance",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="variance of the ETA (normal random effect)",
+                    ),
+                ),
+                (
+                    "variable",
+                    models.OneToOneField(
+                        help_text="variable this distribution applies to",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="distribution",
+                        to="pkpdapp.variable",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
