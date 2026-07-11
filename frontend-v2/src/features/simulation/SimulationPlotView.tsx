@@ -9,7 +9,7 @@ import {
   useEfficacyExperimentRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
-import { MeanSimulateResponse } from "./types";
+import { CentralSimulateResponse } from "./types";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Data, Layout, ScatterData } from "plotly.js";
 import Plotly from "plotly.js-basic-dist-min";
@@ -45,9 +45,9 @@ const Plot = createPlotlyComponent(Plotly);
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: MeanSimulateResponse[];
+  data: CentralSimulateResponse[];
   uncertaintyData: SimulateResponse[];
-  dataReference: MeanSimulateResponse[];
+  dataReference: CentralSimulateResponse[];
   uncertaintyReferenceData: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;

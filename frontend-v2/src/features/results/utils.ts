@@ -3,7 +3,7 @@ import {
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
-import { MeanSimulateResponse } from "../simulation/types";
+import { CentralSimulateResponse } from "../simulation/types";
 
 import { Parameter } from "./useParameters";
 import { columns } from "./columns";
@@ -31,7 +31,7 @@ function interpolate(x: [number, number], y: [number, number], x0: number) {
 export function valuesPerInterval(
   timeIntervals: TimeIntervalRead[],
   variable?: VariableRead,
-  simulation?: MeanSimulateResponse,
+  simulation?: CentralSimulateResponse,
 ) {
   const times = simulation?.time || [];
   const tMax = times[times.length - 1];
@@ -202,8 +202,8 @@ interface TableRowProps {
   interval?: TimeIntervalRead;
   intervals: TimeIntervalRead[];
   variables: VariableListApiResponse | undefined;
-  simulation?: MeanSimulateResponse;
-  simulations: MeanSimulateResponse[];
+  simulation?: CentralSimulateResponse;
+  simulations: CentralSimulateResponse[];
   parameter?: Parameter;
   parameters: Parameter[];
   variable?: VariableRead;

@@ -11,7 +11,7 @@ import {
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
 } from "../../app/backendApi";
-import { MeanSimulateResponse } from "./types";
+import { CentralSimulateResponse } from "./types";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import {
@@ -29,7 +29,7 @@ import {
 const Plot = createPlotlyComponent(Plotly);
 
 interface OptimisationPredictionsPlotProps {
-  predictions: MeanSimulateResponse[];
+  predictions: CentralSimulateResponse[];
   plots: SimulationPlot[];
   variables: VariableRead[];
   units: UnitReadWithCompatible[];

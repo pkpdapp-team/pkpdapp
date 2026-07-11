@@ -11,7 +11,6 @@ import {
   MenuItem,
   Stack,
   Checkbox as MuiCheckbox,
-  FormControlLabel,
 } from "@mui/material";
 import {
   useVariableUpdateMutation,
@@ -333,48 +332,6 @@ const ParameterRow: FC<Props> = ({
           textFieldProps={defaultProps}
         />
       </TableCell>
-      <TableCell size="small" sx={{ width: "14rem" }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <FormControlLabel
-            control={
-              <MuiCheckbox
-                size="small"
-                checked={!!distribution}
-                onChange={(event) =>
-                  handlePopulationToggle(event.target.checked)
-                }
-                disabled={defaultProps.disabled}
-              />
-            }
-            label="Population"
-          />
-          {distribution && (
-            <>
-              <Select
-                size="small"
-                sx={{ minWidth: "6rem" }}
-                value={distribution.pdf ?? "lognormal"}
-                onChange={handleDistributionChange}
-                {...defaultProps}
-              >
-                {distributionOptions.map((option) => (
-                  <MenuItem value={option.value} key={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              <FloatField
-                sx={{ minWidth: "5rem" }}
-                size="small"
-                name="distribution.variance"
-                control={control}
-                label="Variance"
-                textFieldProps={defaultProps}
-              />
-            </>
-          )}
-        </Stack>
-      </TableCell>
       <TableCell size="small" sx={{ width: "10rem" }}>
         <UnitField
           size="small"
@@ -396,7 +353,43 @@ const ParameterRow: FC<Props> = ({
           />
         )}
       </TableCell>
-      <TableCell size="small">
+      <TableCell size="small" sx={{ width: "19rem" }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <MuiCheckbox
+            size="small"
+            checked={!!distribution}
+            onChange={(event) => handlePopulationToggle(event.target.checked)}
+            disabled={defaultProps.disabled}
+            inputProps={{ "aria-label": "Population" }}
+          />
+          {distribution && (
+            <>
+              <Select
+                size="small"
+                sx={{ minWidth: "8.7rem" }}
+                value={distribution.pdf ?? "lognormal"}
+                onChange={handleDistributionChange}
+                {...defaultProps}
+              >
+                {distributionOptions.map((option) => (
+                  <MenuItem value={option.value} key={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FloatField
+                sx={{ minWidth: "4rem" }}
+                size="small"
+                name="distribution.variance"
+                control={control}
+                label="Variance"
+                textFieldProps={defaultProps}
+              />
+            </>
+          )}
+        </Stack>
+      </TableCell>
+      <TableCell size="small" sx={{ width: "20rem" }}>
         {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
             <Select

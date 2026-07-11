@@ -13,12 +13,12 @@ import {
   UnitRead,
   VariableRead,
 } from "../app/backendApi";
-import { MeanSimulateResponse } from "../features/simulation/types";
+import { CentralSimulateResponse } from "../features/simulation/types";
 import { simulationData } from "./simulations.mock";
 import { combinedModels, project, protocols, subjectGroups } from "./generated-mocks";
 import { computeCompatibleUnits } from "../shared/unitConversion";
 
-const baseSimulation = simulationData[0] as MeanSimulateResponse;
+const baseSimulation = simulationData[0] as CentralSimulateResponse;
 const outputIds = Object.keys(baseSimulation.outputs);
 const outputId = Number(outputIds[0]);
 const outputSeries = baseSimulation.outputs[String(outputId)] || [];

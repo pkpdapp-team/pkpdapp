@@ -8,8 +8,8 @@ import {
   SimulateResponse,
   useCombinedModelSimulateCreateMutation,
 } from "../../app/backendApi";
-import { MeanSimulateResponse } from "./types";
-import { simulateResponseToMean } from "./utils";
+import { CentralSimulateResponse } from "./types";
+import { simulateResponseToCentral } from "./utils";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { PageName } from "../main/mainSlice";
@@ -46,7 +46,7 @@ function useFetchSimulations() {
   };
 }
 
-const simulationCache = new Map<string, MeanSimulateResponse[]>();
+const simulationCache = new Map<string, CentralSimulateResponse[]>();
 const uncertaintySimulationCache = new Map<string, SimulateResponse[]>();
 
 export default function useSimulation(
@@ -57,7 +57,7 @@ export default function useSimulation(
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
-  const [data, setData] = useState<MeanSimulateResponse[]>([]);
+  const [data, setData] = useState<CentralSimulateResponse[]>([]);
   const [uncertaintyData, setUncertaintyData] = useState<SimulateResponse[]>(
     [],
   );
@@ -83,10 +83,10 @@ export default function useSimulation(
       if (!ignore) {
         if ("data" in response) {
           const responseData = response.data as SimulateResponse[];
-          const meanData = simulateResponseToMean(responseData);
-          setData(meanData);
-          setSimulations(meanData);
-          simulationCache.set(cacheKey, meanData);
+          const centralData = simulateResponseToCentral(responseData);
+          setData(centralData);
+          setSimulations(centralData);
+          simulationCache.set(cacheKey, centralData);
           if (hasUncertainty(responseData)) {
             setUncertaintyData(responseData);
             uncertaintySimulationCache.set(cacheKey, responseData);

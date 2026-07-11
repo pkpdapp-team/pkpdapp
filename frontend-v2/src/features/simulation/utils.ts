@@ -13,7 +13,7 @@ import {
   VariableRead,
   Y2ScaleEnum,
 } from "../../app/backendApi";
-import { MeanSimulateResponse } from "./types";
+import { CentralSimulateResponse } from "./types";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
@@ -26,18 +26,21 @@ import {
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
 
-// Reduce the full uncertainty response to the mean series used for plot lines and
-// CSV export (one flat number[] per output).
-export function simulateResponseToMean(
+// Reduce the full uncertainty response to the central series used for the plot line,
+// CSV export and results table (one flat number[] per output). Uses the median (P50)
+// so the line stays centred within the P5-P95 band for skewed population outputs;
+// falls back to the mean if no median quantile is present. For a deterministic run
+// (single sample) the median equals the mean equals the value.
+export function simulateResponseToCentral(
   response: SimulateResponse[],
-): MeanSimulateResponse[] {
+): CentralSimulateResponse[] {
   return response.map((scenario) => ({
     time: scenario.time,
     group: scenario.group ?? null,
     outputs: Object.fromEntries(
       Object.entries(scenario.outputs).map(([variableId, summary]) => [
         variableId,
-        summary.mean,
+        summary.quantiles?.["0.5"] ?? summary.mean,
       ]),
     ),
   }));
@@ -431,7 +434,7 @@ export function genIcLines(
 }
 
 export function generatePlotData(
-  d: MeanSimulateResponse,
+  d: CentralSimulateResponse,
   visibleGroups: string[],
   colour: string,
   dash: "dot" | "solid",
@@ -643,7 +646,7 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-  (data: MeanSimulateResponse, index: number) => {
+  (data: CentralSimulateResponse, index: number) => {
     const colourIndex = index + colourOffset;
     const colour = plotColours[colourIndex % plotColours.length];
     const group = groups?.find((g) => g.id === data.group);
@@ -666,9 +669,9 @@ const createPlot =
   };
 
 type PlotsProps = {
-  data: MeanSimulateResponse[];
+  data: CentralSimulateResponse[];
   uncertaintyData: SimulateResponse[];
-  dataReference: MeanSimulateResponse[];
+  dataReference: CentralSimulateResponse[];
   uncertaintyReferenceData: SimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   model: CombinedModelRead;
@@ -1069,7 +1072,7 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
 
 type ScatterPlotsProps = {
   biomarkerVariables: (number | undefined)[];
-  data: MeanSimulateResponse[];
+  data: CentralSimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   i: number;
   model: CombinedModelRead;
@@ -1136,16 +1139,16 @@ export const generateScatterPlots: (
 
 /**
  * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
- * MeanSimulateResponse[] so they can be consumed by the same plotting utilities.
+ * CentralSimulateResponse[] so they can be consumed by the same plotting utilities.
  *
  * The backend returns each entry as a plain dict keyed by integer variable id
- * (plus a "group_id" key).  MeanSimulateResponse expects:
+ * (plus a "group_id" key).  CentralSimulateResponse expects:
  *   { time: number[], group?: number|null, outputs: { [varId: string]: number[] } }
  */
 export function optimisePredictionsToSimulateResponses(
   predictions: { [key: string]: unknown }[],
   variables: VariableRead[],
-): MeanSimulateResponse[] {
+): CentralSimulateResponse[] {
   const timeVariable = variables.find((v) => v.binding === "time");
   return predictions.map((pred) => {
     const groupId = pred["group_id"] as number | null | undefined;

@@ -18,7 +18,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { SimulationContext } from "./contexts/SimulationContext";
-import { MeanSimulateResponse } from "./features/simulation/types";
+import { CentralSimulateResponse } from "./features/simulation/types";
 import { CollapsibleSidebarProvider } from "./shared/contexts/CollapsibleSidebarContext";
 import { ProjectDescriptionProvider } from "./shared/contexts/ProjectDescriptionContext";
 import { PageName, setPage } from "./features/main/mainSlice";
@@ -28,7 +28,7 @@ function App() {
   const isAuth = useSelector(isAuthenticated);
   const error = useSelector((state: RootState) => state.login.error);
   const signupMessage = useSelector(selectSignupMessage);
-  const [simulations, setSimulations] = useState<MeanSimulateResponse[]>([]);
+  const [simulations, setSimulations] = useState<CentralSimulateResponse[]>([]);
   const [showSignup, setShowSignup] = useState<boolean>(false);
   const simulationContext = {
     simulations,
