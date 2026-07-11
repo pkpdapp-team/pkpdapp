@@ -196,6 +196,13 @@ class Protocol(StoredModel):
             # create a copy of it and link to the new protocol
             try:
                 new_group = groups.get(name=self.group.name)
+                # subjects are copied up front in Dataset.copy (with no
+                # protocol), so link any that aren't already assigned to a
+                # protocol to this one (first protocol referencing the group
+                # wins, matching the previous behaviour)
+                new_group.subjects.filter(protocol__isnull=True).update(
+                    protocol=stored_protocol
+                )
             except SubjectGroup.DoesNotExist:
                 new_group = self.group.copy(
                     stored_protocol, new_project, new_dataset=new_dataset

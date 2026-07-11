@@ -74,6 +74,12 @@ class TestProject(TestCase):
             dataset=dataset,
             group=group,
         )
+        # subject with no group and no protocol: only copied if the dataset's
+        # subjects are copied directly, not via the protocol/group chain
+        subject_no_group = Subject.objects.create(
+            id_in_dataset=2,
+            dataset=dataset,
+        )
 
         protocol = Protocol.objects.create(
             name="my protocol",
@@ -117,6 +123,12 @@ class TestProject(TestCase):
             subject=subject,
             biomarker_type=biomarker_type,
             value=42.0,
+        )
+        biomarker_no_group = Biomarker.objects.create(
+            time=2.0,
+            subject=subject_no_group,
+            biomarker_type=biomarker_type,
+            value=43.0,
         )
 
         mapping = PkpdMapping.objects.create(
@@ -194,21 +206,28 @@ class TestProject(TestCase):
         self.assertEqual(new_group.name, "Group 1")
         self.assertEqual(new_group.id_in_dataset, "1")
 
-        self.assertEqual(new_dataset.subjects.count(), 1)
-        new_subject = new_dataset.subjects.first()
-        self.assertEqual(new_subject.id_in_dataset, 1)
+        self.assertEqual(new_dataset.subjects.count(), 2)
+        new_subject = new_dataset.subjects.get(id_in_dataset=1)
         self.assertEqual(new_subject.group, new_group)
+        # subject with no group/protocol should still be copied
+        new_subject_no_group = new_dataset.subjects.get(id_in_dataset=2)
+        self.assertEqual(new_subject_no_group.group, None)
+        self.assertEqual(new_subject_no_group.protocol, None)
 
         self.assertEqual(new_dataset.biomarker_types.count(), 1)
         new_biomarker_type = new_dataset.biomarker_types.first()
         self.assertEqual(new_biomarker_type.name, "my biomarker type")
         self.assertEqual(new_biomarker_type.variable.qname, "PDCompartment.C_Drug")
 
-        self.assertEqual(new_dataset.biomarker_types.first().biomarkers.count(), 1)
-        new_biomarker = new_dataset.biomarker_types.first().biomarkers.first()
+        self.assertEqual(new_biomarker_type.biomarkers.count(), 2)
+        new_biomarker = new_biomarker_type.biomarkers.get(subject=new_subject)
         self.assertNotEqual(new_biomarker.pk, biomarker.pk)
-        self.assertEqual(new_biomarker.subject, new_subject)
         self.assertEqual(new_biomarker.value, 42.0)
+        new_biomarker_no_group = new_biomarker_type.biomarkers.get(
+            subject=new_subject_no_group
+        )
+        self.assertNotEqual(new_biomarker_no_group.pk, biomarker_no_group.pk)
+        self.assertEqual(new_biomarker_no_group.value, 43.0)
 
         # check that the compound is there and has the right name
         new_compound = new_project.compound
