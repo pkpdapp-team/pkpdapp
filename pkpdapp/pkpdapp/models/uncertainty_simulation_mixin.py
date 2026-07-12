@@ -4,7 +4,12 @@
 # copyright notice and full license details.
 #
 
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
+
+if TYPE_CHECKING:
+    from pkpdapp.models import Distribution
 
 
 class UncertaintySimulationMixin:
@@ -23,33 +28,26 @@ class UncertaintySimulationMixin:
 
         return sorted(set(quantiles))
 
-    def _get_distribution_std(self, qname, distribution):
-        mean = distribution.get("mean")
-        variance = distribution.get("variance")
-        std = distribution.get("std")
+    def _validate_variable_distributions(self, variables, variable_distributions):
+        """Validate every distribution before any sampling happens.
 
-        if mean is None:
-            raise ValueError(f"distribution for {qname} is missing mean")
-
-        if variance is None and std is None:
-            raise ValueError(f"distribution for {qname} must define variance or std")
-
-        if variance is not None and variance < 0:
-            raise ValueError(f"distribution for {qname} has negative variance")
-
-        if std is not None and std < 0:
-            raise ValueError(f"distribution for {qname} has negative std")
-
-        if std is None:
-            std = float(np.sqrt(variance))
-
-        return float(mean), float(std)
+        ``simulate`` runs this up front so the sampling pipeline below can assume
+        every distribution is valid. The typical value P for each variable is read
+        from ``variables``. Raises ``ValueError`` (surfaced as HTTP 400) naming the
+        offending variable.
+        """
+        for qname, distribution in variable_distributions.items():
+            try:
+                distribution.validate(variables[qname])
+            except ValueError as e:
+                raise ValueError(f"distribution for {qname}: {e}")
 
     def _sample_variables(self, variables, variable_distributions, rng):
         sampled_variables = {**variables}
         for qname, distribution in variable_distributions.items():
-            mean, std = self._get_distribution_std(qname, distribution)
-            sampled_variables[qname] = float(rng.normal(mean, std))
+            # distributions are validated up front by simulate(); the typical value
+            # P is the variable's value in ``variables``.
+            sampled_variables[qname] = distribution.sample(variables[qname], rng)
         return sampled_variables
 
     def _aggregate_sampled_outputs(self, sampled_outputs, quantiles):
@@ -77,15 +75,25 @@ class UncertaintySimulationMixin:
 
     def simulate_uncertainty(
         self,
-        outputs=None,
-        variables=None,
-        time_max=None,
-        variable_distributions=None,
-        sample_count=200,
-        seed=None,
-        use_diffsol=True,
-        quantiles=None,
-    ):
+        outputs: list[str] | None = None,
+        variables: dict[str, float] | None = None,
+        time_max: float | None = None,
+        variable_distributions: dict[str, "Distribution"] | None = None,
+        sample_count: int = 200,
+        seed: int | None = None,
+        use_diffsol: bool = True,
+        quantiles: list[float] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Simulate the model over a Monte-Carlo population of parameter samples.
+
+        ``variable_distributions`` maps a variable qname to a
+        :class:`~pkpdapp.models.Distribution` instance. The typical value P for
+        each distributed variable is taken from ``variables`` (which ``simulate``
+        fills with the variable's default when not overridden). Distributions are
+        assumed to be already validated (see
+        ``_validate_variable_distributions``); each sample is drawn by
+        ``Distribution.sample``.
+        """
         if sample_count <= 0:
             raise ValueError("sample_count must be greater than 0")
 

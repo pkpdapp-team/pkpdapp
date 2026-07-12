@@ -42,8 +42,6 @@ from .protocol import ProtocolView
 from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
-    SimulateUncertaintyCombinedView,
-    SimulateUncertaintyPdView,
 )
 from .optimise import (
     OptimiseCombinedView,

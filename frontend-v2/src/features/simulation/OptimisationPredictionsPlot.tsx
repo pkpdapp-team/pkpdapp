@@ -6,12 +6,12 @@ import { Box } from "@mui/material";
 import {
   CombinedModelRead,
   CompoundRead,
-  SimulateResponse,
   SimulationPlot,
   SubjectGroupRead,
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import {
@@ -29,7 +29,7 @@ import {
 const Plot = createPlotlyComponent(Plotly);
 
 interface OptimisationPredictionsPlotProps {
-  predictions: SimulateResponse[];
+  predictions: CentralSimulateResponse[];
   plots: SimulationPlot[];
   variables: VariableRead[];
   units: UnitReadWithCompatible[];

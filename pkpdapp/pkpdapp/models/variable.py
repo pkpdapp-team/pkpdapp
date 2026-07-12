@@ -489,3 +489,16 @@ class Variable(StoredModel):
             new_biomarker_type.save()
 
         self.save()
+
+        # copy distribution (one-to-one)
+        from pkpdapp.models import Distribution
+
+        source_distribution = getattr(variable, "distribution", None)
+        Distribution.objects.filter(variable=self).delete()
+        if source_distribution is not None:
+            Distribution.objects.create(
+                variable=self,
+                pdf=source_distribution.pdf,
+                variance=source_distribution.variance,
+                read_only=source_distribution.read_only,
+            )

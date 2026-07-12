@@ -9,21 +9,21 @@ import {
   CombinedModelRead,
   CompoundRead,
   SimulateResponse,
-  SimulateUncertaintyResponse,
   Simulation,
   UnitRead,
   VariableRead,
 } from "../app/backendApi";
+import { CentralSimulateResponse } from "../features/simulation/types";
 import { simulationData } from "./simulations.mock";
 import { combinedModels, project, protocols, subjectGroups } from "./generated-mocks";
 import { computeCompatibleUnits } from "../shared/unitConversion";
 
-const baseSimulation = simulationData[0] as SimulateResponse;
+const baseSimulation = simulationData[0] as CentralSimulateResponse;
 const outputIds = Object.keys(baseSimulation.outputs);
 const outputId = Number(outputIds[0]);
 const outputSeries = baseSimulation.outputs[String(outputId)] || [];
 
-const uncertaintyData: SimulateUncertaintyResponse[] = [
+const uncertaintyData: SimulateResponse[] = [
   {
     time: baseSimulation.time,
     group: baseSimulation.group ?? null,

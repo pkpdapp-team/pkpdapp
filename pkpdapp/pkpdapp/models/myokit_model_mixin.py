@@ -6,7 +6,6 @@
 
 import logging
 import threading
-from typing import Any, cast
 
 import myokit
 import numpy as np
@@ -16,7 +15,6 @@ from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
 
 from pkpdapp.models.optimise_context import NOISE_MODELS, OptimiseContext
-from pkpdapp.models.simulate_context import SimulateContext
 from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 logger = logging.getLogger(__name__)
@@ -278,45 +276,91 @@ class MyokitModelMixin(UncertaintySimulationMixin):
     def get_time_max(self):
         return self.time_max
 
-    def simulate(self, outputs=None, variables=None, time_max=None, use_diffsol=True):
+    def _collect_variable_distributions(self, variables):
+        """Return ``{qname: Distribution}`` for constant variables that have one.
+
+        Also ensures ``variables`` carries the typical value P for each distributed
+        variable: the caller-supplied override if present, otherwise the variable's
+        default value. ``variables`` is mutated in place (``simulate`` passes a copy).
         """
+        variable_distributions = {}
+        for variable in self.variables.filter(constant=True):
+            # reverse one-to-one access returns None when no distribution exists
+            distribution = getattr(variable, "distribution", None)
+            if distribution is None:
+                continue
+            variables.setdefault(variable.qname, variable.get_default_value())
+            variable_distributions[variable.qname] = distribution
+        return variable_distributions
+
+    def simulate(
+        self,
+        outputs=None,
+        variables=None,
+        time_max=None,
+        use_diffsol=True,
+        sample_count=None,
+        seed=None,
+        quantiles=None,
+    ):
+        """
+        Simulate the model, running a Monte-Carlo population whenever any of the
+        model's variables carry a :class:`Distribution`.
+
+        The result always uses the uncertainty shape (mean/std/quantiles per
+        output). When no variable has a distribution a single deterministic run is
+        performed, so ``std`` is zero and every quantile equals the mean.
+
         Arguments
         ---------
         outputs: list
             list of output names to return
         variables: dict
-            dict mapping variable names to values for model parameters
+            dict mapping variable names to values for model parameters. For a
+            variable with a distribution this value is the typical value (P).
         time_max: float
             maximum time to simulate to
         use_diffsol: bool
             if True use diffsol, otherwise use the legacy Myokit solver
+        sample_count: int (optional)
+            number of Monte-Carlo samples to draw when distributions are present
+            (default 200). Ignored (forced to 1) when there are no distributions.
+        seed: int (optional)
+            seed for the random number generator
+        quantiles: list (optional)
+            quantiles to compute for each output
 
         Returns
         -------
-        output: dict
-            a dict with the following key, values:
+        output: list of dict
+            one dict per subject group, each with:
                 - "group_id": id of the subject group, None if no subject group
-                - <variable id>: list of time-series values
-            There is a <variable id> for all the requested outputs, including time
+                - "sample_count": number of samples drawn
+                - "time": list of time values
+                - "outputs": {<variable id>: {"mean", "std", "quantiles"}}
         """
 
-        context = SimulateContext(
-            model=self,
+        variables = dict(variables or {})
+        variable_distributions = self._collect_variable_distributions(variables)
+        # validate all distributions up front so the sampling pipeline
+        # (simulate_uncertainty) can assume everything is valid
+        self._validate_variable_distributions(variables, variable_distributions)
+        if not variable_distributions:
+            # deterministic run: a single sample gives std=0 and quantiles==mean
+            sample_count = 1
+        elif sample_count is None:
+            sample_count = 200
+
+        return self.simulate_uncertainty(
             outputs=outputs or [],
             variables=variables,
-            use_diffsol=use_diffsol,
             time_max=time_max,
+            variable_distributions=variable_distributions,
+            sample_count=sample_count,
+            seed=seed,
+            use_diffsol=use_diffsol,
+            quantiles=quantiles,
         )
-
-        result = []
-        for simulation_group in context.simulation_groups:
-            group_result = cast(
-                dict[Any, Any],
-                context.simulate_model(simulation_group),
-            )
-            group_result["group_id"] = simulation_group.group_id
-            result.append(group_result)
-        return result
 
     _OPTIMISE_METHODS = {
         "cmaes": "CMAES",

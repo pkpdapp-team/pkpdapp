@@ -149,16 +149,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.simulate,
       }),
     }),
-    combinedModelSimulateUncertaintyCreate: build.mutation<
-      CombinedModelSimulateUncertaintyCreateApiResponse,
-      CombinedModelSimulateUncertaintyCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/combined_model/${queryArg.id}/simulate_uncertainty`,
-        method: "POST",
-        body: queryArg.simulateUncertainty,
-      }),
-    }),
     compoundList: build.query<CompoundListApiResponse, CompoundListApiArg>({
       query: () => ({ url: `/api/compound/` }),
     }),
@@ -446,16 +436,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/pharmacodynamic/${queryArg.id}/simulate`,
         method: "POST",
         body: queryArg.simulate,
-      }),
-    }),
-    pharmacodynamicSimulateUncertaintyCreate: build.mutation<
-      PharmacodynamicSimulateUncertaintyCreateApiResponse,
-      PharmacodynamicSimulateUncertaintyCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/simulate_uncertainty`,
-        method: "POST",
-        body: queryArg.simulateUncertainty,
       }),
     }),
     pharmacokineticList: build.query<
@@ -1184,12 +1164,6 @@ export type CombinedModelSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
 };
-export type CombinedModelSimulateUncertaintyCreateApiResponse =
-  /** status 200  */ SimulateUncertaintyResponse[];
-export type CombinedModelSimulateUncertaintyCreateApiArg = {
-  id: number;
-  simulateUncertainty: SimulateUncertainty;
-};
 export type CompoundListApiResponse = /** status 200  */ CompoundRead[];
 export type CompoundListApiArg = void;
 export type CompoundCreateApiResponse = /** status 201  */ CompoundRead;
@@ -1373,12 +1347,6 @@ export type PharmacodynamicSimulateCreateApiResponse =
 export type PharmacodynamicSimulateCreateApiArg = {
   id: number;
   simulate: Simulate;
-};
-export type PharmacodynamicSimulateUncertaintyCreateApiResponse =
-  /** status 200  */ SimulateUncertaintyResponse[];
-export type PharmacodynamicSimulateUncertaintyCreateApiArg = {
-  id: number;
-  simulateUncertainty: SimulateUncertainty;
 };
 export type PharmacokineticListApiResponse =
   /** status 200  */ PharmacokineticRead[];
@@ -2276,11 +2244,19 @@ export type Optimise = {
   log_sigma_mult?: number[] | null;
   sigma_bounds_mult?: number[][] | null;
 };
+export type UncertaintySummary = {
+  mean: number[];
+  std: number[];
+  quantiles: {
+    [key: string]: number[];
+  };
+};
 export type SimulateResponse = {
   time: number[];
   group?: number | null;
+  sample_count: number;
   outputs: {
-    [key: string]: number[];
+    [key: string]: UncertaintySummary;
   };
 };
 export type Simulate = {
@@ -2290,36 +2266,8 @@ export type Simulate = {
   };
   time_max?: number;
   use_diffsol?: boolean;
-};
-export type UncertaintySummary = {
-  mean: number[];
-  std: number[];
-  quantiles: {
-    [key: string]: number[];
-  };
-};
-export type SimulateUncertaintyResponse = {
-  time: number[];
-  group?: number | null;
-  sample_count: number;
-  outputs: {
-    [key: string]: UncertaintySummary;
-  };
-};
-export type SimulateUncertainty = {
-  outputs: string[];
-  variables?: {
-    [key: string]: number;
-  };
-  variable_distributions?: {
-    [key: string]: {
-      [key: string]: any;
-    };
-  };
-  time_max?: number;
   sample_count?: number;
   seed?: number;
-  use_diffsol?: boolean;
   quantiles?: number[];
 };
 export type CompoundTypeEnum = "SM" | "LM";
@@ -3712,7 +3660,30 @@ export type PatchedUserRead = {
   profile?: ProfileRead;
   project_set?: number[];
 };
+export type PdfEnum = "normal" | "lognormal" | "logit";
+export type Distribution = {
+  /** probability density function
+    
+    * `normal` - Normal
+    * `lognormal` - Log-normal
+    * `logit` - Logit-normal */
+  pdf?: PdfEnum;
+  /** variance of the ETA (normal random effect) */
+  variance?: number;
+};
+export type DistributionRead = {
+  id: number;
+  /** probability density function
+    
+    * `normal` - Normal
+    * `lognormal` - Log-normal
+    * `logit` - Logit-normal */
+  pdf?: PdfEnum;
+  /** variance of the ETA (normal random effect) */
+  variance?: number;
+};
 export type Variable = {
+  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3766,6 +3737,7 @@ export type Variable = {
 export type VariableRead = {
   id: number;
   protocols: number[];
+  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3817,6 +3789,7 @@ export type VariableRead = {
   dosed_pk_model?: number | null;
 };
 export type PatchedVariable = {
+  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3870,6 +3843,7 @@ export type PatchedVariable = {
 export type PatchedVariableRead = {
   id?: number;
   protocols?: number[];
+  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -3937,7 +3911,6 @@ export const {
   useCombinedModelOptimiseCreateMutation,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
   useCombinedModelSimulateCreateMutation,
-  useCombinedModelSimulateUncertaintyCreateMutation,
   useCompoundListQuery,
   useCompoundCreateMutation,
   useCompoundRetrieveQuery,
@@ -3973,7 +3946,6 @@ export const {
   usePharmacodynamicMmtUpdateMutation,
   usePharmacodynamicSbmlUpdateMutation,
   usePharmacodynamicSimulateCreateMutation,
-  usePharmacodynamicSimulateUncertaintyCreateMutation,
   usePharmacokineticListQuery,
   usePharmacokineticCreateMutation,
   usePharmacokineticRetrieveQuery,

@@ -10,11 +10,14 @@ import {
   SelectChangeEvent,
   MenuItem,
   Stack,
+  Checkbox as MuiCheckbox,
 } from "@mui/material";
 import {
   useVariableUpdateMutation,
   ProjectRead,
   VariableRead,
+  DistributionRead,
+  PdfEnum,
   CombinedModelRead,
   useVariableRetrieveQuery,
 } from "../../../app/backendApi";
@@ -30,6 +33,19 @@ import { RootState } from "../../../app/store";
 import { DerivedVariableType } from "../derivedVariable";
 import { hasPerWeightOption } from "../../../shared/hasPerWeightOption";
 import parameterDisplayName from "./parameterDisplayName";
+
+// Variance pre-filled when a parameter is first made a population parameter.
+export const DEFAULT_POPULATION_VARIANCE = 0.09;
+
+// The default distribution for a newly-ticked population parameter: logit for a
+// parameter bounded to exactly [0, 1] (a probability/fraction), lognormal otherwise.
+export function defaultDistributionPdf(
+  lower?: number | null,
+  upper?: number | null,
+): PdfEnum {
+  return lower === 0 && upper === 1 ? "logit" : "lognormal";
+}
+
 interface Props {
   model: CombinedModelRead;
   project: ProjectRead;
@@ -54,6 +70,8 @@ const ParameterRow: FC<Props> = ({
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { isDirty },
   } = useForm<VariableRead>({
     defaultValues: variable || { name: "" },
@@ -237,6 +255,41 @@ const ParameterRow: FC<Props> = ({
 
   const variable_name = parameterDisplayName(variable, model);
 
+  const distribution = watch("distribution");
+  const distributionOptions: { value: PdfEnum; label: string }[] = [
+    { value: "normal", label: "Normal" },
+    { value: "lognormal", label: "Log-normal" },
+    { value: "logit", label: "Logit-normal" },
+  ];
+  const handlePopulationToggle = (checked: boolean) => {
+    if (checked) {
+      setValue(
+        "distribution",
+        {
+          pdf: defaultDistributionPdf(
+            watch("lower_bound"),
+            watch("upper_bound"),
+          ),
+          variance: DEFAULT_POPULATION_VARIANCE,
+        } as DistributionRead,
+        { shouldDirty: true },
+      );
+    } else {
+      setValue("distribution", null, { shouldDirty: true });
+    }
+  };
+  const handleDistributionChange = (event: SelectChangeEvent<string>) => {
+    setValue(
+      "distribution",
+      {
+        ...distribution,
+        pdf: event.target.value as PdfEnum,
+        variance: distribution?.variance ?? DEFAULT_POPULATION_VARIANCE,
+      } as DistributionRead,
+      { shouldDirty: true },
+    );
+  };
+
   return (
     <TableRow>
       <TableCell size="small" sx={{ width: "5rem" }}>
@@ -300,7 +353,43 @@ const ParameterRow: FC<Props> = ({
           />
         )}
       </TableCell>
-      <TableCell size="small">
+      <TableCell size="small" sx={{ width: "19rem" }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <MuiCheckbox
+            size="small"
+            checked={!!distribution}
+            onChange={(event) => handlePopulationToggle(event.target.checked)}
+            disabled={defaultProps.disabled}
+            inputProps={{ "aria-label": "Population" }}
+          />
+          {distribution && (
+            <>
+              <Select
+                size="small"
+                sx={{ minWidth: "8.7rem" }}
+                value={distribution.pdf ?? "lognormal"}
+                onChange={handleDistributionChange}
+                {...defaultProps}
+              >
+                {distributionOptions.map((option) => (
+                  <MenuItem value={option.value} key={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FloatField
+                sx={{ minWidth: "4rem" }}
+                size="small"
+                name="distribution.variance"
+                control={control}
+                label="Variance"
+                textFieldProps={defaultProps}
+              />
+            </>
+          )}
+        </Stack>
+      </TableCell>
+      <TableCell size="small" sx={{ width: "20rem" }}>
         {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
             <Select

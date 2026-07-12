@@ -5,7 +5,6 @@ import {
   CompoundRead,
   EfficacyExperimentRead,
   Optimise,
-  SimulateUncertaintyResponse,
   SimulateResponse,
   Simulation,
   SimulationSlider,
@@ -14,6 +13,7 @@ import {
   VariableRead,
   Y2ScaleEnum,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
 import { Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
@@ -25,6 +25,26 @@ import {
 } from "./useOptimise";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
+
+// Reduce the full uncertainty response to the central series used for the plot line,
+// CSV export and results table (one flat number[] per output). Uses the median (P50)
+// so the line stays centred within the P5-P95 band for skewed population outputs;
+// falls back to the mean if no median quantile is present. For a deterministic run
+// (single sample) the median equals the mean equals the value.
+export function simulateResponseToCentral(
+  response: SimulateResponse[],
+): CentralSimulateResponse[] {
+  return response.map((scenario) => ({
+    time: scenario.time,
+    group: scenario.group ?? null,
+    outputs: Object.fromEntries(
+      Object.entries(scenario.outputs).map(([variableId, summary]) => [
+        variableId,
+        summary.quantiles?.["0.5"] ?? summary.mean,
+      ]),
+    ),
+  }));
+}
 
 // Coerce the max-iterations text field to a valid positive integer, falling
 // back to the default for empty/zero/negative/non-integer input. Guards both
@@ -164,7 +184,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 const getQuantileBounds = (
-  uncertainty: SimulateUncertaintyResponse,
+  uncertainty: SimulateResponse,
   variableId: number,
 ): { lower: number[]; upper: number[] } | null => {
   const summary = uncertainty.outputs[String(variableId)];
@@ -414,7 +434,7 @@ export function genIcLines(
 }
 
 export function generatePlotData(
-  d: SimulateResponse,
+  d: CentralSimulateResponse,
   visibleGroups: string[],
   colour: string,
   dash: "dot" | "solid",
@@ -491,7 +511,7 @@ export function generatePlotData(
 }
 
 export function generateUncertaintyBandData(
-  uncertainty: SimulateUncertaintyResponse,
+  uncertainty: SimulateResponse,
   visibleGroups: string[],
   colour: string,
   index: number,
@@ -626,7 +646,7 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-  (data: SimulateResponse, index: number) => {
+  (data: CentralSimulateResponse, index: number) => {
     const colourIndex = index + colourOffset;
     const colour = plotColours[colourIndex % plotColours.length];
     const group = groups?.find((g) => g.id === data.group);
@@ -649,10 +669,10 @@ const createPlot =
   };
 
 type PlotsProps = {
-  data: SimulateResponse[];
-  uncertaintyData: SimulateUncertaintyResponse[];
-  dataReference: SimulateResponse[];
-  uncertaintyReferenceData: SimulateUncertaintyResponse[];
+  data: CentralSimulateResponse[];
+  uncertaintyData: SimulateResponse[];
+  dataReference: CentralSimulateResponse[];
+  uncertaintyReferenceData: SimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
@@ -1052,7 +1072,7 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
 
 type ScatterPlotsProps = {
   biomarkerVariables: (number | undefined)[];
-  data: SimulateResponse[];
+  data: CentralSimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   i: number;
   model: CombinedModelRead;
@@ -1119,16 +1139,16 @@ export const generateScatterPlots: (
 
 /**
  * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
- * SimulateResponse[] so they can be consumed by the same plotting utilities.
+ * CentralSimulateResponse[] so they can be consumed by the same plotting utilities.
  *
  * The backend returns each entry as a plain dict keyed by integer variable id
- * (plus a "group_id" key).  SimulateResponse expects:
+ * (plus a "group_id" key).  CentralSimulateResponse expects:
  *   { time: number[], group?: number|null, outputs: { [varId: string]: number[] } }
  */
 export function optimisePredictionsToSimulateResponses(
   predictions: { [key: string]: unknown }[],
   variables: VariableRead[],
-): SimulateResponse[] {
+): CentralSimulateResponse[] {
   const timeVariable = variables.find((v) => v.binding === "time");
   return predictions.map((pred) => {
     const groupId = pred["group_id"] as number | null | undefined;

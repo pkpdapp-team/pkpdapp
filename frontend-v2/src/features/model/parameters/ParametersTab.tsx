@@ -133,7 +133,19 @@ const ParametersTab: FC<Props> = ({
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ width: "19rem" }}>
+                <div style={{ ...defaultHeaderSx }}>
+                  Population{" "}
+                  <HelpButton title="Population">
+                    Tick to make this a population parameter and run a population
+                    (Monte-Carlo) simulation. The parameter value is the typical
+                    value; the variance sets the spread of the random effect. The
+                    distribution defaults from the bounds (logit for a parameter
+                    bounded to 0–1, otherwise log-normal) and can be changed.
+                  </HelpButton>{" "}
+                </div>
+              </TableCell>
+              <TableCell sx={{ width: "20rem" }}>
                 <div style={{ ...defaultHeaderSx }}>
                   Nonlinearity{" "}
                   <HelpButton title="Nonlinearity">
@@ -150,7 +162,7 @@ const ParametersTab: FC<Props> = ({
           <TableBody>
             {constVariables.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>No variables found</TableCell>
+                <TableCell colSpan={9}>No variables found</TableCell>
               </TableRow>
             )}
             {constVariables.map((variable) => (

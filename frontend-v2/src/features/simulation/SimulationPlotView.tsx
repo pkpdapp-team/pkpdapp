@@ -3,13 +3,13 @@ import createPlotlyComponent from "react-plotly.js/factory";
 import {
   CombinedModelRead,
   CompoundRead,
-  SimulateUncertaintyResponse,
   SimulateResponse,
   Simulation,
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Data, Layout, ScatterData } from "plotly.js";
 import Plotly from "plotly.js-basic-dist-min";
@@ -45,10 +45,10 @@ const Plot = createPlotlyComponent(Plotly);
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: SimulateResponse[];
-  uncertaintyData: SimulateUncertaintyResponse[];
-  dataReference: SimulateResponse[];
-  uncertaintyReferenceData: SimulateUncertaintyResponse[];
+  data: CentralSimulateResponse[];
+  uncertaintyData: SimulateResponse[];
+  dataReference: CentralSimulateResponse[];
+  uncertaintyReferenceData: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;

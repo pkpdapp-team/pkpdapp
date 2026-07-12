@@ -3,7 +3,8 @@ import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-basic-dist-min";
 import { Data } from "plotly.js";
 import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
-import { SimulateResponse, SubjectGroupRead, VariableRead } from "../../app/backendApi";
+import { SubjectGroupRead, VariableRead } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
 import { plotColours } from "./utils";
 
 const Plot = createPlotlyComponent(Plotly);
@@ -31,8 +32,8 @@ interface ResidualPoint {
 }
 
 interface OptimisationResidualPlotsProps {
-  predictions: SimulateResponse[];
-  residuals: SimulateResponse[];
+  predictions: CentralSimulateResponse[];
+  residuals: CentralSimulateResponse[];
   variables: VariableRead[];
   groups: SubjectGroupRead[] | undefined;
 }

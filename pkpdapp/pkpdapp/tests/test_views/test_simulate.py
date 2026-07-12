@@ -85,15 +85,24 @@ class TestSimulateView(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # With no distributions, simulate returns the uncertainty shape from a
+        # single deterministic run: sample_count == 1 and std all zeros.
         for sim in response.data:
+            self.assertEqual(sim["sample_count"], 1)
+            self.assertTrue(len(sim["time"]) > 0)
             outputs = sim.get("outputs")
             self.assertCountEqual(
                 list(outputs.keys()),
                 [
-                    Variable.objects.get(qname=qname, dosed_pk_model=m).id
+                    str(Variable.objects.get(qname=qname, dosed_pk_model=m).id)
                     for qname in data["outputs"]
                 ],
             )
+            for summary in outputs.values():
+                self.assertIn("mean", summary)
+                self.assertIn("std", summary)
+                self.assertIn("quantiles", summary)
+                self.assertTrue(all(s == 0.0 for s in summary["std"]))
 
         legacy_data = {**data, "use_diffsol": False}
         response = self.client.post(url, legacy_data, format="json")
@@ -110,7 +119,7 @@ class TestSimulateView(APITestCase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_simulate_uncertainty(self):
+    def _uncertainty_model(self):
         pd = PharmacodynamicModel.objects.get(
             name='tumour_growth_gompertz',
             read_only=False,
@@ -118,80 +127,74 @@ class TestSimulateView(APITestCase):
         pk = PharmacokineticModel.objects.get(
             name='one_compartment_clinical',
         )
-        m = CombinedModel.objects.create(
+        return CombinedModel.objects.create(
             name='my wonderful model',
             pd_model=pd,
             pk_model=pk,
             project=self.project,
         )
 
-        url = reverse('simulate-uncertainty-combined-model', args=(m.pk,))
+    def test_simulate_with_distribution(self):
+        from pkpdapp.models import Distribution
+
+        m = self._uncertainty_model()
+        variable = Variable.objects.get(
+            qname='PDCompartment.TS0', dosed_pk_model=m
+        )
+        Distribution.objects.create(
+            variable=variable,
+            pdf=Distribution.PDF.LOGNORMAL,
+            variance=0.04,
+        )
+
+        url = reverse('simulate-combined-model', args=(m.pk,))
         data = {
             'outputs': ['PDCompartment.TS', 'environment.t'],
-            'variables': {
-                'PDCompartment.TS0': 1.1,
-            },
-            'variable_distributions': {
-                'PDCompartment.TS0': {
-                    'mean': 1.1,
-                    'variance': 0.01,
-                }
-            },
+            'variables': {'PDCompartment.TS0': 1.1},
             'sample_count': 20,
             'seed': 42,
-            'quantiles': [0.1, 0.5, 0.9],
         }
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        repeated_response = self.client.post(url, data, format='json')
-        self.assertEqual(repeated_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, repeated_response.data)
-
-        data_without_variables = {
-            key: value for key, value in data.items() if key != 'variables'
-        }
-        response_without_variables = self.client.post(
-            url,
-            data_without_variables,
-            format='json',
+        ts_output_id = str(
+            Variable.objects.get(qname='PDCompartment.TS', dosed_pk_model=m).id
         )
-        self.assertEqual(
-            response_without_variables.status_code,
-            status.HTTP_200_OK,
-        )
-
+        has_spread = False
         for sim in response.data:
             self.assertEqual(sim['sample_count'], 20)
             self.assertTrue(len(sim['time']) > 0)
-            outputs = sim['outputs']
-            self.assertCountEqual(
-                list(outputs.keys()),
-                [
-                    str(Variable.objects.get(qname=qname, dosed_pk_model=m).id)
-                    for qname in data['outputs']
-                ],
-            )
-            for summary in outputs.values():
-                self.assertIn('mean', summary)
-                self.assertIn('std', summary)
-                self.assertIn('quantiles', summary)
-                self.assertEqual(len(summary['mean']), len(sim['time']))
-                self.assertEqual(len(summary['std']), len(sim['time']))
-                self.assertCountEqual(
-                    list(summary['quantiles'].keys()),
-                    ['0.1', '0.5', '0.9'],
-                )
+            summary = sim['outputs'][ts_output_id]
+            if any(s > 0.0 for s in summary['std']):
+                has_spread = True
+        self.assertTrue(has_spread)
 
-        invalid_variance_data = {
-            **data,
-            'variable_distributions': {
-                'PDCompartment.TS0': {
-                    'mean': 1.1,
-                    'variance': -0.1,
-                }
-            },
+        # reproducible with the same seed
+        repeated = self.client.post(url, data, format='json')
+        self.assertEqual(repeated.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, repeated.data)
+
+    def test_simulate_with_logit_distribution_out_of_range(self):
+        from pkpdapp.models import Distribution
+
+        m = self._uncertainty_model()
+        variable = Variable.objects.get(
+            qname='PDCompartment.TS0', dosed_pk_model=m
+        )
+        Distribution.objects.create(
+            variable=variable,
+            pdf=Distribution.PDF.LOGIT,
+            variance=0.09,
+        )
+
+        url = reverse('simulate-combined-model', args=(m.pk,))
+        # P = 1.1 is outside (0, 1); logit sampling must reject it
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variables': {'PDCompartment.TS0': 1.1},
+            'sample_count': 20,
+            'seed': 42,
         }
-        response = self.client.post(url, invalid_variance_data, format='json')
+        response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
