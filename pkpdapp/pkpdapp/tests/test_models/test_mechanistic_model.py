@@ -116,11 +116,10 @@ class TestDosedPharmokineticModel(TestCase):
             time_max=self.model.time_max,
             use_diffsol=False,
         )[0]
-        time_id = self.model.variables.get(qname="environment.t").id
         c1_id = self.model.variables.get(qname="PKCompartment.C1").id
-        index = np.where(np.array(output[time_id]) > 0.5)[0][0]
+        index = np.where(np.array(output["time"]) > 0.5)[0][0]
         self.assertGreater(
-            output[c1_id][index],
+            output["outputs"][c1_id]["mean"][index],
             0.01,
         )
 
@@ -130,10 +129,9 @@ class TestDosedPharmokineticModel(TestCase):
             time_max=self.pk.time_max,
             use_diffsol=False,
         )[0]
-        time_id = self.pk.variables.get(qname="environment.t").id
         c1_id = self.pk.variables.get(qname="PKCompartment.C1").id
-        index = np.where(np.array(output[time_id]) > 0.5)[0][0]
+        index = np.where(np.array(output["time"]) > 0.5)[0][0]
         self.assertLess(
-            output[c1_id][index],
+            output["outputs"][c1_id]["mean"][index],
             1e-6,
         )

@@ -154,7 +154,10 @@ class TestSimulateContext(TestCase):
             time_max=12,
             use_diffsol=False,
         )[1]
-        expected_myokit.pop("group_id")
+        expected_myokit = {
+            variable_id: summary["mean"]
+            for variable_id, summary in expected_myokit["outputs"].items()
+        }
         self.assertEqual(context.simulate_model(simulation_group), expected_myokit)
 
         expected_diffsol = model.simulate(
@@ -163,7 +166,10 @@ class TestSimulateContext(TestCase):
             time_max=12,
             use_diffsol=True,
         )[1]
-        expected_diffsol.pop("group_id")
+        expected_diffsol = {
+            variable_id: summary["mean"]
+            for variable_id, summary in expected_diffsol["outputs"].items()
+        }
         self.assertEqual(
             diffsol_context.simulate_model(diffsol_context.simulation_groups[1]),
             expected_diffsol,
