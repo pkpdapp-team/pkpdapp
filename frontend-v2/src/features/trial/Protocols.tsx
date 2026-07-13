@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { FC, SyntheticEvent, useMemo, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   TableRow,
   Tabs,
   Tab,
+  TextField,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
 import IconNonButton from "../../components/IconNonButton";
@@ -19,6 +20,7 @@ import {
   useCombinedModelListQuery,
   useSubjectGroupCreateMutation,
   useSubjectGroupDestroyMutation,
+  useSubjectGroupPartialUpdateMutation,
   useUnitListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
@@ -39,6 +41,10 @@ import { TableHeader } from "../../components/TableHeader";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { selectIsProjectShared } from "../login/loginSlice";
+
+// Sentinel tab value for the hardcoded "Sim-Group 1" tab, which represents the
+// base project protocols (protocol.group === null) and has no SubjectGroup id.
+const BASE_TAB = -1;
 
 const TABLE_BREAKPOINTS = [
   {
@@ -150,10 +156,21 @@ export const Protocols: FC<ProtocolsProps> = ({
   refetchGroups,
   isSharedWithMe,
 }) => {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState<number>(BASE_TAB);
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the inline editor when a group enters edit mode.
+  useEffect(() => {
+    if (editingGroupId !== null) {
+      editInputRef.current?.focus();
+    }
+  }, [editingGroupId]);
 
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
+  const [updateSubjectGroup] = useSubjectGroupPartialUpdateMutation();
 
   const handleTabChange = (
     event: SyntheticEvent<Element, Event>,
@@ -163,6 +180,33 @@ export const Protocols: FC<ProtocolsProps> = ({
       return; // Prevent tab change when clicking on the remove icon
     }
     setTab(newValue);
+  };
+
+  const startEditing = (group: SubjectGroupRead) => {
+    if (isSharedWithMe) {
+      return; // Read-only viewers cannot rename groups
+    }
+    setEditingGroupId(group.id);
+    setEditValue(group.name);
+  };
+
+  const cancelEditing = () => {
+    setEditingGroupId(null);
+    setEditValue("");
+  };
+
+  const commitEditing = async (group: SubjectGroupRead) => {
+    const trimmed = editValue.trim();
+    if (trimmed === "" || trimmed === group.name) {
+      cancelEditing();
+      return;
+    }
+    await updateSubjectGroup({
+      id: group.id,
+      patchedSubjectGroup: { name: trimmed },
+    });
+    await refetchGroups();
+    cancelEditing();
   };
 
   const filteredProtocols = projectProtocols.filter((p) => p.group === null);
@@ -177,7 +221,7 @@ export const Protocols: FC<ProtocolsProps> = ({
       nextSimGroupValue++;
       newGroupName = `Sim-Group ${nextSimGroupValue}`;
     }
-    await createSubjectGroup({
+    const newGroup = await createSubjectGroup({
       subjectGroup: {
         name: newGroupName,
         id_in_dataset: `${newGroupId}`,
@@ -192,15 +236,14 @@ export const Protocols: FC<ProtocolsProps> = ({
           };
         }),
       },
-    });
+    }).unwrap();
     await refetchGroups();
     await refetchProtocols();
-    setTab(groups.length + 1);
+    setTab(newGroup.id);
   };
 
   const removeGroup = (groupID: number) => async () => {
     const subjectGroup = groups?.find((g) => g.id === groupID);
-    const subjectGroupIndex = groups?.findIndex((g) => g.id === groupID) + 1; // +1 because the first tab is the project
     const subjectCount = subjectGroup?.subjects.length || 0;
     const confirmationMessage =
       subjectCount === 0
@@ -209,11 +252,8 @@ export const Protocols: FC<ProtocolsProps> = ({
     if (window?.confirm(confirmationMessage)) {
       await destroySubjectGroup({ id: groupID });
       await refetchGroups();
-      if (subjectGroupIndex === tab) {
-        setTab(subjectGroupIndex - 1);
-      }
-      if (tab > subjectGroupIndex) {
-        setTab(tab - 1);
+      if (groupID === tab) {
+        setTab(BASE_TAB); // fall back to the base tab when the selected group is deleted
       }
     }
   };
@@ -231,7 +271,7 @@ export const Protocols: FC<ProtocolsProps> = ({
     };
   }
 
-  const subjectGroup = tab === 0 ? null : groups?.[tab - 1];
+  const subjectGroup = groups?.find((g) => g.id === tab) ?? null;
   const selectedProtocols = projectProtocols.filter((protocol) =>
     subjectGroup ? protocol.group === subjectGroup.id : protocol.group === null,
   );
@@ -264,7 +304,7 @@ export const Protocols: FC<ProtocolsProps> = ({
           value={tab}
           onChange={handleTabChange}
         >
-          <Tab label={"Sim-Group 1"} {...a11yProps(0)} />
+          <Tab value={BASE_TAB} label={"Sim-Group 1"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
             const selectedProtocols = projectProtocols.filter(
               (protocol) => protocol.group === group.id,
@@ -275,7 +315,33 @@ export const Protocols: FC<ProtocolsProps> = ({
             return (
               <Tab
                 key={group.id}
-                label={group.name}
+                value={group.id}
+                label={
+                  editingGroupId === group.id ? (
+                    <TextField
+                      variant="standard"
+                      size="small"
+                      inputRef={editInputRef}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") {
+                          commitEditing(group);
+                        } else if (e.key === "Escape") {
+                          cancelEditing();
+                        }
+                      }}
+                      onBlur={() => commitEditing(group)}
+                    />
+                  ) : (
+                    <span onDoubleClick={() => startEditing(group)}>
+                      {group.name}
+                    </span>
+                  )
+                }
                 {...a11yProps(index + 1)}
                 icon={
                   !groups?.[index] ? undefined : (
@@ -365,7 +431,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
-                {tab === 0 && (
+                {tab === BASE_TAB && (
                   <TableCell
                     align="right"
                     size="small"
