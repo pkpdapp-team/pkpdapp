@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 from pkpdapp.api.views.profiling import profile_endpoint
-from pkpdapp.models import CombinedModel
+from pkpdapp.models import CombinedModel, ParameterInfo
 import myokit
 
 
@@ -118,6 +118,67 @@ class ErrorResponseSerializer(serializers.Serializer):
     error = serializers.CharField()
 
 
+def _build_model_parameters(data):
+    """Convert the request's parallel model-parameter arrays into a ParameterInfo
+    list.
+
+    The wire format stays as parallel lists (inputs / starting / bounds); the
+    conversion to the ParameterInfo list ``optimise`` expects happens here.
+    """
+    return [
+        ParameterInfo(
+            variable_id=variable_id,
+            starting=float(starting),
+            lower_bound=float(lower),
+            upper_bound=float(upper),
+        )
+        for variable_id, starting, lower, upper in zip(
+            data["inputs"],
+            data["starting"],
+            data["bounds"][0],
+            data["bounds"][1],
+        )
+    ]
+
+
+def _build_noise_parameters(data, noise_model):
+    """Convert the request's parallel sigma arrays into a ParameterInfo list.
+
+    Returns ``None`` when the client supplied no sigma information, so that
+    ``optimise`` falls back to its own per-output defaults. Otherwise returns the
+    additive sigma_a block followed (for the combined model) by the proportional
+    sigma_m block, matching the ordering ``optimise`` expects.
+    """
+    log_sigma = data.get("log_sigma")
+    sigma_bounds = data.get("sigma_bounds")
+    log_sigma_mult = data.get("log_sigma_mult")
+    sigma_bounds_mult = data.get("sigma_bounds_mult")
+
+    supplied = [log_sigma, sigma_bounds, log_sigma_mult, sigma_bounds_mult]
+    present = [array for array in supplied if array is not None]
+    if not present:
+        return None
+
+    # All sigma arrays carry one entry per fitted output variable, so the output
+    # count can be read off whichever array the client provided.
+    n_outputs = len(present[0])
+
+    def _block(values, bounds):
+        return [
+            ParameterInfo(
+                starting=float(values[i]) if values is not None else 0.0,
+                lower_bound=float(bounds[i][0]) if bounds is not None else -20.0,
+                upper_bound=float(bounds[i][1]) if bounds is not None else 20.0,
+            )
+            for i in range(n_outputs)
+        ]
+
+    noise_parameters = _block(log_sigma, sigma_bounds)
+    if noise_model == "combined":
+        noise_parameters += _block(log_sigma_mult, sigma_bounds_mult)
+    return noise_parameters
+
+
 @extend_schema(
     request=OptimiseSerializer,
     responses={
@@ -147,20 +208,27 @@ class OptimiseBaseView(views.APIView):
                 )
 
             data = serializer.validated_data
+            noise_model = data.get("noise_model", "additive")
+
+            # Group each model parameter's attributes into a ParameterInfo.
+            parameters = _build_model_parameters(data)
+
+            # Build the noise (sigma) ParameterInfo list from whichever sigma
+            # arrays the client supplied. They are all length n_outputs in the
+            # backend's canonical output ordering, so the count is derived from
+            # whichever is present. When the client supplies none, pass None so
+            # optimise applies its own per-output defaults (0.0, (-20, 20)).
+            noise_parameters = _build_noise_parameters(data, noise_model)
+
             try:
                 result = m.optimise(
-                    inputs=data["inputs"],
-                    starting=data["starting"],
-                    bounds=data["bounds"],
+                    parameters=parameters,
+                    noise_parameters=noise_parameters,
                     biomarker_types=data.get("biomarker_types"),
                     subject_groups=data.get("subject_groups"),
                     max_iterations=data.get("max_iterations"),
-                    noise_model=data.get("noise_model", "additive"),
+                    noise_model=noise_model,
                     method=data.get("method", "pso"),
-                    log_sigma=data.get("log_sigma"),
-                    sigma_bounds=data.get("sigma_bounds"),
-                    log_sigma_mult=data.get("log_sigma_mult"),
-                    sigma_bounds_mult=data.get("sigma_bounds_mult"),
                 )
             except (myokit.MyokitError, RuntimeError, ValueError) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})

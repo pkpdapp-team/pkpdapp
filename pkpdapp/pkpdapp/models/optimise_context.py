@@ -40,6 +40,25 @@ NOISE_MODELS = ("additive", "multiplicative", "combined")
 
 
 @dataclass(frozen=True)
+class ParameterInfo:
+    """A single parameter to be optimised.
+
+    Used for both model (ODE input) parameters and noise (sigma) parameters.
+    Which of the two a ``ParameterInfo`` describes is determined by the list it
+    is passed to ``optimise`` in, not by any field on this class.
+    """
+
+    starting: float
+    lower_bound: float
+    upper_bound: float
+    # Model params: the variable id being optimised.
+    # Noise params: the output variable id this sigma applies to (optional).
+    variable_id: int | None = None
+    # Optimise this parameter in log space. Only valid when lower_bound >= 0.
+    use_log_space: bool = False
+
+
+@dataclass(frozen=True)
 class OptimisationRecordContext:
     output_index: int
     time_index: int

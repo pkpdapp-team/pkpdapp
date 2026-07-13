@@ -10,7 +10,7 @@ from unittest import mock
 
 import numpy as np
 from django.test import TestCase
-from pkpdapp.models.optimise_context import OptimiseContext
+from pkpdapp.models.optimise_context import OptimiseContext, ParameterInfo
 from pkpdapp.models import (
     Biomarker,
     BiomarkerType,
@@ -26,6 +26,28 @@ from pkpdapp.tests.optimise_fixtures import (
     create_exponential_data,
     exponential_response,
 )
+
+
+def make_parameters(input_ids, starting, bounds, use_log_space=None):
+    """Build the ParameterInfo list ``optimise`` expects from parallel lists.
+
+    ``use_log_space``, if given, is a list of bools parallel to ``input_ids``.
+    """
+    lower, upper = bounds
+    if use_log_space is None:
+        use_log_space = [False] * len(input_ids)
+    return [
+        ParameterInfo(
+            variable_id=variable_id,
+            starting=start,
+            lower_bound=low,
+            upper_bound=up,
+            use_log_space=log_space,
+        )
+        for variable_id, start, low, up, log_space in zip(
+            input_ids, starting, lower, upper, use_log_space
+        )
+    ]
 
 
 class FakeDiffsolOde:
@@ -247,9 +269,7 @@ class TestOptimise(TestCase):
         self.assertLess(true_loss, starting_loss)
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=80,
@@ -266,9 +286,7 @@ class TestOptimise(TestCase):
         input_ids = [variable.id for variable in setup["inputs"]]
 
         result = model.optimise(
-            inputs=input_ids[:1],
-            starting=[0.2],
-            bounds=([0.1], [0.3]),
+            parameters=make_parameters(input_ids[:1], [0.2], ([0.1], [0.3])),
             biomarker_types=[setup["biomarker_type"].id],
             subject_groups=[setup["groups"][0].id],
             max_iterations=25,
@@ -278,9 +296,9 @@ class TestOptimise(TestCase):
 
         with self.assertRaises(ValueError):
             model.optimise(
-                inputs=input_ids,
-                starting=[0.2, 1.5],
-                bounds=([0.3, 1.0], [0.1, 2.0]),
+                parameters=make_parameters(
+                    input_ids, [0.2, 1.5], ([0.3, 1.0], [0.1, 2.0])
+                ),
                 biomarker_types=[setup["biomarker_type"].id],
                 subject_groups=[setup["groups"][0].id],
                 max_iterations=1,
@@ -531,9 +549,11 @@ class TestOptimise(TestCase):
                 )
 
         result = model.optimise(
-            inputs=[variable.id for variable in setup["inputs"]],
-            starting=[0.27, 1.45],
-            bounds=([0.16, 1.2], [0.3, 2.1]),
+            parameters=make_parameters(
+                [variable.id for variable in setup["inputs"]],
+                [0.27, 1.45],
+                ([0.16, 1.2], [0.3, 2.1]),
+            ),
             biomarker_types=[setup["biomarker_type"].id, amount_type.id],
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=60,
@@ -876,9 +896,7 @@ class TestOptimise(TestCase):
         )
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=80,
@@ -940,9 +958,7 @@ class TestOptimise(TestCase):
         self.assertTrue(np.all(np.isfinite(total_gradient)))
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=200,
@@ -1252,9 +1268,7 @@ class TestOptimise(TestCase):
         biomarker_type_ids = [setup["biomarker_type"].id]
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=60,
@@ -1280,9 +1294,9 @@ class TestOptimise(TestCase):
         model = setup["model"]
         input_ids = [variable.id for variable in setup["inputs"]]
         result = model.optimise(
-            inputs=input_ids,
-            starting=[0.27, 1.45],
-            bounds=([0.16, 1.2], [0.3, 2.1]),
+            parameters=make_parameters(
+                input_ids, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            ),
             biomarker_types=[setup["biomarker_type"].id],
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=20,
@@ -1297,11 +1311,129 @@ class TestOptimise(TestCase):
         model = setup["model"]
         with self.assertRaisesMessage(ValueError, "Unknown noise model"):
             model.optimise(
-                inputs=[variable.id for variable in setup["inputs"]],
-                starting=[0.27, 1.45],
-                bounds=([0.16, 1.2], [0.3, 2.1]),
+                parameters=make_parameters(
+                    [variable.id for variable in setup["inputs"]],
+                    [0.27, 1.45],
+                    ([0.16, 1.2], [0.3, 2.1]),
+                ),
                 biomarker_types=[setup["biomarker_type"].id],
                 subject_groups=[group.id for group in setup["groups"]],
                 max_iterations=1,
                 noise_model="not-a-model",
             )
+
+    def test_optimise_log_space_converges_to_true_values(self):
+        """Optimising in log space reaches the same optimum as linear space."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids, starting, bounds, use_log_space=[True, True]
+            ),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=80,
+        )
+
+        self.assertTrue(np.isfinite(result["loss"]))
+        # optimal is reported in user (linear) space regardless of parameterisation
+        self.assertAlmostEqual(result["optimal"][0], true_values[0], delta=0.04)
+        self.assertAlmostEqual(result["optimal"][1], true_values[1], delta=0.18)
+
+    def test_optimise_log_space_gradient_matches_finite_difference(self):
+        """The log-space chain rule used in evaluateS1 (d(nll)/d log(v) =
+        d(nll)/dv * v) matches a finite difference of the loss w.r.t. log(v)."""
+        setup = self._exponential_data()
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        context = self._build_optimise_context(setup, starting, bounds)
+        values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, starting
+        )
+        keys = list(values_by_id)
+        base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
+
+        _, ode_gradient, _ = context.optimise_loss_gradient(
+            context.optimisation_groups,
+            values_by_id,
+        )
+        # Analytic gradient of the loss w.r.t. the log-space variable of param 0.
+        analytic = float(ode_gradient[0] * base_vals[0])
+
+        # Central finite difference w.r.t. z = log(v0): v0 -> v0 * exp(±h).
+        h = 1e-6
+        plus = dict(zip(keys, base_vals))
+        minus = dict(zip(keys, base_vals))
+        plus[keys[0]] = float(base_vals[0] * np.exp(h))
+        minus[keys[0]] = float(base_vals[0] * np.exp(-h))
+        loss_plus = context.optimise_loss(context.optimisation_groups, plus)
+        loss_minus = context.optimise_loss(context.optimisation_groups, minus)
+        numeric = (loss_plus - loss_minus) / (2.0 * h)
+
+        self.assertAlmostEqual(analytic, numeric, delta=1e-3 * (1 + abs(numeric)))
+
+    def test_optimise_log_space_gradient_descent(self):
+        """Gradient descent runs through the evaluateS1 chain-rule path for a
+        log-space parameter and reduces the loss."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+
+        context = self._build_optimise_context(setup, starting, bounds)
+        starting_loss = context.optimise_loss(
+            context.optimisation_groups,
+            self._to_model_space_values_by_id(context, input_ids, starting),
+        )
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids, starting, bounds, use_log_space=[True, False]
+            ),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=200,
+            method="gradient_descent",
+        )
+
+        self.assertTrue(np.isfinite(result["loss"]))
+        self.assertLess(result["loss"], starting_loss)
+
+    def test_optimise_log_space_rejects_negative_lower_bound(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        with self.assertRaisesMessage(ValueError, "lower_bound >= 0"):
+            model.optimise(
+                parameters=make_parameters(
+                    input_ids[:1], [0.2], ([-0.1], [0.3]), use_log_space=[True]
+                ),
+                biomarker_types=[setup["biomarker_type"].id],
+                subject_groups=[setup["groups"][0].id],
+                max_iterations=1,
+            )
+
+    def test_optimise_log_space_zero_lower_bound_is_clamped(self):
+        """A zero lower bound is clamped to a finite floor rather than log(0)."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids[:1], [0.2], ([0.0], [0.3]), use_log_space=[True]
+            ),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[setup["groups"][0].id],
+            max_iterations=25,
+        )
+
+        self.assertEqual(len(result["optimal"]), 1)
+        self.assertTrue(np.isfinite(result["loss"]))
