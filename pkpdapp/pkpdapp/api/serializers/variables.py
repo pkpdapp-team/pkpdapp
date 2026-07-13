@@ -5,6 +5,7 @@
 #
 from rest_framework import serializers
 from pkpdapp.models import (
+    Correlation,
     Distribution,
     Variable,
 )
@@ -14,6 +15,12 @@ class DistributionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Distribution
         fields = ["id", "pdf", "variance"]
+
+
+class CorrelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Correlation
+        fields = ["id", "distribution_1", "distribution_2", "coefficient"]
 
 
 class VariableSerializer(serializers.ModelSerializer):

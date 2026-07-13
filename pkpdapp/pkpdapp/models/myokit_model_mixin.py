@@ -293,6 +293,30 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variable_distributions[variable.qname] = distribution
         return variable_distributions
 
+    def _collect_variable_correlations(self, variable_distributions):
+        """Return ``{(qname_i, qname_j): coefficient}`` for correlated pairs.
+
+        Only pairs where both variables carry a distribution (i.e. are keys of
+        ``variable_distributions``) are returned; any pair without a
+        :class:`Correlation` row is uncorrelated (coefficient 0) and omitted.
+        """
+        from pkpdapp.models import Correlation
+
+        distribution_qname = {
+            distribution.id: qname
+            for qname, distribution in variable_distributions.items()
+        }
+        variable_correlations = {}
+        correlations = Correlation.objects.filter(
+            distribution_1__in=distribution_qname,
+            distribution_2__in=distribution_qname,
+        )
+        for correlation in correlations:
+            qname_1 = distribution_qname[correlation.distribution_1_id]
+            qname_2 = distribution_qname[correlation.distribution_2_id]
+            variable_correlations[(qname_1, qname_2)] = correlation.coefficient
+        return variable_correlations
+
     def simulate(
         self,
         outputs=None,
@@ -342,6 +366,9 @@ class MyokitModelMixin(UncertaintySimulationMixin):
 
         variables = dict(variables or {})
         variable_distributions = self._collect_variable_distributions(variables)
+        variable_correlations = self._collect_variable_correlations(
+            variable_distributions
+        )
         # validate all distributions up front so the sampling pipeline
         # (simulate_uncertainty) can assume everything is valid
         self._validate_variable_distributions(variables, variable_distributions)
@@ -356,6 +383,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variables=variables,
             time_max=time_max,
             variable_distributions=variable_distributions,
+            variable_correlations=variable_correlations,
             sample_count=sample_count,
             seed=seed,
             use_diffsol=use_diffsol,

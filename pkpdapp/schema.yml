@@ -569,6 +569,158 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/correlation/:
+    get:
+      operationId: correlation_list
+      parameters:
+      - in: query
+        name: dosed_pk_model_id
+        schema:
+          type: integer
+        description: Filter results by dosed_pk_model ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - correlation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Correlation'
+          description: ''
+    post:
+      operationId: correlation_create
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+  /api/correlation/{id}/:
+    get:
+      operationId: correlation_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    put:
+      operationId: correlation_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    patch:
+      operationId: correlation_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    delete:
+      operationId: correlation_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/dataset/:
     get:
       operationId: dataset_list
@@ -3460,6 +3612,28 @@ components:
       description: |-
         * `SM` - Small Molecule
         * `LM` - Large Molecule
+    Correlation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        distribution_1:
+          type: integer
+          description: first distribution of the correlated pair
+        distribution_2:
+          type: integer
+          description: second distribution of the correlated pair
+        coefficient:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: -1.0
+          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
+      required:
+      - distribution_1
+      - distribution_2
+      - id
     Dataset:
       type: object
       properties:
@@ -4262,6 +4436,24 @@ components:
         dissociation_unit:
           type: integer
           description: unit for dissociation constant
+    PatchedCorrelation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        distribution_1:
+          type: integer
+          description: first distribution of the correlated pair
+        distribution_2:
+          type: integer
+          description: second distribution of the correlated pair
+        coefficient:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: -1.0
+          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
     PatchedDataset:
       type: object
       properties:
@@ -4865,10 +5057,13 @@ components:
           type: string
           maxLength: 150
         email:
-          type: string
-          format: email
           title: Email address
-          maxLength: 254
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'
@@ -5908,10 +6103,13 @@ components:
           type: string
           maxLength: 150
         email:
-          type: string
-          format: email
           title: Email address
-          maxLength: 254
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'

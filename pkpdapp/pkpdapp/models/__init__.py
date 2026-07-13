@@ -31,7 +31,7 @@ from .pharmacokinetic_model import (
 from .derived_variable import DerivedVariable
 from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .variable import Variable
-from .distribution import Distribution
+from .distribution import Distribution, Correlation
 from .dataset import Dataset
 from .profile import Profile
 from .simulation import (

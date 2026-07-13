@@ -7,6 +7,7 @@ from rest_framework import filters
 from django.db.models import Q
 
 from pkpdapp.models import (
+    Correlation,
     Dataset,
     Project,
     PharmacodynamicModel,
@@ -53,6 +54,10 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                 dosed_pk_model = CombinedModel.objects.get(id=dosed_pk_model_id)
                 if queryset.model == Variable:
                     queryset = dosed_pk_model.variables.all()
+                elif queryset.model == Correlation:
+                    queryset = Correlation.objects.filter(
+                        distribution_1__variable__dosed_pk_model=dosed_pk_model
+                    )
                 elif queryset.model == Unit:
                     unit_ids = dosed_pk_model.variables.values_list("unit", flat=True)
                     queryset = Unit.objects.filter(id__in=unit_ids)
@@ -146,6 +151,10 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == Variable:
                     queryset = Variable.objects.filter(
                         Q(dosed_pk_model__project=project)
+                    )
+                elif queryset.model == Correlation:
+                    queryset = Correlation.objects.filter(
+                        distribution_1__variable__dosed_pk_model__project=project
                     )
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)

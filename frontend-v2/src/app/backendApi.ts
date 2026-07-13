@@ -197,6 +197,63 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    correlationList: build.query<
+      CorrelationListApiResponse,
+      CorrelationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/`,
+        params: {
+          dosed_pk_model_id: queryArg.dosedPkModelId,
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    correlationCreate: build.mutation<
+      CorrelationCreateApiResponse,
+      CorrelationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/`,
+        method: "POST",
+        body: queryArg.correlation,
+      }),
+    }),
+    correlationRetrieve: build.query<
+      CorrelationRetrieveApiResponse,
+      CorrelationRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/correlation/${queryArg.id}/` }),
+    }),
+    correlationUpdate: build.mutation<
+      CorrelationUpdateApiResponse,
+      CorrelationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.correlation,
+      }),
+    }),
+    correlationPartialUpdate: build.mutation<
+      CorrelationPartialUpdateApiResponse,
+      CorrelationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCorrelation,
+      }),
+    }),
+    correlationDestroy: build.mutation<
+      CorrelationDestroyApiResponse,
+      CorrelationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
       query: (queryArg) => ({
         url: `/api/dataset/`,
@@ -1190,6 +1247,40 @@ export type CompoundPartialUpdateApiArg = {
 export type CompoundDestroyApiResponse = unknown;
 export type CompoundDestroyApiArg = {
   /** A unique integer value identifying this compound. */
+  id: number;
+};
+export type CorrelationListApiResponse = /** status 200  */ CorrelationRead[];
+export type CorrelationListApiArg = {
+  /** Filter results by dosed_pk_model ID */
+  dosedPkModelId?: number;
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CorrelationCreateApiResponse = /** status 201  */ CorrelationRead;
+export type CorrelationCreateApiArg = {
+  correlation: Correlation;
+};
+export type CorrelationRetrieveApiResponse = /** status 200  */ CorrelationRead;
+export type CorrelationRetrieveApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+};
+export type CorrelationUpdateApiResponse = /** status 200  */ CorrelationRead;
+export type CorrelationUpdateApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+  correlation: Correlation;
+};
+export type CorrelationPartialUpdateApiResponse =
+  /** status 200  */ CorrelationRead;
+export type CorrelationPartialUpdateApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+  patchedCorrelation: PatchedCorrelation;
+};
+export type CorrelationDestroyApiResponse = unknown;
+export type CorrelationDestroyApiArg = {
+  /** A unique integer value identifying this correlation. */
   id: number;
 };
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
@@ -2437,6 +2528,40 @@ export type PatchedCompoundRead = {
   target_concentration_unit?: number;
   /** unit for dissociation constant */
   dissociation_unit?: number;
+};
+export type Correlation = {
+  /** first distribution of the correlated pair */
+  distribution_1: number;
+  /** second distribution of the correlated pair */
+  distribution_2: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type CorrelationRead = {
+  id: number;
+  /** first distribution of the correlated pair */
+  distribution_1: number;
+  /** second distribution of the correlated pair */
+  distribution_2: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type PatchedCorrelation = {
+  /** first distribution of the correlated pair */
+  distribution_1?: number;
+  /** second distribution of the correlated pair */
+  distribution_2?: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type PatchedCorrelationRead = {
+  id?: number;
+  /** first distribution of the correlated pair */
+  distribution_1?: number;
+  /** second distribution of the correlated pair */
+  distribution_2?: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
 };
 export type Dataset = {
   /** name of the dataset */
@@ -3917,6 +4042,12 @@ export const {
   useCompoundUpdateMutation,
   useCompoundPartialUpdateMutation,
   useCompoundDestroyMutation,
+  useCorrelationListQuery,
+  useCorrelationCreateMutation,
+  useCorrelationRetrieveQuery,
+  useCorrelationUpdateMutation,
+  useCorrelationPartialUpdateMutation,
+  useCorrelationDestroyMutation,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useDatasetRetrieveQuery,

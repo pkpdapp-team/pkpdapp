@@ -5,12 +5,14 @@
 #
 
 import numpy as np
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 
 from pkpdapp.models import (
     CombinedModel,
     Compound,
+    Correlation,
     Distribution,
     PharmacodynamicModel,
     PharmacokineticModel,
@@ -107,3 +109,95 @@ class TestDistribution(TestCase):
         copied = Distribution.objects.get(variable=new_variable)
         self.assertEqual(copied.pdf, Distribution.PDF.LOGNORMAL)
         self.assertEqual(copied.variance, 0.3)
+
+    def test_apply_matches_sample_math(self):
+        for pdf, mean in (
+            (Distribution.PDF.NORMAL, 5.0),
+            (Distribution.PDF.LOGNORMAL, 3.0),
+            (Distribution.PDF.LOGIT, 0.4),
+        ):
+            dist = Distribution(pdf=pdf, variance=0.2)
+            # eta == 0 collapses every pdf to the typical value
+            self.assertAlmostEqual(dist.apply(mean, 0.0), mean)
+
+
+class TestCorrelation(TestCase):
+    def setUp(self):
+        self.compound = Compound.objects.create(name="demo", compound_type="LM")
+        self.project = Project.objects.create(
+            name="test project", compound=self.compound
+        )
+        pd = PharmacodynamicModel.objects.get(
+            name="tumour_growth_gompertz",
+            read_only=False,
+        )
+        pk = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        self.model = CombinedModel.objects.create(
+            name="my wonderful model",
+            pd_model=pd,
+            pk_model=pk,
+            project=self.project,
+        )
+        variables = list(
+            self.model.variables.filter(constant=True).order_by("id")[:2]
+        )
+        self.dist_1 = Distribution.objects.create(
+            variable=variables[0], variance=0.1
+        )
+        self.dist_2 = Distribution.objects.create(
+            variable=variables[1], variance=0.2
+        )
+
+    def test_canonical_ordering_on_save(self):
+        # store with the higher id first; save() should swap to lower id first
+        high, low = sorted([self.dist_1, self.dist_2], key=lambda d: -d.id)
+        correlation = Correlation.objects.create(
+            distribution_1=high, distribution_2=low, coefficient=0.5
+        )
+        correlation.refresh_from_db()
+        self.assertLess(
+            correlation.distribution_1_id, correlation.distribution_2_id
+        )
+
+    def test_unique_pair_constraint(self):
+        Correlation.objects.create(
+            distribution_1=self.dist_1, distribution_2=self.dist_2
+        )
+        # the reversed order is the same unordered pair, so it must clash
+        with self.assertRaises(IntegrityError):
+            Correlation.objects.create(
+                distribution_1=self.dist_2, distribution_2=self.dist_1
+            )
+
+    def test_coefficient_range_validation(self):
+        for bad in (-1.5, 1.5):
+            correlation = Correlation(
+                distribution_1=self.dist_1,
+                distribution_2=self.dist_2,
+                coefficient=bad,
+            )
+            with self.assertRaises(ValidationError):
+                correlation.full_clean()
+
+    def test_get_correlations_finds_both_sides(self):
+        correlation = Correlation.objects.create(
+            distribution_1=self.dist_1, distribution_2=self.dist_2, coefficient=0.3
+        )
+        self.assertEqual(list(self.dist_1.get_correlations()), [correlation])
+        self.assertEqual(list(self.dist_2.get_correlations()), [correlation])
+
+    def test_model_copy_duplicates_correlation(self):
+        Correlation.objects.create(
+            distribution_1=self.dist_1, distribution_2=self.dist_2, coefficient=0.4
+        )
+        new_model = self.model.copy(self.project)
+
+        new_distribution_ids = Distribution.objects.filter(
+            variable__dosed_pk_model=new_model
+        ).values_list("id", flat=True)
+        copied = Correlation.objects.filter(
+            distribution_1__in=new_distribution_ids,
+            distribution_2__in=new_distribution_ids,
+        )
+        self.assertEqual(copied.count(), 1)
+        self.assertEqual(copied.first().coefficient, 0.4)

@@ -175,6 +175,49 @@ class TestSimulateView(APITestCase):
         self.assertEqual(repeated.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, repeated.data)
 
+    def test_simulate_with_correlation(self):
+        from pkpdapp.models import Correlation, Distribution
+
+        m = self._uncertainty_model()
+        ts0 = Variable.objects.get(qname='PDCompartment.TS0', dosed_pk_model=m)
+        cl = Variable.objects.get(qname='PKCompartment.CL', dosed_pk_model=m)
+        dist_ts0 = Distribution.objects.create(
+            variable=ts0, pdf=Distribution.PDF.LOGNORMAL, variance=0.04
+        )
+        dist_cl = Distribution.objects.create(
+            variable=cl, pdf=Distribution.PDF.LOGNORMAL, variance=0.04
+        )
+        Correlation.objects.create(
+            distribution_1=dist_ts0,
+            distribution_2=dist_cl,
+            coefficient=0.7,
+        )
+
+        url = reverse('simulate-combined-model', args=(m.pk,))
+        data = {
+            'outputs': ['PDCompartment.TS', 'environment.t'],
+            'variables': {'PDCompartment.TS0': 1.1},
+            'sample_count': 20,
+            'seed': 42,
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ts_output_id = str(
+            Variable.objects.get(qname='PDCompartment.TS', dosed_pk_model=m).id
+        )
+        has_spread = any(
+            any(s > 0.0 for s in sim['outputs'][ts_output_id]['std'])
+            for sim in response.data
+        )
+        self.assertTrue(has_spread)
+
+        # correlated sampling is still reproducible with the same seed
+        repeated = self.client.post(url, data, format='json')
+        self.assertEqual(repeated.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, repeated.data)
+
     def test_simulate_with_logit_distribution_out_of_range(self):
         from pkpdapp.models import Distribution
 
