@@ -20,6 +20,7 @@ import {
   Box,
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
+import CorrelationMatrix from "./CorrelationMatrix";
 import HelpButton from "../../../components/HelpButton";
 import { useConstVariables, useNoReset } from "./getConstVariables";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
@@ -179,6 +180,8 @@ const ParametersTab: FC<Props> = ({
           </TableBody>
         </Table>
       </TableContainer>
+
+      <CorrelationMatrix model={model} project={project} variables={variables} />
     </Stack>
   );
 };

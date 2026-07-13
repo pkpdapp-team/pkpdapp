@@ -42,13 +42,70 @@ class UncertaintySimulationMixin:
             except ValueError as e:
                 raise ValueError(f"distribution for {qname}: {e}")
 
-    def _sample_variables(self, variables, variable_distributions, rng):
+    def _sample_variables(self, variables, variable_distributions, rng, etas=None):
+        """Return one Monte-Carlo draw of the distributed variables.
+
+        ``etas`` maps each qname to a pre-drawn random effect; pass it for a
+        correlated population (drawn jointly, see :meth:`_draw_correlated_etas`).
+        When ``etas`` is ``None`` each ETA is drawn independently.
+        """
         sampled_variables = {**variables}
         for qname, distribution in variable_distributions.items():
             # distributions are validated up front by simulate(); the typical value
             # P is the variable's value in ``variables``.
-            sampled_variables[qname] = distribution.sample(variables[qname], rng)
+            if etas is None:
+                sampled_variables[qname] = distribution.sample(variables[qname], rng)
+            else:
+                sampled_variables[qname] = distribution.apply(
+                    variables[qname], etas[qname]
+                )
         return sampled_variables
+
+    @staticmethod
+    def _nearest_psd(matrix):
+        """Return the nearest positive-semi-definite matrix (Frobenius norm).
+
+        User-entered pairwise correlations need not form a valid covariance
+        matrix, so we symmetrise and clip any negative eigenvalues to zero before
+        sampling. When the input is already PSD this is a no-op up to rounding.
+        """
+        symmetric = (matrix + matrix.T) / 2.0
+        eigenvalues, eigenvectors = np.linalg.eigh(symmetric)
+        eigenvalues = np.clip(eigenvalues, 0.0, None)
+        psd = (eigenvectors * eigenvalues) @ eigenvectors.T
+        return (psd + psd.T) / 2.0
+
+    def _build_covariance_matrix(
+        self, qnames, variable_distributions, variable_correlations
+    ):
+        """Build the PSD ETA covariance matrix for the ordered ``qnames``.
+
+        Diagonal entries are each distribution's variance; off-diagonal entry
+        (i, j) is ``rho_ij * std_i * std_j`` for any correlated pair, 0 otherwise.
+        The result is corrected to the nearest PSD matrix so it can be sampled.
+        """
+        index = {qname: i for i, qname in enumerate(qnames)}
+        stds = np.array(
+            [np.sqrt(variable_distributions[qname].variance) for qname in qnames]
+        )
+        covariance = np.diag(stds**2)
+        for (qname_1, qname_2), coefficient in variable_correlations.items():
+            i, j = index[qname_1], index[qname_2]
+            covariance[i, j] = covariance[j, i] = coefficient * stds[i] * stds[j]
+        return self._nearest_psd(covariance)
+
+    def _draw_correlated_etas(self, qnames, covariance, sample_count, rng):
+        """Draw ``sample_count`` joint ETA vectors as ``{qname: eta}`` dicts."""
+        draws = rng.multivariate_normal(
+            np.zeros(len(qnames)),
+            covariance,
+            size=sample_count,
+            check_valid="ignore",
+        )
+        return [
+            {qname: draws[i, k] for k, qname in enumerate(qnames)}
+            for i in range(sample_count)
+        ]
 
     def _aggregate_sampled_outputs(self, sampled_outputs, quantiles):
         aggregated_outputs = {}
@@ -79,6 +136,7 @@ class UncertaintySimulationMixin:
         variables: dict[str, float] | None = None,
         time_max: float | None = None,
         variable_distributions: dict[str, "Distribution"] | None = None,
+        variable_correlations: dict[tuple[str, str], float] | None = None,
         sample_count: int = 200,
         seed: int | None = None,
         use_diffsol: bool = True,
@@ -91,8 +149,12 @@ class UncertaintySimulationMixin:
         each distributed variable is taken from ``variables`` (which ``simulate``
         fills with the variable's default when not overridden). Distributions are
         assumed to be already validated (see
-        ``_validate_variable_distributions``); each sample is drawn by
-        ``Distribution.sample``.
+        ``_validate_variable_distributions``).
+
+        ``variable_correlations`` maps a pair of qnames to the correlation
+        coefficient of their ETAs. When any correlation is present the ETA vector
+        is drawn jointly from the resulting covariance matrix; otherwise each ETA
+        is drawn independently by ``Distribution.sample``.
         """
         if sample_count <= 0:
             raise ValueError("sample_count must be greater than 0")
@@ -108,6 +170,9 @@ class UncertaintySimulationMixin:
 
         if variable_distributions is None:
             variable_distributions = {}
+
+        if variable_correlations is None:
+            variable_correlations = {}
 
         quantiles = self._validate_quantiles(quantiles)
         from pkpdapp.models.simulate_context import SimulateContext
@@ -130,15 +195,34 @@ class UncertaintySimulationMixin:
             base_context.time_qname,
         )
 
+        # when any pair is correlated, draw the ETA vector jointly from the
+        # (nearest-PSD) covariance matrix; otherwise fall back to independent draws
+        correlated_qnames = list(variable_distributions.keys())
+        covariance = (
+            self._build_covariance_matrix(
+                correlated_qnames, variable_distributions, variable_correlations
+            )
+            if variable_correlations
+            else None
+        )
+
         uncertainty_results = []
         for simulation_group in base_context.simulation_groups:
             sampled_outputs = []
             t_eval = None
+            correlated_etas = (
+                self._draw_correlated_etas(
+                    correlated_qnames, covariance, sample_count, rng
+                )
+                if covariance is not None
+                else None
+            )
             for i in range(sample_count):
                 sampled_variables = self._sample_variables(
                     variables=variables,
                     variable_distributions=variable_distributions,
                     rng=rng,
+                    etas=correlated_etas[i] if correlated_etas is not None else None,
                 )
                 sampled_values_by_id = {
                     base_context.get_variable_context(qname).id: (
