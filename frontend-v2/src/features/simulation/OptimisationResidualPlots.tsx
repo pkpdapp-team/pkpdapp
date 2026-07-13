@@ -26,6 +26,7 @@ function minPositive(values: number[]): number | undefined {
 interface ResidualPoint {
   predicted: number;
   residual: number;
+  observed: number | null;
   time: number;
   varId: number;
   groupId: number | null;
@@ -34,6 +35,7 @@ interface ResidualPoint {
 interface OptimisationResidualPlotsProps {
   predictions: CentralSimulateResponse[];
   residuals: CentralSimulateResponse[];
+  observations: CentralSimulateResponse[] | null;
   variables: VariableRead[];
   groups: SubjectGroupRead[] | undefined;
 }
@@ -88,20 +90,24 @@ function normalQuantile(p: number): number {
 }
 
 /**
- * Two diagnostic Plotly charts:
- *  1. Residuals vs Predicted values
- *  2. Normal QQ plot of residuals
+ * Diagnostic Plotly charts:
+ *  1. Residuals vs Time
+ *  2. Residuals vs Predicted values
+ *  3. Normal QQ plot of residuals
+ *  4. Observed vs Predicted values
  *
  * Points are coloured by (group × output variable).
  */
 const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   predictions,
   residuals,
+  observations,
   variables,
   groups,
 }) => {
   const [logTime, setLogTime] = useState(false);
   const [logPred, setLogPred] = useState(false);
+  const [logObsPred, setLogObsPred] = useState(false);
 
   // Build matched (predicted, residual) pairs per (group × variable).
   // residuals[i] has the same group as predictions[i].
@@ -112,6 +118,10 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   residuals.forEach((resGroup, gi) => {
     const predGroup = predictions[gi];
     if (!predGroup) return;
+    // observations[gi] mirrors residuals[gi] exactly (same group, same union
+    // time array, same per-output ordering), so observed values align with the
+    // residual values by index.
+    const obsGroup = observations?.[gi];
 
     // Build a time→index lookup for the prediction time grid.
     const predTimeIndex = new Map<number, number>();
@@ -128,6 +138,7 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
 
       const residualValues = resGroup.outputs[varIdStr];
       const predValues = predGroup.outputs[varIdStr];
+      const obsValues = obsGroup?.outputs[varIdStr];
       if (!residualValues || !predValues) return;
 
       // residuals response has same length as number of observed time-points for
@@ -142,7 +153,9 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
         if (predIdx === undefined) return;
         const p = predValues[predIdx];
         if (p === undefined || p === null || isNaN(p)) return;
-        points.push({ predicted: p, residual: r, time: t, varId, groupId });
+        const o = obsValues?.[tidx];
+        const observed = o === undefined || o === null || isNaN(o) ? null : o;
+        points.push({ predicted: p, residual: r, observed, time: t, varId, groupId });
       });
 
       if (points.length) {
@@ -206,6 +219,44 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
         name: "y = 0",
         x: [minX, maxX],
         y: [0, 0],
+        line: { color: "#888", dash: "dash", width: 1 },
+        showlegend: false,
+      } as Partial<Data>);
+    }
+  }
+
+  // --- Observed vs Predicted traces ---
+  // One markers trace per series, plus an identity line y = x spanning the
+  // combined range of observed and predicted values.
+  const obsVsPredTraces: Partial<Data>[] = seriesEntries.map(([label, points], i) => {
+    const withObs = points.filter((p) => p.observed !== null);
+    return {
+      type: "scatter",
+      mode: "markers",
+      name: label,
+      x: withObs.map((p) => p.predicted),
+      y: withObs.map((p) => p.observed as number),
+      marker: { color: plotColours[i % plotColours.length], size: 6 },
+    };
+  });
+
+  const obsPredValues = seriesEntries.flatMap(([, pts]) =>
+    pts
+      .filter((p) => p.observed !== null)
+      .flatMap((p) => [p.predicted, p.observed as number]),
+  );
+  const hasObsVsPred = obsPredValues.length > 0;
+  if (hasObsVsPred) {
+    // On a log axis, anchor the identity line at the smallest positive value.
+    const minV = logObsPred ? minPositive(obsPredValues) : Math.min(...obsPredValues);
+    const maxV = Math.max(...obsPredValues);
+    if (minV !== undefined) {
+      obsVsPredTraces.push({
+        type: "scatter",
+        mode: "lines",
+        name: "y = x",
+        x: [minV, maxV],
+        y: [minV, maxV],
         line: { color: "#888", dash: "dash", width: 1 },
         showlegend: false,
       } as Partial<Data>);
@@ -314,6 +365,58 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
             label={<Typography variant="caption">Log x-axis</Typography>}
           />
         </Box>
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 300 }}>
+        {hasObsVsPred ? (
+          <>
+            <Plot
+              data={obsVsPredTraces}
+              layout={{
+                ...commonLayout,
+                title: { text: "Observed vs Predicted" },
+                xaxis: {
+                  title: { text: "Predicted" },
+                  exponentformat: "power",
+                  type: logObsPred ? "log" : "linear",
+                },
+                yaxis: {
+                  title: { text: "Observed" },
+                  exponentformat: "power",
+                  type: logObsPred ? "log" : "linear",
+                },
+              }}
+              style={{ width: "100%", height: 380 }}
+              useResizeHandler
+            />
+            <Box sx={{ display: "flex", justifyContent: "center", mt: -1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={logObsPred}
+                    onChange={(e) => setLogObsPred(e.target.checked)}
+                  />
+                }
+                label={<Typography variant="caption">Log axes</Typography>}
+              />
+            </Box>
+          </>
+        ) : (
+          <Box
+            sx={{
+              height: 380,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: 2,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary" align="center">
+              Observed vs Predicted plot unavailable — no observation data was
+              returned for this fit.
+            </Typography>
+          </Box>
+        )}
       </Box>
       <Box sx={{ flex: 1, minWidth: 300 }}>
         {showQQ ? (

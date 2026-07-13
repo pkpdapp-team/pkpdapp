@@ -88,6 +88,9 @@ class OptimiseResponseSerializer(serializers.Serializer):
     method = serializers.CharField()
     predictions = serializers.ListField(child=serializers.DictField(), allow_null=True)
     residuals = serializers.ListField(child=serializers.DictField(), allow_null=True)
+    observations = serializers.ListField(
+        child=serializers.DictField(), allow_null=True
+    )
     covariance = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,

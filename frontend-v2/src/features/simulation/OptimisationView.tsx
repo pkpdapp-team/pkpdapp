@@ -87,6 +87,14 @@ const OptimisationView = ({
       )
       : null;
 
+  const observations =
+    optimiseResult?.observations
+      ? optimisePredictionsToSimulateResponses(
+        optimiseResult.observations as { [key: string]: unknown }[],
+        variables,
+      )
+      : null;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Last Optimisation Result</DialogTitle>
@@ -308,6 +316,13 @@ const OptimisationView = ({
                         For <strong>combined noise</strong>: residual = (prediction − observed) / √(σ_a² + σ_m²·prediction²)
                       </p>
                       <p>
+                        The <strong>Observed vs Predicted</strong> plot shows each
+                        observed data point against the model prediction at the same
+                        time. A well-fitted model has points scattered evenly about
+                        the dashed identity line (y = x); systematic deviation from
+                        it indicates bias.
+                      </p>
+                      <p>
                         Well-fitted models should show residuals randomly scattered around
                         zero with no systematic patterns. Look for:
                       </p>
@@ -327,6 +342,7 @@ const OptimisationView = ({
                   <OptimisationResidualPlots
                     predictions={predictions}
                     residuals={residuals}
+                    observations={observations}
                     variables={variables}
                     groups={groups}
                   />

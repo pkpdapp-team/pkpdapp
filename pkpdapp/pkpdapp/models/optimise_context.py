@@ -550,6 +550,7 @@ class OptimiseContext(SimulateContext):
 
         predictions_list = []
         residuals_list = []
+        observations_list = []
         jacobian_rows = []
         residual_values = []
         weights = []
@@ -570,6 +571,7 @@ class OptimiseContext(SimulateContext):
                 return {
                     "predictions": None,
                     "residuals": None,
+                    "observations": None,
                     "covariance": None,
                     "condition_number": None,
                     "sigma": sigma_list,
@@ -594,6 +596,7 @@ class OptimiseContext(SimulateContext):
             predictions_list.append(pred_dict)
 
             obs_residuals_per_output = {i: [] for i in range(len(group.outputs))}
+            obs_observations_per_output = {i: [] for i in range(len(group.outputs))}
 
             for record in group.records:
                 t_idx = record.time_index
@@ -633,18 +636,30 @@ class OptimiseContext(SimulateContext):
                     weight = 1.0 / sigma2[k]
 
                 obs_residuals_per_output[o_idx].append(float(residual_for_output))
+                # Observed value in the same display units as the predictions
+                # (record.value is in model units; predictions are divided by the
+                # output conversion factor above). Appended in lockstep with the
+                # residual so the two stay index-aligned, including under the
+                # multiplicative-noise filtering above.
+                obs_observations_per_output[o_idx].append(
+                    float(observed / output_contexts[o_idx].conversion_factor)
+                )
                 jacobian_rows.append(jac_row)
                 residual_values.append(float(residual))
                 weights.append(weight)
 
             resid_dict = {"group_id": group.group_id}
+            obs_dict = {"group_id": group.group_id}
             all_obs_times = sorted(
                 set(record.time / time_conversion_factor for record in group.records)
             )
             resid_dict[time_context.id] = all_obs_times
+            obs_dict[time_context.id] = all_obs_times
             for i, output in enumerate(group.outputs):
                 resid_dict[output.id] = obs_residuals_per_output[i]
+                obs_dict[output.id] = obs_observations_per_output[i]
             residuals_list.append(resid_dict)
+            observations_list.append(obs_dict)
 
         # Information criteria (AIC/BIC) from the absolute deviance -2*ln(L).
         # The internal NLL drops the per-observation 0.5*log(2*pi) constant, and
@@ -678,6 +693,7 @@ class OptimiseContext(SimulateContext):
             return {
                 "predictions": predictions_list,
                 "residuals": residuals_list,
+                "observations": observations_list,
                 "covariance": None,
                 "condition_number": None,
                 "sigma": sigma_list,
@@ -712,6 +728,7 @@ class OptimiseContext(SimulateContext):
         return {
             "predictions": predictions_list,
             "residuals": residuals_list,
+            "observations": observations_list,
             "covariance": cov.tolist() if cov is not None else None,
             "condition_number": condition_number,
             "sigma": sigma_list,
