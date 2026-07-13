@@ -46,6 +46,18 @@ import { selectIsProjectShared } from "../login/loginSlice";
 // base project protocols (protocol.group === null) and has no SubjectGroup id.
 const BASE_TAB = -1;
 
+// Refetching a query throws "Cannot refetch a query that has not been started
+// yet" when the component unmounts before an awaited mutation settles (the query
+// subscription is already gone). Swallow that case so it doesn't surface as an
+// unhandled rejection.
+async function safeRefetch(refetch: () => unknown) {
+  try {
+    await refetch();
+  } catch {
+    // Query is no longer active; nothing to refresh.
+  }
+}
+
 const TABLE_BREAKPOINTS = [
   {
     minHeight: 1100,
@@ -205,7 +217,7 @@ export const Protocols: FC<ProtocolsProps> = ({
       id: group.id,
       patchedSubjectGroup: { name: trimmed },
     });
-    await refetchGroups();
+    await safeRefetch(refetchGroups);
     cancelEditing();
   };
 
@@ -237,8 +249,8 @@ export const Protocols: FC<ProtocolsProps> = ({
         }),
       },
     }).unwrap();
-    await refetchGroups();
-    await refetchProtocols();
+    await safeRefetch(refetchGroups);
+    await safeRefetch(refetchProtocols);
     setTab(newGroup.id);
   };
 
@@ -251,7 +263,7 @@ export const Protocols: FC<ProtocolsProps> = ({
         : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
     if (window?.confirm(confirmationMessage)) {
       await destroySubjectGroup({ id: groupID });
-      await refetchGroups();
+      await safeRefetch(refetchGroups);
       if (groupID === tab) {
         setTab(BASE_TAB); // fall back to the base tab when the selected group is deleted
       }
@@ -259,9 +271,8 @@ export const Protocols: FC<ProtocolsProps> = ({
   };
 
   const onProtocolChange = () => {
-    console.log("Protocol changed, refetching groups and protocols...");
-    refetchGroups();
-    refetchProtocols();
+    safeRefetch(refetchGroups);
+    safeRefetch(refetchProtocols);
   };
 
   function a11yProps(index: number) {
