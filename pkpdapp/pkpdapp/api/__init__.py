@@ -21,6 +21,7 @@ from .views import (
     UnitView,
     BiomarkerTypeView,
     VariableView,
+    CorrelationView,
     SubjectView,
     ProjectAccessView,
     NcaView,

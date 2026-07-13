@@ -311,6 +311,32 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             old_var = self.variables.get(qname=variable.qname)
             variable.copy(old_var, project)
 
+        # copy the correlations between the newly-copied distributions. Each
+        # variable's distribution was copied by variable.copy above; here we map
+        # old distributions to new ones (by qname) and recreate the pairwise
+        # Correlation rows between them.
+        from pkpdapp.models import Correlation
+
+        old_to_new_distribution = {}
+        for variable in stored_model.variables.all():
+            new_distribution = getattr(variable, "distribution", None)
+            if new_distribution is None:
+                continue
+            old_var = self.variables.get(qname=variable.qname)
+            old_distribution = getattr(old_var, "distribution", None)
+            if old_distribution is not None:
+                old_to_new_distribution[old_distribution.id] = new_distribution
+        for correlation in Correlation.objects.filter(
+            distribution_1__in=old_to_new_distribution,
+            distribution_2__in=old_to_new_distribution,
+        ):
+            Correlation.objects.create(
+                distribution_1=old_to_new_distribution[correlation.distribution_1_id],
+                distribution_2=old_to_new_distribution[correlation.distribution_2_id],
+                coefficient=correlation.coefficient,
+                read_only=correlation.read_only,
+            )
+
         for time_interval in self.time_intervals.all():
             time_interval.copy(stored_model)
 

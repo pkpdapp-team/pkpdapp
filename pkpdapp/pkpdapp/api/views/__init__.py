@@ -52,4 +52,5 @@ from .subject_group import SubjectGroupView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
+from .correlation import CorrelationView
 from .tag import TagView

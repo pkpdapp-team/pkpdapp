@@ -21,7 +21,7 @@ from .models import (
     PharmacodynamicSerializer,
     PharmacodynamicSbmlSerializer,
 )
-from .variables import VariableSerializer
+from .variables import VariableSerializer, CorrelationSerializer
 from .nca import NcaSerializer
 from .project import ProjectSerializer, ProjectAccessSerializer
 from .protocol import ProtocolSerializer
