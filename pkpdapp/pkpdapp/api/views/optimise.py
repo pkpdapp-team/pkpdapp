@@ -62,6 +62,12 @@ class OptimiseSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    # One flag per model parameter, parallel to ``inputs``: optimise that
+    # parameter in log space. Only valid where the parameter's lower bound is
+    # >= 0 (the backend raises otherwise).
+    use_log_space = serializers.ListField(
+        child=serializers.BooleanField(), required=False, allow_null=True
+    )
 
 
 class OptimiseResponseSerializer(serializers.Serializer):
@@ -122,21 +128,26 @@ def _build_model_parameters(data):
     """Convert the request's parallel model-parameter arrays into a ParameterInfo
     list.
 
-    The wire format stays as parallel lists (inputs / starting / bounds); the
-    conversion to the ParameterInfo list ``optimise`` expects happens here.
+    The wire format stays as parallel lists (inputs / starting / bounds /
+    use_log_space); the conversion to the ParameterInfo list ``optimise`` expects
+    happens here. ``use_log_space`` defaults to False per parameter when absent.
     """
+    use_log_space = data.get("use_log_space") or []
     return [
         ParameterInfo(
             variable_id=variable_id,
             starting=float(starting),
             lower_bound=float(lower),
             upper_bound=float(upper),
+            use_log_space=bool(use_log_space[i]) if i < len(use_log_space) else False,
         )
-        for variable_id, starting, lower, upper in zip(
-            data["inputs"],
-            data["starting"],
-            data["bounds"][0],
-            data["bounds"][1],
+        for i, (variable_id, starting, lower, upper) in enumerate(
+            zip(
+                data["inputs"],
+                data["starting"],
+                data["bounds"][0],
+                data["bounds"][1],
+            )
         )
     ]
 

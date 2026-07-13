@@ -133,6 +133,8 @@ const OptimisationSettings = ({
   const [customStarting, setCustomStarting] = useState<number[]>([]);
   const [customLowerBounds, setCustomLowerBounds] = useState<number[]>([]);
   const [customUpperBounds, setCustomUpperBounds] = useState<number[]>([]);
+  // Per-parameter "optimise in log space" flags, parallel to customStarting.
+  const [customUseLogSpace, setCustomUseLogSpace] = useState<boolean[]>([]);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
   // Per-output-variable noise sigma, keyed by model output variable id. The
@@ -178,6 +180,9 @@ const OptimisationSettings = ({
     setCustomStarting(defaultOptimiseInputs.starting);
     setCustomLowerBounds(defaultOptimiseInputs.bounds[0]);
     setCustomUpperBounds(defaultOptimiseInputs.bounds[1]);
+    setCustomUseLogSpace(
+      defaultOptimiseInputs.use_log_space ?? orderedSliders.map(() => false),
+    );
     // method / noiseModel / maxIterations are persisted in useOptimise and
     // intentionally not reset here so they survive dialog open/close.
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
@@ -213,6 +218,12 @@ const OptimisationSettings = ({
       inputs,
       starting: customStarting,
       bounds: [customLowerBounds, customUpperBounds],
+      // Log space is only valid for a non-negative lower bound; guard here so an
+      // invalid combination can never reach the backend (which would 400).
+      use_log_space: orderedSliders.map(
+        (_, index) =>
+          (customUseLogSpace[index] ?? false) && customLowerBounds[index] >= 0,
+      ),
       max_iterations: sanitizeMaxIterations(maxIterations),
       noise_model: noiseModel,
       method,
@@ -262,6 +273,9 @@ const OptimisationSettings = ({
             const label = variable?.description
               ? `${variable.name} (${variable.description})`
               : variable?.name || `Variable ${slider.variable}`;
+            // Log space is undefined for negative values, so only offer it when
+            // the parameter's lower bound is non-negative.
+            const logSpaceDisabled = (customLowerBounds[index] ?? 0) < 0;
 
             return (
               <Box key={slider.variable}>
@@ -315,6 +329,35 @@ const OptimisationSettings = ({
                     fullWidth
                   />
                 </Stack>
+                <Tooltip
+                  title={
+                    logSpaceDisabled
+                      ? "Log scale requires a non-negative lower bound."
+                      : ""
+                  }
+                  placement="top"
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={
+                          (customUseLogSpace[index] ?? false) && !logSpaceDisabled
+                        }
+                        disabled={logSpaceDisabled}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          setCustomUseLogSpace((currentValues) => {
+                            const nextValues = [...currentValues];
+                            nextValues[index] = checked;
+                            return nextValues;
+                          });
+                        }}
+                      />
+                    }
+                    label="Log scale"
+                  />
+                </Tooltip>
               </Box>
             );
           })}

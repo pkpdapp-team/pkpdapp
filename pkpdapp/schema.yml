@@ -4017,6 +4017,11 @@ components:
             maxItems: 2
             minItems: 2
           nullable: true
+        use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
       required:
       - bounds
       - inputs

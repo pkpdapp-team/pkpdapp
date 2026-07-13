@@ -197,3 +197,35 @@ class TestOptimiseView(APITestCase):
         response = self._post_optimise(data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
+
+    def test_optimise_accepts_use_log_space(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "use_log_space": [True, False],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 80,
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(np.isfinite(response.data["loss"]))
+        # optimal is reported in linear space regardless of parameterisation
+        self.assertAlmostEqual(response.data["optimal"][0], TRUE_K, delta=0.04)
+        self.assertAlmostEqual(response.data["optimal"][1], TRUE_SCALE, delta=0.18)
+
+    def test_optimise_400_for_log_space_with_negative_lower_bound(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[-0.1, 1.2], [0.3, 2.1]],
+            "use_log_space": [True, False],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 1,
+        }
+        response = self._post_optimise(data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)

@@ -113,6 +113,9 @@ export function getDefaultOptimiseInputs({
     inputs,
     starting,
     bounds: [lowerBounds, upperBounds],
+    // One flag per model parameter (parallel to inputs); defaults to linear
+    // space. The OptimisationSettings dialog lets the user toggle these on.
+    use_log_space: inputs.map(() => false),
     biomarker_types,
     subject_groups: subjectGroups,
     noise_model: noiseModel,

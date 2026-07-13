@@ -2334,6 +2334,7 @@ export type Optimise = {
   sigma_bounds?: number[][] | null;
   log_sigma_mult?: number[] | null;
   sigma_bounds_mult?: number[][] | null;
+  use_log_space?: boolean[] | null;
 };
 export type UncertaintySummary = {
   mean: number[];
