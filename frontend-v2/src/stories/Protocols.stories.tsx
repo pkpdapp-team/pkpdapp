@@ -230,6 +230,18 @@ const meta: Meta<typeof Protocols> = {
               status: 201,
             });
           }),
+          http.patch("/api/subject_group/:id", async ({ params, request }) => {
+            await delay();
+            // @ts-expect-error params.id is a string
+            const groupId = parseInt(params.id, 10);
+            const body = await request.json();
+            groupMocks = groupMocks.map((group) =>
+              // @ts-expect-error body is DefaultBodyType
+              group.id === groupId ? { ...group, ...body } : group,
+            );
+            const updated = groupMocks.find((group) => group.id === groupId);
+            return HttpResponse.json(updated, { status: 200 });
+          }),
           http.delete("/api/subject_group/:id", async ({ params }) => {
             await delay();
             // @ts-expect-error params.id is a string
@@ -317,6 +329,27 @@ export const AddGroup: Story = {
     const newGroupTab = canvas.getByRole("tab", { name: /Sim-Group 1/i });
     expect(newGroupTab).toBeInTheDocument();
     await userEvent.click(newGroupTab);
+  },
+};
+
+export const RenameGroup: Story = {
+  play: async ({ context, canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await AddGroup.play?.(context);
+    const groupTab = await canvas.findByRole("tab", { name: /Sim-Group 2/i });
+
+    // double-click the label span to enter edit mode
+    await userEvent.dblClick(within(groupTab).getByText("Sim-Group 2"));
+    const input = await within(groupTab).findByRole("textbox");
+
+    await userEvent.clear(input);
+    await userEvent.type(input, "My Renamed Group{enter}");
+
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("tab", { name: /My Renamed Group/i }),
+      ).toBeInTheDocument(),
+    );
   },
 };
 
