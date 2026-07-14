@@ -3,6 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+from dataclasses import asdict
+
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import serializers
@@ -33,12 +35,13 @@ class OptimiseSerializer(serializers.Serializer):
         default="additive",
     )
     method = serializers.CharField(required=False, default="pso")
-    # log_sigma and sigma_bounds carry one entry per fitted output variable, in
-    # the canonical order the backend derives from biomarker_types (ascending
-    # variable id). The corresponding variable ids are echoed back as
-    # sigma_variables in the response. log_sigma_mult / sigma_bounds_mult are the
+    # sigma_start and sigma_bounds carry one *linear* sigma entry per fitted
+    # output variable, in the canonical order the backend derives from
+    # biomarker_types (ascending variable id). The corresponding variable ids are
+    # echoed back as sigma_variables in the response. sigma_use_log_space selects
+    # whether each sigma is optimised in log space. The *_mult fields are the
     # second (proportional) sigma, used only by the "combined" noise model.
-    log_sigma = serializers.ListField(
+    sigma_start = serializers.ListField(
         child=serializers.FloatField(), required=False, allow_null=True
     )
     sigma_bounds = serializers.ListField(
@@ -50,7 +53,10 @@ class OptimiseSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
-    log_sigma_mult = serializers.ListField(
+    sigma_use_log_space = serializers.ListField(
+        child=serializers.BooleanField(), required=False, allow_null=True
+    )
+    sigma_mult_start = serializers.ListField(
         child=serializers.FloatField(), required=False, allow_null=True
     )
     sigma_bounds_mult = serializers.ListField(
@@ -61,6 +67,9 @@ class OptimiseSerializer(serializers.Serializer):
         ),
         required=False,
         allow_null=True,
+    )
+    sigma_mult_use_log_space = serializers.ListField(
+        child=serializers.BooleanField(), required=False, allow_null=True
     )
     # One flag per model parameter, parallel to ``inputs``: optimise that
     # parameter in log space. Only valid where the parameter's lower bound is
@@ -74,7 +83,7 @@ class OptimiseResponseSerializer(serializers.Serializer):
     optimal = serializers.ListField(child=serializers.FloatField())
     loss = serializers.FloatField()
     reason = serializers.CharField()
-    sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
+    sigma = serializers.ListField(child=serializers.FloatField())
     sigma_mult = serializers.ListField(
         child=serializers.FloatField(), allow_null=True
     )
@@ -106,17 +115,25 @@ class OptimiseResponseSerializer(serializers.Serializer):
     sigma_variables = serializers.ListField(
         child=serializers.IntegerField(), allow_null=True
     )
-    log_sigma = serializers.ListField(child=serializers.FloatField(), allow_null=True)
+    sigma_start = serializers.ListField(
+        child=serializers.FloatField(), allow_null=True
+    )
     sigma_bounds = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,
     )
-    log_sigma_mult = serializers.ListField(
+    sigma_use_log_space = serializers.ListField(
+        child=serializers.BooleanField(), allow_null=True
+    )
+    sigma_mult_start = serializers.ListField(
         child=serializers.FloatField(), allow_null=True
     )
     sigma_bounds_mult = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,
+    )
+    sigma_mult_use_log_space = serializers.ListField(
+        child=serializers.BooleanField(), allow_null=True
     )
 
 
@@ -155,17 +172,28 @@ def _build_model_parameters(data):
 def _build_noise_parameters(data, noise_model):
     """Convert the request's parallel sigma arrays into a ParameterInfo list.
 
-    Returns ``None`` when the client supplied no sigma information, so that
-    ``optimise`` falls back to its own per-output defaults. Otherwise returns the
-    additive sigma_a block followed (for the combined model) by the proportional
-    sigma_m block, matching the ordering ``optimise`` expects.
+    The sigma start / bounds are *linear* sigma values, and sigma_use_log_space
+    selects whether each is optimised in log space. Returns ``None`` when the
+    client supplied no sigma information, so that ``optimise`` falls back to its
+    own per-output defaults. Otherwise returns the additive sigma_a block followed
+    (for the combined model) by the proportional sigma_m block, matching the
+    ordering ``optimise`` expects.
     """
-    log_sigma = data.get("log_sigma")
+    sigma_start = data.get("sigma_start")
     sigma_bounds = data.get("sigma_bounds")
-    log_sigma_mult = data.get("log_sigma_mult")
+    sigma_use_log_space = data.get("sigma_use_log_space")
+    sigma_mult_start = data.get("sigma_mult_start")
     sigma_bounds_mult = data.get("sigma_bounds_mult")
+    sigma_mult_use_log_space = data.get("sigma_mult_use_log_space")
 
-    supplied = [log_sigma, sigma_bounds, log_sigma_mult, sigma_bounds_mult]
+    supplied = [
+        sigma_start,
+        sigma_bounds,
+        sigma_use_log_space,
+        sigma_mult_start,
+        sigma_bounds_mult,
+        sigma_mult_use_log_space,
+    ]
     present = [array for array in supplied if array is not None]
     if not present:
         return None
@@ -174,19 +202,24 @@ def _build_noise_parameters(data, noise_model):
     # count can be read off whichever array the client provided.
     n_outputs = len(present[0])
 
-    def _block(values, bounds):
+    def _block(values, bounds, use_log):
         return [
             ParameterInfo(
-                starting=float(values[i]) if values is not None else 0.0,
-                lower_bound=float(bounds[i][0]) if bounds is not None else -20.0,
-                upper_bound=float(bounds[i][1]) if bounds is not None else 20.0,
+                starting=float(values[i]) if values is not None else 1.0,
+                lower_bound=float(bounds[i][0]) if bounds is not None else 0.0,
+                upper_bound=float(bounds[i][1]) if bounds is not None else 1.0,
+                use_log_space=(
+                    bool(use_log[i]) if use_log is not None else True
+                ),
             )
             for i in range(n_outputs)
         ]
 
-    noise_parameters = _block(log_sigma, sigma_bounds)
+    noise_parameters = _block(sigma_start, sigma_bounds, sigma_use_log_space)
     if noise_model == "combined":
-        noise_parameters += _block(log_sigma_mult, sigma_bounds_mult)
+        noise_parameters += _block(
+            sigma_mult_start, sigma_bounds_mult, sigma_mult_use_log_space
+        )
     return noise_parameters
 
 
@@ -247,11 +280,11 @@ class OptimiseBaseView(views.APIView):
                     serialized_result.data, status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # sigma_variables / log_sigma / sigma_bounds come back from result in
+            # sigma_variables / sigma_start / sigma_bounds come back from result in
             # the backend's canonical output ordering so all sigma arrays align.
             serialized_result = OptimiseResponseSerializer(
                 {
-                    **result,
+                    **asdict(result),
                     "inputs": data["inputs"],
                     "starting": data["starting"],
                     "bounds": data["bounds"],

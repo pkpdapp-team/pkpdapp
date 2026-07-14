@@ -59,6 +59,45 @@ class ParameterInfo:
 
 
 @dataclass(frozen=True)
+class OptimiseResult:
+    """The result of :meth:`MyokitModelMixin.optimise`.
+
+    All sigma arrays are one entry per fitted output variable, in the canonical
+    order given by ``sigma_variables`` (ascending variable id). The ``*_mult``
+    fields carry the second (proportional) sigma of the "combined" noise model
+    and are ``None`` for the other models. ``predictions`` / ``residuals`` are one
+    dict per subject group (keys are ``"group_id"`` and integer variable ids).
+    """
+
+    # Optimal ODE input values, in user (linear) space, in the caller's order.
+    optimal: list[float]
+    loss: float
+    reason: str
+    # Output variable ids the sigma arrays are aligned to.
+    sigma_variables: list[int]
+    # Noise starting values / bounds (linear) and whether each was fit in log space.
+    sigma_start: list[float]
+    sigma_bounds: list[list[float]]
+    sigma_use_log_space: list[bool]
+    sigma_mult_start: list[float] | None
+    sigma_bounds_mult: list[list[float]] | None
+    sigma_mult_use_log_space: list[bool] | None
+    # Fitted noise standard deviations (linear). The additive ``sigma`` is always
+    # populated; ``sigma_mult`` (proportional) exists only for the combined model.
+    sigma: list[float]
+    sigma_mult: list[float] | None
+    # Diagnostics at the optimum.
+    predictions: list[dict[str, Any]] | None
+    residuals: list[dict[str, Any]] | None
+    covariance: list[list[float]] | None
+    condition_number: float | None
+    filtered_observations: int
+    neg2ll: float | None
+    aic: float | None
+    bic: float | None
+
+
+@dataclass(frozen=True)
 class OptimisationRecordContext:
     output_index: int
     time_index: int
@@ -234,25 +273,23 @@ class OptimiseContext(SimulateContext):
     ):
         return self._optimise_predict_with_sens(group, values_by_id)
 
-    def _log_sigma_array(self, log_sigma) -> np.ndarray:
+    def _sigma_array(self, sigma) -> np.ndarray:
         """
-        Normalise ``log_sigma`` to a 1-D array with one entry per distinct output
-        variable. A scalar is broadcast across all outputs (used by tests and as
-        a convenience default).
+        Normalise the (linear) ``sigma`` to a 1-D array with one entry per
+        distinct output variable. A scalar is broadcast across all outputs (used
+        by tests and as a convenience default).
         """
         n_outputs = len(self.sigma_output_qnames)
         return np.broadcast_to(
-            np.asarray(log_sigma, dtype=float), (n_outputs,)
+            np.asarray(sigma, dtype=float), (n_outputs,)
         ).astype(float, copy=True)
 
-    def _log_sigma_mult_array(self, log_sigma_mult) -> np.ndarray:
+    def _sigma_mult_array(self, sigma_mult) -> np.ndarray:
         """
-        Like ``_log_sigma_array`` for the combined model's second (proportional)
-        sigma, defaulting a missing value to 0.0 (sigma_m = 1).
+        Like ``_sigma_array`` for the combined model's second (proportional)
+        sigma, defaulting a missing value to 1.0.
         """
-        return self._log_sigma_array(
-            0.0 if log_sigma_mult is None else log_sigma_mult
-        )
+        return self._sigma_array(1.0 if sigma_mult is None else sigma_mult)
 
     @staticmethod
     def _is_filtered_observation(observed) -> bool:
@@ -281,21 +318,21 @@ class OptimiseContext(SimulateContext):
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
-        log_sigma: float = 0.0,
-        log_sigma_mult=None,
+        sigma: float = 1.0,
+        sigma_mult=None,
         noise_model: str = "additive",
     ):
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
             return np.inf
 
-        log_sigma_arr = self._log_sigma_array(log_sigma)
+        sigma_arr = self._sigma_array(sigma)
 
         if noise_model == "combined":
             # Heteroscedastic: per-point variance depends on the prediction, so
             # the loss cannot be factored into per-output SSR/sigma^2 terms.
-            sigma_a2 = np.exp(2.0 * log_sigma_arr)
-            sigma_m2 = np.exp(2.0 * self._log_sigma_mult_array(log_sigma_mult))
+            sigma_a2 = sigma_arr**2
+            sigma_m2 = self._sigma_mult_array(sigma_mult) ** 2
             nll = 0.0
             for group in groups:
                 try:
@@ -313,8 +350,8 @@ class OptimiseContext(SimulateContext):
                 return np.inf
             return float(nll)
 
-        sigma2 = np.exp(2.0 * log_sigma_arr)
-        n_outputs = len(log_sigma_arr)
+        sigma2 = sigma_arr**2
+        n_outputs = len(sigma_arr)
         ssr_per = np.zeros(n_outputs, dtype=float)
         n_obs_per = np.zeros(n_outputs, dtype=float)
         use_multiplicative_noise = noise_model == "multiplicative"
@@ -341,27 +378,27 @@ class OptimiseContext(SimulateContext):
 
         if not np.all(np.isfinite(ssr_per)):
             return np.inf
-        nll = float(np.sum(n_obs_per * log_sigma_arr + ssr_per / (2.0 * sigma2)))
+        nll = float(np.sum(n_obs_per * np.log(sigma_arr) + ssr_per / (2.0 * sigma2)))
         return nll
 
     def optimise_loss(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
-        log_sigma: float = 0.0,
-        log_sigma_mult=None,
+        sigma: float = 1.0,
+        sigma_mult=None,
         noise_model: str = "additive",
     ):
         return self._optimise_loss(
-            groups, values_by_id, log_sigma, log_sigma_mult, noise_model
+            groups, values_by_id, sigma, sigma_mult, noise_model
         )
 
     def _optimise_loss_gradient(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
-        log_sigma: float = 0.0,
-        log_sigma_mult=None,
+        sigma: float = 1.0,
+        sigma_mult=None,
         noise_model: str = "additive",
     ):
         """
@@ -370,24 +407,24 @@ class OptimiseContext(SimulateContext):
 
         ``ode_gradient`` is the gradient of the negative log-likelihood w.r.t.
         the optimised ODE input variables. ``sigma_gradient`` is the gradient
-        w.r.t. the log-sigma block: length ``n_outputs`` for the additive and
+        w.r.t. the (linear) sigma block: length ``n_outputs`` for the additive and
         multiplicative models, or ``2 * n_outputs`` for the combined model,
-        ordered as ``[log_sigma_a block, log_sigma_m block]``. The caller simply
+        ordered as ``[sigma_a block, sigma_m block]``. The caller simply
         concatenates ``[ode_gradient, sigma_gradient]`` to form the full
         parameter gradient.
 
         For the additive/multiplicative models the negative log-likelihood is
 
-            nll = Σ_k ( N_k * log_sigma[k] + SSR_k / (2 * sigma_k^2) )
+            nll = Σ_k ( N_k * log(sigma[k]) + SSR_k / (2 * sigma_k^2) )
 
-        and ``sigma_gradient[k] = N_k - SSR_k / sigma_k^2``. For the combined
-        model the per-observation variance depends on the prediction, so the
-        gradient is accumulated point-by-point (see below).
+        and ``sigma_gradient[k] = (N_k - SSR_k / sigma_k^2) / sigma_k``. For the
+        combined model the per-observation variance depends on the prediction, so
+        the gradient is accumulated point-by-point (see below).
         """
         param_ids = tuple(values_by_id.keys())
         n_params = len(param_ids)
-        log_sigma_arr = self._log_sigma_array(log_sigma)
-        n_outputs = len(log_sigma_arr)
+        sigma_arr = self._sigma_array(sigma)
+        n_outputs = len(sigma_arr)
 
         if noise_model == "combined":
             zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
@@ -400,10 +437,10 @@ class OptimiseContext(SimulateContext):
 
         if noise_model == "combined":
             return self._combined_loss_gradient(
-                groups, values_by_id, log_sigma_arr, log_sigma_mult
+                groups, values_by_id, sigma_arr, sigma_mult
             )
 
-        sigma2 = np.exp(2.0 * log_sigma_arr)
+        sigma2 = sigma_arr**2
         ssr_per = np.zeros(n_outputs, dtype=float)
         n_obs_per = np.zeros(n_outputs, dtype=float)
         total_gradient = np.zeros(n_params, dtype=float)
@@ -442,16 +479,17 @@ class OptimiseContext(SimulateContext):
         if not np.all(np.isfinite(ssr_per)):
             return np.inf, np.zeros(n_params), zeros_sigma
 
-        nll = float(np.sum(n_obs_per * log_sigma_arr + ssr_per / (2.0 * sigma2)))
-        sigma_gradient = n_obs_per - ssr_per / sigma2
+        nll = float(np.sum(n_obs_per * np.log(sigma_arr) + ssr_per / (2.0 * sigma2)))
+        # d(nll)/d(sigma_k) = (N_k - SSR_k / sigma_k^2) / sigma_k
+        sigma_gradient = (n_obs_per - ssr_per / sigma2) / sigma_arr
         return nll, total_gradient, sigma_gradient
 
     def _combined_loss_gradient(
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
-        log_sigma_arr: np.ndarray,
-        log_sigma_mult,
+        sigma_arr: np.ndarray,
+        sigma_mult,
     ):
         """
         Gradient of the combined-noise negative log-likelihood. For each
@@ -461,16 +499,18 @@ class OptimiseContext(SimulateContext):
         ``c = 0.5/s2 - r^2/(2*s2^2)`` and ``d(s2)/dp = 2*sigma_m_k^2*p``:
 
             d nll_i / dp   = r/s2 + c * d(s2)/dp
-            d nll_i / da_k = c * 2*sigma_a_k^2       (a_k = log sigma_a_k)
-            d nll_i / dm_k = c * 2*sigma_m_k^2 * p^2 (m_k = log sigma_m_k)
+            d nll_i / dsigma_a_k = c * 2*sigma_a_k       (linear sigma_a_k)
+            d nll_i / dsigma_m_k = c * 2*sigma_m_k * p^2 (linear sigma_m_k)
         """
         param_ids = tuple(values_by_id.keys())
         n_params = len(param_ids)
-        n_outputs = len(log_sigma_arr)
+        n_outputs = len(sigma_arr)
         zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
 
-        sigma_a2 = np.exp(2.0 * log_sigma_arr)
-        sigma_m2 = np.exp(2.0 * self._log_sigma_mult_array(log_sigma_mult))
+        sigma_a = sigma_arr
+        sigma_m = self._sigma_mult_array(sigma_mult)
+        sigma_a2 = sigma_a**2
+        sigma_m2 = sigma_m**2
 
         nll = 0.0
         total_gradient = np.zeros(n_params, dtype=float)
@@ -499,8 +539,9 @@ class OptimiseContext(SimulateContext):
                 dnll_dp = residual / s2 + common * ds2_dp
 
                 total_gradient += dnll_dp * gradient_row
-                grad_a[k] += common * (2.0 * sigma_a2[k])
-                grad_m[k] += common * (2.0 * sigma_m2[k] * prediction * prediction)
+                # d(s2)/d(sigma_a_k) = 2*sigma_a_k, d(s2)/d(sigma_m_k) = 2*sigma_m_k*p^2
+                grad_a[k] += common * (2.0 * sigma_a[k])
+                grad_m[k] += common * (2.0 * sigma_m[k] * prediction * prediction)
                 nll += self._combined_nll_term(s2, residual)
 
         if not np.isfinite(nll):
@@ -513,23 +554,23 @@ class OptimiseContext(SimulateContext):
         self,
         groups: tuple[OptimisationGroupContext, ...],
         values_by_id: dict[int, float],
-        log_sigma: float = 0.0,
-        log_sigma_mult=None,
+        sigma: float = 1.0,
+        sigma_mult=None,
         noise_model: str = "additive",
     ):
         return self._optimise_loss_gradient(
             groups,
             values_by_id,
-            log_sigma,
-            log_sigma_mult,
+            sigma,
+            sigma_mult,
             noise_model,
         )
 
     def optimise_diagnostics(
         self,
         optimal_model: np.ndarray,
-        log_sigma: float = 0.0,
-        log_sigma_mult=None,
+        sigma: float = 1.0,
+        sigma_mult=None,
         noise_model: str = "additive",
     ):
         input_ids = self.optimise_input_ids
@@ -554,14 +595,13 @@ class OptimiseContext(SimulateContext):
         use_multiplicative_noise = noise_model == "multiplicative"
         is_combined = noise_model == "combined"
 
-        log_sigma_arr = self._log_sigma_array(log_sigma)
-        sigma = np.exp(log_sigma_arr)
+        sigma = self._sigma_array(sigma)
         sigma2 = sigma * sigma
         sigma_list = [float(s) for s in sigma]
         sigma_variables = list(self.sigma_output_variable_ids)
 
         if is_combined:
-            sigma_mult = np.exp(self._log_sigma_mult_array(log_sigma_mult))
+            sigma_mult = self._sigma_mult_array(sigma_mult)
             sigma_mult2 = sigma_mult * sigma_mult
             sigma_mult_list: list[float] | None = [float(s) for s in sigma_mult]
         else:
@@ -674,8 +714,8 @@ class OptimiseContext(SimulateContext):
         # (one sigma per output, or two per output for the combined model).
         info_criteria = self._information_criteria(
             values_by_id=values_by_id,
-            log_sigma=log_sigma,
-            log_sigma_mult=log_sigma_mult,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
             noise_model=noise_model,
             n_params=n_params,
             n_filtered=n_filtered,
@@ -744,8 +784,8 @@ class OptimiseContext(SimulateContext):
         self,
         *,
         values_by_id: dict[int, float],
-        log_sigma,
-        log_sigma_mult,
+        sigma,
+        sigma_mult,
         noise_model: str,
         n_params: int,
         n_filtered: int,
@@ -769,8 +809,8 @@ class OptimiseContext(SimulateContext):
         nll = self._optimise_loss(
             self.optimisation_groups,
             values_by_id,
-            log_sigma,
-            log_sigma_mult,
+            sigma,
+            sigma_mult,
             noise_model,
         )
         if not np.isfinite(nll):

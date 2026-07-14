@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import {
   BiomarkerTypeRead,
+  CombinedModelRead,
   Optimise,
   SimulationSlider,
   SimulationYAxis,
@@ -29,10 +30,13 @@ import {
 } from "../../app/backendApi";
 import {
   getDefaultOptimiseInputs,
+  getMaxObservationByVariable,
   getSigmaVariables,
   sanitizeMaxIterations,
 } from "./utils";
 import { NoiseModel } from "./useOptimise";
+import { SubjectBiomarker } from "../../hooks/useDataset";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 
 const OPTIMISE_METHOD_OPTIONS = [
   { value: "pso", label: "PSO" },
@@ -55,6 +59,11 @@ type OptimisationSettingsProps = {
   biomarkerTypes: BiomarkerTypeRead[];
   groups: SubjectGroupRead[];
   visibleSubjectGroupIds: number[];
+  // Observation data used to default each sigma's upper bound to the maximum
+  // absolute observed value for its output variable.
+  subjectBiomarkers: SubjectBiomarker[][] | undefined;
+  units: UnitReadWithCompatible[];
+  model: CombinedModelRead;
   // Persisted optimisation settings, owned by useOptimise so they survive the
   // dialog closing/reopening and are shared with the sidebar Fit button.
   method: string;
@@ -67,28 +76,33 @@ type OptimisationSettingsProps = {
 
 type SigmaRowProps = {
   label: string;
-  logSigma: number;
-  onLogSigmaChange: (value: number) => void;
+  sigma: number;
+  onSigmaChange: (value: number) => void;
   bounds: [number, number];
   onBoundsChange: (bounds: [number, number]) => void;
+  useLogSpace: boolean;
+  onUseLogSpaceChange: (value: boolean) => void;
 };
 
-// A single log-sigma value plus its [min, max] bounds. Shared by the additive
-// and (combined-model) proportional sigma rows.
+// A single (linear) sigma value plus its [min, max] bounds and a "Log scale"
+// toggle selecting whether it is fit in log space. Shared by the additive and
+// (combined-model) proportional sigma rows.
 const SigmaRow = ({
   label,
-  logSigma,
-  onLogSigmaChange,
+  sigma,
+  onSigmaChange,
   bounds,
   onBoundsChange,
+  useLogSpace,
+  onUseLogSpaceChange,
 }: SigmaRowProps) => (
-  <Stack direction="row" spacing={1}>
+  <Stack direction="row" spacing={1} alignItems="center">
     <TextField
       label={label}
       type="number"
       size="small"
-      value={logSigma}
-      onChange={(event) => onLogSigmaChange(Number(event.target.value))}
+      value={sigma}
+      onChange={(event) => onSigmaChange(Number(event.target.value))}
       fullWidth
     />
     <TextField
@@ -107,6 +121,17 @@ const SigmaRow = ({
       onChange={(event) => onBoundsChange([bounds[0], Number(event.target.value)])}
       fullWidth
     />
+    <FormControlLabel
+      sx={{ whiteSpace: "nowrap" }}
+      control={
+        <Checkbox
+          size="small"
+          checked={useLogSpace}
+          onChange={(event) => onUseLogSpaceChange(event.target.checked)}
+        />
+      }
+      label="Log scale"
+    />
   </Stack>
 );
 
@@ -123,6 +148,9 @@ const OptimisationSettings = ({
   biomarkerTypes,
   groups,
   visibleSubjectGroupIds,
+  subjectBiomarkers,
+  units,
+  model,
   method,
   setMethod,
   noiseModel,
@@ -137,18 +165,25 @@ const OptimisationSettings = ({
   const [customUseLogSpace, setCustomUseLogSpace] = useState<boolean[]>([]);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
-  // Per-output-variable noise sigma, keyed by model output variable id. The
-  // "*Mult" maps hold the second (proportional) sigma used by the combined
-  // noise model.
-  const [logSigmaByVar, setLogSigmaByVar] = useState<Record<number, number>>({});
+  // Per-output-variable noise sigma (linear), keyed by model output variable id,
+  // with a per-sigma "fit in log space" flag. The "*Mult" maps hold the second
+  // (proportional) sigma used by the combined noise model. Entries fall back to
+  // the data-derived defaults (see below) when a variable has no explicit value.
+  const [sigmaStartByVar, setSigmaStartByVar] = useState<Record<number, number>>({});
   const [sigmaBoundsByVar, setSigmaBoundsByVar] = useState<
     Record<number, [number, number]>
   >({});
-  const [logSigmaMultByVar, setLogSigmaMultByVar] = useState<
+  const [sigmaUseLogSpaceByVar, setSigmaUseLogSpaceByVar] = useState<
+    Record<number, boolean>
+  >({});
+  const [sigmaMultStartByVar, setSigmaMultStartByVar] = useState<
     Record<number, number>
   >({});
   const [sigmaBoundsMultByVar, setSigmaBoundsMultByVar] = useState<
     Record<number, [number, number]>
+  >({});
+  const [sigmaMultUseLogSpaceByVar, setSigmaMultUseLogSpaceByVar] = useState<
+    Record<number, boolean>
   >({});
   const isCombined = noiseModel === "combined";
 
@@ -161,6 +196,23 @@ const OptimisationSettings = ({
       ),
     [biomarkerTypes, selectedBiomarkerTypeIds],
   );
+
+  // Max absolute observed value per sigma output variable (in model units), used
+  // to default each sigma's upper bound to the data scale.
+  const maxObservationByVariable = useMemo(
+    () =>
+      getMaxObservationByVariable(
+        sigmaVariables,
+        subjectBiomarkers,
+        variables,
+        units,
+        model,
+      ),
+    [sigmaVariables, subjectBiomarkers, variables, units, model],
+  );
+  const sigmaUpperDefault = (varId: number) =>
+    maxObservationByVariable[varId] ?? 1;
+  const sigmaStartDefault = (varId: number) => sigmaUpperDefault(varId) / 10;
 
   useEffect(() => {
     if (!open) {
@@ -188,12 +240,14 @@ const OptimisationSettings = ({
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
 
-    // Per-variable sigma starts at the defaults (log σ = 0, bounds [-20, 20]);
-    // the render/payload fall back to these when a variable has no entry.
-    setLogSigmaByVar({});
+    // Clear per-variable sigma overrides so the render/payload fall back to the
+    // data-derived defaults (start X/10, bounds [0, X], log space on).
+    setSigmaStartByVar({});
     setSigmaBoundsByVar({});
-    setLogSigmaMultByVar({});
+    setSigmaUseLogSpaceByVar({});
+    setSigmaMultStartByVar({});
     setSigmaBoundsMultByVar({});
+    setSigmaMultUseLogSpaceByVar({});
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -229,20 +283,29 @@ const OptimisationSettings = ({
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
-      // log_sigma / sigma_bounds are ordered by sigmaVariables (ascending
+      // sigma start / bounds are linear and ordered by sigmaVariables (ascending
       // variable id), matching the backend's canonical output ordering.
-      log_sigma: sigmaVariables.map((varId) => logSigmaByVar[varId] ?? 0),
-      sigma_bounds: sigmaVariables.map(
-        (varId) => sigmaBoundsByVar[varId] ?? [-20, 20],
+      sigma_start: sigmaVariables.map(
+        (varId) => sigmaStartByVar[varId] ?? sigmaStartDefault(varId),
       ),
-      // The second (proportional) sigma is only sent for the combined model.
+      sigma_bounds: sigmaVariables.map(
+        (varId) => sigmaBoundsByVar[varId] ?? [0, sigmaUpperDefault(varId)],
+      ),
+      sigma_use_log_space: sigmaVariables.map(
+        (varId) => sigmaUseLogSpaceByVar[varId] ?? true,
+      ),
+      // The second (proportional, dimensionless) sigma is only sent for the
+      // combined model.
       ...(isCombined
         ? {
-            log_sigma_mult: sigmaVariables.map(
-              (varId) => logSigmaMultByVar[varId] ?? 0,
+            sigma_mult_start: sigmaVariables.map(
+              (varId) => sigmaMultStartByVar[varId] ?? 0.1,
             ),
             sigma_bounds_mult: sigmaVariables.map(
-              (varId) => sigmaBoundsMultByVar[varId] ?? [-20, 20],
+              (varId) => sigmaBoundsMultByVar[varId] ?? [0, 1],
+            ),
+            sigma_mult_use_log_space: sigmaVariables.map(
+              (varId) => sigmaMultUseLogSpaceByVar[varId] ?? true,
             ),
           }
         : {}),
@@ -282,7 +345,7 @@ const OptimisationSettings = ({
                 <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
                   {label}
                 </Typography>
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" spacing={1} alignItems="center">
                   <TextField
                     label="Start"
                     type="number"
@@ -328,44 +391,46 @@ const OptimisationSettings = ({
                     }}
                     fullWidth
                   />
-                </Stack>
-                <Tooltip
-                  title={
-                    logSpaceDisabled
-                      ? "Log scale requires a non-negative lower bound."
-                      : ""
-                  }
-                  placement="top"
-                >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={
-                          (customUseLogSpace[index] ?? false) && !logSpaceDisabled
-                        }
-                        disabled={logSpaceDisabled}
-                        onChange={(event) => {
-                          const checked = event.target.checked;
-                          setCustomUseLogSpace((currentValues) => {
-                            const nextValues = [...currentValues];
-                            nextValues[index] = checked;
-                            return nextValues;
-                          });
-                        }}
-                      />
+                  <Tooltip
+                    title={
+                      logSpaceDisabled
+                        ? "Log scale requires a non-negative lower bound."
+                        : ""
                     }
-                    label="Log scale"
-                  />
-                </Tooltip>
+                    placement="top"
+                  >
+                    <FormControlLabel
+                      sx={{ whiteSpace: "nowrap" }}
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={
+                            (customUseLogSpace[index] ?? false) &&
+                            !logSpaceDisabled
+                          }
+                          disabled={logSpaceDisabled}
+                          onChange={(event) => {
+                            const checked = event.target.checked;
+                            setCustomUseLogSpace((currentValues) => {
+                              const nextValues = [...currentValues];
+                              nextValues[index] = checked;
+                              return nextValues;
+                            });
+                          }}
+                        />
+                      }
+                      label="Log scale"
+                    />
+                  </Tooltip>
+                </Stack>
               </Box>
             );
           })}
           <Divider />
           <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
             {isCombined
-              ? "Noise standard deviations (log scale): additive σ_a and proportional σ_m"
-              : "Noise standard deviation (log scale)"}
+              ? "Noise standard deviations: additive σ_a and proportional σ_m"
+              : "Noise standard deviation"}
           </Typography>
           {sigmaVariables.length === 0 && (
             <Typography variant="body2" color="text.secondary">
@@ -383,30 +448,46 @@ const OptimisationSettings = ({
                   {label}
                 </Typography>
                 <SigmaRow
-                  label={isCombined ? "Log sigma (additive)" : "Log sigma"}
-                  logSigma={logSigmaByVar[varId] ?? 0}
-                  onLogSigmaChange={(value) =>
-                    setLogSigmaByVar((current) => ({ ...current, [varId]: value }))
+                  label={isCombined ? "Sigma (additive)" : "Sigma"}
+                  sigma={sigmaStartByVar[varId] ?? sigmaStartDefault(varId)}
+                  onSigmaChange={(value) =>
+                    setSigmaStartByVar((current) => ({ ...current, [varId]: value }))
                   }
-                  bounds={sigmaBoundsByVar[varId] ?? [-20, 20]}
+                  bounds={
+                    sigmaBoundsByVar[varId] ?? [0, sigmaUpperDefault(varId)]
+                  }
                   onBoundsChange={(value) =>
                     setSigmaBoundsByVar((current) => ({ ...current, [varId]: value }))
+                  }
+                  useLogSpace={sigmaUseLogSpaceByVar[varId] ?? true}
+                  onUseLogSpaceChange={(value) =>
+                    setSigmaUseLogSpaceByVar((current) => ({
+                      ...current,
+                      [varId]: value,
+                    }))
                   }
                 />
                 {isCombined && (
                   <Box sx={{ marginTop: ".5rem" }}>
                     <SigmaRow
-                      label="Log sigma (proportional)"
-                      logSigma={logSigmaMultByVar[varId] ?? 0}
-                      onLogSigmaChange={(value) =>
-                        setLogSigmaMultByVar((current) => ({
+                      label="Sigma (proportional)"
+                      sigma={sigmaMultStartByVar[varId] ?? 0.1}
+                      onSigmaChange={(value) =>
+                        setSigmaMultStartByVar((current) => ({
                           ...current,
                           [varId]: value,
                         }))
                       }
-                      bounds={sigmaBoundsMultByVar[varId] ?? [-20, 20]}
+                      bounds={sigmaBoundsMultByVar[varId] ?? [0, 1]}
                       onBoundsChange={(value) =>
                         setSigmaBoundsMultByVar((current) => ({
+                          ...current,
+                          [varId]: value,
+                        }))
+                      }
+                      useLogSpace={sigmaMultUseLogSpaceByVar[varId] ?? true}
+                      onUseLogSpaceChange={(value) =>
+                        setSigmaMultUseLogSpaceByVar((current) => ({
                           ...current,
                           [varId]: value,
                         }))

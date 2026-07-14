@@ -245,7 +245,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     maxIterations,
     setMaxIterations,
   } = useOptimise(model);
-  const { biomarkerTypes } = useDataset(project.id);
+  const { biomarkerTypes, subjectBiomarkers } = useDataset(project.id);
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -534,6 +534,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         noiseModel,
         method,
         maxIterations,
+        subjectBiomarkers,
+        units,
+        model,
       }),
     );
   }, [
@@ -548,6 +551,9 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     method,
     maxIterations,
     handleOptimiseWithInputs,
+    subjectBiomarkers,
+    units,
+    model,
   ]);
 
   const [dimensions, setDimensions] = useState({

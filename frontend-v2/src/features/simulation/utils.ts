@@ -57,6 +57,55 @@ export function sanitizeMaxIterations(value: string): number {
     : Number(DEFAULT_MAX_ITERATIONS);
 }
 
+/**
+ * The maximum absolute observed value for each sigma output variable, converted
+ * into that variable's model units (the units the noise sigma lives in). Used to
+ * default a sigma's upper bound to the data scale. Observations are matched to a
+ * variable by qname and converted with the same unit factors as the scatter
+ * plots (target conversion factor for library-model CT1/AT1 variables).
+ */
+export function getMaxObservationByVariable(
+  sigmaVariables: number[],
+  subjectBiomarkers: SubjectBiomarker[][] | undefined,
+  variables: VariableRead[],
+  units: UnitReadWithCompatible[],
+  model?: CombinedModelRead,
+): Record<number, number> {
+  const result: Record<number, number> = {};
+  if (!subjectBiomarkers) {
+    return result;
+  }
+  const allObservations = subjectBiomarkers.flat();
+  for (const varId of sigmaVariables) {
+    const variable = variables.find((v) => v.id === varId);
+    if (!variable) continue;
+    const outputUnit = units.find((u) => u.id === variable.unit);
+    let maxAbs = 0;
+    for (const obs of allObservations) {
+      if (obs.qname !== variable.qname) continue;
+      const compatibleUnit = obs.unit?.compatible_units.find(
+        (u) => u.id === outputUnit?.id,
+      );
+      const isTarget = model?.is_library_model
+        ? obs.qname?.includes("CT1") || obs.qname?.includes("AT1")
+        : false;
+      const factor = compatibleUnit
+        ? isTarget
+          ? compatibleUnit.target_conversion_factor
+          : compatibleUnit.conversion_factor
+        : 1.0;
+      const value = Math.abs(obs.value * factor);
+      if (Number.isFinite(value) && value > maxAbs) {
+        maxAbs = value;
+      }
+    }
+    if (maxAbs > 0) {
+      result[varId] = maxAbs;
+    }
+  }
+  return result;
+}
+
 type GetDefaultOptimiseInputsProps = {
   orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
   variables: VariableRead[];
@@ -71,6 +120,11 @@ type GetDefaultOptimiseInputsProps = {
   noiseModel?: NoiseModel;
   method?: string;
   maxIterations?: string;
+  // Optional observation data used to default each sigma's upper bound to the
+  // maximum absolute observed value for that output variable.
+  subjectBiomarkers?: SubjectBiomarker[][];
+  units?: UnitReadWithCompatible[];
+  model?: CombinedModelRead;
 };
 
 export function getDefaultOptimiseInputs({
@@ -84,6 +138,9 @@ export function getDefaultOptimiseInputs({
   noiseModel = DEFAULT_NOISE_MODEL,
   method = DEFAULT_OPTIMISE_METHOD,
   maxIterations = DEFAULT_MAX_ITERATIONS,
+  subjectBiomarkers,
+  units,
+  model,
 }: GetDefaultOptimiseInputsProps): Optimise {
   const inputs = orderedSliders.map((slider) => slider.variable);
   const starting = inputs.map((variableId) => {
@@ -104,31 +161,47 @@ export function getDefaultOptimiseInputs({
 
   // One noise sigma per distinct output variable being fitted, in the same
   // canonical (ascending variable id) order the backend derives from
-  // biomarker_types.
+  // biomarker_types. Sigma start / bounds are in linear space; the upper bound
+  // defaults to the maximum absolute observed value for that output variable.
   const sigmaVariables = getSigmaVariables(selectedBiomarkerTypes);
-  const log_sigma = sigmaVariables.map(() => 0);
-  const sigma_bounds = sigmaVariables.map(() => [-20, 20]);
+  const maxObservationByVariable = getMaxObservationByVariable(
+    sigmaVariables,
+    subjectBiomarkers,
+    variables,
+    units ?? [],
+    model,
+  );
+  const sigma_start = sigmaVariables.map(
+    (varId) => (maxObservationByVariable[varId] ?? 1) / 10,
+  );
+  const sigma_bounds = sigmaVariables.map((varId) => [
+    0,
+    maxObservationByVariable[varId] ?? 1,
+  ]);
+  const sigma_use_log_space = sigmaVariables.map(() => true);
 
   return {
     inputs,
     starting,
     bounds: [lowerBounds, upperBounds],
-    // One flag per model parameter (parallel to inputs); defaults to linear
-    // space. The OptimisationSettings dialog lets the user toggle these on.
-    use_log_space: inputs.map(() => false),
+    // One flag per model parameter (parallel to inputs); defaults to log space
+    // where the lower bound is non-negative (log space is undefined otherwise).
+    use_log_space: lowerBounds.map((lb) => lb >= 0),
     biomarker_types,
     subject_groups: subjectGroups,
     noise_model: noiseModel,
     method,
     max_iterations: sanitizeMaxIterations(maxIterations),
-    log_sigma,
+    sigma_start,
     sigma_bounds,
-    // The combined noise model fits a second (proportional) sigma per output
-    // variable, mirroring the OptimisationSettings dialog payload.
+    sigma_use_log_space,
+    // The combined noise model fits a second (proportional, dimensionless) sigma
+    // per output variable, mirroring the OptimisationSettings dialog payload.
     ...(noiseModel === "combined"
       ? {
-          log_sigma_mult: sigmaVariables.map(() => 0),
-          sigma_bounds_mult: sigmaVariables.map(() => [-20, 20]),
+          sigma_mult_start: sigmaVariables.map(() => 0.1),
+          sigma_bounds_mult: sigmaVariables.map(() => [0, 1]),
+          sigma_mult_use_log_space: sigmaVariables.map(() => true),
         }
       : {}),
   };

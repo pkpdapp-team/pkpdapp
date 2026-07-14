@@ -14,7 +14,11 @@ from django.core.cache import cache
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
 
-from pkpdapp.models.optimise_context import NOISE_MODELS, OptimiseContext
+from pkpdapp.models.optimise_context import (
+    NOISE_MODELS,
+    OptimiseContext,
+    OptimiseResult,
+)
 from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 logger = logging.getLogger(__name__)
@@ -407,13 +411,13 @@ class MyokitModelMixin(UncertaintySimulationMixin):
     def optimise(
         self,
         parameters,
-        noise_parameters=None,
+        noise_parameters,
         biomarker_types=None,
         subject_groups=None,
         max_iterations=None,
         noise_model="additive",
         method="pso",
-    ):
+    ) -> OptimiseResult:
         """
         Fits the model against the data indicated
 
@@ -454,17 +458,18 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             ``variable_id`` together with its ``starting`` value and
             ``lower_bound`` / ``upper_bound``. The order chosen here defines the
             order of the ``optimal`` result array.
-        noise_parameters: list of ParameterInfo (optional)
+        noise_parameters: list of ParameterInfo (required)
             noise (sigma) parameters, one per fitted output variable in the
             canonical order (ascending variable id) derived from
             ``biomarker_types`` and reported as ``sigma_variables``. Each entry's
-            ``starting`` is the initial log(sigma) and its bounds are the
-            log_sigma bounds. The first ``n_outputs`` entries are the additive
-            sigma_a block; for the "combined" noise model a further ``n_outputs``
-            entries follow for the proportional sigma_m block. If omitted, every
-            log_sigma defaults to 0.0 with bounds (-20.0, 20.0). If given, the
-            length must be ``n_outputs`` (additive/multiplicative) or
-            ``2 * n_outputs`` (combined).
+            ``starting`` / ``lower_bound`` / ``upper_bound`` are the *linear* sigma
+            value and bounds, and ``use_log_space`` selects whether that sigma is
+            optimised in log space — exactly like the model parameters. The first
+            ``n_outputs`` entries are the additive sigma_a block; for the
+            "combined" noise model a further ``n_outputs`` entries follow for the
+            proportional sigma_m block. The length must be ``n_outputs``
+            (additive/multiplicative) or ``2 * n_outputs`` (combined); ``None`` or
+            a wrong length raises ``ValueError``.
         biomarker_types: list (optional)
             list of biomarker_types (ids) to optimise against, None for all
         subject_groups: list (optional)
@@ -480,7 +485,8 @@ class MyokitModelMixin(UncertaintySimulationMixin):
 
         Returns
         -------
-        result: dict
+        result: OptimiseResult
+            A dataclass with the fields below (see ``OptimiseResult``):
             - "optimal": (list) optimal input values (same order as parameters)
             - "loss": (float) value of loss function at optimal
             - "reason": (str) stopping reason
@@ -489,12 +495,16 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             - "sigma_mult": (list or None) estimated proportional noise standard
               deviation per output variable (combined model only, else None)
             - "sigma_variables": (list) output variable ids for the sigma arrays
-            - "log_sigma": (list) starting log(sigma_a) per output variable
-            - "sigma_bounds": (list of [lo, hi]) log_sigma bounds per output
-            - "log_sigma_mult": (list or None) starting log(sigma_m) per output
-              variable (combined model only, else None)
-            - "sigma_bounds_mult": (list of [lo, hi] or None) log_sigma_mult
-              bounds per output (combined model only, else None)
+            - "sigma_start": (list) starting sigma_a (linear) per output variable
+            - "sigma_bounds": (list of [lo, hi]) linear sigma_a bounds per output
+            - "sigma_use_log_space": (list of bool) whether each sigma_a was fit in
+              log space
+            - "sigma_mult_start": (list or None) starting sigma_m (linear) per
+              output variable (combined model only, else None)
+            - "sigma_bounds_mult": (list of [lo, hi] or None) linear sigma_m bounds
+              per output (combined model only, else None)
+            - "sigma_mult_use_log_space": (list of bool or None) whether each
+              sigma_m was fit in log space (combined model only, else None)
             - "predictions": (list of dicts) simulated values at the optimal
               parameters, one dict per subject group. Each dict has the same
               format as the dicts returned by ``simulate``: keys are
@@ -567,17 +577,18 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         upper_bounds = np.asarray(bounds[1], dtype=float)
         n_inputs = len(inputs)
 
-        # The per-output sigma parameters are aligned positionally with the
-        # context's canonical output variable ordering (ascending variable id),
-        # which is derived from biomarker_types. noise_parameters must therefore
-        # have one entry per output variable, in that same order (and, for the
-        # combined model, a second such block for the proportional sigma_m).
+        # Sigma (noise) parameters are required and aligned positionally with the
+        # context's canonical output variable ordering (ascending variable id):
+        # one linear ParameterInfo per fitted output variable (and, for the
+        # combined model, a second block for the proportional sigma_m).
         output_variable_ids = context.sigma_output_variable_ids
         n_outputs = len(output_variable_ids)
         is_combined = noise_model == "combined"
         expected_noise = 2 * n_outputs if is_combined else n_outputs
 
-        if noise_parameters is not None and len(noise_parameters) != expected_noise:
+        if noise_parameters is None:
+            raise ValueError("noise_parameters is required.")
+        if len(noise_parameters) != expected_noise:
             block_desc = (
                 f"two entries per fitted output variable ({expected_noise})"
                 if is_combined
@@ -587,63 +598,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 f"noise_parameters must have {block_desc}, "
                 f"got {len(noise_parameters)}."
             )
-
-        def _sigma_block(noise_params):
-            """Expand a per-output ParameterInfo block into (start, lower, upper).
-
-            ``noise_params`` is either a length-``n_outputs`` slice of
-            ``noise_parameters`` or ``None`` (in which case defaults are used).
-            """
-            start = np.array(
-                [
-                    float(noise_params[i].starting) if noise_params is not None else 0.0
-                    for i in range(n_outputs)
-                ],
-                dtype=float,
-            )
-            lower = np.array(
-                [
-                    float(noise_params[i].lower_bound)
-                    if noise_params is not None
-                    else -20.0
-                    for i in range(n_outputs)
-                ],
-                dtype=float,
-            )
-            upper = np.array(
-                [
-                    float(noise_params[i].upper_bound)
-                    if noise_params is not None
-                    else 20.0
-                    for i in range(n_outputs)
-                ],
-                dtype=float,
-            )
-            return start, lower, upper
-
-        additive_params = (
-            noise_parameters[:n_outputs] if noise_parameters is not None else None
-        )
-        log_sigma_start, sigma_lower, sigma_upper = _sigma_block(additive_params)
-
-        if is_combined:
-            proportional_params = (
-                noise_parameters[n_outputs:] if noise_parameters is not None else None
-            )
-            log_sigma_mult_start, sigma_mult_lower, sigma_mult_upper = _sigma_block(
-                proportional_params
-            )
-            sigma_start_block = np.concatenate([log_sigma_start, log_sigma_mult_start])
-            sigma_lower_block = np.concatenate([sigma_lower, sigma_mult_lower])
-            sigma_upper_block = np.concatenate([sigma_upper, sigma_mult_upper])
-        else:
-            sigma_start_block = log_sigma_start
-            sigma_lower_block = sigma_lower
-            sigma_upper_block = sigma_upper
-
-        # Number of sigma parameters appended to the ODE-input vector: one per
-        # output (additive/multiplicative) or two per output (combined).
-        n_sigma = len(sigma_start_block)
 
         conversion_factors = np.asarray(
             [
@@ -655,59 +609,85 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             dtype=float,
         )
 
-        # Parameters flagged use_log_space are optimised as z = log(v), where v is
-        # the model-space value. Log space is only defined for non-negative
-        # parameters, so it requires lower_bound >= 0 (and a positive upper bound).
-        log_space_mask = np.array(
-            [bool(parameter.use_log_space) for parameter in parameters], dtype=bool
+        # ODE and sigma parameters are treated identically: each is optimised in
+        # either linear or log space. Build one combined vector of *linear* values
+        # — ODE in model space (user value * conversion factor) followed by the
+        # linear sigma block. ``log_mask`` marks entries optimised in log space.
+        # ``needs_positive`` marks entries that must stay > 0 in linear space (all
+        # sigmas, since the context uses log(sigma) and 1/sigma^2); ODE linear
+        # values are used as-is and may be <= 0.
+        ode_start = starting * conversion_factors
+        ode_lower = lower_bounds * conversion_factors
+        ode_upper = upper_bounds * conversion_factors
+        ode_log = np.array([bool(p.use_log_space) for p in parameters], dtype=bool)
+
+        sigma_start_lin = np.array([p.starting for p in noise_parameters], dtype=float)
+        sigma_lower_lin = np.array(
+            [p.lower_bound for p in noise_parameters], dtype=float
         )
-        for parameter in parameters:
-            if not parameter.use_log_space:
+        sigma_upper_lin = np.array(
+            [p.upper_bound for p in noise_parameters], dtype=float
+        )
+        sigma_log = np.array(
+            [bool(p.use_log_space) for p in noise_parameters], dtype=bool
+        )
+
+        linear_start = np.concatenate([ode_start, sigma_start_lin])
+        linear_lower = np.concatenate([ode_lower, sigma_lower_lin])
+        linear_upper = np.concatenate([ode_upper, sigma_upper_lin])
+        log_mask = np.concatenate([ode_log, sigma_log])
+        needs_positive = np.concatenate(
+            [np.zeros(n_inputs, dtype=bool), np.ones(expected_noise, dtype=bool)]
+        )
+        n_sigma = expected_noise
+
+        # Validate: an entry optimised in log space (or one that must stay
+        # positive) needs lower_bound >= 0 and a positive upper_bound.
+        names = (
+            [f"parameter {input_id}" for input_id in inputs]
+            + ["sigma"] * n_outputs
+            + (["sigma_mult"] * n_outputs if is_combined else [])
+        )
+        for i, name in enumerate(names):
+            if not (log_mask[i] or needs_positive[i]):
                 continue
-            if parameter.lower_bound < 0:
+            if linear_lower[i] < 0:
                 raise ValueError(
-                    "use_log_space is only valid for parameters with "
-                    f"lower_bound >= 0, got lower_bound={parameter.lower_bound}."
+                    f"{name} must have lower_bound >= 0 to be optimised in log "
+                    f"space, got {linear_lower[i]}."
                 )
-            if parameter.upper_bound <= 0:
+            if linear_upper[i] <= 0:
                 raise ValueError(
-                    "use_log_space requires a positive upper_bound, "
-                    f"got upper_bound={parameter.upper_bound}."
+                    f"{name} must have a positive upper_bound to be optimised in "
+                    f"log space, got {linear_upper[i]}."
                 )
 
-        # Model-space (conversion-scaled) ODE parameter vectors. The log-space
-        # entries are then replaced by their logarithm; a zero lower bound / start
-        # is clamped to a scale-aware floor so the log stays finite.
-        starting_ode = np.asarray(starting, dtype=float) * conversion_factors
-        lower_ode = np.asarray(lower_bounds, dtype=float) * conversion_factors
-        upper_ode = np.asarray(upper_bounds, dtype=float) * conversion_factors
-        if log_space_mask.any():
-            floor = upper_ode * _LOG_SPACE_FLOOR_RATIO
-            starting_ode[log_space_mask] = np.log(
-                np.maximum(starting_ode[log_space_mask], floor[log_space_mask])
-            )
-            lower_ode[log_space_mask] = np.log(
-                np.maximum(lower_ode[log_space_mask], floor[log_space_mask])
-            )
-            upper_ode[log_space_mask] = np.log(upper_ode[log_space_mask])
+        # Shared linear<->optimiser mapping for the whole vector. A scale-aware
+        # floor keeps log() finite for a zero lower bound / start, and keeps
+        # positivity-required linear entries away from zero.
+        floor = linear_upper * _LOG_SPACE_FLOOR_RATIO
+        clamp_mask = log_mask | needs_positive
 
-        starting_model = np.concatenate([starting_ode, sigma_start_block])
-        lower_bounds_model = np.concatenate([lower_ode, sigma_lower_block])
-        upper_bounds_model = np.concatenate([upper_ode, sigma_upper_block])
+        def to_optimiser(values):
+            """Linear values -> optimiser space (log the log-space entries)."""
+            out = np.asarray(values, dtype=float).copy()
+            out[clamp_mask] = np.maximum(out[clamp_mask], floor[clamp_mask])
+            out[log_mask] = np.log(out[log_mask])
+            return out
 
-        def ode_to_model(ode_values):
-            """Map the optimiser's ODE block to model space (exp the log entries)."""
-            ode_values = np.asarray(ode_values, dtype=float)
-            if not log_space_mask.any():
-                return ode_values
-            model_values = ode_values.copy()
-            model_values[log_space_mask] = np.exp(model_values[log_space_mask])
-            return model_values
+        def to_linear(x):
+            """Optimiser vector -> linear values (exp the log-space entries)."""
+            out = np.asarray(x, dtype=float).copy()
+            out[log_mask] = np.exp(out[log_mask])
+            return out
+
+        starting_model = to_optimiser(linear_start)
+        lower_bounds_model = to_optimiser(linear_lower)
+        upper_bounds_model = to_optimiser(linear_upper)
 
         def split_sigma(sigma_block):
-            """Split the appended sigma block into (log_sigma_a, log_sigma_m).
-
-            log_sigma_m is None unless the combined model is in use.
+            """Split the linear sigma block into (sigma_a, sigma_m). sigma_m is
+            None unless the combined model is in use.
             """
             sigma_block = np.asarray(sigma_block, dtype=float)
             if is_combined:
@@ -728,13 +708,13 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 return n_inputs + n_sigma
 
             def __call__(self, x):
-                ode_values = ode_to_model(x[:n_inputs])
-                log_s, log_s_mult = split_sigma(x[n_inputs:])
+                linear = to_linear(x)
+                sigma_a, sigma_m = split_sigma(linear[n_inputs:])
                 loss = context.optimise_loss(
                     context.optimisation_groups,
-                    self.values_by_id(ode_values),
-                    log_sigma=log_s,
-                    log_sigma_mult=log_s_mult,
+                    self.values_by_id(linear[:n_inputs]),
+                    sigma=sigma_a,
+                    sigma_mult=sigma_m,
                     noise_model=noise_model,
                 )
                 if np.isfinite(loss) and loss < self.best_loss:
@@ -743,14 +723,14 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 return loss
 
             def evaluateS1(self, x):
-                ode_values = ode_to_model(x[:n_inputs])
-                log_s, log_s_mult = split_sigma(x[n_inputs:])
+                linear = to_linear(x)
+                sigma_a, sigma_m = split_sigma(linear[n_inputs:])
                 try:
                     result = context.optimise_loss_gradient(
                         context.optimisation_groups,
-                        self.values_by_id(ode_values),
-                        log_sigma=log_s,
-                        log_sigma_mult=log_s_mult,
+                        self.values_by_id(linear[:n_inputs]),
+                        sigma=sigma_a,
+                        sigma_mult=sigma_m,
                         noise_model=noise_model,
                     )
                     nll, ode_gradient, sigma_gradient = result
@@ -761,12 +741,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                     return np.inf, np.zeros(n_inputs + n_sigma)
                 if not np.isfinite(nll):
                     return np.inf, np.zeros(n_inputs + n_sigma)
-                # Chain rule for log-space parameters: the context returns
-                # d(nll)/d(v); with z = log(v), d(nll)/dz = d(nll)/dv * v.
-                if log_space_mask.any():
-                    ode_gradient = np.asarray(ode_gradient, dtype=float).copy()
-                    ode_gradient[log_space_mask] *= ode_values[log_space_mask]
-                total_gradient = np.concatenate([ode_gradient, sigma_gradient])
+                # The context returns both gradients w.r.t. the linear value.
+                # Map to optimiser space with one shared chain rule: for a
+                # log-space entry z = log(v), d/dz = d/dv * v; else d/dv * 1.
+                grad_linear = np.concatenate([ode_gradient, sigma_gradient])
+                total_gradient = grad_linear * np.where(log_mask, linear, 1.0)
                 loss = float(nll)
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = loss
@@ -834,14 +813,15 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 reason = f"Converged after {iters} iterations."
 
         optimal = np.asarray(optimal, dtype=float)
-        # ode_to_model exponentiates the log-space entries, so ode_optimal is in
-        # model space regardless of how each parameter was parameterised.
-        ode_optimal = ode_to_model(optimal[:n_inputs])
-        log_s, log_s_mult = split_sigma(optimal[n_inputs:])
+        # to_linear exponentiates the log-space entries, so the linear optimum is
+        # in model space (ODE) / linear sigma regardless of parameterisation.
+        linear_optimal = to_linear(optimal)
+        ode_optimal = linear_optimal[:n_inputs]
+        sigma_a, sigma_m = split_sigma(linear_optimal[n_inputs:])
         diagnostics = context.optimise_diagnostics(
             optimal_model=ode_optimal,
-            log_sigma=log_s,
-            log_sigma_mult=log_s_mult,
+            sigma=sigma_a,
+            sigma_mult=sigma_m,
             noise_model=noise_model,
         )
 
@@ -862,23 +842,41 @@ class MyokitModelMixin(UncertaintySimulationMixin):
 
         optimal_user = ode_optimal / conversion_factors
 
-        result = {
-            "optimal": np.asarray(optimal_user, dtype=float).tolist(),
-            "loss": float(loss),
-            "reason": str(reason),
-            "sigma_variables": list(output_variable_ids),
-            "log_sigma": log_sigma_start.tolist(),
-            "sigma_bounds": [
-                [float(lo), float(hi)] for lo, hi in zip(sigma_lower, sigma_upper)
-            ],
-            "log_sigma_mult": None,
-            "sigma_bounds_mult": None,
-            **diagnostics,
-        }
+        # Sigma start / bounds are reported in linear space (the same units as the
+        # fitted ``sigma``), with a flag recording whether each was fit in log
+        # space. The proportional (``*_mult``) block only exists for the combined
+        # model.
         if is_combined:
-            result["log_sigma_mult"] = log_sigma_mult_start.tolist()
-            result["sigma_bounds_mult"] = [
+            sigma_mult_start = sigma_start_lin[n_outputs:].tolist()
+            sigma_bounds_mult = [
                 [float(lo), float(hi)]
-                for lo, hi in zip(sigma_mult_lower, sigma_mult_upper)
+                for lo, hi in zip(
+                    sigma_lower_lin[n_outputs:], sigma_upper_lin[n_outputs:]
+                )
             ]
-        return result
+            sigma_mult_use_log_space = [bool(v) for v in sigma_log[n_outputs:]]
+        else:
+            sigma_mult_start = None
+            sigma_bounds_mult = None
+            sigma_mult_use_log_space = None
+
+        return OptimiseResult(
+            optimal=np.asarray(optimal_user, dtype=float).tolist(),
+            loss=float(loss),
+            reason=str(reason),
+            sigma_start=sigma_start_lin[:n_outputs].tolist(),
+            sigma_bounds=[
+                [float(lo), float(hi)]
+                for lo, hi in zip(
+                    sigma_lower_lin[:n_outputs], sigma_upper_lin[:n_outputs]
+                )
+            ],
+            sigma_use_log_space=[bool(v) for v in sigma_log[:n_outputs]],
+            sigma_mult_start=sigma_mult_start,
+            sigma_bounds_mult=sigma_bounds_mult,
+            sigma_mult_use_log_space=sigma_mult_use_log_space,
+            # sigma_variables + the diagnostics fields (sigma, predictions,
+            # residuals, covariance, condition_number, filtered_observations,
+            # neg2ll, aic, bic) are supplied directly by optimise_diagnostics.
+            **diagnostics,
+        )
