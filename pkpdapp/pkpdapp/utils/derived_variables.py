@@ -804,6 +804,181 @@ def add_imax(
     return imax_var
 
 
+def add_time_emax(
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    time_var: myokit.Variable,
+    **kwargs,
+) -> myokit.Variable:
+    """
+    Create a Time Emax variable for the given variable in the Myokit model.
+
+    base_variable_TEmax = (base_variable - Xmin)
+        * time**hll/(time**hll + t50**hll) + Xmin
+
+    Unlike the (dose) Emax nonlinearity, this depends on the model time rather
+    than the first dose, so it is always available (no dose protocol required).
+
+    Parameters
+    ----------
+    myokit_var
+        Variable to create Time Emax for.
+    myokit_compartment
+        Myokit compartment to add the Time Emax variable to.
+    time_var
+        Time variable.
+
+    Returns
+    -------
+    myokit.Variable
+        The created Time Emax variable.
+    """
+    var_name = myokit_var.name()
+    # base_variable_TEmax = (base_variable - Xmin) * time**hll/(time**hll+t50**hll) + Xmin  # noqa: E501
+    temax_var_name = f"{var_name}_TEmax"
+    t50_var_name = f"t50_{var_name}"
+    hll_var_name = f"hll_{var_name}"
+    min_var_name = f"{var_name}_min"
+
+    if myokit_compartment.has_variable(temax_var_name):
+        return myokit_compartment.get(temax_var_name)
+    t50_var = myokit_compartment.add_variable(t50_var_name)
+    t50_var.meta["desc"] = f"Time Emax t50 for {var_name}"
+    t50_var.set_unit(time_var.unit())
+    t50_var.set_rhs(myokit.Number(1))
+
+    hll_var = myokit_compartment.add_variable(hll_var_name)
+    hll_var.meta["desc"] = f"Time Emax Hill coefficient for {var_name}"
+    hll_var.set_unit(myokit.units.dimensionless)
+    hll_var.set_rhs(myokit.Number(1))
+
+    min_var = myokit_compartment.add_variable(min_var_name)
+    min_var.meta["desc"] = f"Time Emax min for {var_name}"
+    min_var.set_unit(myokit_var.unit())
+    min_var.set_rhs(myokit.Number(0))
+
+    temax_var = myokit_compartment.add_variable(temax_var_name)
+    temax_var.meta["desc"] = f"Time Emax for {var_name}"
+    temax_var.set_unit(myokit_var.unit())
+    temax_var.set_rhs(
+        myokit.Plus(
+            myokit.Multiply(
+                myokit.Minus(
+                    myokit.Name(myokit_var),
+                    myokit.Name(min_var),
+                ),
+                myokit.Divide(
+                    myokit.Power(
+                        myokit.Name(time_var),
+                        myokit.Name(hll_var),
+                    ),
+                    myokit.Plus(
+                        myokit.Power(
+                            myokit.Name(time_var),
+                            myokit.Name(hll_var),
+                        ),
+                        myokit.Power(
+                            myokit.Name(t50_var),
+                            myokit.Name(hll_var),
+                        ),
+                    ),
+                ),
+            ),
+            myokit.Name(min_var),
+        )
+    )
+    return temax_var
+
+
+def add_time_imax(
+    myokit_var: myokit.Variable,
+    myokit_compartment: myokit.Component,
+    time_var: myokit.Variable,
+    **kwargs,
+) -> myokit.Variable:
+    """
+    Create a Time Imax variable for the given variable in the Myokit model.
+
+    base_variable_TImax = (base_variable - Xmin)
+        * [1 - time**hll/(time**hll + t50**hll)] + Xmin
+
+    Unlike the (dose) Imax nonlinearity, this depends on the model time rather
+    than the first dose, so it is always available (no dose protocol required).
+
+    Parameters
+    ----------
+    myokit_var
+        Variable to create Time Imax for.
+    myokit_compartment
+        Myokit compartment to add the Time Imax variable to.
+    time_var
+        Time variable.
+
+    Returns
+    -------
+    myokit.Variable
+        The created Time Imax variable.
+    """
+    var_name = myokit_var.name()
+    # base_variable_TImax = (base_variable - Xmin) * [1-time**hll/(time**hll+t50**hll)] + Xmin  # noqa: E501
+    timax_var_name = f"{var_name}_TImax"
+    t50_var_name = f"t50_{var_name}"
+    hll_var_name = f"hll_{var_name}"
+    min_var_name = f"{var_name}_min"
+
+    if myokit_compartment.has_variable(timax_var_name):
+        return myokit_compartment.get(timax_var_name)
+    t50_var = myokit_compartment.add_variable(t50_var_name)
+    t50_var.meta["desc"] = f"Time Imax t50 for {var_name}"
+    t50_var.set_unit(time_var.unit())
+    t50_var.set_rhs(myokit.Number(1))
+
+    hll_var = myokit_compartment.add_variable(hll_var_name)
+    hll_var.meta["desc"] = f"Time Imax Hill coefficient for {var_name}"
+    hll_var.set_unit(myokit.units.dimensionless)
+    hll_var.set_rhs(myokit.Number(1))
+
+    min_var = myokit_compartment.add_variable(min_var_name)
+    min_var.meta["desc"] = f"Time Imax min for {var_name}"
+    min_var.set_unit(myokit_var.unit())
+    min_var.set_rhs(myokit.Number(0))
+
+    timax_var = myokit_compartment.add_variable(timax_var_name)
+    timax_var.meta["desc"] = f"Time Imax for {var_name}"
+    timax_var.set_unit(myokit_var.unit())
+    timax_var.set_rhs(
+        myokit.Plus(
+            myokit.Multiply(
+                myokit.Minus(
+                    myokit.Name(myokit_var),
+                    myokit.Name(min_var),
+                ),
+                myokit.Minus(
+                    myokit.Number(1),
+                    myokit.Divide(
+                        myokit.Power(
+                            myokit.Name(time_var),
+                            myokit.Name(hll_var),
+                        ),
+                        myokit.Plus(
+                            myokit.Power(
+                                myokit.Name(time_var),
+                                myokit.Name(hll_var),
+                            ),
+                            myokit.Power(
+                                myokit.Name(t50_var),
+                                myokit.Name(hll_var),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            myokit.Name(min_var),
+        )
+    )
+    return timax_var
+
+
 def add_power(
     myokit_var: myokit.Variable,
     myokit_compartment: myokit.Component,
@@ -1088,6 +1263,8 @@ pd_model_var_types = {
     DerivedVariable.Type.EXTENDED_MICHAELIS_MENTEN: add_extended_michaelis_menten,
     DerivedVariable.Type.EMAX: add_emax,
     DerivedVariable.Type.IMAX: add_imax,
+    DerivedVariable.Type.TIME_EMAX: add_time_emax,
+    DerivedVariable.Type.TIME_IMAX: add_time_imax,
     DerivedVariable.Type.POWER: add_power,
     DerivedVariable.Type.NEGATIVE_POWER: add_negative_power,
     DerivedVariable.Type.EXP_DECAY: add_exp_decay,

@@ -41,6 +41,8 @@ class DerivedVariable(StoredModel):
         EXTENDED_MICHAELIS_MENTEN = "EMM", "Extended Michaelis-Menten"
         EMAX = "EMX", "Emax"
         IMAX = "IMX", "Imax"
+        TIME_EMAX = "TEM", "Time Emax"
+        TIME_IMAX = "TIM", "Time Imax"
         POWER = "POW", "Power"
         NEGATIVE_POWER = "NPW", "Negative Power"
         EXP_DECAY = "TDI", "Exponential Decay"
