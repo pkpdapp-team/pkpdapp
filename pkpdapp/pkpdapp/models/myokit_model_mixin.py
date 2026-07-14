@@ -25,11 +25,6 @@ logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
 
-# When a parameter is optimised in log space, a lower bound or starting value of
-# zero maps to log(0) = -inf. To keep the optimiser bounds finite we clamp such
-# values to this fraction of the parameter's upper bound (scale-aware floor).
-_LOG_SPACE_FLOOR_RATIO = 1e-9
-
 
 class MyokitModelMixin(UncertaintySimulationMixin):
 
@@ -612,10 +607,8 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         # ODE and sigma parameters are treated identically: each is optimised in
         # either linear or log space. Build one combined vector of *linear* values
         # — ODE in model space (user value * conversion factor) followed by the
-        # linear sigma block. ``log_mask`` marks entries optimised in log space.
-        # ``needs_positive`` marks entries that must stay > 0 in linear space (all
-        # sigmas, since the context uses log(sigma) and 1/sigma^2); ODE linear
-        # values are used as-is and may be <= 0.
+        # linear sigma block — plus ``log_mask`` marking entries optimised in log
+        # space. These drive the per-parameter pints transformation below.
         ode_start = starting * conversion_factors
         ode_lower = lower_bounds * conversion_factors
         ode_upper = upper_bounds * conversion_factors
@@ -636,54 +629,66 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         linear_lower = np.concatenate([ode_lower, sigma_lower_lin])
         linear_upper = np.concatenate([ode_upper, sigma_upper_lin])
         log_mask = np.concatenate([ode_log, sigma_log])
-        needs_positive = np.concatenate(
-            [np.zeros(n_inputs, dtype=bool), np.ones(expected_noise, dtype=bool)]
-        )
         n_sigma = expected_noise
 
-        # Validate: an entry optimised in log space (or one that must stay
-        # positive) needs lower_bound >= 0 and a positive upper_bound.
+        # Validate: log-space parameters need a non-negative lower bound and a
+        # positive starting value (log is undefined otherwise); every parameter
+        # needs lower < upper.
         names = (
             [f"parameter {input_id}" for input_id in inputs]
             + ["sigma"] * n_outputs
             + (["sigma_mult"] * n_outputs if is_combined else [])
         )
         for i, name in enumerate(names):
-            if not (log_mask[i] or needs_positive[i]):
-                continue
-            if linear_lower[i] < 0:
+            if linear_lower[i] >= linear_upper[i]:
                 raise ValueError(
-                    f"{name} must have lower_bound >= 0 to be optimised in log "
-                    f"space, got {linear_lower[i]}."
+                    f"{name} lower bound must be less than the upper bound, got "
+                    f"[{linear_lower[i]}, {linear_upper[i]}]."
                 )
-            if linear_upper[i] <= 0:
-                raise ValueError(
-                    f"{name} must have a positive upper_bound to be optimised in "
-                    f"log space, got {linear_upper[i]}."
-                )
+            if log_mask[i]:
+                if linear_lower[i] < 0:
+                    raise ValueError(
+                        f"{name} must have lower_bound >= 0 to be optimised in "
+                        f"log space, got {linear_lower[i]}."
+                    )
+                if linear_start[i] <= 0:
+                    raise ValueError(
+                        f"{name} must have a positive starting value to be "
+                        f"optimised in log space, got {linear_start[i]}."
+                    )
 
-        # Shared linear<->optimiser mapping for the whole vector. A scale-aware
-        # floor keeps log() finite for a zero lower bound / start, and keeps
-        # positivity-required linear entries away from zero.
-        floor = linear_upper * _LOG_SPACE_FLOOR_RATIO
-        clamp_mask = log_mask | needs_positive
+        # The error measure works in model space; pints applies each parameter's
+        # transformation (and its Jacobian for the gradient). Log-space parameters
+        # use a log transformation; the rest use a rectangular-boundaries
+        # transformation that maps the bounded interval to an unbounded search
+        # space, so gradient optimisers are not trapped by hard bounds.
+        transformation = pints.ComposedTransformation(
+            *[
+                pints.LogTransformation(1)
+                if log
+                else pints.RectangularBoundariesTransformation([lo], [hi])
+                for log, lo, hi in zip(log_mask, linear_lower, linear_upper)
+            ]
+        )
 
-        def to_optimiser(values):
-            """Linear values -> optimiser space (log the log-space entries)."""
-            out = np.asarray(values, dtype=float).copy()
-            out[clamp_mask] = np.maximum(out[clamp_mask], floor[clamp_mask])
-            out[log_mask] = np.log(out[log_mask])
-            return out
+        # Boundaries (model space) so gradient-free methods (CMA-ES / PSO /
+        # Nelder-Mead) respect the log-space parameters' bounds; pints does not
+        # hard-enforce them for gradient methods, which is what we want.
+        boundaries = pints.RectangularBoundaries(linear_lower, linear_upper)
 
-        def to_linear(x):
-            """Optimiser vector -> linear values (exp the log-space entries)."""
-            out = np.asarray(x, dtype=float).copy()
-            out[log_mask] = np.exp(out[log_mask])
-            return out
+        # Explicit per-parameter sigma0 (model space). Passing this avoids pints
+        # deriving the step size from the transformed bound range, which is
+        # infinite for a log-space parameter whose lower bound is 0.
+        sigma0 = (linear_upper - linear_lower) / 6.0
 
-        starting_model = to_optimiser(linear_start)
-        lower_bounds_model = to_optimiser(linear_lower)
-        upper_bounds_model = to_optimiser(linear_upper)
+        # Model-space start, clamped strictly inside the bounds so the forward
+        # transform and pints' initial-position-in-bounds check stay finite.
+        span = linear_upper - linear_lower
+        x0 = np.clip(
+            linear_start,
+            linear_lower + 1e-9 * span,
+            linear_upper - 1e-9 * span,
+        )
 
         def split_sigma(sigma_block):
             """Split the linear sigma block into (sigma_a, sigma_m). sigma_m is
@@ -708,27 +713,30 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 return n_inputs + n_sigma
 
             def __call__(self, x):
-                linear = to_linear(x)
-                sigma_a, sigma_m = split_sigma(linear[n_inputs:])
+                # x is in model space (pints applies the transformation).
+                x = np.asarray(x, dtype=float)
+                sigma_a, sigma_m = split_sigma(x[n_inputs:])
                 loss = context.optimise_loss(
                     context.optimisation_groups,
-                    self.values_by_id(linear[:n_inputs]),
+                    self.values_by_id(x[:n_inputs]),
                     sigma=sigma_a,
                     sigma_mult=sigma_m,
                     noise_model=noise_model,
                 )
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = float(loss)
-                    self.best_values = np.asarray(x, dtype=float).copy()
+                    self.best_values = x.copy()
                 return loss
 
             def evaluateS1(self, x):
-                linear = to_linear(x)
-                sigma_a, sigma_m = split_sigma(linear[n_inputs:])
+                # x is in model space; the context returns gradients w.r.t. the
+                # model values, and pints applies the transformation Jacobian.
+                x = np.asarray(x, dtype=float)
+                sigma_a, sigma_m = split_sigma(x[n_inputs:])
                 try:
                     result = context.optimise_loss_gradient(
                         context.optimisation_groups,
-                        self.values_by_id(linear[:n_inputs]),
+                        self.values_by_id(x[:n_inputs]),
                         sigma=sigma_a,
                         sigma_mult=sigma_m,
                         noise_model=noise_model,
@@ -741,37 +749,31 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                     return np.inf, np.zeros(n_inputs + n_sigma)
                 if not np.isfinite(nll):
                     return np.inf, np.zeros(n_inputs + n_sigma)
-                # The context returns both gradients w.r.t. the linear value.
-                # Map to optimiser space with one shared chain rule: for a
-                # log-space entry z = log(v), d/dz = d/dv * v; else d/dv * 1.
-                grad_linear = np.concatenate([ode_gradient, sigma_gradient])
-                total_gradient = grad_linear * np.where(log_mask, linear, 1.0)
+                total_gradient = np.concatenate([ode_gradient, sigma_gradient])
                 loss = float(nll)
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = loss
-                    self.best_values = np.asarray(x, dtype=float).copy()
+                    self.best_values = x.copy()
                 return loss, total_gradient
 
         error = OptimiseError()
         error.best_loss = np.inf
-        error.best_values = np.asarray(starting_model, dtype=float).copy()
-        starting_loss = error(starting_model)
+        error.best_values = x0.copy()
+        starting_loss = error(x0)
         if not np.isfinite(starting_loss):
             raise RuntimeError(
                 "Initial optimisation loss is not finite. Check that the solver "
                 "returns all requested dense output times and that data are valid."
             )
 
-        optimiser_start = np.asarray(starting_model, dtype=float)
-
-        boundaries = pints.RectangularBoundaries(
-            lower_bounds_model,
-            upper_bounds_model,
-        )
+        # The controller works in the transformed (search) space: it transforms
+        # x0 / boundaries / sigma0 and calls the error with model-space values.
         optimiser = pints.OptimisationController(
             error,
-            optimiser_start,
+            x0,
             boundaries=boundaries,
+            transformation=transformation,
+            sigma0=sigma0,
             method=pints_method,
         )
         optimiser.set_max_iterations(max_iterations)
@@ -812,12 +814,10 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             else:
                 reason = f"Converged after {iters} iterations."
 
+        # run() returns the optimum in model space (pints de-transforms it).
         optimal = np.asarray(optimal, dtype=float)
-        # to_linear exponentiates the log-space entries, so the linear optimum is
-        # in model space (ODE) / linear sigma regardless of parameterisation.
-        linear_optimal = to_linear(optimal)
-        ode_optimal = linear_optimal[:n_inputs]
-        sigma_a, sigma_m = split_sigma(linear_optimal[n_inputs:])
+        ode_optimal = optimal[:n_inputs]
+        sigma_a, sigma_m = split_sigma(optimal[n_inputs:])
         diagnostics = context.optimise_diagnostics(
             optimal_model=ode_optimal,
             sigma=sigma_a,

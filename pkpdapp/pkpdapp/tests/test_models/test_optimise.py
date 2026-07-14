@@ -1007,6 +1007,35 @@ class TestOptimise(TestCase):
         self.assertTrue(np.isfinite(result.loss))
         self.assertLess(result.loss, starting_loss)
 
+    def test_optimise_adam_converges(self):
+        """Adam converges to the true values with the frontend's default config:
+        model parameters and sigma optimised in log space with a zero lower bound
+        (the configuration that previously stayed stuck at the initial values,
+        before the pints-transformation fix). Asserts the parameters actually move
+        to the optimum, not just that the loss decreases."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids,
+                [0.27, 1.45],
+                ([0.0, 0.0], [1.0, 10.0]),
+                use_log_space=[True, True],
+            ),
+            noise_parameters=make_noise_parameters(1),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=500,
+            method="adam",
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
+        self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
+
     def test_combined_noise_gradient_matches_finite_difference(self):
         """The combined-noise analytic gradient matches finite differences for
         both the ODE parameters and the two (linear) sigma parameters."""
