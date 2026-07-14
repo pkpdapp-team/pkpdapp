@@ -689,6 +689,17 @@ class TestOptimise(TestCase):
         self.assertIn(output_id, diagnostics["predictions"][0])
         self.assertIn(time_id, diagnostics["residuals"][0])
         self.assertIn(output_id, diagnostics["residuals"][0])
+        self.assertIsNotNone(diagnostics["observations"])
+        self.assertIn(time_id, diagnostics["observations"][0])
+        self.assertIn(output_id, diagnostics["observations"][0])
+        # Observations mirror residuals: one entry per group, aligned per output.
+        self.assertEqual(
+            len(diagnostics["observations"]), len(diagnostics["residuals"])
+        )
+        self.assertEqual(
+            len(diagnostics["observations"][0][output_id]),
+            len(diagnostics["residuals"][0][output_id]),
+        )
 
         context.optimisation_groups = (
             replace(
@@ -708,6 +719,7 @@ class TestOptimise(TestCase):
             {
                 "predictions": None,
                 "residuals": None,
+                "observations": None,
                 "covariance": None,
                 "condition_number": None,
                 "sigma": [1.0] * n_sigma,

@@ -2305,6 +2305,11 @@ export type OptimiseResponse = {
         [key: string]: any;
       }[]
     | null;
+  observations:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
   covariance: number[][] | null;
   condition_number: number | null;
   neg2ll: number | null;
