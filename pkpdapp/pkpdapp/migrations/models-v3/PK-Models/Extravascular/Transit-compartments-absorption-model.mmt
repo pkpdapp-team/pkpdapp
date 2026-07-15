@@ -29,39 +29,84 @@ ka = 1 in [1/h]
 	
 ktrA = 1 in [1/h]
     desc: Transit rate constant of absorption 
-
-RateAbs = ka*Aa in [pmol/h]
-	desc: Absorption rate
-
-dot(Atr10) = -ktrA*Atr10 in [pmol]
-    desc: Amount of drug in the 10th transit compartment
-
-dot(Atr9) = ktrA*(Atr10-Atr9) in [pmol]
-    desc: Amount of drug in the 9th transit compartment
-
-dot(Atr8) = ktrA*(Atr9-Atr8) in [pmol]
-    desc: Amount of drug in the 8th transit compartment	
 	
-dot(Atr7) = ktrA*(Atr8-Atr7) in [pmol]
-    desc: Amount of drug in the 7th transit compartment
+Ntr = 1 in [dimensionless]	
+    desc: number of transit compartments
 
-dot(Atr6) = ktrA*(Atr7-Atr6) in [pmol]
-    desc: Amount of drug in the 6th transit compartment	
-	
-dot(Atr5) = ktrA*(Atr6-Atr5) in [pmol]
-    desc: Amount of drug in the 5th transit compartment
+RateAbs = piecewise(
+			Ntr < 0.5, ka*Aa,
+			Ntr < 1.5, ka*Atr1,
+			Ntr < 2.5, ka*Atr2,
+			Ntr < 3.5, ka*Atr3,
+			Ntr < 4.5, ka*Atr4,
+			Ntr < 5.5, ka*Atr5,
+			Ntr < 6.5, ka*Atr6,
+			Ntr < 7.5, ka*Atr7,
+			Ntr < 8.5, ka*Atr8,
+			Ntr < 9.5, ka*Atr9,
+			ka*Atr10)  in [pmol/h]
+				desc: Absorption rate
 
-dot(Atr4) = ktrA*(Atr5-Atr4) in [pmol]
-    desc: Amount of drug in the 4th transit compartment	
-	
-dot(Atr3) = ktrA*(Atr4-Atr3) in [pmol]
-    desc: Amount of drug in the 3rd transit compartment
+dot(Aa) = piecewise(
+			Ntr < 0.5 , -RateAbs ,
+			-ktrA*Aa) in [pmol]
+				desc: Amount of drug in dosing/ absorption compartment
 
-dot(Atr2) = ktrA*(Atr3-Atr2) in [pmol]
-    desc: Amount of drug in the 2nd transit compartment
+dot(Atr1) = piecewise(
+			Ntr < 0.5 , 0 ,
+			Ntr < 1.5 , ktrA*Aa-RateAbs ,
+			ktrA*(Aa-Atr1)) in [pmol]
+				desc: Amount of drug in the 1st transit compartment
 
-dot(Atr1) = ktrA*(Atr2-Atr1) in [pmol]
-    desc: Amount of drug in the 1st transit compartment (most proximal to absorption compartment)	
+dot(Atr2) = piecewise(
+			Ntr < 1.5 , 0 ,
+			Ntr < 2.5 , ktrA*Atr1-RateAbs ,
+			ktrA*(Atr1-Atr2)) in [pmol]
+				desc: Amount of drug in the 2nd transit compartment		
 
-dot(Aa) = ktrA*Atr1 -RateAbs in [pmol]
-    desc: Amount of drug in absorption compartment
+dot(Atr3) = piecewise(
+			Ntr < 2.5 , 0 ,
+			Ntr < 3.5 , ktrA*Atr2-RateAbs ,
+			ktrA*(Atr2-Atr3)) in [pmol]
+				desc: Amount of drug in the 3rd transit compartment
+
+dot(Atr4) = piecewise(
+			Ntr < 3.5 , 0 ,
+			Ntr < 4.5 , ktrA*Atr3-RateAbs ,
+			ktrA*(Atr3-Atr4)) in [pmol]
+				desc: Amount of drug in the 4th transit compartment	
+
+dot(Atr5) = piecewise(
+			Ntr < 4.5 , 0 ,
+			Ntr < 5.5 , ktrA*Atr4-RateAbs ,
+			ktrA*(Atr4-Atr5)) in [pmol]
+				desc: Amount of drug in the 5th transit compartment	
+
+dot(Atr6) = piecewise(
+			Ntr < 5.5 , 0 ,
+			Ntr < 6.5 , ktrA*Atr5-RateAbs ,
+			ktrA*(Atr5-Atr6)) in [pmol]
+				desc: Amount of drug in the 6th transit compartment	
+
+dot(Atr7) = piecewise(
+			Ntr < 6.5 , 0 ,
+			Ntr < 7.5 , ktrA*Atr6-RateAbs ,
+			ktrA*(Atr6-Atr7)) in [pmol]
+				desc: Amount of drug in the 7th transit compartment	
+
+dot(Atr8) = piecewise(
+			Ntr < 7.5 , 0 ,
+			Ntr < 8.5 , ktrA*Atr7-RateAbs ,
+			ktrA*(Atr7-Atr8)) in [pmol]
+				desc: Amount of drug in the 8th transit compartment	
+
+dot(Atr9) = piecewise(
+			Ntr < 8.5 , 0 ,
+			Ntr < 9.5 , ktrA*Atr8-RateAbs ,
+			ktrA*(Atr8-Atr9)) in [pmol]
+				desc: Amount of drug in the 9th transit compartment	
+
+dot(Atr10) = piecewise(
+			Ntr < 9.5 , 0 ,
+			ktrA*Atr9-RateAbs) in [pmol]
+				desc: Amount of drug in the 10th transit compartment	
