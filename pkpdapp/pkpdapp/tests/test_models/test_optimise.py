@@ -94,6 +94,12 @@ class FakeDiffsolOde:
 
 
 class TestOptimise(TestCase):
+    def setUp(self):
+        # The gradient-free optimisers (PSO, CMA-ES) draw from the global numpy
+        # RNG, which makes their convergence tests flaky. Seed it so every test in
+        # this class is deterministic.
+        np.random.seed(1234)
+
     def _build_optimise_context(self, setup, starting, bounds):
         return OptimiseContext(
             model=setup["model"],
@@ -932,9 +938,6 @@ class TestOptimise(TestCase):
             starting_values_by_id,
         )
 
-        # PSO draws from the global numpy RNG (np.random.normal/uniform); seed it
-        # so this stochastic test is deterministic.
-        np.random.seed(1234)
         result = model.optimise(
             parameters=make_parameters(input_ids, starting, bounds),
             noise_parameters=make_noise_parameters(1),

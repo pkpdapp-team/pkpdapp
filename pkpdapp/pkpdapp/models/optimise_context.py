@@ -95,6 +95,10 @@ class OptimiseResult:
     neg2ll: float | None
     aic: float | None
     bic: float | None
+    # Observed data points at the fitted time-points, one dict per subject group
+    # (same shape as ``predictions`` / ``residuals``). Optional so the result
+    # tolerates optimise_diagnostics variants that do or do not report it.
+    observations: list[dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True)
