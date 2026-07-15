@@ -13,6 +13,26 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='derivedvariable',
             name='type',
-            field=models.CharField(choices=[('AUC', 'area under curve'), ('RO', 'receptor occupancy'), ('FUP', 'fraction unbound plasma'), ('BPR', 'blood plasma ratio'), ('TLG', 'dosing lag time'), ('MM', 'Michaelis-Menten'), ('EMM', 'Extended Michaelis-Menten'), ('EMX', 'Emax'), ('IMX', 'Imax'), ('TEM', 'Time Emax'), ('TIM', 'Time Imax'), ('POW', 'Power'), ('NPW', 'Negative Power'), ('TDI', 'Exponential Decay'), ('IND', 'Exponential Increase')], help_text='type of derived variable', max_length=3),
+            field=models.CharField(
+                choices=[
+                    ('AUC', 'area under curve'),
+                    ('RO', 'receptor occupancy'),
+                    ('FUP', 'fraction unbound plasma'),
+                    ('BPR', 'blood plasma ratio'),
+                    ('TLG', 'dosing lag time'),
+                    ('MM', 'Michaelis-Menten'),
+                    ('EMM', 'Extended Michaelis-Menten'),
+                    ('EMX', 'Emax'),
+                    ('IMX', 'Imax'),
+                    ('TEM', 'Time Emax'),
+                    ('TIM', 'Time Imax'),
+                    ('POW', 'Power'),
+                    ('NPW', 'Negative Power'),
+                    ('TDI', 'Exponential Decay'),
+                    ('IND', 'Exponential Increase'),
+                ],
+                help_text='type of derived variable',
+                max_length=3,
+            ),
         ),
     ]
