@@ -1974,6 +1974,8 @@ export type TypeEnum =
   | "EMM"
   | "EMX"
   | "IMX"
+  | "TEM"
+  | "TIM"
   | "POW"
   | "NPW"
   | "TDI"
@@ -1994,6 +1996,8 @@ export type DerivedVariable = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
@@ -2023,6 +2027,8 @@ export type DerivedVariableRead = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
@@ -2285,7 +2291,7 @@ export type OptimiseResponse = {
   optimal: number[];
   loss: number;
   reason: string;
-  sigma: number[] | null;
+  sigma: number[];
   sigma_mult: number[] | null;
   inputs: number[];
   starting: number[];
@@ -2317,10 +2323,12 @@ export type OptimiseResponse = {
   bic: number | null;
   filtered_observations?: number | null;
   sigma_variables: number[] | null;
-  log_sigma: number[] | null;
+  sigma_start: number[] | null;
   sigma_bounds: number[][] | null;
-  log_sigma_mult: number[] | null;
+  sigma_use_log_space: boolean[] | null;
+  sigma_mult_start: number[] | null;
   sigma_bounds_mult: number[][] | null;
+  sigma_mult_use_log_space: boolean[] | null;
 };
 export type ErrorResponse = {
   error: string;
@@ -2335,10 +2343,13 @@ export type Optimise = {
   max_iterations?: number | null;
   noise_model?: NoiseModelEnum;
   method?: string;
-  log_sigma?: number[] | null;
+  sigma_start?: number[] | null;
   sigma_bounds?: number[][] | null;
-  log_sigma_mult?: number[] | null;
+  sigma_use_log_space?: boolean[] | null;
+  sigma_mult_start?: number[] | null;
   sigma_bounds_mult?: number[][] | null;
+  sigma_mult_use_log_space?: boolean[] | null;
+  use_log_space?: boolean[] | null;
 };
 export type UncertaintySummary = {
   mean: number[];

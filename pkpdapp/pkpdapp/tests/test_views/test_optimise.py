@@ -43,6 +43,15 @@ class TestOptimiseView(APITestCase):
         url = reverse("optimise-combined-model", args=(pk,))
         return self.client.post(url, data, format="json")
 
+    @staticmethod
+    def _sigma_fields(n=1):
+        """Default linear sigma request fields (now required by the API)."""
+        return {
+            "sigma_start": [1.0] * n,
+            "sigma_bounds": [[0.0, 10.0] for _ in range(n)],
+            "sigma_use_log_space": [True] * n,
+        }
+
     def test_optimise_returns_ok(self):
         data = {
             "inputs": [self.k_var.id, self.scale_var.id],
@@ -51,6 +60,7 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 80,
+            **self._sigma_fields(),
         }
         response = self._post_optimise(data)
 
@@ -83,6 +93,7 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 80,
+            **self._sigma_fields(),
         }
         response = self._post_optimise(data)
 
@@ -99,6 +110,7 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 25,
+            **self._sigma_fields(),
         }
         response = self._post_optimise(data)
 
@@ -106,7 +118,8 @@ class TestOptimiseView(APITestCase):
         response_var_id = self.biomarker_type.variable.id
         self.assertEqual(response.data["sigma_variables"], [response_var_id])
         self.assertEqual(len(response.data["sigma"]), 1)
-        self.assertEqual(len(response.data["log_sigma"]), 1)
+        self.assertEqual(len(response.data["sigma_start"]), 1)
+        self.assertEqual(len(response.data["sigma_use_log_space"]), 1)
         self.assertEqual(len(response.data["sigma_bounds"]), 1)
         self.assertEqual(len(response.data["sigma_bounds"][0]), 2)
 
@@ -119,8 +132,10 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 25,
-            "log_sigma": [-1.0],
-            "sigma_bounds": [[-10.0, 10.0]],
+            # linear sigma start / bounds + log-space flag
+            "sigma_start": [1.0],
+            "sigma_bounds": [[0.0, 10.0]],
+            "sigma_use_log_space": [True],
         }
         response = self._post_optimise(data)
 
@@ -128,8 +143,29 @@ class TestOptimiseView(APITestCase):
         # sigma_variables is echoed back in the response (canonical order),
         # derived from biomarker_types — it is not part of the request.
         self.assertEqual(response.data["sigma_variables"], [response_var_id])
-        self.assertEqual(response.data["log_sigma"], [-1.0])
-        self.assertEqual(response.data["sigma_bounds"], [[-10.0, 10.0]])
+        self.assertEqual(response.data["sigma_start"], [1.0])
+        self.assertEqual(response.data["sigma_bounds"], [[0.0, 10.0]])
+        self.assertEqual(response.data["sigma_use_log_space"], [True])
+
+    def test_optimise_accepts_linear_sigma(self):
+        # sigma_use_log_space=False fits the noise sd in linear space.
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 25,
+            "sigma_start": [1.0],
+            "sigma_bounds": [[0.0, 10.0]],
+            "sigma_use_log_space": [False],
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["sigma_use_log_space"], [False])
+        self.assertTrue(np.isfinite(response.data["loss"]))
+        self.assertTrue(all(s > 0 for s in response.data["sigma"]))
 
     def test_optimise_combined_noise_returns_second_sigma(self):
         response_var_id = self.biomarker_type.variable.id
@@ -141,10 +177,12 @@ class TestOptimiseView(APITestCase):
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 25,
             "noise_model": "combined",
-            "log_sigma": [-1.0],
-            "sigma_bounds": [[-10.0, 10.0]],
-            "log_sigma_mult": [-2.0],
-            "sigma_bounds_mult": [[-10.0, 10.0]],
+            "sigma_start": [1.0],
+            "sigma_bounds": [[0.0, 10.0]],
+            "sigma_use_log_space": [True],
+            "sigma_mult_start": [0.1],
+            "sigma_bounds_mult": [[0.0, 1.0]],
+            "sigma_mult_use_log_space": [True],
         }
         response = self._post_optimise(data)
 
@@ -153,8 +191,8 @@ class TestOptimiseView(APITestCase):
         self.assertEqual(response.data["sigma_variables"], [response_var_id])
         self.assertEqual(len(response.data["sigma"]), 1)
         self.assertEqual(len(response.data["sigma_mult"]), 1)
-        self.assertEqual(response.data["log_sigma_mult"], [-2.0])
-        self.assertEqual(response.data["sigma_bounds_mult"], [[-10.0, 10.0]])
+        self.assertEqual(response.data["sigma_mult_start"], [0.1])
+        self.assertEqual(response.data["sigma_bounds_mult"], [[0.0, 1.0]])
 
     def test_optimise_400_for_invalid_noise_model(self):
         data = {
@@ -191,6 +229,7 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 25,
+            **self._sigma_fields(),
         }
         response = self._post_optimise(data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -204,6 +243,55 @@ class TestOptimiseView(APITestCase):
             "inputs": [self.k_var.id, self.scale_var.id],
             "starting": [0.27, 1.45],
             "bounds": [[0.3, 1.0], [0.1, 2.0]],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 1,
+            **self._sigma_fields(),
+        }
+        response = self._post_optimise(data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_optimise_accepts_use_log_space(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "use_log_space": [True, False],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 80,
+            **self._sigma_fields(),
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(np.isfinite(response.data["loss"]))
+        # optimal is reported in linear space regardless of parameterisation
+        self.assertAlmostEqual(response.data["optimal"][0], TRUE_K, delta=0.04)
+        self.assertAlmostEqual(response.data["optimal"][1], TRUE_SCALE, delta=0.18)
+
+    def test_optimise_400_for_log_space_with_negative_lower_bound(self):
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[-0.1, 1.2], [0.3, 2.1]],
+            "use_log_space": [True, False],
+            "biomarker_types": [self.biomarker_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 1,
+            **self._sigma_fields(),
+        }
+        response = self._post_optimise(data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_optimise_400_when_sigma_omitted(self):
+        # noise parameters are now required by the optimise method.
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 1,

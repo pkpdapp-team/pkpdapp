@@ -750,6 +750,9 @@ export const SimulationsSidePanel = ({
             biomarkerTypes={biomarkerTypes}
             groups={groups ?? []}
             visibleSubjectGroupIds={visibleSubjectGroupIds}
+            subjectBiomarkers={subjectBiomarkers}
+            units={units}
+            model={model}
           />
           <OptimisationView
             open={optimiseViewOpen}

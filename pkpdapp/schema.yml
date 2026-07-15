@@ -3724,6 +3724,8 @@ components:
             * `EMM` - Extended Michaelis-Menten
             * `EMX` - Emax
             * `IMX` - Imax
+            * `TEM` - Time Emax
+            * `TIM` - Time Imax
             * `POW` - Power
             * `NPW` - Negative Power
             * `TDI` - Exponential Decay
@@ -3985,7 +3987,7 @@ components:
         method:
           type: string
           default: pso
-        log_sigma:
+        sigma_start:
           type: array
           items:
             type: number
@@ -4001,7 +4003,12 @@ components:
             maxItems: 2
             minItems: 2
           nullable: true
-        log_sigma_mult:
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
           type: array
           items:
             type: number
@@ -4016,6 +4023,16 @@ components:
               format: double
             maxItems: 2
             minItems: 2
+          nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        use_log_space:
+          type: array
+          items:
+            type: boolean
           nullable: true
       required:
       - bounds
@@ -4039,7 +4056,6 @@ components:
           items:
             type: number
             format: double
-          nullable: true
         sigma_mult:
           type: array
           items:
@@ -4091,6 +4107,12 @@ components:
             type: object
             additionalProperties: {}
           nullable: true
+        observations:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          nullable: true
         covariance:
           type: array
           items:
@@ -4123,7 +4145,7 @@ components:
           items:
             type: integer
           nullable: true
-        log_sigma:
+        sigma_start:
           type: array
           items:
             type: number
@@ -4137,7 +4159,12 @@ components:
               type: number
               format: double
           nullable: true
-        log_sigma_mult:
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
           type: array
           items:
             type: number
@@ -4151,6 +4178,11 @@ components:
               type: number
               format: double
           nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
       required:
       - aic
       - bic
@@ -4158,12 +4190,11 @@ components:
       - condition_number
       - covariance
       - inputs
-      - log_sigma
-      - log_sigma_mult
       - loss
       - method
       - neg2ll
       - noise_model
+      - observations
       - optimal
       - predictions
       - reason
@@ -4172,6 +4203,10 @@ components:
       - sigma_bounds
       - sigma_bounds_mult
       - sigma_mult
+      - sigma_mult_start
+      - sigma_mult_use_log_space
+      - sigma_start
+      - sigma_use_log_space
       - sigma_variables
       - starting
     PatchedBiomarkerType:
@@ -5057,13 +5092,10 @@ components:
           type: string
           maxLength: 150
         email:
+          type: string
+          format: email
           title: Email address
-          oneOf:
-          - type: string
-            format: email
-            maxLength: 254
-          - type: string
-            maxLength: 0
+          maxLength: 254
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'
@@ -5996,6 +6028,8 @@ components:
       - EMM
       - EMX
       - IMX
+      - TEM
+      - TIM
       - POW
       - NPW
       - TDI
@@ -6011,6 +6045,8 @@ components:
         * `EMM` - Extended Michaelis-Menten
         * `EMX` - Emax
         * `IMX` - Imax
+        * `TEM` - Time Emax
+        * `TIM` - Time Imax
         * `POW` - Power
         * `NPW` - Negative Power
         * `TDI` - Exponential Decay
@@ -6103,13 +6139,10 @@ components:
           type: string
           maxLength: 150
         email:
+          type: string
+          format: email
           title: Email address
-          oneOf:
-          - type: string
-            format: email
-            maxLength: 254
-          - type: string
-            maxLength: 0
+          maxLength: 254
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'

@@ -10,7 +10,7 @@ from unittest import mock
 
 import numpy as np
 from django.test import TestCase
-from pkpdapp.models.optimise_context import OptimiseContext
+from pkpdapp.models.optimise_context import OptimiseContext, ParameterInfo
 from pkpdapp.models import (
     Biomarker,
     BiomarkerType,
@@ -26,6 +26,47 @@ from pkpdapp.tests.optimise_fixtures import (
     create_exponential_data,
     exponential_response,
 )
+
+
+def make_parameters(input_ids, starting, bounds, use_log_space=None):
+    """Build the ParameterInfo list ``optimise`` expects from parallel lists.
+
+    ``use_log_space``, if given, is a list of bools parallel to ``input_ids``.
+    """
+    lower, upper = bounds
+    if use_log_space is None:
+        use_log_space = [False] * len(input_ids)
+    return [
+        ParameterInfo(
+            variable_id=variable_id,
+            starting=start,
+            lower_bound=low,
+            upper_bound=up,
+            use_log_space=log_space,
+        )
+        for variable_id, start, low, up, log_space in zip(
+            input_ids, starting, lower, upper, use_log_space
+        )
+    ]
+
+
+def make_noise_parameters(
+    count, *, combined=False, use_log_space=True, start=1.0, upper=10.0
+):
+    """Build the (now mandatory) linear noise ParameterInfo list ``optimise``
+    expects: ``count`` additive sigmas, plus ``count`` proportional sigmas when
+    ``combined``. Bounds default to [0, upper] in linear sigma units.
+    """
+    n = count * (2 if combined else 1)
+    return [
+        ParameterInfo(
+            starting=start,
+            lower_bound=0.0,
+            upper_bound=upper,
+            use_log_space=use_log_space,
+        )
+        for _ in range(n)
+    ]
 
 
 class FakeDiffsolOde:
@@ -53,6 +94,12 @@ class FakeDiffsolOde:
 
 
 class TestOptimise(TestCase):
+    def setUp(self):
+        # The gradient-free optimisers (PSO, CMA-ES) draw from the global numpy
+        # RNG, which makes their convergence tests flaky. Seed it so every test in
+        # this class is deterministic.
+        np.random.seed(1234)
+
     def _build_optimise_context(self, setup, starting, bounds):
         return OptimiseContext(
             model=setup["model"],
@@ -247,18 +294,17 @@ class TestOptimise(TestCase):
         self.assertLess(true_loss, starting_loss)
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
+            noise_parameters=make_noise_parameters(1),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=80,
         )
 
-        self.assertTrue(np.isfinite(result["loss"]))
-        self.assertLess(result["loss"], starting_loss)
-        self.assertAlmostEqual(result["optimal"][0], true_values[0], delta=0.04)
-        self.assertAlmostEqual(result["optimal"][1], true_values[1], delta=0.18)
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertLess(result.loss, starting_loss)
+        self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
+        self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
 
     def test_optimise_validation(self):
         setup = self._exponential_data()
@@ -266,21 +312,34 @@ class TestOptimise(TestCase):
         input_ids = [variable.id for variable in setup["inputs"]]
 
         result = model.optimise(
-            inputs=input_ids[:1],
-            starting=[0.2],
-            bounds=([0.1], [0.3]),
+            parameters=make_parameters(input_ids[:1], [0.2], ([0.1], [0.3])),
+            noise_parameters=make_noise_parameters(1),
             biomarker_types=[setup["biomarker_type"].id],
             subject_groups=[setup["groups"][0].id],
             max_iterations=25,
         )
-        self.assertEqual(len(result["optimal"]), 1)
-        self.assertTrue(np.isfinite(result["loss"]))
+        self.assertEqual(len(result.optimal), 1)
+        self.assertTrue(np.isfinite(result.loss))
 
         with self.assertRaises(ValueError):
             model.optimise(
-                inputs=input_ids,
-                starting=[0.2, 1.5],
-                bounds=([0.3, 1.0], [0.1, 2.0]),
+                parameters=make_parameters(
+                    input_ids, [0.2, 1.5], ([0.3, 1.0], [0.1, 2.0])
+                ),
+                noise_parameters=make_noise_parameters(1),
+                biomarker_types=[setup["biomarker_type"].id],
+                subject_groups=[setup["groups"][0].id],
+                max_iterations=1,
+            )
+
+    def test_optimise_requires_noise_parameters(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        with self.assertRaisesMessage(ValueError, "noise_parameters is required"):
+            model.optimise(
+                parameters=make_parameters(input_ids[:1], [0.2], ([0.1], [0.3])),
+                noise_parameters=None,
                 biomarker_types=[setup["biomarker_type"].id],
                 subject_groups=[setup["groups"][0].id],
                 max_iterations=1,
@@ -531,24 +590,28 @@ class TestOptimise(TestCase):
                 )
 
         result = model.optimise(
-            inputs=[variable.id for variable in setup["inputs"]],
-            starting=[0.27, 1.45],
-            bounds=([0.16, 1.2], [0.3, 2.1]),
+            parameters=make_parameters(
+                [variable.id for variable in setup["inputs"]],
+                [0.27, 1.45],
+                ([0.16, 1.2], [0.3, 2.1]),
+            ),
+            noise_parameters=make_noise_parameters(2),
             biomarker_types=[setup["biomarker_type"].id, amount_type.id],
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=60,
         )
 
         expected_ids = sorted((response_id, amount.id))
-        self.assertEqual(result["sigma_variables"], expected_ids)
-        self.assertEqual(len(result["sigma"]), 2)
-        self.assertEqual(len(result["log_sigma"]), 2)
-        self.assertEqual(len(result["sigma_bounds"]), 2)
-        self.assertTrue(np.all(np.isfinite(result["sigma"])))
-        self.assertTrue(all(s > 0 for s in result["sigma"]))
+        self.assertEqual(result.sigma_variables, expected_ids)
+        self.assertEqual(len(result.sigma), 2)
+        self.assertEqual(len(result.sigma_start), 2)
+        self.assertEqual(len(result.sigma_use_log_space), 2)
+        self.assertEqual(len(result.sigma_bounds), 2)
+        self.assertTrue(np.all(np.isfinite(result.sigma)))
+        self.assertTrue(all(s > 0 for s in result.sigma))
         # The two output variables have very different scales, so their fitted
         # noise sigmas should differ.
-        self.assertNotAlmostEqual(result["sigma"][0], result["sigma"][1])
+        self.assertNotAlmostEqual(result.sigma[0], result.sigma[1])
 
     def test_prediction_loss_and_gradient_failure_branches(self):
         setup = create_exponential_data(
@@ -888,19 +951,18 @@ class TestOptimise(TestCase):
         )
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
+            noise_parameters=make_noise_parameters(1),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=80,
             method="pso",
         )
 
-        self.assertTrue(np.isfinite(result["loss"]))
-        self.assertLess(result["loss"], starting_loss)
-        self.assertAlmostEqual(result["optimal"][0], setup["true"][0], delta=0.04)
-        self.assertAlmostEqual(result["optimal"][1], setup["true"][1], delta=0.18)
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertLess(result.loss, starting_loss)
+        self.assertAlmostEqual(result.optimal[0], setup["true"][0], delta=0.04)
+        self.assertAlmostEqual(result.optimal[1], setup["true"][1], delta=0.18)
 
     def test_optimise_gradient_descent(self):
         """Gradient descent uses forward sensitivities and should reduce the loss."""
@@ -952,21 +1014,49 @@ class TestOptimise(TestCase):
         self.assertTrue(np.all(np.isfinite(total_gradient)))
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
+            noise_parameters=make_noise_parameters(1),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=200,
             method="gradient_descent",
         )
 
-        self.assertTrue(np.isfinite(result["loss"]))
-        self.assertLess(result["loss"], starting_loss)
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertLess(result.loss, starting_loss)
+
+    def test_optimise_adam_converges(self):
+        """Adam converges to the true values with the frontend's default config:
+        model parameters and sigma optimised in log space with a zero lower bound
+        (the configuration that previously stayed stuck at the initial values,
+        before the pints-transformation fix). Asserts the parameters actually move
+        to the optimum, not just that the loss decreases."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids,
+                [0.27, 1.45],
+                ([0.0, 0.0], [1.0, 10.0]),
+                use_log_space=[True, True],
+            ),
+            noise_parameters=make_noise_parameters(1),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=500,
+            method="adam",
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
+        self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
 
     def test_combined_noise_gradient_matches_finite_difference(self):
         """The combined-noise analytic gradient matches finite differences for
-        both the ODE parameters and the two log-sigma parameters."""
+        both the ODE parameters and the two (linear) sigma parameters."""
         setup = self._exponential_data()
         input_ids = [variable.id for variable in setup["inputs"]]
         starting = [0.27, 1.45]
@@ -978,25 +1068,25 @@ class TestOptimise(TestCase):
         keys = list(values_by_id)
         base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
         n_outputs = len(context.sigma_output_variable_ids)
-        log_sigma = np.full(n_outputs, -0.5)
-        log_sigma_mult = np.full(n_outputs, -1.0)
+        sigma = np.full(n_outputs, np.exp(-0.5))
+        sigma_mult = np.full(n_outputs, np.exp(-1.0))
 
         nll, ode_gradient, sigma_gradient = context.optimise_loss_gradient(
             context.optimisation_groups,
             values_by_id,
-            log_sigma=log_sigma,
-            log_sigma_mult=log_sigma_mult,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
             noise_model="combined",
         )
         self.assertTrue(np.isfinite(nll))
         self.assertEqual(len(sigma_gradient), 2 * n_outputs)
 
-        def loss_at(vals, ls, lsm):
+        def loss_at(vals, s, sm):
             return context.optimise_loss(
                 context.optimisation_groups,
                 {k: float(v) for k, v in zip(keys, vals)},
-                log_sigma=ls,
-                log_sigma_mult=lsm,
+                sigma=s,
+                sigma_mult=sm,
                 noise_model="combined",
             )
 
@@ -1008,8 +1098,7 @@ class TestOptimise(TestCase):
             vm = base_vals.copy()
             vm[i] -= eps
             fd = (
-                loss_at(vp, log_sigma, log_sigma_mult)
-                - loss_at(vm, log_sigma, log_sigma_mult)
+                loss_at(vp, sigma, sigma_mult) - loss_at(vm, sigma, sigma_mult)
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, ode_gradient[i], rtol=1e-2, atol=1e-3)
 
@@ -1020,25 +1109,24 @@ class TestOptimise(TestCase):
         # rather than machine precision. See the exact fake-solver check in
         # test_combined_noise_sigma_gradient_exact for a tight formula check.
         for i in range(n_outputs):
-            lp = log_sigma.copy()
-            lp[i] += eps
-            lm = log_sigma.copy()
-            lm[i] -= eps
+            sp = sigma.copy()
+            sp[i] += eps
+            sm = sigma.copy()
+            sm[i] -= eps
             fd = (
-                loss_at(base_vals, lp, log_sigma_mult)
-                - loss_at(base_vals, lm, log_sigma_mult)
+                loss_at(base_vals, sp, sigma_mult)
+                - loss_at(base_vals, sm, sigma_mult)
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-2, atol=1e-3)
 
-        # log_sigma_m gradient.
+        # proportional (sigma_m) gradient.
         for i in range(n_outputs):
-            mp = log_sigma_mult.copy()
+            mp = sigma_mult.copy()
             mp[i] += eps
-            mm = log_sigma_mult.copy()
+            mm = sigma_mult.copy()
             mm[i] -= eps
             fd = (
-                loss_at(base_vals, log_sigma, mp)
-                - loss_at(base_vals, log_sigma, mm)
+                loss_at(base_vals, sigma, mp) - loss_at(base_vals, sigma, mm)
             ) / (2.0 * eps)
             np.testing.assert_allclose(
                 fd, sigma_gradient[n_outputs + i], rtol=1e-2, atol=1e-3
@@ -1068,40 +1156,40 @@ class TestOptimise(TestCase):
             ),
         )
         groups = (fake_group,)
-        log_sigma = np.full(n_outputs, -0.3)
-        log_sigma_mult = np.full(n_outputs, -0.8)
+        sigma = np.full(n_outputs, np.exp(-0.3))
+        sigma_mult = np.full(n_outputs, np.exp(-0.8))
 
         _, _, sigma_gradient = context.optimise_loss_gradient(
             groups,
             values_by_id,
-            log_sigma=log_sigma,
-            log_sigma_mult=log_sigma_mult,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
             noise_model="combined",
         )
 
         eps = 1e-6
         for i in range(n_outputs):
-            lp = log_sigma.copy()
-            lp[i] += eps
-            lm = log_sigma.copy()
-            lm[i] -= eps
+            sp = sigma.copy()
+            sp[i] += eps
+            sm = sigma.copy()
+            sm[i] -= eps
             fd = (
                 context.optimise_loss(
-                    groups, values_by_id, lp, log_sigma_mult, "combined"
+                    groups, values_by_id, sp, sigma_mult, "combined"
                 )
                 - context.optimise_loss(
-                    groups, values_by_id, lm, log_sigma_mult, "combined"
+                    groups, values_by_id, sm, sigma_mult, "combined"
                 )
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-6, atol=1e-8)
 
-            mp = log_sigma_mult.copy()
+            mp = sigma_mult.copy()
             mp[i] += eps
-            mm = log_sigma_mult.copy()
+            mm = sigma_mult.copy()
             mm[i] -= eps
             fd = (
-                context.optimise_loss(groups, values_by_id, log_sigma, mp, "combined")
-                - context.optimise_loss(groups, values_by_id, log_sigma, mm, "combined")
+                context.optimise_loss(groups, values_by_id, sigma, mp, "combined")
+                - context.optimise_loss(groups, values_by_id, sigma, mm, "combined")
             ) / (2.0 * eps)
             np.testing.assert_allclose(
                 fd, sigma_gradient[n_outputs + i], rtol=1e-6, atol=1e-8
@@ -1131,21 +1219,21 @@ class TestOptimise(TestCase):
         optimal_model = np.array(setup["true"], dtype=float) * cf
         values_by_id = {i: float(v) for i, v in zip(input_ids, optimal_model)}
         n_outputs = len(context.sigma_output_variable_ids)
-        log_sigma = np.full(n_outputs, np.log(0.4))
-        log_sigma_mult = np.full(n_outputs, np.log(0.1))
+        sigma = np.full(n_outputs, 0.4)
+        sigma_mult = np.full(n_outputs, 0.1)
 
         diag = context.optimise_diagnostics(
             optimal_model,
-            log_sigma=log_sigma,
-            log_sigma_mult=log_sigma_mult,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
             noise_model="combined",
         )
         self.assertIsNotNone(diag["covariance"])
         cov = np.array(diag["covariance"], dtype=float)
 
         # Independently rebuild (J^T W J)^-1 from the model's own sensitivities.
-        sigma_a2 = np.exp(2.0 * log_sigma)
-        sigma_m2 = np.exp(2.0 * log_sigma_mult)
+        sigma_a2 = sigma**2
+        sigma_m2 = sigma_mult**2
         jac_rows = []
         weights = []
         for group in context.optimisation_groups:
@@ -1185,8 +1273,8 @@ class TestOptimise(TestCase):
         n_outputs = len(context.sigma_output_variable_ids)
         sigma_a = 0.4
         sigma_m = 0.1
-        log_sigma = np.full(n_outputs, np.log(sigma_a))
-        log_sigma_mult = np.full(n_outputs, np.log(sigma_m))
+        sigma = np.full(n_outputs, sigma_a)
+        sigma_mult = np.full(n_outputs, sigma_m)
 
         # Diagnostics covariance at the true parameters. The covariance depends
         # only on the parameters and sigma (through predictions), not on the
@@ -1194,8 +1282,8 @@ class TestOptimise(TestCase):
         # refits below should reproduce.
         diag = context.optimise_diagnostics(
             true_model,
-            log_sigma=log_sigma,
-            log_sigma_mult=log_sigma_mult,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
             noise_model="combined",
         )
         cov_diag = np.array(diag["covariance"], dtype=float)
@@ -1231,8 +1319,8 @@ class TestOptimise(TestCase):
                 nll, ode_gradient, _ = context.optimise_loss_gradient(
                     groups,
                     values,
-                    log_sigma=log_sigma,
-                    log_sigma_mult=log_sigma_mult,
+                    sigma=sigma,
+                    sigma_mult=sigma_mult,
                     noise_model="combined",
                 )
                 return nll, ode_gradient
@@ -1264,56 +1352,227 @@ class TestOptimise(TestCase):
         biomarker_type_ids = [setup["biomarker_type"].id]
 
         result = model.optimise(
-            inputs=input_ids,
-            starting=starting,
-            bounds=bounds,
+            parameters=make_parameters(input_ids, starting, bounds),
+            noise_parameters=make_noise_parameters(1, combined=True),
             biomarker_types=biomarker_type_ids,
             subject_groups=group_ids,
             max_iterations=60,
             noise_model="combined",
         )
 
-        n_outputs = len(result["sigma_variables"])
-        self.assertTrue(np.isfinite(result["loss"]))
+        n_outputs = len(result.sigma_variables)
+        self.assertTrue(np.isfinite(result.loss))
         for key in (
             "sigma",
             "sigma_mult",
-            "log_sigma",
-            "log_sigma_mult",
+            "sigma_start",
+            "sigma_mult_start",
+            "sigma_use_log_space",
+            "sigma_mult_use_log_space",
             "sigma_bounds",
             "sigma_bounds_mult",
         ):
-            self.assertIsNotNone(result[key], key)
-            self.assertEqual(len(result[key]), n_outputs, key)
-        self.assertAlmostEqual(result["optimal"][0], setup["true"][0], delta=0.06)
+            self.assertIsNotNone(getattr(result, key), key)
+            self.assertEqual(len(getattr(result, key)), n_outputs, key)
+        self.assertAlmostEqual(result.optimal[0], setup["true"][0], delta=0.06)
 
     def test_optimise_additive_has_no_second_sigma(self):
         setup = self._exponential_data()
         model = setup["model"]
         input_ids = [variable.id for variable in setup["inputs"]]
         result = model.optimise(
-            inputs=input_ids,
-            starting=[0.27, 1.45],
-            bounds=([0.16, 1.2], [0.3, 2.1]),
+            parameters=make_parameters(
+                input_ids, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            ),
+            noise_parameters=make_noise_parameters(1),
             biomarker_types=[setup["biomarker_type"].id],
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=20,
             noise_model="additive",
         )
-        self.assertIsNone(result["sigma_mult"])
-        self.assertIsNone(result["log_sigma_mult"])
-        self.assertIsNone(result["sigma_bounds_mult"])
+        self.assertIsNone(result.sigma_mult)
+        self.assertIsNone(result.sigma_mult_start)
+        self.assertIsNone(result.sigma_bounds_mult)
+        self.assertIsNone(result.sigma_mult_use_log_space)
 
     def test_optimise_rejects_unknown_noise_model(self):
         setup = self._exponential_data()
         model = setup["model"]
         with self.assertRaisesMessage(ValueError, "Unknown noise model"):
             model.optimise(
-                inputs=[variable.id for variable in setup["inputs"]],
-                starting=[0.27, 1.45],
-                bounds=([0.16, 1.2], [0.3, 2.1]),
+                parameters=make_parameters(
+                    [variable.id for variable in setup["inputs"]],
+                    [0.27, 1.45],
+                    ([0.16, 1.2], [0.3, 2.1]),
+                ),
+                noise_parameters=make_noise_parameters(1),
                 biomarker_types=[setup["biomarker_type"].id],
                 subject_groups=[group.id for group in setup["groups"]],
                 max_iterations=1,
                 noise_model="not-a-model",
             )
+
+    def test_optimise_log_space_converges_to_true_values(self):
+        """Optimising in log space reaches the same optimum as linear space."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids, starting, bounds, use_log_space=[True, True]
+            ),
+            noise_parameters=make_noise_parameters(1),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=80,
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        # optimal is reported in user (linear) space regardless of parameterisation
+        self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
+        self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
+
+    def test_optimise_log_space_gradient_matches_finite_difference(self):
+        """The log-space chain rule used in evaluateS1 (d(nll)/d log(v) =
+        d(nll)/dv * v) matches a finite difference of the loss w.r.t. log(v)."""
+        setup = self._exponential_data()
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+        context = self._build_optimise_context(setup, starting, bounds)
+        values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, starting
+        )
+        keys = list(values_by_id)
+        base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
+
+        _, ode_gradient, _ = context.optimise_loss_gradient(
+            context.optimisation_groups,
+            values_by_id,
+        )
+        # Analytic gradient of the loss w.r.t. the log-space variable of param 0.
+        analytic = float(ode_gradient[0] * base_vals[0])
+
+        # Central finite difference w.r.t. z = log(v0): v0 -> v0 * exp(±h).
+        h = 1e-6
+        plus = dict(zip(keys, base_vals))
+        minus = dict(zip(keys, base_vals))
+        plus[keys[0]] = float(base_vals[0] * np.exp(h))
+        minus[keys[0]] = float(base_vals[0] * np.exp(-h))
+        loss_plus = context.optimise_loss(context.optimisation_groups, plus)
+        loss_minus = context.optimise_loss(context.optimisation_groups, minus)
+        numeric = (loss_plus - loss_minus) / (2.0 * h)
+
+        self.assertAlmostEqual(analytic, numeric, delta=1e-3 * (1 + abs(numeric)))
+
+    def test_optimise_log_space_gradient_descent(self):
+        """Gradient descent runs through the evaluateS1 chain-rule path for a
+        log-space parameter and reduces the loss."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+
+        context = self._build_optimise_context(setup, starting, bounds)
+        starting_loss = context.optimise_loss(
+            context.optimisation_groups,
+            self._to_model_space_values_by_id(context, input_ids, starting),
+        )
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids, starting, bounds, use_log_space=[True, False]
+            ),
+            noise_parameters=make_noise_parameters(1),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=200,
+            method="gradient_descent",
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertLess(result.loss, starting_loss)
+
+    def test_optimise_log_space_rejects_negative_lower_bound(self):
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        with self.assertRaisesMessage(ValueError, "lower_bound >= 0"):
+            model.optimise(
+                parameters=make_parameters(
+                    input_ids[:1], [0.2], ([-0.1], [0.3]), use_log_space=[True]
+                ),
+                noise_parameters=make_noise_parameters(1),
+                biomarker_types=[setup["biomarker_type"].id],
+                subject_groups=[setup["groups"][0].id],
+                max_iterations=1,
+            )
+
+    def test_optimise_log_space_zero_lower_bound_is_clamped(self):
+        """A zero lower bound is clamped to a finite floor rather than log(0)."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids[:1], [0.2], ([0.0], [0.3]), use_log_space=[True]
+            ),
+            noise_parameters=make_noise_parameters(1),
+            biomarker_types=[setup["biomarker_type"].id],
+            subject_groups=[setup["groups"][0].id],
+            max_iterations=25,
+        )
+
+        self.assertEqual(len(result.optimal), 1)
+        self.assertTrue(np.isfinite(result.loss))
+
+    def test_optimise_linear_sigma_matches_log_sigma(self):
+        """Fitting the noise sigma in linear space reaches the same optimum as
+        fitting it in log space (the parameterisation changes the path, not the
+        result). The ODE parameters are pinned near their true values with tight
+        bounds so the fitted sigma is the (deterministic) RMS residual and both
+        parameterisations converge to it via gradient descent."""
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+        # Pin the ODE parameters near the truth so sigma is the free parameter.
+        starting = list(true_values)
+        bounds = (
+            [v * 0.99 for v in true_values],
+            [v * 1.01 for v in true_values],
+        )
+
+        def fit(sigma_use_log_space):
+            return model.optimise(
+                parameters=make_parameters(input_ids, starting, bounds),
+                noise_parameters=[
+                    ParameterInfo(
+                        starting=0.5,
+                        lower_bound=0.0,
+                        upper_bound=2.0,
+                        use_log_space=sigma_use_log_space,
+                    )
+                ],
+                biomarker_types=[setup["biomarker_type"].id],
+                subject_groups=[group.id for group in setup["groups"]],
+                max_iterations=300,
+                method="gradient_descent",
+            )
+
+        log_result = fit(True)
+        linear_result = fit(False)
+
+        self.assertEqual(linear_result.sigma_use_log_space, [False])
+        self.assertTrue(np.isfinite(linear_result.loss))
+        self.assertGreater(linear_result.sigma[0], 0.0)
+        # Both parameterisations should recover essentially the same noise sd.
+        self.assertAlmostEqual(
+            linear_result.sigma[0], log_result.sigma[0], delta=0.02
+        )

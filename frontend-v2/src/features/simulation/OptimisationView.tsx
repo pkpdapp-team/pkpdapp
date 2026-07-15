@@ -168,12 +168,14 @@ const OptimisationView = ({
                     indicating the true optimum may lie outside the specified range.
                   </p>
                   <p>
-                    <strong>Log sigma</strong> is the log of the noise standard deviation
-                    parameter (σ = exp(log_sigma)) that is jointly optimised with the
-                    model parameters. One σ is fitted per observed output variable, so
-                    there is a row for each. The <strong>combined</strong> noise model
-                    fits two σ per output — an additive σ_a and a proportional σ_m
-                    (variance = σ_a² + σ_m²·prediction²) — shown as separate rows.
+                    <strong>Sigma</strong> is the noise standard deviation parameter
+                    (in the output variable&apos;s units) that is jointly optimised
+                    with the model parameters. One σ is fitted per observed output
+                    variable, so there is a row for each; a <strong>[log]</strong>
+                    marker indicates that σ was fit in log space. The{" "}
+                    <strong>combined</strong> noise model fits two σ per output — an
+                    additive σ_a and a proportional σ_m (variance = σ_a² +
+                    σ_m²·prediction²) — shown as separate rows.
                   </p>
                 </HelpButton>
               </Stack>
@@ -207,7 +209,7 @@ const OptimisationView = ({
                     );
                   })}
                   {optimiseResult.sigma_variables != null &&
-                    optimiseResult.log_sigma != null &&
+                    optimiseResult.sigma_start != null &&
                     optimiseResult.sigma_bounds != null &&
                     optimiseResult.sigma != null &&
                     optimiseResult.sigma_variables.map((varId, i) => {
@@ -215,39 +217,43 @@ const OptimisationView = ({
                       const name = variable?.name ?? String(varId);
                       const isCombined = optimiseResult.noise_model === "combined";
                       const bounds = optimiseResult.sigma_bounds![i];
-                      const optimalLogSigma = Math.log(optimiseResult.sigma![i]);
+                      const optimalSigma = optimiseResult.sigma![i];
+                      const useLog =
+                        optimiseResult.sigma_use_log_space?.[i] ?? true;
+                      const logSuffix = useLog ? " [log]" : "";
                       const additiveLabel = isCombined
-                        ? `Log sigma additive (${name})`
-                        : `Log sigma (${name})`;
+                        ? `Sigma additive (${name})${logSuffix}`
+                        : `Sigma (${name})${logSuffix}`;
                       const rows = [
                         <TableRow key={`sigma-${varId}`}>
                           <TableCell>{additiveLabel}</TableCell>
-                          <TableCell>{formatNum(optimiseResult.log_sigma![i])}</TableCell>
+                          <TableCell>{formatNum(optimiseResult.sigma_start![i])}</TableCell>
                           <TableCell>{formatNum(bounds[0])}</TableCell>
                           <TableCell>{formatNum(bounds[1])}</TableCell>
-                          <TableCell sx={isNearBound(optimalLogSigma, bounds[0], bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
-                            {formatNum(optimalLogSigma)}
+                          <TableCell sx={isNearBound(optimalSigma, bounds[0], bounds[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                            {formatNum(optimalSigma)}
                           </TableCell>
                         </TableRow>,
                       ];
                       if (
                         isCombined &&
                         optimiseResult.sigma_mult != null &&
-                        optimiseResult.log_sigma_mult != null &&
+                        optimiseResult.sigma_mult_start != null &&
                         optimiseResult.sigma_bounds_mult != null
                       ) {
                         const boundsM = optimiseResult.sigma_bounds_mult![i];
-                        const optimalLogSigmaM = Math.log(
-                          optimiseResult.sigma_mult![i],
-                        );
+                        const optimalSigmaM = optimiseResult.sigma_mult![i];
+                        const useLogM =
+                          optimiseResult.sigma_mult_use_log_space?.[i] ?? true;
+                        const logSuffixM = useLogM ? " [log]" : "";
                         rows.push(
                           <TableRow key={`sigma-mult-${varId}`}>
-                            <TableCell>Log sigma proportional ({name})</TableCell>
-                            <TableCell>{formatNum(optimiseResult.log_sigma_mult![i])}</TableCell>
+                            <TableCell>{`Sigma proportional (${name})${logSuffixM}`}</TableCell>
+                            <TableCell>{formatNum(optimiseResult.sigma_mult_start![i])}</TableCell>
                             <TableCell>{formatNum(boundsM[0])}</TableCell>
                             <TableCell>{formatNum(boundsM[1])}</TableCell>
-                            <TableCell sx={isNearBound(optimalLogSigmaM, boundsM[0], boundsM[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
-                              {formatNum(optimalLogSigmaM)}
+                            <TableCell sx={isNearBound(optimalSigmaM, boundsM[0], boundsM[1]) ? { color: "error.main", fontWeight: "bold" } : {}}>
+                              {formatNum(optimalSigmaM)}
                             </TableCell>
                           </TableRow>,
                         );
