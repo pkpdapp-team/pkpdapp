@@ -141,6 +141,8 @@ const ParameterRow: FC<Props> = ({
       { value: "IMX", label: "Dose Imax" },
       { value: "POW", label: "Dose Power Increase" },
       { value: "NPW", label: "Dose Power Decrease" },
+      { value: "TEM", label: "Time Emax" },
+      { value: "TIM", label: "Time Imax" },
       { value: "TDI", label: "Time Decrease" },
       { value: "IND", label: "Time Increase" },
       { value: "", label: "None" },
@@ -185,6 +187,12 @@ const ParameterRow: FC<Props> = ({
       nonlinearityDocImage = "Dose_increase_wo.JPG";
     } else if (nonlinearityValue === "NPW") {
       nonlinearityDocImage = "Dose_decrease_wo.JPG";
+    } else if (nonlinearityValue === "TEM") {
+      // TODO: replace with a dedicated Time Emax help image when available
+      nonlinearityDocImage = "Time_induction.JPG";
+    } else if (nonlinearityValue === "TIM") {
+      // TODO: replace with a dedicated Time Imax help image when available
+      nonlinearityDocImage = "Time_inhibition.JPG";
     } else if (nonlinearityValue === "TDI") {
       nonlinearityDocImage = "Time_inhibition.JPG";
     } else if (nonlinearityValue === "IND") {

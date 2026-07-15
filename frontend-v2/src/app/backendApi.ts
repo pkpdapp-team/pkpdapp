@@ -1974,6 +1974,8 @@ export type TypeEnum =
   | "EMM"
   | "EMX"
   | "IMX"
+  | "TEM"
+  | "TIM"
   | "POW"
   | "NPW"
   | "TDI"
@@ -1994,6 +1996,8 @@ export type DerivedVariable = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
@@ -2023,6 +2027,8 @@ export type DerivedVariableRead = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
