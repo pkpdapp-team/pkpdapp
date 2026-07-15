@@ -17,6 +17,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/.
 """
 
 import os
+import sys
 import dj_database_url
 import ldap
 from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnion
@@ -58,6 +59,17 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        # pydiffsol bridges the diffsol/diffsl Rust solver logs into Python via
+        # pyo3-log (e.g. "BDF Solver Statistics", "Built tensor"). These are very
+        # noisy at INFO; keep only warnings and errors.
+        "diffsol": {
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "diffsl": {
+            "level": "WARNING",
+            "propagate": True,
+        },
     },
     "formatters": {
         "simple": {"format": "%(levelname)s %(message)s"},
@@ -66,6 +78,13 @@ LOGGING = {
         },
     },
 }
+
+# Silence noisy INFO-level application logs (e.g. "UPDATE MODEL",
+# "SimulateContext ... diffsol_odes ...") when running the test suite. Warnings
+# and errors are still shown.
+if "test" in sys.argv:
+    LOGGING["loggers"]["pkpdapp"]["level"] = "WARNING"
+    LOGGING["loggers"]["django"]["level"] = "WARNING"
 
 
 # Quick-start development settings - unsuitable for production

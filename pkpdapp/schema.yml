@@ -3987,7 +3987,7 @@ components:
         method:
           type: string
           default: pso
-        log_sigma:
+        sigma_start:
           type: array
           items:
             type: number
@@ -4003,7 +4003,12 @@ components:
             maxItems: 2
             minItems: 2
           nullable: true
-        log_sigma_mult:
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
           type: array
           items:
             type: number
@@ -4018,6 +4023,16 @@ components:
               format: double
             maxItems: 2
             minItems: 2
+          nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        use_log_space:
+          type: array
+          items:
+            type: boolean
           nullable: true
       required:
       - bounds
@@ -4041,7 +4056,6 @@ components:
           items:
             type: number
             format: double
-          nullable: true
         sigma_mult:
           type: array
           items:
@@ -4131,7 +4145,7 @@ components:
           items:
             type: integer
           nullable: true
-        log_sigma:
+        sigma_start:
           type: array
           items:
             type: number
@@ -4145,7 +4159,12 @@ components:
               type: number
               format: double
           nullable: true
-        log_sigma_mult:
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
           type: array
           items:
             type: number
@@ -4159,6 +4178,11 @@ components:
               type: number
               format: double
           nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
       required:
       - aic
       - bic
@@ -4166,8 +4190,6 @@ components:
       - condition_number
       - covariance
       - inputs
-      - log_sigma
-      - log_sigma_mult
       - loss
       - method
       - neg2ll
@@ -4181,6 +4203,10 @@ components:
       - sigma_bounds
       - sigma_bounds_mult
       - sigma_mult
+      - sigma_mult_start
+      - sigma_mult_use_log_space
+      - sigma_start
+      - sigma_use_log_space
       - sigma_variables
       - starting
     PatchedBiomarkerType:
