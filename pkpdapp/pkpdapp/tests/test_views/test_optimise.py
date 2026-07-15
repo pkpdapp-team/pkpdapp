@@ -71,6 +71,20 @@ class TestOptimiseView(APITestCase):
         self.assertEqual(len(response.data["optimal"]), 2)
         self.assertTrue(np.isfinite(response.data["loss"]))
 
+        # Observed data (DV) is returned for the observed-vs-predicted plot,
+        # one entry per group aligned with the residuals.
+        self.assertIn("observations", response.data)
+        self.assertIsNotNone(response.data["observations"])
+        self.assertEqual(
+            len(response.data["observations"]), len(response.data["residuals"])
+        )
+        output_var_id = str(self.biomarker_type.variable.id)
+        self.assertIn(output_var_id, response.data["observations"][0])
+        self.assertEqual(
+            len(response.data["observations"][0][output_var_id]),
+            len(response.data["residuals"][0][output_var_id]),
+        )
+
     def test_optimise_result_close_to_true(self):
         data = {
             "inputs": [self.k_var.id, self.scale_var.id],

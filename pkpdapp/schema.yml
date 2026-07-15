@@ -3724,6 +3724,8 @@ components:
             * `EMM` - Extended Michaelis-Menten
             * `EMX` - Emax
             * `IMX` - Imax
+            * `TEM` - Time Emax
+            * `TIM` - Time Imax
             * `POW` - Power
             * `NPW` - Negative Power
             * `TDI` - Exponential Decay
@@ -4105,6 +4107,12 @@ components:
             type: object
             additionalProperties: {}
           nullable: true
+        observations:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          nullable: true
         covariance:
           type: array
           items:
@@ -4186,6 +4194,7 @@ components:
       - method
       - neg2ll
       - noise_model
+      - observations
       - optimal
       - predictions
       - reason
@@ -5083,13 +5092,10 @@ components:
           type: string
           maxLength: 150
         email:
+          type: string
+          format: email
           title: Email address
-          oneOf:
-          - type: string
-            format: email
-            maxLength: 254
-          - type: string
-            maxLength: 0
+          maxLength: 254
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'
@@ -6022,6 +6028,8 @@ components:
       - EMM
       - EMX
       - IMX
+      - TEM
+      - TIM
       - POW
       - NPW
       - TDI
@@ -6037,6 +6045,8 @@ components:
         * `EMM` - Extended Michaelis-Menten
         * `EMX` - Emax
         * `IMX` - Imax
+        * `TEM` - Time Emax
+        * `TIM` - Time Imax
         * `POW` - Power
         * `NPW` - Negative Power
         * `TDI` - Exponential Decay
@@ -6129,13 +6139,10 @@ components:
           type: string
           maxLength: 150
         email:
+          type: string
+          format: email
           title: Email address
-          oneOf:
-          - type: string
-            format: email
-            maxLength: 254
-          - type: string
-            maxLength: 0
+          maxLength: 254
         profile:
           allOf:
           - $ref: '#/components/schemas/Profile'

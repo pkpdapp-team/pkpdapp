@@ -87,6 +87,14 @@ const OptimisationView = ({
       )
       : null;
 
+  const observations =
+    optimiseResult?.observations
+      ? optimisePredictionsToSimulateResponses(
+        optimiseResult.observations as { [key: string]: unknown }[],
+        variables,
+      )
+      : null;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Last Optimisation Result</DialogTitle>
@@ -292,54 +300,6 @@ const OptimisationView = ({
             </Stack>
 
             <Divider />
-            {predictions && residuals && predictions.length > 0 && residuals.length > 0 && (
-              <>
-                <Stack spacing={1}>
-                  <Stack direction="row" alignItems="center">
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      Residual Diagnostics
-                    </Typography>
-                    <HelpButton title="Residual Diagnostics">
-                      <p>
-                        Residuals are the normalised differences between model predictions
-                        and observed data, divided by that variable&apos;s estimated σ.
-                      </p>
-                      <p>
-                        For <strong>additive noise</strong>: residual = (prediction − observed) / σ
-                      </p>
-                      <p>
-                        For <strong>multiplicative noise</strong>: residual = (log(prediction) − log(observed)) / σ
-                      </p>
-                      <p>
-                        For <strong>combined noise</strong>: residual = (prediction − observed) / √(σ_a² + σ_m²·prediction²)
-                      </p>
-                      <p>
-                        Well-fitted models should show residuals randomly scattered around
-                        zero with no systematic patterns. Look for:
-                      </p>
-                      <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
-                        <li>Trends over time suggesting model misspecification</li>
-                        <li>Increasing spread suggesting heteroscedasticity</li>
-                        <li>Clusters of large residuals suggesting outliers</li>
-                      </ul>
-                      <p>
-                        Each residual scatter plot has its own <strong>Log x-axis</strong>{" "}
-                        toggle for data spanning several orders of magnitude. The
-                        Normal QQ plot is shown only when at least 30 residuals are
-                        available, below which it is not informative.
-                      </p>
-                    </HelpButton>
-                  </Stack>
-                  <OptimisationResidualPlots
-                    predictions={predictions}
-                    residuals={residuals}
-                    variables={variables}
-                    groups={groups}
-                  />
-                </Stack>
-                <Divider />
-              </>
-            )}
 
             {/* Covariance / correlation matrix */}
             {optimiseResult.covariance && (
@@ -425,6 +385,63 @@ const OptimisationView = ({
                       variables={variables}
                     />
                   </Box>
+                </Stack>
+              </>
+            )}
+
+            {predictions && residuals && predictions.length > 0 && residuals.length > 0 && (
+              <>
+                <Divider />
+                <Stack spacing={1}>
+                  <Stack direction="row" alignItems="center">
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Residual Diagnostics
+                    </Typography>
+                    <HelpButton title="Residual Diagnostics">
+                      <p>
+                        Residuals are the normalised differences between model predictions
+                        and observed data, divided by that variable&apos;s estimated σ.
+                      </p>
+                      <p>
+                        For <strong>additive noise</strong>: residual = (prediction − observed) / σ
+                      </p>
+                      <p>
+                        For <strong>multiplicative noise</strong>: residual = (log(prediction) − log(observed)) / σ
+                      </p>
+                      <p>
+                        For <strong>combined noise</strong>: residual = (prediction − observed) / √(σ_a² + σ_m²·prediction²)
+                      </p>
+                      <p>
+                        The <strong>Observed vs Predicted</strong> plot shows each
+                        observed data point against the model prediction at the same
+                        time. A well-fitted model has points scattered evenly about
+                        the dashed identity line (y = x); systematic deviation from
+                        it indicates bias.
+                      </p>
+                      <p>
+                        Well-fitted models should show residuals randomly scattered around
+                        zero with no systematic patterns. Look for:
+                      </p>
+                      <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                        <li>Trends over time suggesting model misspecification</li>
+                        <li>Increasing spread suggesting heteroscedasticity</li>
+                        <li>Clusters of large residuals suggesting outliers</li>
+                      </ul>
+                      <p>
+                        Each residual scatter plot has its own <strong>Log x-axis</strong>{" "}
+                        toggle for data spanning several orders of magnitude. The
+                        Normal QQ plot is shown only when at least 30 residuals are
+                        available, below which it is not informative.
+                      </p>
+                    </HelpButton>
+                  </Stack>
+                  <OptimisationResidualPlots
+                    predictions={predictions}
+                    residuals={residuals}
+                    observations={observations}
+                    variables={variables}
+                    groups={groups}
+                  />
                 </Stack>
               </>
             )}
