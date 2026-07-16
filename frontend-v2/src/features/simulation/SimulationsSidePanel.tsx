@@ -47,7 +47,6 @@ import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import OptimisationSettings from "./OptimisationSettings";
 import OptimisationView from "./OptimisationView";
-import { NoiseModel } from "./useOptimise";
 import { getPlottedBiomarkerTypes } from "./utils";
 import "../../App.css";
 
@@ -90,8 +89,6 @@ type SimulationsSidePanelType = {
   loadingOptimise: boolean;
   optimiseMethod: string;
   setOptimiseMethod: (method: string) => void;
-  noiseModel: NoiseModel;
-  setNoiseModel: (noiseModel: NoiseModel) => void;
   maxIterations: string;
   setMaxIterations: (maxIterations: string) => void;
   optimiseResult: OptimiseResponse | null;
@@ -219,8 +216,6 @@ export const SimulationsSidePanel = ({
   loadingOptimise,
   optimiseMethod,
   setOptimiseMethod,
-  noiseModel,
-  setNoiseModel,
   maxIterations,
   setMaxIterations,
   optimiseResult,
@@ -742,8 +737,6 @@ export const SimulationsSidePanel = ({
             loadingOptimise={loadingOptimise}
             method={optimiseMethod}
             setMethod={setOptimiseMethod}
-            noiseModel={noiseModel}
-            setNoiseModel={setNoiseModel}
             maxIterations={maxIterations}
             setMaxIterations={setMaxIterations}
             plots={plots}

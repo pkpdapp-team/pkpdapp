@@ -10,10 +10,14 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from pkpdapp.models import Biomarker, BiomarkerType, Unit
 from pkpdapp.tests.optimise_fixtures import (
+    DOSE_SPECS,
+    SELECTED_TIMES,
     TRUE_K,
     TRUE_SCALE,
     create_exponential_data,
+    exponential_response,
 )
 
 
@@ -176,7 +180,7 @@ class TestOptimiseView(APITestCase):
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
             "max_iterations": 25,
-            "noise_model": "combined",
+            "noise_models": ["combined"],
             "sigma_start": [1.0],
             "sigma_bounds": [[0.0, 10.0]],
             "sigma_use_log_space": [True],
@@ -187,12 +191,69 @@ class TestOptimiseView(APITestCase):
         response = self._post_optimise(data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["noise_model"], "combined")
+        self.assertEqual(response.data["noise_models"], ["combined"])
         self.assertEqual(response.data["sigma_variables"], [response_var_id])
         self.assertEqual(len(response.data["sigma"]), 1)
         self.assertEqual(len(response.data["sigma_mult"]), 1)
         self.assertEqual(response.data["sigma_mult_start"], [0.1])
         self.assertEqual(response.data["sigma_bounds_mult"], [[0.0, 1.0]])
+
+    def test_optimise_mixed_noise_models(self):
+        # Add a second output variable (Central.amount) with observations so two
+        # biomarker types can use different noise models in one fit.
+        amount = self.model.variables.get(qname="Central.amount")
+        unit_mg = Unit.objects.get(symbol="mg")
+        amount_type = BiomarkerType.objects.create(
+            name="amount view",
+            dataset=self.biomarker_type.dataset,
+            stored_unit=unit_mg,
+            display_unit=unit_mg,
+            stored_time_unit=self.biomarker_type.stored_time_unit,
+            display_time_unit=self.biomarker_type.display_time_unit,
+            variable=amount,
+        )
+        for group, doses in zip(self.groups, DOSE_SPECS):
+            subject = group.subjects.first()
+            amounts = exponential_response(SELECTED_TIMES, doses, TRUE_K, 1.0)
+            for t, value in zip(SELECTED_TIMES, amounts):
+                Biomarker.objects.create(
+                    time=float(t),
+                    subject=subject,
+                    biomarker_type=amount_type,
+                    value=float(max(value, 1e-6)),
+                )
+
+        # noise_models / sigma arrays are in canonical (ascending variable id)
+        # order: additive for the first output variable, combined for the second.
+        var_ids = sorted([self.biomarker_type.variable.id, amount.id])
+        noise_models = ["additive", "combined"]
+        data = {
+            "inputs": [self.k_var.id, self.scale_var.id],
+            "starting": [0.27, 1.45],
+            "bounds": [[0.16, 1.2], [0.3, 2.1]],
+            "biomarker_types": [self.biomarker_type.id, amount_type.id],
+            "subject_groups": [g.id for g in self.groups],
+            "max_iterations": 20,
+            "noise_models": noise_models,
+            "sigma_start": [1.0, 1.0],
+            "sigma_bounds": [[0.0, 10.0], [0.0, 10.0]],
+            "sigma_use_log_space": [True, True],
+            "sigma_mult_start": [0.1, 0.1],
+            "sigma_bounds_mult": [[0.0, 1.0], [0.0, 1.0]],
+            "sigma_mult_use_log_space": [True, True],
+        }
+        response = self._post_optimise(data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["sigma_variables"], var_ids)
+        self.assertEqual(response.data["noise_models"], noise_models)
+        self.assertEqual(len(response.data["sigma"]), 2)
+        # sigma_mult is per-output: None for the additive output, a float for the
+        # combined one.
+        self.assertIsNone(response.data["sigma_mult"][0])
+        self.assertIsInstance(response.data["sigma_mult"][1], float)
+        self.assertIsNone(response.data["sigma_mult_start"][0])
+        self.assertEqual(response.data["sigma_mult_start"][1], 0.1)
 
     def test_optimise_400_for_invalid_noise_model(self):
         data = {
@@ -201,7 +262,7 @@ class TestOptimiseView(APITestCase):
             "bounds": [[0.16, 1.2], [0.3, 2.1]],
             "biomarker_types": [self.biomarker_type.id],
             "subject_groups": [g.id for g in self.groups],
-            "noise_model": "not-a-model",
+            "noise_models": ["not-a-model"],
         }
         response = self._post_optimise(data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

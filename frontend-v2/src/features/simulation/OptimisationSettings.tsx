@@ -34,7 +34,7 @@ import {
   getSigmaVariables,
   sanitizeMaxIterations,
 } from "./utils";
-import { NoiseModel } from "./useOptimise";
+import { DEFAULT_NOISE_MODEL, NoiseModel } from "./useOptimise";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 
@@ -68,8 +68,6 @@ type OptimisationSettingsProps = {
   // dialog closing/reopening and are shared with the sidebar Fit button.
   method: string;
   setMethod: (method: string) => void;
-  noiseModel: NoiseModel;
-  setNoiseModel: (noiseModel: NoiseModel) => void;
   maxIterations: string;
   setMaxIterations: (maxIterations: string) => void;
 };
@@ -153,8 +151,6 @@ const OptimisationSettings = ({
   model,
   method,
   setMethod,
-  noiseModel,
-  setNoiseModel,
   maxIterations,
   setMaxIterations,
 }: OptimisationSettingsProps) => {
@@ -185,7 +181,14 @@ const OptimisationSettings = ({
   const [sigmaMultUseLogSpaceByVar, setSigmaMultUseLogSpaceByVar] = useState<
     Record<number, boolean>
   >({});
-  const isCombined = noiseModel === "combined";
+  // Per-output-variable noise model. Each observation defaults to
+  // DEFAULT_NOISE_MODEL and can be overridden independently.
+  const [noiseModelByVar, setNoiseModelByVar] = useState<
+    Record<number, NoiseModel>
+  >({});
+  const noiseModelFor = (varId: number): NoiseModel =>
+    noiseModelByVar[varId] ?? DEFAULT_NOISE_MODEL;
+  const isCombinedFor = (varId: number) => noiseModelFor(varId) === "combined";
 
   // The distinct output variables to fit a sigma for follow the selected
   // observations, in the same canonical (ascending id) order as the backend.
@@ -235,8 +238,8 @@ const OptimisationSettings = ({
     setCustomUseLogSpace(
       defaultOptimiseInputs.use_log_space ?? orderedSliders.map(() => false),
     );
-    // method / noiseModel / maxIterations are persisted in useOptimise and
-    // intentionally not reset here so they survive dialog open/close.
+    // method / maxIterations are persisted in useOptimise and intentionally not
+    // reset here so they survive dialog open/close.
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
 
@@ -248,6 +251,9 @@ const OptimisationSettings = ({
     setSigmaMultStartByVar({});
     setSigmaBoundsMultByVar({});
     setSigmaMultUseLogSpaceByVar({});
+    // Clear per-observation noise-model overrides so each falls back to
+    // DEFAULT_NOISE_MODEL.
+    setNoiseModelByVar({});
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -279,7 +285,9 @@ const OptimisationSettings = ({
           (customUseLogSpace[index] ?? false) && customLowerBounds[index] >= 0,
       ),
       max_iterations: sanitizeMaxIterations(maxIterations),
-      noise_model: noiseModel,
+      // One noise model per output variable, in the same canonical (ascending
+      // variable id) order as the sigma arrays below.
+      noise_models: sigmaVariables.map((varId) => noiseModelFor(varId)),
       method,
       biomarker_types: selectedBiomarkerTypeIds,
       subject_groups: selectedSubjectGroupIds,
@@ -294,9 +302,11 @@ const OptimisationSettings = ({
       sigma_use_log_space: sigmaVariables.map(
         (varId) => sigmaUseLogSpaceByVar[varId] ?? true,
       ),
-      // The second (proportional, dimensionless) sigma is only sent for the
-      // combined model.
-      ...(isCombined
+      // The second (proportional, dimensionless) sigma is sent whenever any
+      // observation uses the combined model. The arrays are full-length (one per
+      // output variable); the backend only reads the entries for combined
+      // outputs.
+      ...(sigmaVariables.some((varId) => isCombinedFor(varId))
         ? {
             sigma_mult_start: sigmaVariables.map(
               (varId) => sigmaMultStartByVar[varId] ?? 0.1,
@@ -428,9 +438,7 @@ const OptimisationSettings = ({
           })}
           <Divider />
           <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
-            {isCombined
-              ? "Noise standard deviations: additive σ_a and proportional σ_m"
-              : "Noise standard deviation"}
+            Noise model and standard deviation (per observation)
           </Typography>
           {sigmaVariables.length === 0 && (
             <Typography variant="body2" color="text.secondary">
@@ -442,13 +450,37 @@ const OptimisationSettings = ({
             const label = variable?.description
               ? `${variable.name} (${variable.description})`
               : variable?.name || `Variable ${varId}`;
+            const varIsCombined = isCombinedFor(varId);
             return (
               <Box key={varId}>
                 <Typography variant="body2" sx={{ marginBottom: ".25rem" }}>
                   {label}
                 </Typography>
+                <FormControl
+                  size="small"
+                  sx={{ marginBottom: ".5rem", minWidth: 200 }}
+                >
+                  <InputLabel id={`noise-model-${varId}-label`}>
+                    Noise model
+                  </InputLabel>
+                  <Select
+                    labelId={`noise-model-${varId}-label`}
+                    label="Noise model"
+                    value={noiseModelFor(varId)}
+                    onChange={(event) =>
+                      setNoiseModelByVar((current) => ({
+                        ...current,
+                        [varId]: event.target.value as NoiseModel,
+                      }))
+                    }
+                  >
+                    <MenuItem value="additive">Additive</MenuItem>
+                    <MenuItem value="multiplicative">Multiplicative</MenuItem>
+                    <MenuItem value="combined">Combined</MenuItem>
+                  </Select>
+                </FormControl>
                 <SigmaRow
-                  label={isCombined ? "Sigma (additive)" : "Sigma"}
+                  label={varIsCombined ? "Sigma (additive)" : "Sigma"}
                   sigma={sigmaStartByVar[varId] ?? sigmaStartDefault(varId)}
                   onSigmaChange={(value) =>
                     setSigmaStartByVar((current) => ({ ...current, [varId]: value }))
@@ -467,7 +499,7 @@ const OptimisationSettings = ({
                     }))
                   }
                 />
-                {isCombined && (
+                {varIsCombined && (
                   <Box sx={{ marginTop: ".5rem" }}>
                     <SigmaRow
                       label="Sigma (proportional)"
@@ -572,26 +604,6 @@ const OptimisationSettings = ({
                     {option.label}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth size="small">
-              <InputLabel id="noise-model-label">Noise model</InputLabel>
-              <Select
-                labelId="noise-model-label"
-                label="Noise model"
-                value={noiseModel}
-                onChange={(event) =>
-                  setNoiseModel(
-                    event.target.value as
-                      | "additive"
-                      | "multiplicative"
-                      | "combined",
-                  )
-                }
-              >
-                <MenuItem value="additive">Additive</MenuItem>
-                <MenuItem value="multiplicative">Multiplicative</MenuItem>
-                <MenuItem value="combined">Combined</MenuItem>
               </Select>
             </FormControl>
             <TextField

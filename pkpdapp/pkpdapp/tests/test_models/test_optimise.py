@@ -10,7 +10,11 @@ from unittest import mock
 
 import numpy as np
 from django.test import TestCase
-from pkpdapp.models.optimise_context import OptimiseContext, ParameterInfo
+from pkpdapp.models.optimise_context import (
+    ObservationInfo,
+    OptimiseContext,
+    ParameterInfo,
+)
 from pkpdapp.models import (
     Biomarker,
     BiomarkerType,
@@ -50,22 +54,47 @@ def make_parameters(input_ids, starting, bounds, use_log_space=None):
     ]
 
 
-def make_noise_parameters(
-    count, *, combined=False, use_log_space=True, start=1.0, upper=10.0
+def _make_sigma(*, use_log_space=True, start=1.0, upper=10.0):
+    return ParameterInfo(
+        starting=start,
+        lower_bound=0.0,
+        upper_bound=upper,
+        use_log_space=use_log_space,
+    )
+
+
+def make_observation(
+    biomarker_type_id,
+    noise_model="additive",
+    *,
+    use_log_space=True,
+    start=1.0,
+    upper=10.0,
 ):
-    """Build the (now mandatory) linear noise ParameterInfo list ``optimise``
-    expects: ``count`` additive sigmas, plus ``count`` proportional sigmas when
-    ``combined``. Bounds default to [0, upper] in linear sigma units.
+    """Build one ObservationInfo carrying its noise model and sigma param(s):
+    one sigma for additive / multiplicative, and a second (sigma_mult) for the
+    combined model. Bounds default to [0, upper] in linear sigma units.
     """
-    n = count * (2 if combined else 1)
+    sigma_mult = (
+        _make_sigma(use_log_space=use_log_space, start=start, upper=upper)
+        if noise_model == "combined"
+        else None
+    )
+    return ObservationInfo(
+        biomarker_type=biomarker_type_id,
+        noise_model=noise_model,
+        sigma=_make_sigma(use_log_space=use_log_space, start=start, upper=upper),
+        sigma_mult=sigma_mult,
+    )
+
+
+def make_observations(biomarker_type_ids, noise_model="additive", **kwargs):
+    """Build the ``observations`` list ``optimise`` expects: one ObservationInfo
+    per biomarker type, all using ``noise_model``.
+    """
     return [
-        ParameterInfo(
-            starting=start,
-            lower_bound=0.0,
-            upper_bound=upper,
-            use_log_space=use_log_space,
-        )
-        for _ in range(n)
+        make_observation(biomarker_type_id, noise_model, **kwargs)
+        for biomarker_type_id in biomarker_type_ids
     ]
 
 
@@ -100,13 +129,13 @@ class TestOptimise(TestCase):
         # this class is deterministic.
         np.random.seed(1234)
 
-    def _build_optimise_context(self, setup, starting, bounds):
+    def _build_optimise_context(self, setup, starting, bounds, noise_model="additive"):
         return OptimiseContext(
             model=setup["model"],
             optimise_inputs=[variable.id for variable in setup["inputs"]],
             starting=starting,
             bounds=bounds,
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id], noise_model),
             subject_groups=[group.id for group in setup["groups"]],
             use_diffsol=True,
         )
@@ -295,8 +324,7 @@ class TestOptimise(TestCase):
 
         result = model.optimise(
             parameters=make_parameters(input_ids, starting, bounds),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=biomarker_type_ids,
+            observations=make_observations(biomarker_type_ids),
             subject_groups=group_ids,
             max_iterations=80,
         )
@@ -313,8 +341,7 @@ class TestOptimise(TestCase):
 
         result = model.optimise(
             parameters=make_parameters(input_ids[:1], [0.2], ([0.1], [0.3])),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[setup["groups"][0].id],
             max_iterations=25,
         )
@@ -326,21 +353,19 @@ class TestOptimise(TestCase):
                 parameters=make_parameters(
                     input_ids, [0.2, 1.5], ([0.3, 1.0], [0.1, 2.0])
                 ),
-                noise_parameters=make_noise_parameters(1),
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations([setup["biomarker_type"].id]),
                 subject_groups=[setup["groups"][0].id],
                 max_iterations=1,
             )
 
-    def test_optimise_requires_noise_parameters(self):
+    def test_optimise_requires_observations(self):
         setup = self._exponential_data()
         model = setup["model"]
         input_ids = [variable.id for variable in setup["inputs"]]
-        with self.assertRaisesMessage(ValueError, "noise_parameters is required"):
+        with self.assertRaisesMessage(ValueError, "at least one observation"):
             model.optimise(
                 parameters=make_parameters(input_ids[:1], [0.2], ([0.1], [0.3])),
-                noise_parameters=None,
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=[],
                 subject_groups=[setup["groups"][0].id],
                 max_iterations=1,
             )
@@ -359,7 +384,7 @@ class TestOptimise(TestCase):
                 optimise_inputs=inputs,
                 starting=starting,
                 bounds=bounds,
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations([setup["biomarker_type"].id]),
                 subject_groups=[setup["groups"][0].id],
             )
 
@@ -413,7 +438,7 @@ class TestOptimise(TestCase):
         with self.assertRaises(BiomarkerType.DoesNotExist):
             OptimiseContext(
                 **base_kwargs,
-                biomarker_types=[missing_biomarker_type_id],
+                observations=make_observations([missing_biomarker_type_id]),
             )
 
         unmapped = BiomarkerType.objects.create(
@@ -425,7 +450,9 @@ class TestOptimise(TestCase):
             display_time_unit=setup["biomarker_type"].display_time_unit,
         )
         with self.assertRaisesMessage(ValueError, "not mapped"):
-            OptimiseContext(**base_kwargs, biomarker_types=[unmapped.id])
+            OptimiseContext(
+                **base_kwargs, observations=make_observations([unmapped.id])
+            )
 
         outside_variable = Variable.objects.create(
             name="outside response",
@@ -445,7 +472,9 @@ class TestOptimise(TestCase):
             variable=outside_variable,
         )
         with self.assertRaisesMessage(ValueError, "outside this model"):
-            OptimiseContext(**base_kwargs, biomarker_types=[outside.id])
+            OptimiseContext(
+                **base_kwargs, observations=make_observations([outside.id])
+            )
 
         missing_group_kwargs = {
             **base_kwargs,
@@ -454,7 +483,7 @@ class TestOptimise(TestCase):
         with self.assertRaises(SubjectGroup.DoesNotExist):
             OptimiseContext(
                 **missing_group_kwargs,
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations([setup["biomarker_type"].id]),
             )
 
         setup["biomarker_type"].biomarkers.all().delete()
@@ -464,7 +493,7 @@ class TestOptimise(TestCase):
                 optimise_inputs=input_ids,
                 starting=[0.2, 1.5],
                 bounds=([0.1, 1.0], [0.3, 2.0]),
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations([setup["biomarker_type"].id]),
             )
 
     def test_optimisation_groups_include_ungrouped_and_multiple_outputs(self):
@@ -515,7 +544,9 @@ class TestOptimise(TestCase):
             optimise_inputs=[variable.id for variable in setup["inputs"]],
             starting=[0.2, 1.5],
             bounds=([0.1, 1.0], [0.3, 2.0]),
-            biomarker_types=[setup["biomarker_type"].id, amount_type.id],
+            observations=make_observations(
+                [setup["biomarker_type"].id, amount_type.id]
+            ),
             subject_groups=None,
         )
 
@@ -595,8 +626,9 @@ class TestOptimise(TestCase):
                 [0.27, 1.45],
                 ([0.16, 1.2], [0.3, 2.1]),
             ),
-            noise_parameters=make_noise_parameters(2),
-            biomarker_types=[setup["biomarker_type"].id, amount_type.id],
+            observations=make_observations(
+                [setup["biomarker_type"].id, amount_type.id]
+            ),
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=60,
         )
@@ -612,6 +644,210 @@ class TestOptimise(TestCase):
         # The two output variables have very different scales, so their fitted
         # noise sigmas should differ.
         self.assertNotAlmostEqual(result.sigma[0], result.sigma[1])
+
+    def _two_output_setup(self, name_prefix):
+        """Exponential data with a second (``Central.amount``) output variable, so
+        different biomarker types can be given different noise models."""
+        setup = create_exponential_data(
+            name_prefix=name_prefix, group_name_prefix="Mixed"
+        )
+        model = setup["model"]
+        amount = model.variables.get(qname="Central.amount")
+        unit_mg = Unit.objects.get(symbol="mg")
+        amount_type = BiomarkerType.objects.create(
+            name="amount",
+            dataset=setup["dataset"],
+            stored_unit=unit_mg,
+            display_unit=unit_mg,
+            stored_time_unit=setup["biomarker_type"].stored_time_unit,
+            display_time_unit=setup["biomarker_type"].display_time_unit,
+            variable=amount,
+        )
+        for group, doses in zip(setup["groups"], DOSE_SPECS):
+            subject = group.subjects.first()
+            amounts = exponential_response(SELECTED_TIMES, doses, TRUE_K, 1.0)
+            for t, value in zip(SELECTED_TIMES, amounts):
+                Biomarker.objects.create(
+                    time=float(t),
+                    subject=subject,
+                    biomarker_type=amount_type,
+                    value=float(max(value, 1e-6)),
+                )
+        setup["amount"] = amount
+        setup["amount_type"] = amount_type
+        return setup
+
+    def test_optimise_mixed_noise_models_pack_and_gradient(self):
+        """Different biomarker types can use different noise models in one fit:
+        the packed sigma block has one sigma_a per output plus one sigma_m per
+        combined output, and the analytic gradient matches finite differences."""
+        setup = self._two_output_setup("optimise_mixed_grad")
+        response_type = setup["biomarker_type"]
+        amount_type = setup["amount_type"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = [0.27, 1.45]
+        bounds = ([0.16, 1.2], [0.3, 2.1])
+
+        # response -> additive, amount -> combined.
+        observations = [
+            make_observation(response_type.id, "additive"),
+            make_observation(amount_type.id, "combined"),
+        ]
+        context = OptimiseContext(
+            model=setup["model"],
+            optimise_inputs=input_ids,
+            starting=starting,
+            bounds=bounds,
+            observations=observations,
+            subject_groups=[group.id for group in setup["groups"]],
+            use_diffsol=True,
+        )
+
+        n_outputs = len(context.sigma_output_variable_ids)
+        self.assertEqual(n_outputs, 2)
+        self.assertEqual(set(context.noise_model_by_output), {"additive", "combined"})
+        self.assertEqual(len(context.combined_output_indices), 1)
+        combined_k = context.combined_output_indices[0]
+
+        values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, starting
+        )
+        sigma = np.full(n_outputs, np.exp(-0.5))
+        # sigma_m only matters for the combined output; other entries are inert.
+        sigma_mult = np.ones(n_outputs)
+        sigma_mult[combined_k] = np.exp(-1.0)
+
+        nll, ode_gradient, sigma_gradient = context.optimise_loss_gradient(
+            context.optimisation_groups,
+            values_by_id,
+            sigma=sigma,
+            sigma_mult=sigma_mult,
+        )
+        self.assertTrue(np.isfinite(nll))
+        # One sigma_a per output (2) plus one sigma_m for the single combined
+        # output (1).
+        self.assertEqual(len(sigma_gradient), n_outputs + 1)
+
+        def loss_at(s, sm):
+            return context.optimise_loss(
+                context.optimisation_groups, values_by_id, sigma=s, sigma_mult=sm
+            )
+
+        eps = 1e-6
+        # sigma_a gradient for each output (additive and combined).
+        for k in range(n_outputs):
+            sp = sigma.copy()
+            sp[k] += eps
+            sm = sigma.copy()
+            sm[k] -= eps
+            fd = (loss_at(sp, sigma_mult) - loss_at(sm, sigma_mult)) / (2.0 * eps)
+            np.testing.assert_allclose(
+                fd, sigma_gradient[k], rtol=1e-2, atol=1e-3
+            )
+
+        # The single sigma_m gradient (last packed entry) for the combined output.
+        mp = sigma_mult.copy()
+        mp[combined_k] += eps
+        mm = sigma_mult.copy()
+        mm[combined_k] -= eps
+        fd = (loss_at(sigma, mp) - loss_at(sigma, mm)) / (2.0 * eps)
+        np.testing.assert_allclose(
+            fd, sigma_gradient[n_outputs], rtol=1e-2, atol=1e-3
+        )
+
+    def test_optimise_mixed_noise_models_result(self):
+        """End-to-end mixed fit: sigma_mult is reported per output, None for the
+        additive output and a float for the combined one."""
+        setup = self._two_output_setup("optimise_mixed_result")
+        response_type = setup["biomarker_type"]
+        amount_type = setup["amount_type"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+
+        result = setup["model"].optimise(
+            parameters=make_parameters(
+                input_ids, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            ),
+            observations=[
+                make_observation(response_type.id, "additive"),
+                make_observation(amount_type.id, "combined"),
+            ],
+            subject_groups=[group.id for group in setup["groups"]],
+            max_iterations=40,
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertEqual(len(result.sigma), 2)
+        self.assertEqual(len(result.sigma_mult), 2)
+        # sigma_mult is None for the additive output and a float for the combined.
+        combined_index = result.sigma_variables.index(setup["amount"].id)
+        additive_index = result.sigma_variables.index(response_type.variable.id)
+        self.assertIsNone(result.sigma_mult[additive_index])
+        self.assertIsInstance(result.sigma_mult[combined_index], float)
+        self.assertIsNone(result.sigma_mult_start[additive_index])
+        self.assertIsInstance(result.sigma_mult_start[combined_index], float)
+
+    def test_optimise_rejects_duplicate_output_variable(self):
+        """Two biomarker types mapping to the same output variable are ambiguous
+        (which noise model / sigma?) and are rejected."""
+        setup = self._exponential_data()
+        duplicate_type = BiomarkerType.objects.create(
+            name="duplicate response",
+            dataset=setup["dataset"],
+            stored_unit=setup["biomarker_type"].stored_unit,
+            display_unit=setup["biomarker_type"].display_unit,
+            stored_time_unit=setup["biomarker_type"].stored_time_unit,
+            display_time_unit=setup["biomarker_type"].display_time_unit,
+            variable=setup["biomarker_type"].variable,
+        )
+        input_ids = [variable.id for variable in setup["inputs"]]
+        with self.assertRaisesMessage(ValueError, "same output variable"):
+            OptimiseContext(
+                model=setup["model"],
+                optimise_inputs=input_ids,
+                starting=[0.27, 1.45],
+                bounds=([0.16, 1.2], [0.3, 2.1]),
+                observations=make_observations(
+                    [setup["biomarker_type"].id, duplicate_type.id]
+                ),
+                subject_groups=[group.id for group in setup["groups"]],
+            )
+
+    def test_observation_noise_model_validation(self):
+        setup = self._exponential_data()
+        bt_id = setup["biomarker_type"].id
+        input_ids = [variable.id for variable in setup["inputs"]]
+
+        def build(observations):
+            return OptimiseContext(
+                model=setup["model"],
+                optimise_inputs=input_ids,
+                starting=[0.27, 1.45],
+                bounds=([0.16, 1.2], [0.3, 2.1]),
+                observations=observations,
+                subject_groups=[group.id for group in setup["groups"]],
+            )
+
+        # combined requires sigma_mult.
+        with self.assertRaisesMessage(ValueError, "requires sigma_mult"):
+            build([
+                ObservationInfo(
+                    biomarker_type=bt_id,
+                    noise_model="combined",
+                    sigma=_make_sigma(),
+                    sigma_mult=None,
+                )
+            ])
+
+        # sigma_mult is only valid for the combined model.
+        with self.assertRaisesMessage(ValueError, "only valid for the 'combined'"):
+            build([
+                ObservationInfo(
+                    biomarker_type=bt_id,
+                    noise_model="additive",
+                    sigma=_make_sigma(),
+                    sigma_mult=_make_sigma(),
+                )
+            ])
 
     def test_prediction_loss_and_gradient_failure_branches(self):
         setup = create_exponential_data(
@@ -692,7 +928,15 @@ class TestOptimise(TestCase):
 
         # Under the multiplicative model, non-positive observed values are
         # filtered out rather than aborting the fit. When every observation is
-        # filtered the loss and gradient contributions are simply zero.
+        # filtered the loss and gradient contributions are simply zero. The noise
+        # model is a property of the context (per output), so use a multiplicative
+        # context here.
+        mult_context = self._build_optimise_context(
+            setup,
+            [0.27, 1.45],
+            ([0.16, 1.2], [0.3, 2.1]),
+            noise_model="multiplicative",
+        )
         non_positive_obs_group = replace(
             group,
             diffsol_ode=FakeDiffsolOde(
@@ -704,17 +948,15 @@ class TestOptimise(TestCase):
             ),
         )
         self.assertEqual(
-            context.optimise_loss(
+            mult_context.optimise_loss(
                 (non_positive_obs_group,),
                 values_by_id,
-                noise_model="multiplicative",
             ),
             0.0,
         )
-        loss, gradient, sigma_gradient = context.optimise_loss_gradient(
+        loss, gradient, sigma_gradient = mult_context.optimise_loss_gradient(
             (non_positive_obs_group,),
             values_by_id,
-            noise_model="multiplicative",
         )
         self.assertEqual(loss, 0.0)
         self.assertTrue(np.array_equal(gradient, np.zeros(len(values_by_id))))
@@ -802,27 +1044,27 @@ class TestOptimise(TestCase):
             group_name_prefix="InfoCriteria",
         )
         input_ids = [variable.id for variable in setup["inputs"]]
-        context = self._build_optimise_context(
-            setup,
-            [0.27, 1.45],
-            ([0.16, 1.2], [0.3, 2.1]),
-        )
         optimal = np.asarray(setup["true"])
-        values_by_id = self._to_model_space_values_by_id(
-            context, input_ids, setup["true"]
-        )
-
-        n_obs = sum(len(g.records) for g in context.optimisation_groups)
-        self.assertGreater(n_obs, 0)
 
         for noise_model in ("additive", "multiplicative", "combined"):
-            diagnostics = context.optimise_diagnostics(
-                optimal, noise_model=noise_model
+            # The noise model is baked into the context (per output), so build a
+            # fresh context for each model.
+            context = self._build_optimise_context(
+                setup,
+                [0.27, 1.45],
+                ([0.16, 1.2], [0.3, 2.1]),
+                noise_model=noise_model,
             )
+            values_by_id = self._to_model_space_values_by_id(
+                context, input_ids, setup["true"]
+            )
+            n_obs = sum(len(g.records) for g in context.optimisation_groups)
+            self.assertGreater(n_obs, 0)
+
+            diagnostics = context.optimise_diagnostics(optimal)
             nll = context.optimise_loss(
                 context.optimisation_groups,
                 values_by_id,
-                noise_model=noise_model,
             )
 
             n_sigma = len(context.sigma_output_variable_ids) * (
@@ -877,6 +1119,7 @@ class TestOptimise(TestCase):
             setup,
             starting,
             bounds,
+            noise_model="multiplicative",
         )
         true_values_by_id = self._to_model_space_values_by_id(
             context,
@@ -888,14 +1131,12 @@ class TestOptimise(TestCase):
         loss = context.optimise_loss(
             context.optimisation_groups,
             true_values_by_id,
-            noise_model="multiplicative",
         )
         self.assertTrue(np.isfinite(loss))
 
         # The diagnostics report exactly one filtered observation.
         diagnostics = context.optimise_diagnostics(
             np.asarray(setup["true"]),
-            noise_model="multiplicative",
         )
         self.assertEqual(diagnostics["filtered_observations"], 1)
 
@@ -907,23 +1148,26 @@ class TestOptimise(TestCase):
             biomarker.value = 0.0
             biomarker.save()
 
-        context = self._build_optimise_context(
-            setup,
-            [0.27, 1.45],
-            ([0.16, 1.2], [0.3, 2.1]),
-        )
         optimal = np.asarray(setup["true"])
 
+        def diagnostics_for(noise_model):
+            context = self._build_optimise_context(
+                setup,
+                [0.27, 1.45],
+                ([0.16, 1.2], [0.3, 2.1]),
+                noise_model=noise_model,
+            )
+            return context.optimise_diagnostics(optimal)
+
         # Multiplicative drops the two near-zero observations.
-        mult = context.optimise_diagnostics(optimal, noise_model="multiplicative")
-        self.assertEqual(mult["filtered_observations"], 2)
+        self.assertEqual(
+            diagnostics_for("multiplicative")["filtered_observations"], 2
+        )
 
         # Additive and combined models take no logarithm of the observation, so
         # near-zero values are valid and nothing is filtered.
-        additive = context.optimise_diagnostics(optimal, noise_model="additive")
-        self.assertEqual(additive["filtered_observations"], 0)
-        combined = context.optimise_diagnostics(optimal, noise_model="combined")
-        self.assertEqual(combined["filtered_observations"], 0)
+        self.assertEqual(diagnostics_for("additive")["filtered_observations"], 0)
+        self.assertEqual(diagnostics_for("combined")["filtered_observations"], 0)
 
     def test_optimise_pso(self):
         """Particle Swarm Optimisation method should converge to the true values."""
@@ -952,8 +1196,7 @@ class TestOptimise(TestCase):
 
         result = model.optimise(
             parameters=make_parameters(input_ids, starting, bounds),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=biomarker_type_ids,
+            observations=make_observations(biomarker_type_ids),
             subject_groups=group_ids,
             max_iterations=80,
             method="pso",
@@ -1015,8 +1258,7 @@ class TestOptimise(TestCase):
 
         result = model.optimise(
             parameters=make_parameters(input_ids, starting, bounds),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=biomarker_type_ids,
+            observations=make_observations(biomarker_type_ids),
             subject_groups=group_ids,
             max_iterations=200,
             method="gradient_descent",
@@ -1043,8 +1285,7 @@ class TestOptimise(TestCase):
                 ([0.0, 0.0], [1.0, 10.0]),
                 use_log_space=[True, True],
             ),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=500,
             method="adam",
@@ -1061,7 +1302,9 @@ class TestOptimise(TestCase):
         input_ids = [variable.id for variable in setup["inputs"]]
         starting = [0.27, 1.45]
         bounds = ([0.16, 1.2], [0.3, 2.1])
-        context = self._build_optimise_context(setup, starting, bounds)
+        context = self._build_optimise_context(
+            setup, starting, bounds, noise_model="combined"
+        )
         values_by_id = self._to_model_space_values_by_id(
             context, input_ids, starting
         )
@@ -1076,7 +1319,6 @@ class TestOptimise(TestCase):
             values_by_id,
             sigma=sigma,
             sigma_mult=sigma_mult,
-            noise_model="combined",
         )
         self.assertTrue(np.isfinite(nll))
         self.assertEqual(len(sigma_gradient), 2 * n_outputs)
@@ -1087,7 +1329,6 @@ class TestOptimise(TestCase):
                 {k: float(v) for k, v in zip(keys, vals)},
                 sigma=s,
                 sigma_mult=sm,
-                noise_model="combined",
             )
 
         eps = 1e-6
@@ -1139,7 +1380,7 @@ class TestOptimise(TestCase):
         precision."""
         setup = self._exponential_data()
         context = self._build_optimise_context(
-            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1]), noise_model="combined"
         )
         group = context.optimisation_groups[0]
         values_by_id = self._starting_values_by_id(context, setup)
@@ -1164,7 +1405,6 @@ class TestOptimise(TestCase):
             values_by_id,
             sigma=sigma,
             sigma_mult=sigma_mult,
-            noise_model="combined",
         )
 
         eps = 1e-6
@@ -1174,12 +1414,8 @@ class TestOptimise(TestCase):
             sm = sigma.copy()
             sm[i] -= eps
             fd = (
-                context.optimise_loss(
-                    groups, values_by_id, sp, sigma_mult, "combined"
-                )
-                - context.optimise_loss(
-                    groups, values_by_id, sm, sigma_mult, "combined"
-                )
+                context.optimise_loss(groups, values_by_id, sp, sigma_mult)
+                - context.optimise_loss(groups, values_by_id, sm, sigma_mult)
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-6, atol=1e-8)
 
@@ -1188,8 +1424,8 @@ class TestOptimise(TestCase):
             mm = sigma_mult.copy()
             mm[i] -= eps
             fd = (
-                context.optimise_loss(groups, values_by_id, sigma, mp, "combined")
-                - context.optimise_loss(groups, values_by_id, sigma, mm, "combined")
+                context.optimise_loss(groups, values_by_id, sigma, mp)
+                - context.optimise_loss(groups, values_by_id, sigma, mm)
             ) / (2.0 * eps)
             np.testing.assert_allclose(
                 fd, sigma_gradient[n_outputs + i], rtol=1e-6, atol=1e-8
@@ -1212,7 +1448,7 @@ class TestOptimise(TestCase):
         the parameter conversion factors."""
         setup = self._exponential_data()
         context = self._build_optimise_context(
-            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1]), noise_model="combined"
         )
         input_ids = list(context.optimise_input_ids)
         cf = self._combined_conversion_factors(context)
@@ -1226,7 +1462,6 @@ class TestOptimise(TestCase):
             optimal_model,
             sigma=sigma,
             sigma_mult=sigma_mult,
-            noise_model="combined",
         )
         self.assertIsNotNone(diag["covariance"])
         cov = np.array(diag["covariance"], dtype=float)
@@ -1262,7 +1497,7 @@ class TestOptimise(TestCase):
 
         setup = self._exponential_data()
         context = self._build_optimise_context(
-            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1]), noise_model="combined"
         )
         input_ids = list(context.optimise_input_ids)
         true_user = np.array(setup["true"], dtype=float)
@@ -1284,7 +1519,6 @@ class TestOptimise(TestCase):
             true_model,
             sigma=sigma,
             sigma_mult=sigma_mult,
-            noise_model="combined",
         )
         cov_diag = np.array(diag["covariance"], dtype=float)
         d = np.sqrt(np.diag(cov_diag))
@@ -1321,7 +1555,6 @@ class TestOptimise(TestCase):
                     values,
                     sigma=sigma,
                     sigma_mult=sigma_mult,
-                    noise_model="combined",
                 )
                 return nll, ode_gradient
 
@@ -1353,11 +1586,9 @@ class TestOptimise(TestCase):
 
         result = model.optimise(
             parameters=make_parameters(input_ids, starting, bounds),
-            noise_parameters=make_noise_parameters(1, combined=True),
-            biomarker_types=biomarker_type_ids,
+            observations=make_observations(biomarker_type_ids, "combined"),
             subject_groups=group_ids,
             max_iterations=60,
-            noise_model="combined",
         )
 
         n_outputs = len(result.sigma_variables)
@@ -1384,11 +1615,9 @@ class TestOptimise(TestCase):
             parameters=make_parameters(
                 input_ids, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
             ),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=20,
-            noise_model="additive",
         )
         self.assertIsNone(result.sigma_mult)
         self.assertIsNone(result.sigma_mult_start)
@@ -1405,11 +1634,11 @@ class TestOptimise(TestCase):
                     [0.27, 1.45],
                     ([0.16, 1.2], [0.3, 2.1]),
                 ),
-                noise_parameters=make_noise_parameters(1),
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations(
+                    [setup["biomarker_type"].id], "not-a-model"
+                ),
                 subject_groups=[group.id for group in setup["groups"]],
                 max_iterations=1,
-                noise_model="not-a-model",
             )
 
     def test_optimise_log_space_converges_to_true_values(self):
@@ -1425,8 +1654,7 @@ class TestOptimise(TestCase):
             parameters=make_parameters(
                 input_ids, starting, bounds, use_log_space=[True, True]
             ),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=80,
         )
@@ -1488,8 +1716,7 @@ class TestOptimise(TestCase):
             parameters=make_parameters(
                 input_ids, starting, bounds, use_log_space=[True, False]
             ),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[group.id for group in setup["groups"]],
             max_iterations=200,
             method="gradient_descent",
@@ -1507,8 +1734,7 @@ class TestOptimise(TestCase):
                 parameters=make_parameters(
                     input_ids[:1], [0.2], ([-0.1], [0.3]), use_log_space=[True]
                 ),
-                noise_parameters=make_noise_parameters(1),
-                biomarker_types=[setup["biomarker_type"].id],
+                observations=make_observations([setup["biomarker_type"].id]),
                 subject_groups=[setup["groups"][0].id],
                 max_iterations=1,
             )
@@ -1523,8 +1749,7 @@ class TestOptimise(TestCase):
             parameters=make_parameters(
                 input_ids[:1], [0.2], ([0.0], [0.3]), use_log_space=[True]
             ),
-            noise_parameters=make_noise_parameters(1),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=make_observations([setup["biomarker_type"].id]),
             subject_groups=[setup["groups"][0].id],
             max_iterations=25,
         )
@@ -1552,15 +1777,18 @@ class TestOptimise(TestCase):
         def fit(sigma_use_log_space):
             return model.optimise(
                 parameters=make_parameters(input_ids, starting, bounds),
-                noise_parameters=[
-                    ParameterInfo(
-                        starting=0.5,
-                        lower_bound=0.0,
-                        upper_bound=2.0,
-                        use_log_space=sigma_use_log_space,
+                observations=[
+                    ObservationInfo(
+                        biomarker_type=setup["biomarker_type"].id,
+                        noise_model="additive",
+                        sigma=ParameterInfo(
+                            starting=0.5,
+                            lower_bound=0.0,
+                            upper_bound=2.0,
+                            use_log_space=sigma_use_log_space,
+                        ),
                     )
                 ],
-                biomarker_types=[setup["biomarker_type"].id],
                 subject_groups=[group.id for group in setup["groups"]],
                 max_iterations=300,
                 method="gradient_descent",

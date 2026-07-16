@@ -59,6 +59,53 @@ class ParameterInfo:
 
 
 @dataclass(frozen=True)
+class ObservationInfo:
+    """A biomarker type to fit, its noise model, and that model's sigma params.
+
+    ``sigma`` is the additive/log noise standard deviation sigma_a — used by
+    every noise model. ``sigma_mult`` is the second, proportional sigma_m; it is
+    required for the "combined" model and must be ``None`` otherwise. Each
+    ``ObservationInfo`` therefore carries one sigma ``ParameterInfo`` (additive /
+    multiplicative) or two (combined), so the noise model and its parameters are
+    specified together, per biomarker type.
+    """
+
+    biomarker_type: int
+    noise_model: str
+    sigma: ParameterInfo
+    sigma_mult: ParameterInfo | None = None
+
+    def validate(self) -> None:
+        """Validate this observation's noise model and sigma parameter(s).
+
+        Raises ``ValueError`` if the noise model is unknown, the required
+        ``sigma`` is missing, or the ``sigma_mult`` / combined-model invariant is
+        broken (``sigma_mult`` is present iff the model is "combined").
+        """
+        if self.noise_model not in NOISE_MODELS:
+            raise ValueError(
+                f"Unknown noise model '{self.noise_model}' for biomarker "
+                f"type {self.biomarker_type}. Choose from: {list(NOISE_MODELS)}"
+            )
+        if self.sigma is None:
+            raise ValueError(
+                "Each observation must carry a sigma parameter "
+                f"(biomarker type {self.biomarker_type})."
+            )
+        is_combined = self.noise_model == "combined"
+        if is_combined and self.sigma_mult is None:
+            raise ValueError(
+                "The 'combined' noise model requires sigma_mult "
+                f"(biomarker type {self.biomarker_type})."
+            )
+        if not is_combined and self.sigma_mult is not None:
+            raise ValueError(
+                "sigma_mult is only valid for the 'combined' noise model "
+                f"(biomarker type {self.biomarker_type})."
+            )
+
+
+@dataclass(frozen=True)
 class OptimiseResult:
     """The result of :meth:`MyokitModelMixin.optimise`.
 
@@ -116,6 +163,39 @@ class OptimisationGroupContext(SimulationGroupContext):
     records: tuple[OptimisationRecordContext, ...]
 
 
+def load_project_biomarker_types(project, biomarker_type_ids: list[int] | None):
+    """Load the project's biomarker types to fit against.
+
+    When ``biomarker_type_ids`` is ``None`` all biomarker types mapped to a model
+    variable are returned; otherwise the named types are loaded (raising
+    ``BiomarkerType.DoesNotExist`` for any missing id). The returned list is
+    ordered by id and has ``variable`` / ``stored_unit`` / ``stored_time_unit``
+    prefetched. Shared by :class:`OptimiseContext` and the optimise API view so
+    both resolve the fitted biomarker types the same way.
+    """
+    from pkpdapp.models import BiomarkerType
+
+    biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=project)
+    if biomarker_type_ids is None:
+        biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
+    else:
+        biomarker_type_qs = biomarker_type_qs.filter(id__in=biomarker_type_ids)
+        found_ids = set(biomarker_type_qs.values_list("id", flat=True))
+        missing_ids = set(biomarker_type_ids) - found_ids
+        if missing_ids:
+            raise BiomarkerType.DoesNotExist(
+                f"Biomarker types do not exist in this project: {missing_ids}"
+            )
+
+    return list(
+        biomarker_type_qs.select_related(
+            "variable",
+            "stored_unit",
+            "stored_time_unit",
+        ).order_by("id")
+    )
+
+
 class OptimiseContext(SimulateContext):
     def __init__(
         self,
@@ -123,7 +203,7 @@ class OptimiseContext(SimulateContext):
         optimise_inputs: list[int],
         starting: list[float],
         bounds: tuple[list[float], list[float]] | list[list[float]],
-        biomarker_types: list[int] | None = None,
+        observations: list[ObservationInfo],
         subject_groups: list[int] | None = None,
         outputs: list[str] | None = None,
         variables: dict[str, float] | None = None,
@@ -145,14 +225,33 @@ class OptimiseContext(SimulateContext):
             starting,
             bounds,
         )
+        self._validate_observations(observations)
         self.optimise_input_ids = tuple(optimise_inputs)
+        self.observations = tuple(observations)
+        self._observation_by_biomarker_type = {
+            observation.biomarker_type: observation for observation in observations
+        }
         self.optimisation_groups = self._build_optimisation_groups(
-            biomarker_types,
+            [observation.biomarker_type for observation in observations],
             subject_groups,
         )
         self._build_sigma_output_index()
 
         self._discard_database_state()
+
+    @staticmethod
+    def _validate_observations(observations: list[ObservationInfo]) -> None:
+        if not observations:
+            raise ValueError("Optimisation requires at least one observation.")
+        seen: set[int] = set()
+        for observation in observations:
+            if observation.biomarker_type in seen:
+                raise ValueError(
+                    "Each biomarker type may appear at most once in observations; "
+                    f"biomarker type {observation.biomarker_type} is duplicated."
+                )
+            seen.add(observation.biomarker_type)
+            observation.validate()
 
     def _build_sigma_output_index(self):
         """
@@ -172,6 +271,31 @@ class OptimiseContext(SimulateContext):
         self.sigma_output_qnames = tuple(outputs_by_id[i] for i in ordered_ids)
         self._sigma_index_by_qname = {
             qname: index for index, qname in enumerate(self.sigma_output_qnames)
+        }
+
+        # Each distinct output variable maps to exactly one ObservationInfo (its
+        # biomarker type's), giving a per-output noise model and sigma parameter
+        # block aligned to the canonical sigma ordering above. ``observation_by_qname``
+        # is populated in ``_build_optimisation_groups`` (where the biomarker
+        # type -> variable qname mapping is available).
+        self.observation_by_output = tuple(
+            self._observation_by_qname[qname] for qname in self.sigma_output_qnames
+        )
+        self.noise_model_by_output = tuple(
+            observation.noise_model for observation in self.observation_by_output
+        )
+        # Output (sigma) indices whose noise model is "combined" carry a second,
+        # proportional sigma_m. They occupy the compact sigma_m block that follows
+        # the per-output sigma_a block; ``_sigma_m_pos_by_output`` maps an output
+        # index to its position within that compact block.
+        self.combined_output_indices = tuple(
+            index
+            for index, noise_model in enumerate(self.noise_model_by_output)
+            if noise_model == "combined"
+        )
+        self._sigma_m_pos_by_output = {
+            index: position
+            for position, index in enumerate(self.combined_output_indices)
         }
 
     def _sigma_index_for_record(
@@ -313,9 +437,12 @@ class OptimiseContext(SimulateContext):
         return sigma_a2_k + sigma_m2_k * prediction * prediction
 
     @staticmethod
-    def _combined_nll_term(variance, residual):
-        """Per-observation negative log-likelihood contribution of the combined
-        noise model (dropping the constant 0.5*log(2*pi))."""
+    def _gaussian_nll_term(variance, residual):
+        """Per-observation Gaussian negative log-likelihood contribution
+        (dropping the constant 0.5*log(2*pi)). Used by every noise model: the
+        additive / multiplicative models pass ``variance = sigma_a^2`` and the
+        combined model passes ``variance = sigma_a^2 + sigma_m^2 * prediction^2``.
+        """
         return 0.5 * np.log(variance) + residual * residual / (2.0 * variance)
 
     def _optimise_loss(
@@ -324,41 +451,29 @@ class OptimiseContext(SimulateContext):
         values_by_id: dict[int, float],
         sigma: float = 1.0,
         sigma_mult=None,
-        noise_model: str = "additive",
     ):
+        """
+        Negative log-likelihood across ``groups``, summed point-by-point with
+        each observation contributing according to the noise model of its output
+        variable (``self.noise_model_by_output``).
+
+        Every model uses the same Gaussian term ``0.5*log(s2) + r^2/(2*s2)``; the
+        models differ only in the residual ``r`` and the variance ``s2``:
+          - additive:       r = prediction - observed, s2 = sigma_a^2
+          - multiplicative: r = log(prediction) - log(observed), s2 = sigma_a^2
+                            (observations at/near zero are filtered out)
+          - combined:       r = prediction - observed,
+                            s2 = sigma_a^2 + sigma_m^2 * prediction^2
+        """
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
             return np.inf
 
-        sigma_arr = self._sigma_array(sigma)
+        sigma2 = self._sigma_array(sigma) ** 2
+        sigma_m2 = self._sigma_mult_array(sigma_mult) ** 2
+        noise_models = self.noise_model_by_output
 
-        if noise_model == "combined":
-            # Heteroscedastic: per-point variance depends on the prediction, so
-            # the loss cannot be factored into per-output SSR/sigma^2 terms.
-            sigma_a2 = sigma_arr**2
-            sigma_m2 = self._sigma_mult_array(sigma_mult) ** 2
-            nll = 0.0
-            for group in groups:
-                try:
-                    y = self._optimise_predict(group, values_by_id)
-                except Exception:
-                    logger.exception("diffsol solve failed during optimisation.")
-                    return np.inf
-                for record in group.records:
-                    k = self._sigma_index_for_record(group, record)
-                    prediction = y[record.output_index, record.time_index]
-                    residual = prediction - record.value
-                    s2 = self._combined_variance(sigma_a2[k], sigma_m2[k], prediction)
-                    nll += self._combined_nll_term(s2, residual)
-            if not np.isfinite(nll):
-                return np.inf
-            return float(nll)
-
-        sigma2 = sigma_arr**2
-        n_outputs = len(sigma_arr)
-        ssr_per = np.zeros(n_outputs, dtype=float)
-        n_obs_per = np.zeros(n_outputs, dtype=float)
-        use_multiplicative_noise = noise_model == "multiplicative"
+        nll = 0.0
         for group in groups:
             try:
                 y = self._optimise_predict(group, values_by_id)
@@ -368,22 +483,26 @@ class OptimiseContext(SimulateContext):
 
             for record in group.records:
                 k = self._sigma_index_for_record(group, record)
+                noise_model = noise_models[k]
                 prediction = y[record.output_index, record.time_index]
                 observed = record.value
-                if use_multiplicative_noise:
+                if noise_model == "combined":
+                    residual = prediction - observed
+                    s2 = self._combined_variance(sigma2[k], sigma_m2[k], prediction)
+                elif noise_model == "multiplicative":
                     if self._is_filtered_observation(observed):
                         continue
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
+                    s2 = sigma2[k]
                 else:
                     residual = prediction - observed
-                ssr_per[k] += residual * residual
-                n_obs_per[k] += 1
+                    s2 = sigma2[k]
+                nll += self._gaussian_nll_term(s2, residual)
 
-        if not np.all(np.isfinite(ssr_per)):
+        if not np.isfinite(nll):
             return np.inf
-        nll = float(np.sum(n_obs_per * np.log(sigma_arr) + ssr_per / (2.0 * sigma2)))
-        return nll
+        return float(nll)
 
     def optimise_loss(
         self,
@@ -391,11 +510,8 @@ class OptimiseContext(SimulateContext):
         values_by_id: dict[int, float],
         sigma: float = 1.0,
         sigma_mult=None,
-        noise_model: str = "additive",
     ):
-        return self._optimise_loss(
-            groups, values_by_id, sigma, sigma_mult, noise_model
-        )
+        return self._optimise_loss(groups, values_by_id, sigma, sigma_mult)
 
     def _optimise_loss_gradient(
         self,
@@ -403,52 +519,54 @@ class OptimiseContext(SimulateContext):
         values_by_id: dict[int, float],
         sigma: float = 1.0,
         sigma_mult=None,
-        noise_model: str = "additive",
     ):
         """
         Returns (nll, ode_gradient, sigma_gradient) across prepared groups,
-        using forward sensitivities for the requested input variables.
+        using forward sensitivities for the requested input variables, with each
+        observation contributing point-by-point according to its output's noise
+        model.
 
         ``ode_gradient`` is the gradient of the negative log-likelihood w.r.t.
         the optimised ODE input variables. ``sigma_gradient`` is the gradient
-        w.r.t. the (linear) sigma block: length ``n_outputs`` for the additive and
-        multiplicative models, or ``2 * n_outputs`` for the combined model,
-        ordered as ``[sigma_a block, sigma_m block]``. The caller simply
-        concatenates ``[ode_gradient, sigma_gradient]`` to form the full
-        parameter gradient.
+        w.r.t. the packed (linear) sigma block: the per-output ``sigma_a`` block
+        (length ``n_outputs``) followed by the compact ``sigma_m`` block (one
+        entry per combined output, in ``self.combined_output_indices`` order).
+        The caller concatenates ``[ode_gradient, sigma_gradient]`` to form the
+        full parameter gradient.
 
-        For the additive/multiplicative models the negative log-likelihood is
+        Every model uses the same Gaussian per-point term with variance ``s2``,
+        residual ``r`` and ``c = 0.5/s2 - r^2/(2*s2^2)``:
 
-            nll = Σ_k ( N_k * log(sigma[k]) + SSR_k / (2 * sigma_k^2) )
+            d nll_i / dtheta     = (r/s2 + c * ds2/dp) * (dr/dtheta chain)
+            d nll_i / dsigma_a_k = c * 2*sigma_a_k
+            d nll_i / dsigma_m_k = c * 2*sigma_m_k * p^2   (combined only)
 
-        and ``sigma_gradient[k] = (N_k - SSR_k / sigma_k^2) / sigma_k``. For the
-        combined model the per-observation variance depends on the prediction, so
-        the gradient is accumulated point-by-point (see below).
+        The models differ only in ``r`` (log vs linear), ``gradient_row`` (the
+        multiplicative model divides ``dp/dtheta`` by ``p`` for ``dr/dtheta``),
+        ``s2`` and ``ds2/dp`` (zero unless combined). For additive /
+        multiplicative outputs ``c * 2*sigma_a_k`` reduces to the closed-form
+        ``d(nll)/d(sigma_a_k) = 1/sigma_a_k - r^2/sigma_a_k^3``.
         """
         param_ids = tuple(values_by_id.keys())
         n_params = len(param_ids)
         sigma_arr = self._sigma_array(sigma)
         n_outputs = len(sigma_arr)
-
-        if noise_model == "combined":
-            zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
-        else:
-            zeros_sigma = np.zeros(n_outputs, dtype=float)
+        n_combined = len(self.combined_output_indices)
+        zeros_sigma = np.zeros(n_outputs + n_combined, dtype=float)
 
         values = np.asarray(list(values_by_id.values()), dtype=float)
         if not np.all(np.isfinite(values)):
             return np.inf, np.zeros(n_params), zeros_sigma
 
-        if noise_model == "combined":
-            return self._combined_loss_gradient(
-                groups, values_by_id, sigma_arr, sigma_mult
-            )
-
         sigma2 = sigma_arr**2
-        ssr_per = np.zeros(n_outputs, dtype=float)
-        n_obs_per = np.zeros(n_outputs, dtype=float)
+        sigma_m_arr = self._sigma_mult_array(sigma_mult)
+        sigma_m2 = sigma_m_arr**2
+        noise_models = self.noise_model_by_output
+
+        grad_a = np.zeros(n_outputs, dtype=float)
+        grad_m = np.zeros(n_combined, dtype=float)
+        nll = 0.0
         total_gradient = np.zeros(n_params, dtype=float)
-        use_multiplicative_noise = noise_model == "multiplicative"
 
         for group in groups:
             try:
@@ -462,91 +580,38 @@ class OptimiseContext(SimulateContext):
 
             for record in group.records:
                 k = self._sigma_index_for_record(group, record)
+                noise_model = noise_models[k]
                 prediction = y[record.time_index, record.output_index]
                 observed = record.value
-                if use_multiplicative_noise:
+                gradient_row = y_prime[record.time_index, record.output_index, :]
+
+                # Per-model residual, variance, its prediction-derivative, and the
+                # residual's parameter-sensitivity (gradient_row).
+                if noise_model == "combined":
+                    residual = prediction - observed
+                    s2 = self._combined_variance(sigma2[k], sigma_m2[k], prediction)
+                    ds2_dp = 2.0 * sigma_m2[k] * prediction
+                elif noise_model == "multiplicative":
                     if self._is_filtered_observation(observed):
                         continue
                     prediction = max(prediction, _MULTIPLICATIVE_NOISE_FLOOR)
                     residual = np.log(prediction) - np.log(observed)
-                    gradient_row = (
-                        y_prime[record.time_index, record.output_index, :] / prediction
-                    )
+                    gradient_row = gradient_row / prediction
+                    s2 = sigma2[k]
+                    ds2_dp = 0.0
                 else:
                     residual = prediction - observed
-                    gradient_row = y_prime[record.time_index, record.output_index, :]
+                    s2 = sigma2[k]
+                    ds2_dp = 0.0
 
-                ssr_per[k] += residual * residual
-                n_obs_per[k] += 1
-                total_gradient += (residual / sigma2[k]) * gradient_row
-
-        if not np.all(np.isfinite(ssr_per)):
-            return np.inf, np.zeros(n_params), zeros_sigma
-
-        nll = float(np.sum(n_obs_per * np.log(sigma_arr) + ssr_per / (2.0 * sigma2)))
-        # d(nll)/d(sigma_k) = (N_k - SSR_k / sigma_k^2) / sigma_k
-        sigma_gradient = (n_obs_per - ssr_per / sigma2) / sigma_arr
-        return nll, total_gradient, sigma_gradient
-
-    def _combined_loss_gradient(
-        self,
-        groups: tuple[OptimisationGroupContext, ...],
-        values_by_id: dict[int, float],
-        sigma_arr: np.ndarray,
-        sigma_mult,
-    ):
-        """
-        Gradient of the combined-noise negative log-likelihood. For each
-        observation of output ``k`` with prediction ``p`` and residual
-        ``r = p - observed``, the variance is ``s2 = sigma_a_k^2 + sigma_m_k^2 *
-        p^2`` and ``nll_i = 0.5*log(s2) + r^2/(2*s2)``. With
-        ``c = 0.5/s2 - r^2/(2*s2^2)`` and ``d(s2)/dp = 2*sigma_m_k^2*p``:
-
-            d nll_i / dp   = r/s2 + c * d(s2)/dp
-            d nll_i / dsigma_a_k = c * 2*sigma_a_k       (linear sigma_a_k)
-            d nll_i / dsigma_m_k = c * 2*sigma_m_k * p^2 (linear sigma_m_k)
-        """
-        param_ids = tuple(values_by_id.keys())
-        n_params = len(param_ids)
-        n_outputs = len(sigma_arr)
-        zeros_sigma = np.zeros(2 * n_outputs, dtype=float)
-
-        sigma_a = sigma_arr
-        sigma_m = self._sigma_mult_array(sigma_mult)
-        sigma_a2 = sigma_a**2
-        sigma_m2 = sigma_m**2
-
-        nll = 0.0
-        total_gradient = np.zeros(n_params, dtype=float)
-        grad_a = np.zeros(n_outputs, dtype=float)
-        grad_m = np.zeros(n_outputs, dtype=float)
-
-        for group in groups:
-            try:
-                y, y_prime = self._optimise_predict_with_sens(group, values_by_id)
-            except Exception:
-                logger.exception("solve_fwd_sens failed during gradient computation.")
-                return np.inf, np.zeros(n_params), zeros_sigma
-
-            if y.shape != (len(group.t_eval), len(group.outputs)):
-                return np.inf, np.zeros(n_params), zeros_sigma
-
-            for record in group.records:
-                k = self._sigma_index_for_record(group, record)
-                prediction = y[record.time_index, record.output_index]
-                residual = prediction - record.value
-                gradient_row = y_prime[record.time_index, record.output_index, :]
-
-                s2 = self._combined_variance(sigma_a2[k], sigma_m2[k], prediction)
                 common = 0.5 / s2 - residual * residual / (2.0 * s2 * s2)
-                ds2_dp = 2.0 * sigma_m2[k] * prediction
-                dnll_dp = residual / s2 + common * ds2_dp
-
-                total_gradient += dnll_dp * gradient_row
-                # d(s2)/d(sigma_a_k) = 2*sigma_a_k, d(s2)/d(sigma_m_k) = 2*sigma_m_k*p^2
-                grad_a[k] += common * (2.0 * sigma_a[k])
-                grad_m[k] += common * (2.0 * sigma_m[k] * prediction * prediction)
-                nll += self._combined_nll_term(s2, residual)
+                nll += self._gaussian_nll_term(s2, residual)
+                total_gradient += (residual / s2 + common * ds2_dp) * gradient_row
+                grad_a[k] += common * (2.0 * sigma_arr[k])
+                if noise_model == "combined":
+                    grad_m[self._sigma_m_pos_by_output[k]] += common * (
+                        2.0 * sigma_m_arr[k] * prediction * prediction
+                    )
 
         if not np.isfinite(nll):
             return np.inf, np.zeros(n_params), zeros_sigma
@@ -560,14 +625,12 @@ class OptimiseContext(SimulateContext):
         values_by_id: dict[int, float],
         sigma: float = 1.0,
         sigma_mult=None,
-        noise_model: str = "additive",
     ):
         return self._optimise_loss_gradient(
             groups,
             values_by_id,
             sigma,
             sigma_mult,
-            noise_model,
         )
 
     def optimise_diagnostics(
@@ -575,7 +638,6 @@ class OptimiseContext(SimulateContext):
         optimal_model: np.ndarray,
         sigma: float = 1.0,
         sigma_mult=None,
-        noise_model: str = "additive",
     ):
         input_ids = self.optimise_input_ids
         n_params = len(input_ids)
@@ -596,18 +658,24 @@ class OptimiseContext(SimulateContext):
             dtype=float,
         )
 
-        use_multiplicative_noise = noise_model == "multiplicative"
-        is_combined = noise_model == "combined"
+        noise_models = self.noise_model_by_output
+        any_combined = len(self.combined_output_indices) > 0
 
         sigma = self._sigma_array(sigma)
         sigma2 = sigma * sigma
         sigma_list = [float(s) for s in sigma]
         sigma_variables = list(self.sigma_output_variable_ids)
 
-        if is_combined:
-            sigma_mult = self._sigma_mult_array(sigma_mult)
-            sigma_mult2 = sigma_mult * sigma_mult
-            sigma_mult_list: list[float] | None = [float(s) for s in sigma_mult]
+        # sigma_mult (proportional sigma_m) is only meaningful for combined
+        # outputs. Report it per output, with None for non-combined outputs, and
+        # None entirely when no output is combined.
+        sigma_mult = self._sigma_mult_array(sigma_mult)
+        sigma_mult2 = sigma_mult * sigma_mult
+        if any_combined:
+            sigma_mult_list: list[float | None] | None = [
+                float(sigma_mult[k]) if noise_models[k] == "combined" else None
+                for k in range(len(noise_models))
+            ]
         else:
             sigma_mult_list = None
 
@@ -665,10 +733,11 @@ class OptimiseContext(SimulateContext):
                 t_idx = record.time_index
                 o_idx = record.output_index
                 k = self._sigma_index_for_record(group, record)
+                noise_model = noise_models[k]
                 prediction = y[t_idx, o_idx]
                 observed = record.value
 
-                if use_multiplicative_noise:
+                if noise_model == "multiplicative":
                     if self._is_filtered_observation(observed):
                         n_filtered += 1
                         continue
@@ -678,7 +747,7 @@ class OptimiseContext(SimulateContext):
                     residual_for_output = residual / sigma[k]
                     weight = 1.0 / sigma2[k]
                     sum_log_obs += float(np.log(observed))
-                elif is_combined:
+                elif noise_model == "combined":
                     residual = prediction - observed
                     # Per-point (heteroscedastic) variance and weight. The
                     # standardised residual is dimensionless (residual and the
@@ -726,20 +795,18 @@ class OptimiseContext(SimulateContext):
 
         # Information criteria (AIC/BIC) from the absolute deviance -2*ln(L).
         # The internal NLL drops the per-observation 0.5*log(2*pi) constant, and
-        # the multiplicative model additionally works in log-space (so it omits the
+        # multiplicative outputs additionally work in log-space (so they omit the
         # -sum(log(observed)) change-of-variables Jacobian). Both are restored here
         # so the reported values are on the standard absolute scale and comparable
         # across noise models. Free parameters k = optimised inputs + noise sigmas
-        # (one sigma per output, or two per output for the combined model).
+        # (one sigma per output, plus one extra per combined output).
         info_criteria = self._information_criteria(
             values_by_id=values_by_id,
             sigma=sigma,
             sigma_mult=sigma_mult,
-            noise_model=noise_model,
             n_params=n_params,
             n_filtered=n_filtered,
             sum_log_obs=sum_log_obs,
-            is_combined=is_combined,
         )
 
         J = np.array(jacobian_rows)
@@ -807,11 +874,9 @@ class OptimiseContext(SimulateContext):
         values_by_id: dict[int, float],
         sigma,
         sigma_mult,
-        noise_model: str,
         n_params: int,
         n_filtered: int,
         sum_log_obs: float,
-        is_combined: bool,
     ) -> dict[str, float | None]:
         """Compute the absolute deviance -2*ln(L) and the AIC/BIC information
         criteria at the optimal parameters.
@@ -832,19 +897,21 @@ class OptimiseContext(SimulateContext):
             values_by_id,
             sigma,
             sigma_mult,
-            noise_model,
         )
         if not np.isfinite(nll):
             return none_result
 
-        n_sigma = len(self.sigma_output_variable_ids) * (2 if is_combined else 1)
+        # One sigma per output, plus one extra (sigma_m) per combined output.
+        n_sigma = len(self.sigma_output_variable_ids) + len(
+            self.combined_output_indices
+        )
         k = n_params + n_sigma
 
-        # -2*ln(L): restore the dropped 0.5*log(2*pi) constant (per observation) and,
-        # for the multiplicative model, the -sum(log(observed)) log-space Jacobian.
-        neg2ll = 2.0 * nll + n_obs * np.log(2.0 * np.pi)
-        if noise_model == "multiplicative":
-            neg2ll += 2.0 * sum_log_obs
+        # -2*ln(L): restore the dropped 0.5*log(2*pi) constant (per observation) and
+        # the -sum(log(observed)) log-space Jacobian of the multiplicative outputs
+        # (``sum_log_obs`` was accumulated over multiplicative records only, so this
+        # is zero when no output is multiplicative).
+        neg2ll = 2.0 * nll + n_obs * np.log(2.0 * np.pi) + 2.0 * sum_log_obs
 
         aic = 2.0 * k + neg2ll
         bic = k * np.log(n_obs) + neg2ll
@@ -901,6 +968,23 @@ class OptimiseContext(SimulateContext):
             raise ValueError("Optimisation requires the model to belong to a project.")
 
         biomarker_type_list = self._load_biomarker_types(biomarker_types)
+
+        # Map each fitted output variable (by qname) to the ObservationInfo of the
+        # biomarker type mapped to it. Each output variable must correspond to
+        # exactly one ObservationInfo; two biomarker types mapping to the same
+        # variable would make the per-output noise model / sigma ambiguous.
+        self._observation_by_qname: dict[str, ObservationInfo] = {}
+        for biomarker_type in biomarker_type_list:
+            qname = biomarker_type.variable.qname
+            observation = self._observation_by_biomarker_type[biomarker_type.id]
+            existing = self._observation_by_qname.get(qname)
+            if existing is not None and existing is not observation:
+                raise ValueError(
+                    "Multiple biomarker types map to the same output variable "
+                    f"'{qname}'; each output variable may have only one noise model."
+                )
+            self._observation_by_qname[qname] = observation
+
         biomarkers = self._load_biomarkers(biomarker_type_list, subject_groups)
         group_ids = list(
             biomarkers.order_by("subject__group_id")
@@ -932,28 +1016,9 @@ class OptimiseContext(SimulateContext):
         return tuple(groups)
 
     def _load_biomarker_types(self, biomarker_type_ids: list[int] | None):
-        from pkpdapp.models import BiomarkerType
-
         model_variable_qnames = set(self._variables_by_qname)
-        biomarker_type_qs = BiomarkerType.objects.filter(dataset__project=self._project)
-
-        if biomarker_type_ids is None:
-            biomarker_type_qs = biomarker_type_qs.filter(variable__isnull=False)
-        else:
-            biomarker_type_qs = biomarker_type_qs.filter(id__in=biomarker_type_ids)
-            found_ids = set(biomarker_type_qs.values_list("id", flat=True))
-            missing_ids = set(biomarker_type_ids) - found_ids
-            if missing_ids:
-                raise BiomarkerType.DoesNotExist(
-                    f"Biomarker types do not exist in this project: {missing_ids}"
-                )
-
-        biomarker_type_list = list(
-            biomarker_type_qs.select_related(
-                "variable",
-                "stored_unit",
-                "stored_time_unit",
-            ).order_by("id")
+        biomarker_type_list = load_project_biomarker_types(
+            self._project, biomarker_type_ids
         )
         unmapped = [bt.id for bt in biomarker_type_list if bt.variable is None]
         if unmapped:

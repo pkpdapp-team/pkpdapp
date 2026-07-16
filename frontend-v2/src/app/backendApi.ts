@@ -2299,7 +2299,7 @@ export type OptimiseResponse = {
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  noise_model: string;
+  noise_models: string[];
   method: string;
   predictions:
     | {
@@ -2333,7 +2333,7 @@ export type OptimiseResponse = {
 export type ErrorResponse = {
   error: string;
 };
-export type NoiseModelEnum = "additive" | "multiplicative" | "combined";
+export type NoiseModelsEnum = "additive" | "multiplicative" | "combined";
 export type Optimise = {
   inputs: number[];
   starting: number[];
@@ -2341,7 +2341,7 @@ export type Optimise = {
   biomarker_types?: number[] | null;
   subject_groups?: number[] | null;
   max_iterations?: number | null;
-  noise_model?: NoiseModelEnum;
+  noise_models?: NoiseModelsEnum[] | null;
   method?: string;
   sigma_start?: number[] | null;
   sigma_bounds?: number[][] | null;

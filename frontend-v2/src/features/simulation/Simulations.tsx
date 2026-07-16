@@ -241,7 +241,6 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     method,
     setMethod,
     noiseModel,
-    setNoiseModel,
     maxIterations,
     setMaxIterations,
   } = useOptimise(model);
@@ -643,8 +642,6 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         loadingOptimise={loadingOptimise}
         optimiseMethod={method}
         setOptimiseMethod={setMethod}
-        noiseModel={noiseModel}
-        setNoiseModel={setNoiseModel}
         maxIterations={maxIterations}
         setMaxIterations={setMaxIterations}
         optimiseResult={optimiseResult}

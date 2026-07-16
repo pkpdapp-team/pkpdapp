@@ -15,7 +15,6 @@ from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
 
 from pkpdapp.models.optimise_context import (
-    NOISE_MODELS,
     OptimiseContext,
     OptimiseResult,
 )
@@ -406,35 +405,37 @@ class MyokitModelMixin(UncertaintySimulationMixin):
     def optimise(
         self,
         parameters,
-        noise_parameters,
-        biomarker_types=None,
+        observations,
         subject_groups=None,
         max_iterations=None,
-        noise_model="additive",
         method="pso",
     ) -> OptimiseResult:
         """
         Fits the model against the data indicated
 
-        Three noise models are supported, selected by ``noise_model``:
+        The biomarker types to fit, and the noise model used for each, are given
+        by ``observations`` (a list of :class:`ObservationInfo`). Each observation
+        point contributes to the loss according to the noise model of *its*
+        biomarker type, so different biomarkers can use different noise models in
+        the same fit. Three noise models are supported per observation:
           - "additive":       y ~ N(y_hat, sigma_a^2)
           - "multiplicative": log(y) ~ N(log(y_hat), sigma^2) (log-normal)
           - "combined":       y ~ N(y_hat, sigma_a^2 + sigma_m^2 * y_hat^2)
 
-        For the additive and multiplicative models the loss function is the
-        negative log-likelihood with one noise standard deviation sigma_k per
-        distinct model output variable being fitted:
+        For additive / multiplicative outputs the loss is the negative
+        log-likelihood factored per output variable k:
 
             nll = Σ_k ( N_k * log_sigma_k + SSR_k / (2 * sigma_k^2) )
 
-        where N_k is the number of observations of output variable k, SSR_k is
-        the sum of squared residuals for that variable, and
-        sigma_k = exp(log_sigma_k).
+        where N_k is the number of observations of output variable k and SSR_k is
+        its sum of squared residuals. A "combined" output fits *two* sigmas
+        (sigma_a and sigma_m); its per-observation variance depends on the
+        prediction, so its contribution is accumulated point-by-point.
 
-        The combined model fits *two* sigmas per output variable (sigma_a from
-        ``log_sigma`` and sigma_m from ``log_sigma_mult``); its per-observation
-        variance depends on the prediction so the loss is accumulated
-        point-by-point rather than factored per output.
+        The sigma parameters are carried by each observation: ``sigma`` (sigma_a,
+        used by every model) and, for the combined model, ``sigma_mult``
+        (sigma_m). Each is optimised in linear or log space exactly like the model
+        parameters.
 
         The package Pints is used for optimisation
         (https://pints.readthedocs.io/en/stable/optimisers/index.html).
@@ -453,27 +454,22 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             ``variable_id`` together with its ``starting`` value and
             ``lower_bound`` / ``upper_bound``. The order chosen here defines the
             order of the ``optimal`` result array.
-        noise_parameters: list of ParameterInfo (required)
-            noise (sigma) parameters, one per fitted output variable in the
-            canonical order (ascending variable id) derived from
-            ``biomarker_types`` and reported as ``sigma_variables``. Each entry's
-            ``starting`` / ``lower_bound`` / ``upper_bound`` are the *linear* sigma
-            value and bounds, and ``use_log_space`` selects whether that sigma is
-            optimised in log space — exactly like the model parameters. The first
-            ``n_outputs`` entries are the additive sigma_a block; for the
-            "combined" noise model a further ``n_outputs`` entries follow for the
-            proportional sigma_m block. The length must be ``n_outputs``
-            (additive/multiplicative) or ``2 * n_outputs`` (combined); ``None`` or
-            a wrong length raises ``ValueError``.
-        biomarker_types: list (optional)
-            list of biomarker_types (ids) to optimise against, None for all
+        observations: list of ObservationInfo (required)
+            the biomarker types to fit and, for each, its noise model and sigma
+            parameter(s). Every fitted output variable must correspond to exactly
+            one observation (its biomarker type). Each observation carries a
+            ``sigma`` ParameterInfo (sigma_a) and, for the "combined" model, a
+            ``sigma_mult`` ParameterInfo (sigma_m); each entry's ``starting`` /
+            ``lower_bound`` / ``upper_bound`` are the *linear* sigma value and
+            bounds and ``use_log_space`` selects log-space optimisation. The sigma
+            parameters are packed into the optimiser's canonical output order
+            (ascending variable id, reported as ``sigma_variables``): the per-output
+            sigma_a block followed by a compact sigma_m block for the combined
+            outputs.
         subject_groups: list (optional)
             list of subject groups (ids) to optimise against, None for all
         max_iterations: int (optional)
             maximum number of iterations of the opimisation algorithm (default 100)
-        noise_model: str (optional)
-            noise model, one of "additive" (default), "multiplicative", or
-            "combined"
         method: str (optional)
             optimisation method, one of "cmaes", "pso" (default), "nelder-mead",
             "gradient_descent", "adam", "irprop"
@@ -488,18 +484,21 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             - "sigma": (list) estimated (additive) noise standard deviation per
               output variable, in the canonical order given by "sigma_variables"
             - "sigma_mult": (list or None) estimated proportional noise standard
-              deviation per output variable (combined model only, else None)
+              deviation per output variable; ``None`` for outputs whose noise model
+              is not "combined", and ``None`` entirely when no output is combined
             - "sigma_variables": (list) output variable ids for the sigma arrays
             - "sigma_start": (list) starting sigma_a (linear) per output variable
             - "sigma_bounds": (list of [lo, hi]) linear sigma_a bounds per output
             - "sigma_use_log_space": (list of bool) whether each sigma_a was fit in
               log space
             - "sigma_mult_start": (list or None) starting sigma_m (linear) per
-              output variable (combined model only, else None)
+              output variable; per-output with ``None`` for non-combined outputs,
+              and ``None`` entirely when no output is combined
             - "sigma_bounds_mult": (list of [lo, hi] or None) linear sigma_m bounds
-              per output (combined model only, else None)
+              per output (same None convention as sigma_mult_start)
             - "sigma_mult_use_log_space": (list of bool or None) whether each
-              sigma_m was fit in log space (combined model only, else None)
+              sigma_m was fit in log space (same None convention as
+              sigma_mult_start)
             - "predictions": (list of dicts) simulated values at the optimal
               parameters, one dict per subject group. Each dict has the same
               format as the dicts returned by ``simulate``: keys are
@@ -537,12 +536,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 "Please upgrade pints."
             )
 
-        if noise_model not in NOISE_MODELS:
-            raise ValueError(
-                f"Unknown noise model '{noise_model}'. "
-                f"Choose from: {list(NOISE_MODELS)}"
-            )
-
         if max_iterations is None:
             max_iterations = 100
 
@@ -557,12 +550,15 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             [parameter.upper_bound for parameter in parameters],
         )
 
+        # The context validates ``observations`` (known noise models, one per
+        # fitted output variable, sigma_mult present iff combined) and resolves the
+        # canonical per-output ordering.
         context = OptimiseContext(
             model=self,
             optimise_inputs=inputs,
             starting=starting,
             bounds=bounds,
-            biomarker_types=biomarker_types,
+            observations=observations,
             subject_groups=subject_groups,
             use_diffsol=True,
         )
@@ -572,27 +568,19 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         upper_bounds = np.asarray(bounds[1], dtype=float)
         n_inputs = len(inputs)
 
-        # Sigma (noise) parameters are required and aligned positionally with the
-        # context's canonical output variable ordering (ascending variable id):
-        # one linear ParameterInfo per fitted output variable (and, for the
-        # combined model, a second block for the proportional sigma_m).
+        # The sigma (noise) parameters live inside each observation. Pack them into
+        # the context's canonical output order (ascending variable id): the
+        # per-output sigma_a block, followed by a compact sigma_m block for the
+        # combined outputs (in ``combined_output_indices`` order).
         output_variable_ids = context.sigma_output_variable_ids
         n_outputs = len(output_variable_ids)
-        is_combined = noise_model == "combined"
-        expected_noise = 2 * n_outputs if is_combined else n_outputs
+        observation_by_output = context.observation_by_output
+        combined_output_indices = context.combined_output_indices
+        n_combined = len(combined_output_indices)
 
-        if noise_parameters is None:
-            raise ValueError("noise_parameters is required.")
-        if len(noise_parameters) != expected_noise:
-            block_desc = (
-                f"two entries per fitted output variable ({expected_noise})"
-                if is_combined
-                else f"one entry per fitted output variable ({expected_noise})"
-            )
-            raise ValueError(
-                f"noise_parameters must have {block_desc}, "
-                f"got {len(noise_parameters)}."
-            )
+        noise_parameters = [obs.sigma for obs in observation_by_output] + [
+            observation_by_output[k].sigma_mult for k in combined_output_indices
+        ]
 
         conversion_factors = np.asarray(
             [
@@ -629,15 +617,18 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         linear_lower = np.concatenate([ode_lower, sigma_lower_lin])
         linear_upper = np.concatenate([ode_upper, sigma_upper_lin])
         log_mask = np.concatenate([ode_log, sigma_log])
-        n_sigma = expected_noise
+        n_sigma = n_outputs + n_combined
 
         # Validate: log-space parameters need a non-negative lower bound and a
         # positive starting value (log is undefined otherwise); every parameter
         # needs lower < upper.
         names = (
             [f"parameter {input_id}" for input_id in inputs]
-            + ["sigma"] * n_outputs
-            + (["sigma_mult"] * n_outputs if is_combined else [])
+            + [f"sigma {vid}" for vid in output_variable_ids]
+            + [
+                f"sigma_mult {output_variable_ids[k]}"
+                for k in combined_output_indices
+            ]
         )
         for i, name in enumerate(names):
             if linear_lower[i] >= linear_upper[i]:
@@ -691,13 +682,20 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         )
 
         def split_sigma(sigma_block):
-            """Split the linear sigma block into (sigma_a, sigma_m). sigma_m is
-            None unless the combined model is in use.
+            """Split the packed linear sigma block into (sigma_a, sigma_m_full).
+
+            ``sigma_a`` is the per-output block (length ``n_outputs``).
+            ``sigma_m_full`` is a length-``n_outputs`` array with the compact
+            sigma_m values scattered into ``combined_output_indices`` (other
+            entries are inert and never read for non-combined outputs).
             """
             sigma_block = np.asarray(sigma_block, dtype=float)
-            if is_combined:
-                return sigma_block[:n_outputs], sigma_block[n_outputs:]
-            return sigma_block, None
+            sigma_a = sigma_block[:n_outputs]
+            sigma_m_compact = sigma_block[n_outputs:]
+            sigma_m_full = np.ones(n_outputs, dtype=float)
+            for position, k in enumerate(combined_output_indices):
+                sigma_m_full[k] = sigma_m_compact[position]
+            return sigma_a, sigma_m_full
 
         class OptimiseError(pints.ErrorMeasure):
             def values_by_id(self, values):
@@ -721,7 +719,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                     self.values_by_id(x[:n_inputs]),
                     sigma=sigma_a,
                     sigma_mult=sigma_m,
-                    noise_model=noise_model,
                 )
                 if np.isfinite(loss) and loss < self.best_loss:
                     self.best_loss = float(loss)
@@ -739,7 +736,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                         self.values_by_id(x[:n_inputs]),
                         sigma=sigma_a,
                         sigma_mult=sigma_m,
-                        noise_model=noise_model,
                     )
                     nll, ode_gradient, sigma_gradient = result
                 except Exception:
@@ -822,39 +818,42 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             optimal_model=ode_optimal,
             sigma=sigma_a,
             sigma_mult=sigma_m,
-            noise_model=noise_model,
         )
 
-        # Under the multiplicative noise model, observations at or below the
-        # observed-value floor are dropped (log(observed) is undefined near zero).
-        # If every observation was filtered there is nothing left to fit.
-        if noise_model == "multiplicative":
-            total_observations = sum(
-                len(group.records) for group in context.optimisation_groups
+        # Multiplicative outputs drop observations at or below the observed-value
+        # floor (log(observed) is undefined near zero); other noise models never
+        # filter. If every observation was filtered there is nothing left to fit.
+        total_observations = sum(
+            len(group.records) for group in context.optimisation_groups
+        )
+        if diagnostics.get("filtered_observations", 0) >= total_observations:
+            raise ValueError(
+                "All observations were filtered out because they are at or "
+                "below the multiplicative-noise threshold "
+                "(values close to zero). The multiplicative noise model "
+                "cannot be used with this data."
             )
-            if diagnostics.get("filtered_observations", 0) >= total_observations:
-                raise ValueError(
-                    "All observations were filtered out because they are at or "
-                    "below the multiplicative-noise threshold "
-                    "(values close to zero). The multiplicative noise model "
-                    "cannot be used with this data."
-                )
 
         optimal_user = ode_optimal / conversion_factors
 
         # Sigma start / bounds are reported in linear space (the same units as the
         # fitted ``sigma``), with a flag recording whether each was fit in log
-        # space. The proportional (``*_mult``) block only exists for the combined
-        # model.
-        if is_combined:
-            sigma_mult_start = sigma_start_lin[n_outputs:].tolist()
-            sigma_bounds_mult = [
-                [float(lo), float(hi)]
-                for lo, hi in zip(
-                    sigma_lower_lin[n_outputs:], sigma_upper_lin[n_outputs:]
-                )
-            ]
-            sigma_mult_use_log_space = [bool(v) for v in sigma_log[n_outputs:]]
+        # space. The proportional (``*_mult``) block is reported per output, with
+        # None for non-combined outputs (and None entirely when no output is
+        # combined). The packed sigma_m block (sigma_start_lin[n_outputs:], ...) is
+        # compact, in combined_output_indices order, so it is scattered back out.
+        if n_combined > 0:
+            sigma_mult_start = [None] * n_outputs
+            sigma_bounds_mult = [None] * n_outputs
+            sigma_mult_use_log_space = [None] * n_outputs
+            for position, k in enumerate(combined_output_indices):
+                idx = n_outputs + position
+                sigma_mult_start[k] = float(sigma_start_lin[idx])
+                sigma_bounds_mult[k] = [
+                    float(sigma_lower_lin[idx]),
+                    float(sigma_upper_lin[idx]),
+                ]
+                sigma_mult_use_log_space[k] = bool(sigma_log[idx])
         else:
             sigma_mult_start = None
             sigma_bounds_mult = None
