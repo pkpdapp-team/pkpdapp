@@ -10,7 +10,11 @@ from django.test import TestCase
 import numpy as np
 
 from pkpdapp.models import Dose, Variable
-from pkpdapp.models.optimise_context import OptimiseContext
+from pkpdapp.models.optimise_context import (
+    ObservationInfo,
+    OptimiseContext,
+    ParameterInfo,
+)
 from pkpdapp.models.simulate_context import SimulateContext
 from pkpdapp.tests.optimise_fixtures import SELECTED_TIMES, create_exponential_data
 
@@ -39,7 +43,18 @@ class TestSimulateContext(TestCase):
             optimise_inputs=[variable.id for variable in input_variables],
             starting=[0.2, 1.5],
             bounds=([0.1, 1.0], [0.4, 2.5]),
-            biomarker_types=[setup["biomarker_type"].id],
+            observations=[
+                ObservationInfo(
+                    biomarker_type=setup["biomarker_type"].id,
+                    noise_model="additive",
+                    sigma=ParameterInfo(
+                        starting=1.0,
+                        lower_bound=0.0,
+                        upper_bound=10.0,
+                        use_log_space=True,
+                    ),
+                )
+            ],
             subject_groups=[group.id for group in setup["groups"]],
         )
         diffsol_context = SimulateContext(
