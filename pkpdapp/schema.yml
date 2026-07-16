@@ -438,48 +438,6 @@ paths:
           description: ''
         '404':
           description: No response body
-  /api/combined_model/{id}/simulate_uncertainty:
-    post:
-      operationId: combined_model_simulate_uncertainty_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - combined_model
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: ''
-        '404':
-          description: No response body
   /api/compound/:
     get:
       operationId: compound_list
@@ -699,6 +657,158 @@ paths:
         required: true
       tags:
       - conversations
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/correlation/:
+    get:
+      operationId: correlation_list
+      parameters:
+      - in: query
+        name: dosed_pk_model_id
+        schema:
+          type: integer
+        description: Filter results by dosed_pk_model ID
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - correlation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Correlation'
+          description: ''
+    post:
+      operationId: correlation_create
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+  /api/correlation/{id}/:
+    get:
+      operationId: correlation_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    put:
+      operationId: correlation_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Correlation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    patch:
+      operationId: correlation_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCorrelation'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correlation'
+          description: ''
+    delete:
+      operationId: correlation_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this correlation.
+        required: true
+      tags:
+      - correlation
       security:
       - cookieAuth: []
       responses:
@@ -1454,48 +1564,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SimulateResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: ''
-        '404':
-          description: No response body
-  /api/pharmacodynamic/{id}/simulate_uncertainty:
-    post:
-      operationId: pharmacodynamic_simulate_uncertainty_create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - pharmacodynamic
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SimulateUncertainty'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SimulateUncertaintyResponse'
           description: ''
         '400':
           content:
@@ -3709,6 +3777,28 @@ components:
       - id
       - last_message_preview
       - updated_at
+    Correlation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        distribution_1:
+          type: integer
+          description: first distribution of the correlated pair
+        distribution_2:
+          type: integer
+          description: second distribution of the correlated pair
+        coefficient:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: -1.0
+          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
+      required:
+      - distribution_1
+      - distribution_2
+      - id
     Dataset:
       type: object
       properties:
@@ -3799,6 +3889,8 @@ components:
             * `EMM` - Extended Michaelis-Menten
             * `EMX` - Emax
             * `IMX` - Imax
+            * `TEM` - Time Emax
+            * `TIM` - Time Imax
             * `POW` - Power
             * `NPW` - Negative Power
             * `TDI` - Exponential Decay
@@ -3840,6 +3932,27 @@ components:
       - inputs
       - outputs
       - state_indices
+    Distribution:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        pdf:
+          allOf:
+          - $ref: '#/components/schemas/PdfEnum'
+          description: |-
+            probability density function
+
+            * `normal` - Normal
+            * `lognormal` - Log-normal
+            * `logit` - Logit-normal
+        variance:
+          type: number
+          format: double
+          description: variance of the ETA (normal random effect)
+      required:
+      - id
     Dose:
       type: object
       properties:
@@ -4005,6 +4118,16 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
+    NoiseModelsEnum:
+      enum:
+      - additive
+      - multiplicative
+      - combined
+      type: string
+      description: |-
+        * `additive` - additive
+        * `multiplicative` - multiplicative
+        * `combined` - combined
     NullEnum:
       enum:
       - null
@@ -4042,26 +4165,61 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        use_multiplicative_noise:
-          type: boolean
-          default: true
+        noise_models:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoiseModelsEnum'
+          nullable: true
         method:
           type: string
           default: pso
-        log_sigma:
-          type: number
-          format: double
-          default: 0.0
-        sigma_bounds:
+        sigma_start:
           type: array
           items:
             type: number
             format: double
-          default:
-          - -20.0
-          - 20.0
-          maxItems: 2
-          minItems: 2
+          nullable: true
+        sigma_bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          nullable: true
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds_mult:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+            maxItems: 2
+            minItems: 2
+          nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
       required:
       - bounds
       - inputs
@@ -4080,8 +4238,15 @@ components:
         reason:
           type: string
         sigma:
-          type: number
-          format: double
+          type: array
+          items:
+            type: number
+            format: double
+        sigma_mult:
+          type: array
+          items:
+            type: number
+            format: double
           nullable: true
         inputs:
           type: array
@@ -4112,8 +4277,10 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        use_multiplicative_noise:
-          type: boolean
+        noise_models:
+          type: array
+          items:
+            type: string
         method:
           type: string
         predictions:
@@ -4123,6 +4290,12 @@ components:
             additionalProperties: {}
           nullable: true
         residuals:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          nullable: true
+        observations:
           type: array
           items:
             type: object
@@ -4140,32 +4313,90 @@ components:
           type: number
           format: double
           nullable: true
-        log_sigma:
+        neg2ll:
           type: number
           format: double
           nullable: true
-        sigma_bounds:
+        aic:
+          type: number
+          format: double
+          nullable: true
+        bic:
+          type: number
+          format: double
+          nullable: true
+        filtered_observations:
+          type: integer
+          nullable: true
+        sigma_variables:
+          type: array
+          items:
+            type: integer
+          nullable: true
+        sigma_start:
           type: array
           items:
             type: number
             format: double
           nullable: true
+        sigma_bounds:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+          nullable: true
+        sigma_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
+        sigma_mult_start:
+          type: array
+          items:
+            type: number
+            format: double
+          nullable: true
+        sigma_bounds_mult:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+          nullable: true
+        sigma_mult_use_log_space:
+          type: array
+          items:
+            type: boolean
+          nullable: true
       required:
+      - aic
+      - bic
       - bounds
       - condition_number
       - covariance
       - inputs
-      - log_sigma
       - loss
       - method
+      - neg2ll
+      - noise_models
+      - observations
       - optimal
       - predictions
       - reason
       - residuals
       - sigma
       - sigma_bounds
+      - sigma_bounds_mult
+      - sigma_mult
+      - sigma_mult_start
+      - sigma_mult_use_log_space
+      - sigma_start
+      - sigma_use_log_space
+      - sigma_variables
       - starting
-      - use_multiplicative_noise
     PatchedBiomarkerType:
       type: object
       properties:
@@ -4428,6 +4659,24 @@ components:
         dissociation_unit:
           type: integer
           description: unit for dissociation constant
+    PatchedCorrelation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        distribution_1:
+          type: integer
+          description: first distribution of the correlated pair
+        distribution_2:
+          type: integer
+          description: second distribution of the correlated pair
+        coefficient:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: -1.0
+          description: Pearson correlation coefficient of the ETAs, in [-1, 1]
     PatchedDataset:
       type: object
       properties:
@@ -5055,6 +5304,10 @@ components:
           items:
             type: integer
           readOnly: true
+        distribution:
+          allOf:
+          - $ref: '#/components/schemas/Distribution'
+          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored
@@ -5161,6 +5414,16 @@ components:
           type: integer
           nullable: true
           description: dosed pharmacokinetic model
+    PdfEnum:
+      enum:
+      - normal
+      - lognormal
+      - logit
+      type: string
+      description: |-
+        * `normal` - Normal
+        * `lognormal` - Log-normal
+        * `logit` - Logit-normal
     Pharmacodynamic:
       type: object
       properties:
@@ -5599,58 +5862,11 @@ components:
         use_diffsol:
           type: boolean
           default: true
-      required:
-      - outputs
-      - variables
-    SimulateResponse:
-      type: object
-      properties:
-        time:
-          type: array
-          items:
-            type: number
-            format: double
-        group:
-          type: integer
-          nullable: true
-        outputs:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: number
-              format: double
-      required:
-      - outputs
-      - time
-    SimulateUncertainty:
-      type: object
-      properties:
-        outputs:
-          type: array
-          items:
-            type: string
-        variables:
-          type: object
-          additionalProperties:
-            type: number
-            format: double
-        variable_distributions:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties: {}
-        time_max:
-          type: number
-          format: double
         sample_count:
           type: integer
           minimum: 1
         seed:
           type: integer
-        use_diffsol:
-          type: boolean
-          default: true
         quantiles:
           type: array
           items:
@@ -5660,7 +5876,8 @@ components:
             minimum: 0.0
       required:
       - outputs
-    SimulateUncertaintyResponse:
+      - variables
+    SimulateResponse:
       type: object
       properties:
         time:
@@ -6011,6 +6228,8 @@ components:
       - EMM
       - EMX
       - IMX
+      - TEM
+      - TIM
       - POW
       - NPW
       - TDI
@@ -6026,6 +6245,8 @@ components:
         * `EMM` - Extended Michaelis-Menten
         * `EMX` - Emax
         * `IMX` - Imax
+        * `TEM` - Time Emax
+        * `TIM` - Time Imax
         * `POW` - Power
         * `NPW` - Negative Power
         * `TDI` - Exponential Decay
@@ -6147,6 +6368,10 @@ components:
           items:
             type: integer
           readOnly: true
+        distribution:
+          allOf:
+          - $ref: '#/components/schemas/Distribution'
+          nullable: true
         read_only:
           type: boolean
           description: true if object has been stored
