@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { ConversationRead } from "../app/backendApi";
+import { ConversationRead, MessageRead } from "../app/backendApi";
 
 export const conversations: ConversationRead[] = [
   {
@@ -33,5 +33,28 @@ export const conversationHandlers = [
   http.delete("/api/conversations/:id/", async () => {
     await delay();
     return new HttpResponse(null, { status: 204 });
+  }),
+];
+
+// Stored messages for a single conversation, used by the ChatPanel stories.
+export const messages: MessageRead[] = [
+  {
+    id: 1,
+    role: "user",
+    content: "How is clearance estimated?",
+    created_at: "2025-06-01T09:00:00Z",
+  },
+  {
+    id: 2,
+    role: "assistant",
+    content: "Clearance is estimated from the dose and concentration data.",
+    created_at: "2025-06-01T09:00:05Z",
+  },
+];
+
+export const messageHandlers = [
+  http.get("/api/messages/", async () => {
+    await delay();
+    return HttpResponse.json(messages, { status: 200 });
   }),
 ];
