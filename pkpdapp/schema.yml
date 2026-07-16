@@ -3933,7 +3933,7 @@ components:
       - pd_model
       - pk_model
       - project_mlxtran
-    NoiseModelEnum:
+    NoiseModelsEnum:
       enum:
       - additive
       - multiplicative
@@ -3980,10 +3980,11 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        noise_model:
-          allOf:
-          - $ref: '#/components/schemas/NoiseModelEnum'
-          default: additive
+        noise_models:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoiseModelsEnum'
+          nullable: true
         method:
           type: string
           default: pso
@@ -4091,8 +4092,10 @@ components:
         max_iterations:
           type: integer
           nullable: true
-        noise_model:
-          type: string
+        noise_models:
+          type: array
+          items:
+            type: string
         method:
           type: string
         predictions:
@@ -4193,7 +4196,7 @@ components:
       - loss
       - method
       - neg2ll
-      - noise_model
+      - noise_models
       - observations
       - optimal
       - predictions

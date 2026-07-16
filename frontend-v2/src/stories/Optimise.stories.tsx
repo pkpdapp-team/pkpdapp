@@ -50,7 +50,7 @@ const optimiseHandler = http.post(
         biomarker_types: optimiseParams.biomarker_types || [],
         subject_groups: optimiseParams.subject_groups || [],
         max_iterations: optimiseParams.max_iterations || null,
-        noise_model: optimiseParams.noise_model ?? "additive",
+        noise_models: optimiseParams.noise_models ?? [],
         method: optimiseParams.method || "pso",
         predictions: null,
         residuals: null,
@@ -287,6 +287,63 @@ export const OptimiseSingleParameter: Story = {
     await waitFor(() => {
       expect(inputField).toHaveValue(2.5);
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    });
+  },
+};
+
+// Each fitted observation has its own noise-model dropdown; selecting "Combined"
+// for one sends that per-observation model plus the proportional sigma arrays.
+export const OptimisePerObservationNoiseModel: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        ...baseHandlers,
+        simulationListHandler(simulations[0]),
+        optimiseHandler,
+      ],
+    },
+  },
+  play: async ({ userEvent }) => {
+    optimiseSpy.mockClear();
+
+    await screen.findByRole("heading", { name: "Simulations" });
+
+    const parametersButton = await screen.findByRole("button", {
+      name: new RegExp(`^Parameters ${expectedSliders.length}`),
+    });
+    await userEvent.click(parametersButton);
+
+    const settingsButton = await screen.findByRole("button", {
+      name: "Open optimisation settings",
+    });
+    await waitFor(() => expect(settingsButton).toBeEnabled(), {
+      timeout: 10000,
+    });
+    await userEvent.click(settingsButton);
+
+    await screen.findByRole("heading", { name: "Optimisation Settings" });
+
+    // Set the first observation's noise model to Combined.
+    const noiseSelects = await screen.findAllByRole("combobox", {
+      name: "Noise model",
+    });
+    expect(noiseSelects.length).toBeGreaterThan(0);
+    await userEvent.click(noiseSelects[0]);
+    const combinedOption = await screen.findByRole("option", {
+      name: "Combined",
+    });
+    await userEvent.click(combinedOption);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Optimise" }),
+    );
+
+    await waitFor(() => {
+      const [optimiseParams] = optimiseSpy.mock.lastCall || [];
+      expect(optimiseParams).toBeTruthy();
+      expect(optimiseParams.noise_models).toContain("combined");
+      // A combined observation also sends the proportional sigma arrays.
+      expect(optimiseParams.sigma_mult_start).toBeTruthy();
     });
   },
 };

@@ -215,15 +215,18 @@ const OptimisationView = ({
                     optimiseResult.sigma_variables.map((varId, i) => {
                       const variable = variables.find((v) => v.id === varId);
                       const name = variable?.name ?? String(varId);
-                      const isCombined = optimiseResult.noise_model === "combined";
+                      // Noise model is per output variable, aligned to
+                      // sigma_variables (always present, same length).
+                      const noiseModel = optimiseResult.noise_models[i];
+                      const isCombined = noiseModel === "combined";
                       const bounds = optimiseResult.sigma_bounds![i];
                       const optimalSigma = optimiseResult.sigma![i];
                       const useLog =
                         optimiseResult.sigma_use_log_space?.[i] ?? true;
-                      const logSuffix = useLog ? " [log]" : "";
+                      const detail = ` [${noiseModel}${useLog ? ", log" : ""}]`;
                       const additiveLabel = isCombined
-                        ? `Sigma additive (${name})${logSuffix}`
-                        : `Sigma (${name})${logSuffix}`;
+                        ? `Sigma additive (${name})${detail}`
+                        : `Sigma (${name})${detail}`;
                       const rows = [
                         <TableRow key={`sigma-${varId}`}>
                           <TableCell>{additiveLabel}</TableCell>
@@ -271,9 +274,6 @@ const OptimisationView = ({
                     <strong>Max iterations:</strong> {optimiseResult.max_iterations}
                   </Typography>
                 )}
-                <Typography variant="body2">
-                  <strong>Noise model:</strong> {optimiseResult.noise_model}
-                </Typography>
               </Stack>
               {optimiseResult.biomarker_types && optimiseResult.biomarker_types.length > 0 && (
                 <Typography variant="body2">

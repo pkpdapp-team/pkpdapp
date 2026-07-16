@@ -189,7 +189,9 @@ export function getDefaultOptimiseInputs({
     use_log_space: lowerBounds.map((lb) => lb >= 0),
     biomarker_types,
     subject_groups: subjectGroups,
-    noise_model: noiseModel,
+    // The sidebar "Fit" is a one-click uniform fit: apply the same noise model
+    // to every fitted output variable (one entry per sigma variable).
+    noise_models: sigmaVariables.map(() => noiseModel),
     method,
     max_iterations: sanitizeMaxIterations(maxIterations),
     sigma_start,
