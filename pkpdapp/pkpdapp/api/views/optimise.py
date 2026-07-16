@@ -5,12 +5,14 @@
 #
 from dataclasses import asdict
 
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 from pkpdapp.api.views.profiling import profile_endpoint
-from pkpdapp.models import CombinedModel, ParameterInfo
+from pkpdapp.models import CombinedModel, ObservationInfo, ParameterInfo
+from pkpdapp.models.optimise_context import load_project_biomarker_types
 import myokit
 
 
@@ -172,16 +174,43 @@ def _build_model_parameters(data):
     ]
 
 
-def _build_noise_parameters(data, noise_model):
-    """Convert the request's parallel sigma arrays into a ParameterInfo list.
+def _sigma_parameter(values, bounds, use_log, i):
+    """Build one sigma ParameterInfo from the request's parallel sigma arrays.
 
-    The sigma start / bounds are *linear* sigma values, and sigma_use_log_space
-    selects whether each is optimised in log space. Returns ``None`` when the
-    client supplied no sigma information, so that ``optimise`` falls back to its
-    own per-output defaults. Otherwise returns the additive sigma_a block followed
-    (for the combined model) by the proportional sigma_m block, matching the
-    ordering ``optimise`` expects.
+    The sigma start / bounds are *linear* sigma values, and ``use_log`` selects
+    whether it is optimised in log space. Any array the client omitted falls back
+    to the per-output defaults (1.0, [0.0, 1.0], log space).
     """
+    return ParameterInfo(
+        starting=float(values[i]) if values is not None else 1.0,
+        lower_bound=float(bounds[i][0]) if bounds is not None else 0.0,
+        upper_bound=float(bounds[i][1]) if bounds is not None else 1.0,
+        use_log_space=bool(use_log[i]) if use_log is not None else True,
+    )
+
+
+def _build_observations(project, data, noise_model):
+    """Translate the request into the ``observations`` list ``optimise`` expects.
+
+    The wire format keeps a single global ``noise_model`` plus per-output sigma
+    arrays in the backend's canonical order (fitted output variables ascending by
+    variable id). This resolves the fitted biomarker types (the request's
+    ``biomarker_types``, or all mapped types when absent), sorts them into that
+    canonical order, and pairs each with its sigma parameter(s), producing one
+    :class:`ObservationInfo` per output — all carrying the same global noise
+    model.
+    """
+    biomarker_types = load_project_biomarker_types(
+        project, data.get("biomarker_types")
+    )
+    # Canonical order matches the backend's sigma ordering (ascending variable id).
+    # Unmapped types have no output variable and are excluded here; the optimise
+    # context raises for any explicitly requested type that is unmapped.
+    mapped = sorted(
+        (bt for bt in biomarker_types if bt.variable_id is not None),
+        key=lambda bt: bt.variable_id,
+    )
+
     sigma_start = data.get("sigma_start")
     sigma_bounds = data.get("sigma_bounds")
     sigma_use_log_space = data.get("sigma_use_log_space")
@@ -189,41 +218,42 @@ def _build_noise_parameters(data, noise_model):
     sigma_bounds_mult = data.get("sigma_bounds_mult")
     sigma_mult_use_log_space = data.get("sigma_mult_use_log_space")
 
-    supplied = [
-        sigma_start,
-        sigma_bounds,
-        sigma_use_log_space,
-        sigma_mult_start,
-        sigma_bounds_mult,
-        sigma_mult_use_log_space,
-    ]
-    present = [array for array in supplied if array is not None]
-    if not present:
-        return None
-
-    # All sigma arrays carry one entry per fitted output variable, so the output
-    # count can be read off whichever array the client provided.
-    n_outputs = len(present[0])
-
-    def _block(values, bounds, use_log):
-        return [
-            ParameterInfo(
-                starting=float(values[i]) if values is not None else 1.0,
-                lower_bound=float(bounds[i][0]) if bounds is not None else 0.0,
-                upper_bound=float(bounds[i][1]) if bounds is not None else 1.0,
-                use_log_space=(
-                    bool(use_log[i]) if use_log is not None else True
-                ),
-            )
-            for i in range(n_outputs)
-        ]
-
-    noise_parameters = _block(sigma_start, sigma_bounds, sigma_use_log_space)
-    if noise_model == "combined":
-        noise_parameters += _block(
-            sigma_mult_start, sigma_bounds_mult, sigma_mult_use_log_space
+    # Noise (sigma) parameters are required: reject a request that supplies none
+    # of the sigma arrays rather than silently falling back to defaults.
+    if all(
+        array is None
+        for array in (
+            sigma_start,
+            sigma_bounds,
+            sigma_use_log_space,
+            sigma_mult_start,
+            sigma_bounds_mult,
+            sigma_mult_use_log_space,
         )
-    return noise_parameters
+    ):
+        raise ValueError("sigma parameters are required.")
+
+    is_combined = noise_model == "combined"
+    observations = []
+    for i, biomarker_type in enumerate(mapped):
+        sigma_mult = (
+            _sigma_parameter(
+                sigma_mult_start, sigma_bounds_mult, sigma_mult_use_log_space, i
+            )
+            if is_combined
+            else None
+        )
+        observations.append(
+            ObservationInfo(
+                biomarker_type=biomarker_type.id,
+                noise_model=noise_model,
+                sigma=_sigma_parameter(
+                    sigma_start, sigma_bounds, sigma_use_log_space, i
+                ),
+                sigma_mult=sigma_mult,
+            )
+        )
+    return observations
 
 
 @extend_schema(
@@ -260,24 +290,27 @@ class OptimiseBaseView(views.APIView):
             # Group each model parameter's attributes into a ParameterInfo.
             parameters = _build_model_parameters(data)
 
-            # Build the noise (sigma) ParameterInfo list from whichever sigma
-            # arrays the client supplied. They are all length n_outputs in the
-            # backend's canonical output ordering, so the count is derived from
-            # whichever is present. When the client supplies none, pass None so
-            # optimise applies its own per-output defaults (0.0, (-20, 20)).
-            noise_parameters = _build_noise_parameters(data, noise_model)
-
+            # The wire format still carries a single global noise model plus
+            # per-output sigma arrays; translate that into the per-observation
+            # ``observations`` list optimise now expects (all outputs sharing the
+            # one global noise model).
             try:
+                observations = _build_observations(
+                    m.get_project(), data, noise_model
+                )
                 result = m.optimise(
                     parameters=parameters,
-                    noise_parameters=noise_parameters,
-                    biomarker_types=data.get("biomarker_types"),
+                    observations=observations,
                     subject_groups=data.get("subject_groups"),
                     max_iterations=data.get("max_iterations"),
-                    noise_model=noise_model,
                     method=data.get("method", "pso"),
                 )
-            except (myokit.MyokitError, RuntimeError, ValueError) as e:
+            except (
+                myokit.MyokitError,
+                RuntimeError,
+                ValueError,
+                ObjectDoesNotExist,
+            ) as e:
                 serialized_result = ErrorResponseSerializer({"error": str(e)})
                 return Response(
                     serialized_result.data, status=status.HTTP_400_BAD_REQUEST
