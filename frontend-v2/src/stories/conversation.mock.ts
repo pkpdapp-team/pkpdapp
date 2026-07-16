@@ -10,6 +10,14 @@ export const conversations: ConversationRead[] = [
     updated_at: "2025-06-01T09:30:00Z",
     last_message_preview: "How is clearance estimated?",
   },
+  {
+    id: 2,
+    project: 57,
+    title: "Volume of distribution",
+    created_at: "2025-06-02T14:00:00Z",
+    updated_at: "2025-06-02T14:15:00Z",
+    last_message_preview: "What drives the central compartment volume?",
+  },
 ];
 
 export const conversationHandlers = [
@@ -21,5 +29,9 @@ export const conversationHandlers = [
       return HttpResponse.json(conversations, { status: 200 });
     }
     return HttpResponse.json([], { status: 200 });
+  }),
+  http.delete("/api/conversations/:id/", async () => {
+    await delay();
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

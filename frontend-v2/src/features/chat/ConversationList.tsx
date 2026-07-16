@@ -178,11 +178,15 @@ const ConversationList: FC<ConversationListProps> = ({
                       className="conversation-menu-btn"
                       size="small"
                       onClick={(e) => handleMenuOpen(e, conversation.id)}
-                      aria-label="Conversation options"
+                      aria-label={`Options for ${conversation.title || "Untitled conversation"}`}
                       sx={{
                         width: 32,
                         height: 32,
-                        visibility: "hidden",
+                        opacity: 0,
+                        transition: "opacity 0.15s",
+                        "&:focus-visible": {
+                          opacity: 1,
+                        },
                       }}
                     >
                       <MoreVertIcon sx={{ fontSize: 18 }} />
@@ -198,7 +202,12 @@ const ConversationList: FC<ConversationListProps> = ({
                     "&:hover": {
                       bgcolor: "grey.100",
                       "& .conversation-menu-btn": {
-                        visibility: "visible",
+                        opacity: 1,
+                      },
+                    },
+                    "&:focus-within": {
+                      "& .conversation-menu-btn": {
+                        opacity: 1,
                       },
                     },
                   }}
