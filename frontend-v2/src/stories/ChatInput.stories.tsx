@@ -1,4 +1,4 @@
-import { expect, fn, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import ChatInput from '../features/chat/ChatInput';
@@ -45,7 +45,7 @@ export const WithValue: Story = {
     "onStop": fn(),
     "isLoading": false
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByRole("textbox");
     expect(input).toHaveValue("PKPD modeling");
@@ -58,6 +58,18 @@ export const WithValue: Story = {
     await step("stop button is not rendered when isLoading is false (i.e when streaming is not happening)", () => {
       const stopButton = canvas.queryByRole("button", { name: /stop generating/i });
       expect(stopButton).not.toBeInTheDocument();
+    });
+
+    // Test that Shift+Enter does not send the message (allows multiline input)
+    await step("Shift+Enter does not fire onSend", async () => {
+      await userEvent.type(input, "{Shift>}{Enter}{/Shift}");
+      expect(args.onSend).not.toHaveBeenCalled();
+    });
+
+    // Test that Enter sends the message when there is text and it is not disabled
+    await step("Enter fires onSend", async () => {
+      await userEvent.type(input, "{Enter}");
+      expect(args.onSend).toHaveBeenCalled();
     });
   }
 };
@@ -96,7 +108,7 @@ export const Disabled: Story = {
     "isLoading": false,
     "disabled": true
   },
-  play: async ({ canvasElement, step }) => {
+  play: async ({ canvasElement, args, step }) => {
     const canvas = within(canvasElement);
 
 
@@ -109,6 +121,13 @@ export const Disabled: Story = {
       expect(
         canvas.queryByRole("button", { name: /stop generating/i }),
       ).not.toBeInTheDocument();
+    });
+
+    // Test that Enter does not fire onSend when the input is disabled
+    await step("Enter does not fire onSend when disabled", async () => {
+      const input = canvas.getByRole("textbox");
+      await userEvent.type(input, "{Enter}");
+      expect(args.onSend).not.toHaveBeenCalled();
     });
   }
 };
