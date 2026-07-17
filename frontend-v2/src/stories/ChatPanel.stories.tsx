@@ -85,6 +85,53 @@ export const WithMessages: Story = {
   },
 };
 
+// A project is selected but no conversation is active: the message view shows
+// the empty-with-project prompt (the ELSE branch of the empty state) rather than
+// the "select a project" prompt, and the input is enabled.
+export const ProjectSelectedEmpty: Story = {
+  decorators: [projectOnlyState],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    expect(canvas.getByText("AI Assistant")).toBeInTheDocument();
+    expect(
+      canvas.getByText(/Ask me about pharmacokinetic/i),
+    ).toBeInTheDocument();
+    expect(
+      canvas.getByRole("button", { name: /send message/i }),
+    ).toBeInTheDocument();
+  },
+};
+
+// Typing a message and clicking send runs handleSend: the input is cleared and a
+// conversation is created via the mocked API. The real streaming transport is not
+// mocked, but handleSend still executes deterministically up to the send call.
+export const SendMessage: Story = {
+  decorators: [projectOnlyState],
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: conversationHandlers,
+        messages: messageHandlers,
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const textbox = canvas.getByRole("textbox");
+    await userEvent.type(textbox, "Hello");
+    expect(textbox).toHaveValue("Hello");
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: /send message/i }),
+    );
+
+    // handleSend clears the input synchronously before awaiting.
+    await expect(canvas.getByRole("textbox")).toHaveValue("");
+  },
+};
+
 // Clicking the "Conversations" button toggles the conversation list into view,
 // and the "Back to chat" control returns to the message view.
 export const ToggleConversations: Story = {
