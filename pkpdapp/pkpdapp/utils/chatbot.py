@@ -211,7 +211,8 @@ def _process_response_stream(stream):
         yield ("error", error_msg)
 
 
-done_token = "[DONE]"
+DONE_TOKEN = "[DONE]"
+
 
 def stream_chat_response(
     conversation: Conversation, new_user_message: str, context=None
@@ -279,14 +280,14 @@ def stream_chat_response(
                     "Please try again."
                 ),
             })
-            yield _sse(done_token)
+            yield _sse(DONE_TOKEN)
             # Don't persist partial output — would confuse the model on
             # subsequent turns when fed back via build_input_items.
             return
 
         yield _sse({"type": "finish-step"})
         yield _sse({"type": "finish"})
-        yield _sse(done_token)
+        yield _sse(DONE_TOKEN)
         try:
             conversation.save_assistant_message(assistant_text_parts)
         except Exception:
@@ -300,4 +301,4 @@ def stream_chat_response(
             "type": "error",
             "errorText": "An error occurred. Please try again.",
         })
-        yield _sse(done_token)
+        yield _sse(DONE_TOKEN)
