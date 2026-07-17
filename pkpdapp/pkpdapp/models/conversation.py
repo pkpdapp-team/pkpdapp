@@ -54,6 +54,14 @@ class Conversation(models.Model):
         first_line = text.split("\n", 1)[0]
         return first_line[:120]
 
+    def add_user_message(self, content):
+        """Persist a user message to the database and return it."""
+        return Message.objects.create(
+            conversation=self,
+            role="user",
+            content=content,
+        )
+
     def save_assistant_message(self, text_parts):
         """Persist accumulated assistant text to the database."""
         content = "".join(text_parts)
@@ -63,6 +71,27 @@ class Conversation(models.Model):
                 role="assistant",
                 content=content,
             )
+
+    def build_input_items(self, max_messages=40):
+        """Reconstruct the Responses API input array from DB messages.
+
+        Returns a list suitable for passing to
+        client.responses.create(input=...). Only user and assistant messages
+        are replayed.
+        """
+        db_messages = list(
+            self.messages.order_by("id")
+        )
+        if len(db_messages) > max_messages:
+            db_messages = db_messages[-max_messages:]
+
+        input_items = []
+        for m in db_messages:
+            if m.role == "user":
+                input_items.append({"role": "user", "content": m.content})
+            elif m.role == "assistant":
+                input_items.append({"role": "assistant", "content": m.content})
+        return input_items
 
 
 class Message(models.Model):

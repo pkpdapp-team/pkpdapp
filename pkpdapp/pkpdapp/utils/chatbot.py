@@ -9,7 +9,7 @@ import uuid
 
 from django.conf import settings
 
-from pkpdapp.models import Conversation, Message as ConvMessage
+from pkpdapp.models import Conversation
 
 from portkey_ai import Portkey
 
@@ -211,26 +211,6 @@ def _process_response_stream(stream):
         yield ("error", error_msg)
 
 
-def _build_input_items(conversation, max_messages=40):
-    """Reconstruct the Responses API input array from DB messages.
-
-    Returns a list suitable for passing to client.responses.create(input=...).
-    Only user and assistant messages are replayed.
-    """
-    db_messages = list(
-        conversation.messages.order_by("id")
-    )
-    if len(db_messages) > max_messages:
-        db_messages = db_messages[-max_messages:]
-
-    input_items = []
-    for m in db_messages:
-        if m.role == "user":
-            input_items.append({"role": "user", "content": m.content})
-        elif m.role == "assistant":
-            input_items.append({"role": "assistant", "content": m.content})
-    return input_items
-
 done_token = "[DONE]"
 
 def stream_chat_response(
@@ -244,15 +224,11 @@ def stream_chat_response(
     req_id = uuid.uuid4().hex[:8]
     logger.info("[chatbot] [%s] conversation=%s", req_id, conversation.pk)
 
-    ConvMessage.objects.create(
-        conversation=conversation,
-        role="user",
-        content=new_user_message,
-    )
+    conversation.add_user_message(new_user_message)
 
     _log_io(req_id, "USER MESSAGE", new_user_message)
 
-    input_items = _build_input_items(conversation)
+    input_items = conversation.build_input_items()
 
     assistant_text_parts = []
     instructions = _build_system_prompt(context, conversation=conversation)
@@ -305,7 +281,7 @@ def stream_chat_response(
             })
             yield _sse(done_token)
             # Don't persist partial output — would confuse the model on
-            # subsequent turns when fed back via _build_input_items.
+            # subsequent turns when fed back via build_input_items.
             return
 
         yield _sse({"type": "finish-step"})
