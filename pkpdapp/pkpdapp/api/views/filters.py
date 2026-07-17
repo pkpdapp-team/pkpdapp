@@ -7,6 +7,7 @@ from rest_framework import filters
 from django.db.models import Q
 
 from pkpdapp.models import (
+    Conversation,
     Correlation,
     Dataset,
     Project,
@@ -156,6 +157,10 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = Correlation.objects.filter(
                         distribution_1__variable__dosed_pk_model__project=project
                     )
+                elif queryset.model == Conversation:
+                    # Filter (not replace) so the user/is_active scoping applied
+                    # in ConversationViewSet.get_queryset is preserved.
+                    queryset = queryset.filter(project=project)
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)
             except Project.DoesNotExist:

@@ -11,24 +11,21 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from pkpdapp.models import Conversation, Message
 from pkpdapp.api.serializers import ConversationSerializer, MessageSerializer
-from pkpdapp.api.views import CheckAccessToProject
+from pkpdapp.api.views import CheckAccessToProject, ProjectFilter
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
+    filter_backends = [ProjectFilter]
     permission_classes = [IsAuthenticated & CheckAccessToProject]
     http_method_names = ["get", "post", "delete", "head", "options"]
 
     def get_queryset(self):
-        qs = Conversation.objects.filter(
+        return Conversation.objects.filter(
             user=self.request.user,
             is_active=True,
         )
-        project_id = self.request.query_params.get("project_id")
-        if project_id is not None:
-            qs = qs.filter(project_id=project_id)
-        return qs
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
