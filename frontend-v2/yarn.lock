@@ -12,52 +12,52 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:3.0.66":
-  version: 3.0.66
-  resolution: "@ai-sdk/gateway@npm:3.0.66"
+"@ai-sdk/gateway@npm:3.0.152":
+  version: 3.0.152
+  resolution: "@ai-sdk/gateway@npm:3.0.152"
   dependencies:
-    "@ai-sdk/provider": "npm:3.0.8"
-    "@ai-sdk/provider-utils": "npm:4.0.19"
-    "@vercel/oidc": "npm:3.1.0"
+    "@ai-sdk/provider": "npm:3.0.14"
+    "@ai-sdk/provider-utils": "npm:4.0.39"
+    "@vercel/oidc": "npm:3.2.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/bfc61de36de750216d5f483c234b96ca3098fafdab56ac555be82bf186844bb6aebf224f31acc88501fffd89bed2277827e5a7c8445d9271350952340639746b
+  checksum: 10c0/367e51af32516432e877eb4533b2bf7135f20cb59826a3dd83cd19c7dd8e3db5a446ca61f42b9252246d419160b7e17e149276c9f32bde543bebdadb79bc6447
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider-utils@npm:4.0.19":
-  version: 4.0.19
-  resolution: "@ai-sdk/provider-utils@npm:4.0.19"
+"@ai-sdk/provider-utils@npm:4.0.39":
+  version: 4.0.39
+  resolution: "@ai-sdk/provider-utils@npm:4.0.39"
   dependencies:
-    "@ai-sdk/provider": "npm:3.0.8"
+    "@ai-sdk/provider": "npm:3.0.14"
     "@standard-schema/spec": "npm:^1.1.0"
-    eventsource-parser: "npm:^3.0.6"
+    eventsource-parser: "npm:^3.0.8"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/fdfdcef09b3897769dd7e5c67c92188ee37339e1cd68974b57a0ab47efee080bc614d1df7d28f5a3183344ccb38e0380982adf2340e78a8f90e311595a3fff1f
+  checksum: 10c0/67404233e0819f549e35cd200773f29aff8387f568e713d6900ede483ae0b851b81ec210434a62b3bf3dbc91137abee13d2e3d58812f53614822d7c752005418
   languageName: node
   linkType: hard
 
-"@ai-sdk/provider@npm:3.0.8":
-  version: 3.0.8
-  resolution: "@ai-sdk/provider@npm:3.0.8"
+"@ai-sdk/provider@npm:3.0.14":
+  version: 3.0.14
+  resolution: "@ai-sdk/provider@npm:3.0.14"
   dependencies:
     json-schema: "npm:^0.4.0"
-  checksum: 10c0/c68637c0139a6ce8af17bac1d7d539f531860026237c5c971dcecda2daa8b1e42d8c05e1e664ece60c15edb325c0253fd5b091ee54d32f870a750a493acbb0b7
+  checksum: 10c0/4a533f0c7e98c3f7a3b75119b3f1855fd1ae759d696f7ee9c07b9bd4feaed57716f3e0d81586333e621a501dc0b99d3a103def3e063a45970a653ab027a8f163
   languageName: node
   linkType: hard
 
-"@ai-sdk/react@npm:3.0.118":
-  version: 3.0.118
-  resolution: "@ai-sdk/react@npm:3.0.118"
+"@ai-sdk/react@npm:^3.0.118":
+  version: 3.0.231
+  resolution: "@ai-sdk/react@npm:3.0.231"
   dependencies:
-    "@ai-sdk/provider-utils": "npm:4.0.19"
-    ai: "npm:6.0.116"
+    "@ai-sdk/provider-utils": "npm:4.0.39"
+    ai: "npm:6.0.229"
     swr: "npm:^2.2.5"
     throttleit: "npm:2.1.0"
   peerDependencies:
     react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
-  checksum: 10c0/270ca2b77d181dfbd9a451c73fb144a6a9ee2683162db9eb5c538fa03503594aacddda6be2c027cefc0b495e1626bd18951e942eb99e0412152e10ebb41f0b64
+  checksum: 10c0/3c72dacffa6e8341cfd7213fd8c8da515b6da68570a32f9237f4f26b159ee767911d27410602eb5133de65bb3f8500260f90461006e3483161a52b01ce30f33e
   languageName: node
   linkType: hard
 
@@ -3785,10 +3785,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/api@npm:1.9.0":
-  version: 1.9.0
-  resolution: "@opentelemetry/api@npm:1.9.0"
-  checksum: 10c0/9aae2fe6e8a3a3eeb6c1fdef78e1939cf05a0f37f8a4fae4d6bf2e09eb1e06f966ece85805626e01ba5fab48072b94f19b835449e58b6d26720ee19a58298add
+"@opentelemetry/api@npm:^1.9.0":
+  version: 1.9.1
+  resolution: "@opentelemetry/api@npm:1.9.1"
+  checksum: 10c0/c608485fc8b5a91e1f7e05e843b45b509307456b31cd2ad365933d90813e40ebfedf179f1451c762037e82d7c76aa8500e95d2da3609f640a1206cde5322cd14
   languageName: node
   linkType: hard
 
@@ -5530,10 +5530,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/oidc@npm:3.1.0":
-  version: 3.1.0
-  resolution: "@vercel/oidc@npm:3.1.0"
-  checksum: 10c0/f57278ed4b4c022c7ca85e8baa5f9bdb2623397abfa0e5dbfd75de283c8e5dc534d64dac1364b5ad8c96d00eb2d469886e6f7b640f6f195def5766950ad8ce71
+"@vercel/oidc@npm:3.2.0":
+  version: 3.2.0
+  resolution: "@vercel/oidc@npm:3.2.0"
+  checksum: 10c0/98318d3236f58c296616c8c2e1655b268c7bf58525bcd985adac7af6d900e05fc610f6f03ce2ff4bdcd3df7885a40c0ca44fdc761f122dcfe15a78c2756b0243
   languageName: node
   linkType: hard
 
@@ -5803,17 +5803,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ai@npm:6.0.116":
-  version: 6.0.116
-  resolution: "ai@npm:6.0.116"
+"ai@npm:6.0.229, ai@npm:^6.0.116":
+  version: 6.0.229
+  resolution: "ai@npm:6.0.229"
   dependencies:
-    "@ai-sdk/gateway": "npm:3.0.66"
-    "@ai-sdk/provider": "npm:3.0.8"
-    "@ai-sdk/provider-utils": "npm:4.0.19"
-    "@opentelemetry/api": "npm:1.9.0"
+    "@ai-sdk/gateway": "npm:3.0.152"
+    "@ai-sdk/provider": "npm:3.0.14"
+    "@ai-sdk/provider-utils": "npm:4.0.39"
+    "@opentelemetry/api": "npm:^1.9.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/6487297914defe015e391fcf67fb21ff784a4844be695df553018d69ce8a1b9ae906ae02effecb911c8f0dcfb41288a70d195149e1e5cc80e5fb73f0bb2d73a4
+  checksum: 10c0/5edb65d74cd04a15e22f7bfcee05e6063a06780dcff1d2ce5a6b63dd09622c0d58444e6fcad69c91bc8b018895b09661da3da883845a4cf48756983a87f95a85
   languageName: node
   linkType: hard
 
@@ -7913,7 +7913,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventsource-parser@npm:^3.0.6":
+"eventsource-parser@npm:^3.0.8":
   version: 3.1.0
   resolution: "eventsource-parser@npm:3.1.0"
   checksum: 10c0/5ab4c6c9a2a042be0b387b6d03810eb580bac4ce90e299ede56458125a97ffe3af8145b2740089fc898a96cfa5aae792ee79f2a06257fba2776b0e7bce037071
@@ -8124,7 +8124,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "frontend-v2@workspace:."
   dependencies:
-    "@ai-sdk/react": "npm:3.0.118"
+    "@ai-sdk/react": "npm:^3.0.118"
     "@babel/core": "npm:^7.29.7"
     "@babel/plugin-proposal-private-property-in-object": "npm:^7.21.11"
     "@babel/plugin-syntax-flow": "npm:^7.29.7"
@@ -8159,7 +8159,7 @@ __metadata:
     "@vitest/browser": "npm:^4.1.8"
     "@vitest/browser-playwright": "npm:^4.1.8"
     "@vitest/coverage-v8": "npm:^4.1.8"
-    ai: "npm:6.0.116"
+    ai: "npm:^6.0.116"
     env-cmd: "npm:^10.1.0"
     eslint: "npm:^9.39.4"
     eslint-config-prettier: "npm:^10.1.8"
