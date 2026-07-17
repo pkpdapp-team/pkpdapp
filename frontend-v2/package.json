@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@ai-sdk/react": "3.0.118",
+    "@ai-sdk/react": "^3.0.118",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/comfortaa": "^5.2.8",
@@ -12,7 +12,7 @@
     "@mui/material": "^7.3.11",
     "@mui/x-data-grid": "^8.28.7",
     "@reduxjs/toolkit": "^2.12.0",
-    "ai": "6.0.116",
+    "ai": "^6.0.116",
     "highlight.js": "^11.11.1",
     "papaparse": "^5.5.3",
     "plotly.js-basic-dist-min": "^3.6.0",
