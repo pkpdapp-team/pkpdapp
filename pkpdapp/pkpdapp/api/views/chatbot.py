@@ -7,9 +7,10 @@ from django.http import StreamingHttpResponse
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
-from pkpdapp.models import Conversation
+from pkpdapp.models import Conversation, ProjectAccess
 from pkpdapp.utils.chatbot import (
     stream_chat_response,
     check_chatbot_config,
@@ -58,6 +59,21 @@ class ChatbotView(APIView):
                 {"error": "Conversation not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        # Ownership above guarantees conversation.user == request.user, but a
+        # conversation also belongs to a project. Mirror CheckAccessToProject
+        # (used by ConversationViewSet) so a user who no longer has access to
+        # the conversation's project cannot keep chatting against it.
+        project = conversation.get_project()
+        if project is not None and not request.user.is_superuser:
+            has_access = ProjectAccess.objects.filter(
+                project=project,
+                user=request.user,
+            ).exists()
+            if not has_access:
+                raise PermissionDenied(
+                    "You do not have access to this conversation's project."
+                )
 
         try:
             check_chatbot_config()
