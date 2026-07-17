@@ -37,6 +37,23 @@ class Conversation(models.Model):
     def get_project(self):
         return self.project
 
+    def last_message_preview(self):
+        """Return the first text line from the last user/assistant message."""
+        last_msg = (
+            self.messages
+            .filter(role__in=["user", "assistant"])
+            .order_by("-created_at")
+            .values_list("content", flat=True)
+            .first()
+        )
+        if not last_msg:
+            return ""
+        text = last_msg.strip()
+        if not text:
+            return ""
+        first_line = text.split("\n", 1)[0]
+        return first_line[:120]
+
     def save_assistant_message(self, text_parts):
         """Persist accumulated assistant text to the database."""
         content = "".join(text_parts)

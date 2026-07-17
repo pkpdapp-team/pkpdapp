@@ -27,18 +27,4 @@ class ConversationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def get_last_message_preview(self, obj):
-        """Return the first text line from the last user/assistant message."""
-        last_msg = (
-            obj.messages
-            .filter(role__in=["user", "assistant"])
-            .order_by("-created_at")
-            .values_list("content", flat=True)
-            .first()
-        )
-        if not last_msg:
-            return ""
-        text = last_msg.strip()
-        if not text:
-            return ""
-        first_line = text.split("\n", 1)[0]
-        return first_line[:120]
+        return obj.last_message_preview()
