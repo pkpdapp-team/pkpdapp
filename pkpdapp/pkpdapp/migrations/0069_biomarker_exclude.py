@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0067_merge_20260716_2304'),
+        ('pkpdapp', '0068_base_subject_group'),
     ]
 
     operations = [

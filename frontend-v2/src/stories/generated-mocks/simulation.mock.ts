@@ -9,11 +9,11 @@ export const simulations = [
     sliders: [
       {
         id: 1,
-        variable: 5298
+        variable: 4
       },
       {
         id: 2,
-        variable: 5299
+        variable: 5
       }
     ],
     plots: [
@@ -23,7 +23,7 @@ export const simulations = [
           {
             id: 1,
             right: false,
-            variable: 5305
+            variable: 11
           }
         ],
         cx_lines: [],
@@ -38,8 +38,8 @@ export const simulations = [
         max: null,
         min2: null,
         max2: null,
-        x_unit: 9,
-        y_unit: 6,
+        x_unit: 20,
+        y_unit: 9,
         y_unit2: null
       }
     ],
@@ -49,8 +49,8 @@ export const simulations = [
     time_max: 30.0,
     abs_tolerance: 1e-06,
     rel_tolerance: 1e-06,
-    project: 105,
-    time_max_unit: 9
+    project: 1,
+    time_max_unit: 20
   }
 ] as unknown as SimulationRead[];
 

@@ -5,18 +5,18 @@ import { http, HttpResponse, delay } from "msw";
 
 export const subjectGroups = [
   {
-    id: 2234,
+    id: 1,
     subjects: [
-      6785,
-      6786,
-      6787
+      1,
+      2,
+      3
     ],
     protocols: [
       {
-        id: 5093,
+        id: 2,
         doses: [
           {
-            id: 11320,
+            id: 2,
             start_time: 0.0,
             amount: 10.0,
             duration: 0.0833,
@@ -24,7 +24,7 @@ export const subjectGroups = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 5093
+            protocol: 2
           }
         ],
         subjects: [],
@@ -33,33 +33,33 @@ export const subjectGroups = [
         name: "WithData Test Dataset-Data-Group 1",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 339,
-        project: 105,
+        dataset: 1,
+        project: 1,
         compound: null,
-        time_unit: 9,
-        amount_unit: 11,
-        variable: 5303,
-        group: 2234
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 9,
+        group: 1
       }
     ],
     name: "Data-Group 1",
     id_in_dataset: "1",
-    dataset: 339,
-    project: 105
+    dataset: 1,
+    project: 1
   },
   {
-    id: 2235,
+    id: 2,
     subjects: [
-      6788,
-      6789,
-      6790
+      4,
+      5,
+      6
     ],
     protocols: [
       {
-        id: 5094,
+        id: 3,
         doses: [
           {
-            id: 11321,
+            id: 3,
             start_time: 0.0,
             amount: 10.0,
             duration: 0.0833,
@@ -67,7 +67,7 @@ export const subjectGroups = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 5094
+            protocol: 3
           }
         ],
         subjects: [],
@@ -76,19 +76,19 @@ export const subjectGroups = [
         name: "WithData Test Dataset-Data-Group 2",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 339,
-        project: 105,
+        dataset: 1,
+        project: 1,
         compound: null,
-        time_unit: 9,
-        amount_unit: 11,
-        variable: 5303,
-        group: 2235
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 9,
+        group: 2
       }
     ],
     name: "Data-Group 2",
     id_in_dataset: "2",
-    dataset: 339,
-    project: 105
+    dataset: 1,
+    project: 1
   }
 ] as unknown as SubjectGroupRead[];
 

@@ -299,6 +299,11 @@ class DataParser:
         def to_bool(x):
             if isinstance(x, bool):
                 return x
+            # numeric columns arrive as int/float (e.g. 1.0 when the column is
+            # float64 because blank rows became NaN), so handle them explicitly
+            # rather than via str() which would turn 1.0 into "1.0".
+            if isinstance(x, (int, float)):
+                return not pd.isna(x) and x != 0
             return str(x).strip().lower() in ("1", "true", "yes", "y", "t")
 
         data["PER_BODY_WEIGHT_KG"] = data["PER_BODY_WEIGHT_KG"].apply(to_bool)

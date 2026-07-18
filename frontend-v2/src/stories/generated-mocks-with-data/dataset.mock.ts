@@ -5,10 +5,10 @@ import { http, HttpResponse, delay } from "msw";
 
 export const datasets = [
   {
-    id: 339,
+    id: 1,
     biomarker_types: [
       {
-        id: 4312,
+        id: 1,
         data: {
           times: [
             0.0,
@@ -61,54 +61,54 @@ export const datasets = [
             336.0
           ],
           subjects: [
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790,
-            6785,
-            6786,
-            6787,
-            6788,
-            6789,
-            6790
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
           ],
           values: [
             0.0,
@@ -159,6 +159,106 @@ export const datasets = [
             0.0,
             0.82,
             0.0
+          ],
+          ids: [
+            1,
+            9,
+            17,
+            25,
+            33,
+            41,
+            2,
+            10,
+            18,
+            26,
+            34,
+            42,
+            3,
+            11,
+            19,
+            27,
+            35,
+            43,
+            4,
+            12,
+            20,
+            28,
+            36,
+            44,
+            5,
+            13,
+            21,
+            29,
+            37,
+            45,
+            6,
+            14,
+            22,
+            30,
+            38,
+            46,
+            7,
+            15,
+            23,
+            31,
+            39,
+            47,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48
+          ],
+          exclude: [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
           ]
         },
         is_continuous: true,
@@ -168,36 +268,36 @@ export const datasets = [
         display: true,
         color: 1,
         axis: false,
-        stored_unit: 96,
-        dataset: 339,
-        display_unit: 96,
-        stored_time_unit: 9,
-        display_time_unit: 9,
-        variable: 5305
+        stored_unit: 69,
+        dataset: 1,
+        display_unit: 69,
+        stored_time_unit: 20,
+        display_time_unit: 20,
+        variable: 11
       }
     ],
     subjects: [
-      6785,
-      6786,
-      6787,
-      6788,
-      6789,
-      6790
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
     ],
     groups: [
       {
-        id: 2234,
+        id: 1,
         subjects: [
-          6785,
-          6786,
-          6787
+          1,
+          2,
+          3
         ],
         protocols: [
           {
-            id: 5093,
+            id: 2,
             doses: [
               {
-                id: 11320,
+                id: 2,
                 start_time: 0.0,
                 amount: 10.0,
                 duration: 0.0833,
@@ -205,7 +305,7 @@ export const datasets = [
                 repeat_interval: 1.0,
                 read_only: false,
                 datetime: null,
-                protocol: 5093
+                protocol: 2
               }
             ],
             subjects: [],
@@ -214,33 +314,33 @@ export const datasets = [
             name: "WithData Test Dataset-Data-Group 1",
             dose_type: "D",
             amount_per_body_weight: true,
-            dataset: 339,
-            project: 105,
+            dataset: 1,
+            project: 1,
             compound: null,
-            time_unit: 9,
-            amount_unit: 11,
-            variable: 5303,
-            group: 2234
+            time_unit: 20,
+            amount_unit: 22,
+            variable: 9,
+            group: 1
           }
         ],
         name: "Data-Group 1",
         id_in_dataset: "1",
-        dataset: 339,
-        project: 105
+        dataset: 1,
+        project: 1
       },
       {
-        id: 2235,
+        id: 2,
         subjects: [
-          6788,
-          6789,
-          6790
+          4,
+          5,
+          6
         ],
         protocols: [
           {
-            id: 5094,
+            id: 3,
             doses: [
               {
-                id: 11321,
+                id: 3,
                 start_time: 0.0,
                 amount: 10.0,
                 duration: 0.0833,
@@ -248,7 +348,7 @@ export const datasets = [
                 repeat_interval: 1.0,
                 read_only: false,
                 datetime: null,
-                protocol: 5094
+                protocol: 3
               }
             ],
             subjects: [],
@@ -257,27 +357,27 @@ export const datasets = [
             name: "WithData Test Dataset-Data-Group 2",
             dose_type: "D",
             amount_per_body_weight: true,
-            dataset: 339,
-            project: 105,
+            dataset: 1,
+            project: 1,
             compound: null,
-            time_unit: 9,
-            amount_unit: 11,
-            variable: 5303,
-            group: 2235
+            time_unit: 20,
+            amount_unit: 22,
+            variable: 9,
+            group: 2
           }
         ],
         name: "Data-Group 2",
         id_in_dataset: "2",
-        dataset: 339,
-        project: 105
+        dataset: 1,
+        project: 1
       }
     ],
     protocols: [
       {
-        id: 5093,
+        id: 2,
         doses: [
           {
-            id: 11320,
+            id: 2,
             start_time: 0.0,
             amount: 10.0,
             duration: 0.0833,
@@ -285,7 +385,7 @@ export const datasets = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 5093
+            protocol: 2
           }
         ],
         subjects: [],
@@ -294,19 +394,19 @@ export const datasets = [
         name: "WithData Test Dataset-Data-Group 1",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 339,
-        project: 105,
+        dataset: 1,
+        project: 1,
         compound: null,
-        time_unit: 9,
-        amount_unit: 11,
-        variable: 5303,
-        group: 2234
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 9,
+        group: 1
       },
       {
-        id: 5094,
+        id: 3,
         doses: [
           {
-            id: 11321,
+            id: 3,
             start_time: 0.0,
             amount: 10.0,
             duration: 0.0833,
@@ -314,7 +414,7 @@ export const datasets = [
             repeat_interval: 1.0,
             read_only: false,
             datetime: null,
-            protocol: 5094
+            protocol: 3
           }
         ],
         subjects: [],
@@ -323,27 +423,27 @@ export const datasets = [
         name: "WithData Test Dataset-Data-Group 2",
         dose_type: "D",
         amount_per_body_weight: true,
-        dataset: 339,
-        project: 105,
+        dataset: 1,
+        project: 1,
         compound: null,
-        time_unit: 9,
-        amount_unit: 11,
-        variable: 5303,
-        group: 2235
+        time_unit: 20,
+        amount_unit: 22,
+        variable: 9,
+        group: 2
       }
     ],
     name: "WithData Test Dataset",
     datetime: null,
     description: "",
-    project: 105
+    project: 1
   }
 ] as unknown as DatasetRead[];
 
 export const dataset = {
-  id: 339,
+  id: 1,
   biomarker_types: [
     {
-      id: 4312,
+      id: 1,
       data: {
         times: [
           0.0,
@@ -396,54 +496,54 @@ export const dataset = {
           336.0
         ],
         subjects: [
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790,
-          6785,
-          6786,
-          6787,
-          6788,
-          6789,
-          6790
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
         ],
         values: [
           0.0,
@@ -494,6 +594,106 @@ export const dataset = {
           0.0,
           0.82,
           0.0
+        ],
+        ids: [
+          1,
+          9,
+          17,
+          25,
+          33,
+          41,
+          2,
+          10,
+          18,
+          26,
+          34,
+          42,
+          3,
+          11,
+          19,
+          27,
+          35,
+          43,
+          4,
+          12,
+          20,
+          28,
+          36,
+          44,
+          5,
+          13,
+          21,
+          29,
+          37,
+          45,
+          6,
+          14,
+          22,
+          30,
+          38,
+          46,
+          7,
+          15,
+          23,
+          31,
+          39,
+          47,
+          8,
+          16,
+          24,
+          32,
+          40,
+          48
+        ],
+        exclude: [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
         ]
       },
       is_continuous: true,
@@ -503,36 +703,36 @@ export const dataset = {
       display: true,
       color: 1,
       axis: false,
-      stored_unit: 96,
-      dataset: 339,
-      display_unit: 96,
-      stored_time_unit: 9,
-      display_time_unit: 9,
-      variable: 5305
+      stored_unit: 69,
+      dataset: 1,
+      display_unit: 69,
+      stored_time_unit: 20,
+      display_time_unit: 20,
+      variable: 11
     }
   ],
   subjects: [
-    6785,
-    6786,
-    6787,
-    6788,
-    6789,
-    6790
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
   ],
   groups: [
     {
-      id: 2234,
+      id: 1,
       subjects: [
-        6785,
-        6786,
-        6787
+        1,
+        2,
+        3
       ],
       protocols: [
         {
-          id: 5093,
+          id: 2,
           doses: [
             {
-              id: 11320,
+              id: 2,
               start_time: 0.0,
               amount: 10.0,
               duration: 0.0833,
@@ -540,7 +740,7 @@ export const dataset = {
               repeat_interval: 1.0,
               read_only: false,
               datetime: null,
-              protocol: 5093
+              protocol: 2
             }
           ],
           subjects: [],
@@ -549,33 +749,33 @@ export const dataset = {
           name: "WithData Test Dataset-Data-Group 1",
           dose_type: "D",
           amount_per_body_weight: true,
-          dataset: 339,
-          project: 105,
+          dataset: 1,
+          project: 1,
           compound: null,
-          time_unit: 9,
-          amount_unit: 11,
-          variable: 5303,
-          group: 2234
+          time_unit: 20,
+          amount_unit: 22,
+          variable: 9,
+          group: 1
         }
       ],
       name: "Data-Group 1",
       id_in_dataset: "1",
-      dataset: 339,
-      project: 105
+      dataset: 1,
+      project: 1
     },
     {
-      id: 2235,
+      id: 2,
       subjects: [
-        6788,
-        6789,
-        6790
+        4,
+        5,
+        6
       ],
       protocols: [
         {
-          id: 5094,
+          id: 3,
           doses: [
             {
-              id: 11321,
+              id: 3,
               start_time: 0.0,
               amount: 10.0,
               duration: 0.0833,
@@ -583,7 +783,7 @@ export const dataset = {
               repeat_interval: 1.0,
               read_only: false,
               datetime: null,
-              protocol: 5094
+              protocol: 3
             }
           ],
           subjects: [],
@@ -592,27 +792,27 @@ export const dataset = {
           name: "WithData Test Dataset-Data-Group 2",
           dose_type: "D",
           amount_per_body_weight: true,
-          dataset: 339,
-          project: 105,
+          dataset: 1,
+          project: 1,
           compound: null,
-          time_unit: 9,
-          amount_unit: 11,
-          variable: 5303,
-          group: 2235
+          time_unit: 20,
+          amount_unit: 22,
+          variable: 9,
+          group: 2
         }
       ],
       name: "Data-Group 2",
       id_in_dataset: "2",
-      dataset: 339,
-      project: 105
+      dataset: 1,
+      project: 1
     }
   ],
   protocols: [
     {
-      id: 5093,
+      id: 2,
       doses: [
         {
-          id: 11320,
+          id: 2,
           start_time: 0.0,
           amount: 10.0,
           duration: 0.0833,
@@ -620,7 +820,7 @@ export const dataset = {
           repeat_interval: 1.0,
           read_only: false,
           datetime: null,
-          protocol: 5093
+          protocol: 2
         }
       ],
       subjects: [],
@@ -629,19 +829,19 @@ export const dataset = {
       name: "WithData Test Dataset-Data-Group 1",
       dose_type: "D",
       amount_per_body_weight: true,
-      dataset: 339,
-      project: 105,
+      dataset: 1,
+      project: 1,
       compound: null,
-      time_unit: 9,
-      amount_unit: 11,
-      variable: 5303,
-      group: 2234
+      time_unit: 20,
+      amount_unit: 22,
+      variable: 9,
+      group: 1
     },
     {
-      id: 5094,
+      id: 3,
       doses: [
         {
-          id: 11321,
+          id: 3,
           start_time: 0.0,
           amount: 10.0,
           duration: 0.0833,
@@ -649,7 +849,7 @@ export const dataset = {
           repeat_interval: 1.0,
           read_only: false,
           datetime: null,
-          protocol: 5094
+          protocol: 3
         }
       ],
       subjects: [],
@@ -658,19 +858,19 @@ export const dataset = {
       name: "WithData Test Dataset-Data-Group 2",
       dose_type: "D",
       amount_per_body_weight: true,
-      dataset: 339,
-      project: 105,
+      dataset: 1,
+      project: 1,
       compound: null,
-      time_unit: 9,
-      amount_unit: 11,
-      variable: 5303,
-      group: 2235
+      time_unit: 20,
+      amount_unit: 22,
+      variable: 9,
+      group: 2
     }
   ],
   name: "WithData Test Dataset",
   datetime: null,
   description: "",
-  project: 105
+  project: 1
 } as unknown as DatasetRead;
 
 export const datasetHandlers = [
