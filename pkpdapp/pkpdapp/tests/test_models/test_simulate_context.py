@@ -83,7 +83,9 @@ class TestSimulateContext(TestCase):
         )
 
         self.assertEqual(len(context.simulation_groups), 3)
-        self.assertEqual(context.simulation_groups[0].group_id, None)
+        # the base group is now a real "Sim-Group 1" SubjectGroup, sorted first
+        self.assertEqual(context.simulation_groups[0].group_name, "Sim-Group 1")
+        self.assertIsNotNone(context.simulation_groups[0].group_id)
         self.assertEqual(len(context.simulation_groups[0].dosing_protocols), 0)
         self.assertIsNone(context.simulation_groups[0].diffsol_ode)
         for group_context in context.simulation_groups[1:]:
@@ -309,7 +311,7 @@ class TestSimulateContext(TestCase):
 
         self.assertEqual(
             [group_context.group_name for group_context in context.simulation_groups],
-            [None, "Dose-Group 1", "Dose-Group 2"],
+            ["Sim-Group 1", "Dose-Group 1", "Dose-Group 2"],
         )
         group_context = next(
             group_context

@@ -108,11 +108,9 @@ export default function useExportSimulation({
           rows = [
             ...rows,
             [...varNames, "Group"],
-            ...centralData.flatMap((data, index) => {
-              const label =
-                index === 0
-                  ? "Sim-Group 1"
-                  : groups[index - 1].id_in_dataset || groups[index - 1].name;
+            ...centralData.flatMap((data) => {
+              const group = groups.find((g) => g.id === data.group);
+              const label = group?.id_in_dataset || group?.name || "";
               return parseResponse(data, timeCol, label);
             }),
           ];

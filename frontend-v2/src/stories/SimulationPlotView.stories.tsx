@@ -23,10 +23,14 @@ const outputIds = Object.keys(baseSimulation.outputs);
 const outputId = Number(outputIds[0]);
 const outputSeries = baseSimulation.outputs[String(outputId)] || [];
 
+// tie the mocked results to a real subject group (id 1, "Group 1") now that the
+// base group is a real SubjectGroup and results are matched by group id.
+const GROUP_ID = 1;
+
 const uncertaintyData: SimulateResponse[] = [
   {
     time: baseSimulation.time,
-    group: baseSimulation.group ?? null,
+    group: GROUP_ID,
     sample_count: 200,
     outputs: {
       [String(outputId)]: {
@@ -168,7 +172,7 @@ const PlotHarness = () => {
     },
   });
 
-  const data = useMemo(() => [baseSimulation], []);
+  const data = useMemo(() => [{ ...baseSimulation, group: GROUP_ID }], []);
 
   return (
     <div style={{ height: 520, width: 900 }}>
@@ -186,7 +190,7 @@ const PlotHarness = () => {
         units={units}
         compound={compound}
         model={model}
-        visibleGroups={["Sim-Group 1"]}
+        visibleGroups={["Group 1"]}
         shouldShowLegend={true}
         isVertical={false}
         isHorizontal={false}

@@ -126,7 +126,7 @@ export const ResultsTable: FC<ResultsTableProps> = ({
             )
             : groupIndex === "columns"
               ? groups
-                ? [{ name: "Sim-Group 1" }, ...groups].map((group) => group.name)
+                ? groups.map((group) => group.name)
                 : []
               : [];
 

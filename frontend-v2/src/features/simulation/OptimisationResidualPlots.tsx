@@ -130,8 +130,7 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
 
     const groupId = resGroup.group ?? null;
     const group = groups?.find((g) => g.id === groupId);
-    const groupLabel =
-      group?.name ?? (gi === 0 ? "Sim-Group 1" : `Group ${gi + 1}`);
+    const groupLabel = group?.name ?? `Group ${gi + 1}`;
 
     Object.keys(resGroup.outputs).forEach((varIdStr) => {
       const varId = Number(varIdStr);

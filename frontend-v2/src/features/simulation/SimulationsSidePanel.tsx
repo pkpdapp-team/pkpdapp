@@ -458,18 +458,6 @@ export const SimulationsSidePanel = ({
                           component="div"
                         >
                           <FormGroup>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  checked={visibleGroups.includes(
-                                    "Sim-Group 1",
-                                  )}
-                                  value="Sim-Group 1"
-                                  onChange={handleVisibleGroups}
-                                />
-                              }
-                              label="Sim-Group 1"
-                            />
                             {groups?.map((group) => (
                               <FormControlLabel
                                 key={group.name}

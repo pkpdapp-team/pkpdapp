@@ -70,10 +70,7 @@ export default function useEditProtocol({
       project: project.id,
       variable: variable.id,
     }
-    await createProtocol({
-      protocol: defaultProtocol,
-    });
-    // also add protocol to each group that isn't linked to a dataset
+    // add a protocol to each group that isn't linked to a dataset.
     for (const group of groups || []) {
       if (!group.dataset) {
         await createProtocol({

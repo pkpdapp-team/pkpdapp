@@ -115,6 +115,13 @@ class Project(models.Model):
         new_project.datasets.set([new_dataset])
         new_project.save()
 
+        # copy project-level groups (e.g. the base "Sim-Group 1") directly so
+        # they survive even when no protocol references them. Dataset-level
+        # groups are already copied in Dataset.copy. Protocol.copy later does a
+        # groups.get(name=...) so pre-creating these keeps copy idempotent.
+        for group in self.groups.filter(dataset__isnull=True):
+            group.copy(new_protocol=None, new_project=new_project, new_dataset=None)
+
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project)

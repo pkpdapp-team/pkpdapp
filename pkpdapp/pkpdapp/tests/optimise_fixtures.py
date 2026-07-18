@@ -128,6 +128,16 @@ def create_exponential_data(
         variable=response,
     )
 
+    # every project has a base "Sim-Group 1" project group (created by
+    # ProjectSerializer.create in production). This fixture builds the project
+    # directly, so create it here to mirror production. It is not part of the
+    # returned data groups (it has no subjects and isn't an optimisation group).
+    SubjectGroup.objects.create(
+        name="Sim-Group 1",
+        project=project,
+        dataset=None,
+    )
+
     groups = [
         SubjectGroup.objects.create(
             name=f"{group_name_prefix}-Group {i}",
