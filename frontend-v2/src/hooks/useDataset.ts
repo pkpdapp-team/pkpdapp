@@ -18,6 +18,8 @@ import { UnitReadWithCompatible } from "../shared/unitConversion";
 
 export type SubjectBiomarker = {
   id: number;
+  datapointId: number;
+  exclude: boolean;
   subjectId: number;
   subjectDatasetId: number | undefined;
   time: number;
@@ -119,6 +121,8 @@ export default function useDataset(selectedProject: number | null) {
       return (
         b.data?.subjects
           .map((subjectId, index) => ({
+            datapointId: b.data?.ids[index],
+            exclude: b.data?.exclude[index],
             subjectId,
             subjectDatasetId: subjects?.find((s) => s.id === subjectId)
               ?.id_in_dataset,

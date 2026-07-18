@@ -129,6 +129,24 @@ class TestBiomarkerTypeModel(TestCase):
             df['values'], [self.values[0], self.values[3]]
         )
 
+    def test_data_includes_ids_and_exclude(self):
+        df = self.biomarker_type.data()
+        # ids match the created biomarkers, ordered by time
+        expected_ids = [b.id for b in sorted(self.biomarkers, key=lambda b: b.time)]
+        np.testing.assert_array_equal(df['ids'], np.array(expected_ids))
+        # exclude defaults to False for every point
+        np.testing.assert_array_equal(
+            df['exclude'], np.array([False] * len(self.biomarkers))
+        )
+
+        # flip one point and check it is reflected
+        excluded = self.biomarkers[0]
+        excluded.exclude = True
+        excluded.save()
+        df = self.biomarker_type.data()
+        excluded_index = list(df['ids']).index(excluded.id)
+        self.assertTrue(df['exclude'][excluded_index])
+
     def test_empty_data(self):
         df = self.biomarker_type2.data()
         for key in ['values', 'times', 'subjects']:

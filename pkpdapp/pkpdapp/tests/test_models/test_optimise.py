@@ -334,6 +334,37 @@ class TestOptimise(TestCase):
         self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
         self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
 
+    def test_excluded_biomarkers_are_dropped_from_fitting(self):
+        """Biomarkers with exclude=True are not loaded into the fit, so the
+        optimisation groups carry one fewer record per excluded point."""
+        setup = self._exponential_data()
+        biomarker_type = setup["biomarker_type"]
+
+        context = self._build_optimise_context(
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+        )
+        n_before = sum(len(g.records) for g in context.optimisation_groups)
+        self.assertGreater(n_before, 0)
+
+        # Exclude a single datapoint belonging to a fitted subject group.
+        group_subject_ids = [
+            subject.id
+            for group in setup["groups"]
+            for subject in group.subjects.all()
+        ]
+        excluded = biomarker_type.biomarkers.filter(
+            subject_id__in=group_subject_ids
+        ).first()
+        self.assertIsNotNone(excluded)
+        excluded.exclude = True
+        excluded.save()
+
+        context_after = self._build_optimise_context(
+            setup, [0.27, 1.45], ([0.16, 1.2], [0.3, 2.1])
+        )
+        n_after = sum(len(g.records) for g in context_after.optimisation_groups)
+        self.assertEqual(n_after, n_before - 1)
+
     def test_optimise_validation(self):
         setup = self._exponential_data()
         model = setup["model"]

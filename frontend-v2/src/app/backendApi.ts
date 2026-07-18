@@ -4,6 +4,54 @@ const injectedRtkApi = api.injectEndpoints({
     auceCreate: build.mutation<AuceCreateApiResponse, AuceCreateApiArg>({
       query: () => ({ url: `/api/auce/`, method: "POST" }),
     }),
+    biomarkerList: build.query<BiomarkerListApiResponse, BiomarkerListApiArg>({
+      query: () => ({ url: `/api/biomarker/` }),
+    }),
+    biomarkerCreate: build.mutation<
+      BiomarkerCreateApiResponse,
+      BiomarkerCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/`,
+        method: "POST",
+        body: queryArg.biomarker,
+      }),
+    }),
+    biomarkerRetrieve: build.query<
+      BiomarkerRetrieveApiResponse,
+      BiomarkerRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/biomarker/${queryArg.id}/` }),
+    }),
+    biomarkerUpdate: build.mutation<
+      BiomarkerUpdateApiResponse,
+      BiomarkerUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.biomarker,
+      }),
+    }),
+    biomarkerPartialUpdate: build.mutation<
+      BiomarkerPartialUpdateApiResponse,
+      BiomarkerPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedBiomarker,
+      }),
+    }),
+    biomarkerDestroy: build.mutation<
+      BiomarkerDestroyApiResponse,
+      BiomarkerDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     biomarkerTypeList: build.query<
       BiomarkerTypeListApiResponse,
       BiomarkerTypeListApiArg
@@ -1184,6 +1232,35 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as backendApi };
 export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
+export type BiomarkerListApiResponse = /** status 200  */ BiomarkerRead[];
+export type BiomarkerListApiArg = void;
+export type BiomarkerCreateApiResponse = /** status 201  */ BiomarkerRead;
+export type BiomarkerCreateApiArg = {
+  biomarker: Biomarker;
+};
+export type BiomarkerRetrieveApiResponse = /** status 200  */ BiomarkerRead;
+export type BiomarkerRetrieveApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+};
+export type BiomarkerUpdateApiResponse = /** status 200  */ BiomarkerRead;
+export type BiomarkerUpdateApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+  biomarker: Biomarker;
+};
+export type BiomarkerPartialUpdateApiResponse =
+  /** status 200  */ BiomarkerRead;
+export type BiomarkerPartialUpdateApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+  patchedBiomarker: PatchedBiomarker;
+};
+export type BiomarkerDestroyApiResponse = unknown;
+export type BiomarkerDestroyApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+};
 export type BiomarkerTypeListApiResponse =
   /** status 200  */ BiomarkerTypeRead[];
 export type BiomarkerTypeListApiArg = {
@@ -1927,6 +2004,40 @@ export type VariableDestroyApiArg = {
 };
 export type WhoamiRetrieveApiResponse = unknown;
 export type WhoamiRetrieveApiArg = void;
+export type Biomarker = {
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+};
+export type BiomarkerRead = {
+  id: number;
+  /** time point of measurement, in hours. */
+  time: number;
+  /** value of the measurement */
+  value: number;
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+  /** subject associated with this biomarker */
+  subject: number;
+  /** biomarker type, for example "concentration in mg" */
+  biomarker_type: number;
+};
+export type PatchedBiomarker = {
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+};
+export type PatchedBiomarkerRead = {
+  id?: number;
+  /** time point of measurement, in hours. */
+  time?: number;
+  /** value of the measurement */
+  value?: number;
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+  /** subject associated with this biomarker */
+  subject?: number;
+  /** biomarker type, for example "concentration in mg" */
+  biomarker_type?: number;
+};
 export type BiomarkerType = {
   /** name of the biomarker type */
   name: string;
@@ -4152,6 +4263,12 @@ export type PatchedVariableRead = {
 };
 export const {
   useAuceCreateMutation,
+  useBiomarkerListQuery,
+  useBiomarkerCreateMutation,
+  useBiomarkerRetrieveQuery,
+  useBiomarkerUpdateMutation,
+  useBiomarkerPartialUpdateMutation,
+  useBiomarkerDestroyMutation,
   useBiomarkerTypeListQuery,
   useBiomarkerTypeCreateMutation,
   useBiomarkerTypeRetrieveQuery,
