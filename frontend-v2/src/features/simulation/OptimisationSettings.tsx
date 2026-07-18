@@ -37,6 +37,7 @@ import {
 import { DEFAULT_NOISE_MODEL, NoiseModel } from "./useOptimise";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
+import HelpButton from "../../components/HelpButton";
 
 const OPTIMISE_METHOD_OPTIONS = [
   { value: "pso", label: "PSO" },
@@ -437,9 +438,36 @@ const OptimisationSettings = ({
             );
           })}
           <Divider />
-          <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
-            Noise model and standard deviation (per observation)
-          </Typography>
+          <Stack direction="row" alignItems="center">
+            <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
+              Noise model and standard deviation (per observation)
+            </Typography>
+            <HelpButton title="Noise models" maxWidth="500px">
+              <p>
+                The noise model describes how the measurement error relates to
+                the predicted value ŷ. Each observation is fit with its own
+                model and standard deviation σ.
+              </p>
+              <p>
+                <strong>Additive:</strong> y ~ N(ŷ, σₐ²). The error has a
+                constant standard deviation σₐ regardless of the size of the
+                value. Best when the measurement error is a fixed absolute
+                amount.
+              </p>
+              <p>
+                <strong>Multiplicative</strong> (default): log(y) ~ N(log(ŷ),
+                σ²). The error is log-normal, so it grows in proportion to the
+                predicted value. Best when the relative (percentage) error is
+                roughly constant across the range of the data.
+              </p>
+              <p>
+                <strong>Combined:</strong> y ~ N(ŷ, σₐ² + σₘ²·ŷ²). Combines an
+                additive floor σₐ with a proportional term σₘ (two sigmas per
+                observation). Useful when there is both a fixed error floor at
+                low values and proportional scaling at higher values.
+              </p>
+            </HelpButton>
+          </Stack>
           {sigmaVariables.length === 0 && (
             <Typography variant="body2" color="text.secondary">
               Select at least one observation to configure its noise.
