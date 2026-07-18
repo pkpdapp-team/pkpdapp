@@ -185,8 +185,15 @@ export function getDefaultOptimiseInputs({
     starting,
     bounds: [lowerBounds, upperBounds],
     // One flag per model parameter (parallel to inputs); defaults to log space
-    // where the lower bound is non-negative (log space is undefined otherwise).
-    use_log_space: lowerBounds.map((lb) => lb >= 0),
+    // where the lower bound is non-negative (log space is undefined otherwise),
+    // EXCEPT for parameters with a fixed upper bound set in the database, which
+    // default to linear space.
+    use_log_space: inputs.map((variableId, index) => {
+      const variable = variables.find((item) => item.id === variableId);
+      const hasFixedUpperBound =
+        variable?.upper_bound !== undefined && variable?.upper_bound !== null;
+      return lowerBounds[index] >= 0 && !hasFixedUpperBound;
+    }),
     biomarker_types,
     subject_groups: subjectGroups,
     // The sidebar "Fit" is a one-click uniform fit: apply the same noise model
@@ -516,7 +523,6 @@ export function generatePlotData(
   visibleGroups: string[],
   colour: string,
   dash: "dot" | "solid",
-  index: number,
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
@@ -526,10 +532,7 @@ export function generatePlotData(
   xConversionFactor: number,
   isReference?: boolean,
 ): Partial<ScatterDataWithVariable> {
-  const visible =
-    index === 0
-      ? visibleGroups.includes("Sim-Group 1")
-      : visibleGroups.includes(group?.name || "");
+  const visible = visibleGroups.includes(group?.name || "");
   const variableValues = d.outputs[y_axis.variable];
   const variable = variables.find((v) => v.id === y_axis.variable);
   const variableName = variable?.name;
@@ -566,8 +569,8 @@ export function generatePlotData(
     : 1.0;
 
   const name = variableValues
-    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "Sim-Group 1"}`
-    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "Sim-Group 1"}`;
+    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || ""}`
+    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || ""}`;
   const x = variableValues ? d.time.map((t) => t * xConversionFactor) : [];
   const y = variableValues
     ? variableValues.map((v) => v * yConversionFactor)
@@ -592,7 +595,6 @@ export function generateUncertaintyBandData(
   uncertainty: SimulateResponse,
   visibleGroups: string[],
   colour: string,
-  index: number,
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
@@ -602,10 +604,7 @@ export function generateUncertaintyBandData(
   xConversionFactor: number,
   isReference?: boolean,
 ): Partial<ScatterDataWithVariable>[] {
-  const visible =
-    index === 0
-      ? visibleGroups.includes("Sim-Group 1")
-      : visibleGroups.includes(group?.name || "");
+  const visible = visibleGroups.includes(group?.name || "");
 
   const bounds = getQuantileBounds(uncertainty, y_axis.variable);
   if (!bounds) {
@@ -734,7 +733,6 @@ const createPlot =
       visibleGroups,
       colour,
       style,
-      index,
       group,
       y_axis,
       plot,
@@ -784,7 +782,6 @@ export const createPlots = ({
         uncertainty,
         visibleGroups,
         colour,
-        index,
         group,
         y_axis,
         plot,
@@ -804,7 +801,6 @@ export const createPlots = ({
           uncertainty,
           visibleGroups,
           colour,
-          index,
           group,
           y_axis,
           plot,

@@ -42,10 +42,6 @@ import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { selectIsProjectShared } from "../login/loginSlice";
 
-// Sentinel tab value for the hardcoded "Sim-Group 1" tab, which represents the
-// base project protocols (protocol.group === null) and has no SubjectGroup id.
-const BASE_TAB = -1;
-
 // Refetching a query throws "Cannot refetch a query that has not been started
 // yet" when the component unmounts before an awaited mutation settles (the query
 // subscription is already gone). Swallow that case so it doesn't surface as an
@@ -168,7 +164,9 @@ export const Protocols: FC<ProtocolsProps> = ({
   refetchGroups,
   isSharedWithMe,
 }) => {
-  const [tab, setTab] = useState<number>(BASE_TAB);
+  // the selected tab is always a group id 
+  // (or false when the project has no groups at all).
+  const [tab, setTab] = useState<number | false>(false);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -179,6 +177,15 @@ export const Protocols: FC<ProtocolsProps> = ({
       editInputRef.current?.focus();
     }
   }, [editingGroupId]);
+
+  // Keep the selected tab valid: default to the first group (the base group,
+  // since groups are sorted Sim-first) and recover if the current tab is gone.
+  useEffect(() => {
+    const ids = groups?.map((g) => g.id) ?? [];
+    if (tab === false || !ids.includes(tab)) {
+      setTab(ids.length > 0 ? ids[0] : false);
+    }
+  }, [groups, tab]);
 
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
@@ -221,13 +228,18 @@ export const Protocols: FC<ProtocolsProps> = ({
     cancelEditing();
   };
 
-  const filteredProtocols = projectProtocols.filter((p) => p.group === null);
+  // Seed a new group from the base group's protocols (base is the first group).
+  const baseGroupId = groups?.[0]?.id;
+  const filteredProtocols = projectProtocols.filter(
+    (p) => p.group === baseGroupId,
+  );
 
   const handleAddTab = async () => {
-    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group")).map((g) => g.name);
+    const existingSimGroupNames =
+      groups?.filter((g) => g.name.startsWith("Sim-Group")) ?? [];
     const existingNames = groups?.map((g) => g.name) || [];
     const newGroupId = (groups?.length || 1) + 1;
-    let nextSimGroupValue = existingSimGroupNames.length + 2;
+    let nextSimGroupValue = existingSimGroupNames.length + 1;
     let newGroupName = `Sim-Group ${nextSimGroupValue}`;
     while (existingNames?.includes(newGroupName)) {
       nextSimGroupValue++;
@@ -244,7 +256,7 @@ export const Protocols: FC<ProtocolsProps> = ({
             ...newProtocol,
             dataset: null,
             project,
-            name: `${newProtocol.name} - {newGroupName}`,
+            name: `${newProtocol.name} - ${newGroupName}`,
           };
         }),
       },
@@ -265,7 +277,9 @@ export const Protocols: FC<ProtocolsProps> = ({
       await destroySubjectGroup({ id: groupID });
       await safeRefetch(refetchGroups);
       if (groupID === tab) {
-        setTab(BASE_TAB); // fall back to the base tab when the selected group is deleted
+        // fall back to the first remaining group (or none if all were deleted)
+        const remaining = groups?.filter((g) => g.id !== groupID) ?? [];
+        setTab(remaining.length > 0 ? remaining[0].id : false);
       }
     }
   };
@@ -283,8 +297,8 @@ export const Protocols: FC<ProtocolsProps> = ({
   }
 
   const subjectGroup = groups?.find((g) => g.id === tab) ?? null;
-  const selectedProtocols = projectProtocols.filter((protocol) =>
-    subjectGroup ? protocol.group === subjectGroup.id : protocol.group === null,
+  const selectedProtocols = projectProtocols.filter(
+    (protocol) => protocol.group === subjectGroup?.id,
   );
 
   // sort protocols alphabetically by name
@@ -315,7 +329,6 @@ export const Protocols: FC<ProtocolsProps> = ({
           value={tab}
           onChange={handleTabChange}
         >
-          <Tab value={BASE_TAB} label={"Sim-Group 1"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
             const selectedProtocols = projectProtocols.filter(
               (protocol) => protocol.group === group.id,
@@ -353,7 +366,7 @@ export const Protocols: FC<ProtocolsProps> = ({
                     </span>
                   )
                 }
-                {...a11yProps(index + 1)}
+                {...a11yProps(index)}
                 icon={
                   !groups?.[index] ? undefined : (
                     <IconNonButton
@@ -442,15 +455,13 @@ export const Protocols: FC<ProtocolsProps> = ({
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
-                {tab === BASE_TAB && (
-                  <TableCell
-                    align="right"
-                    size="small"
-                    sx={{ textWrap: "nowrap" }}
-                  >
-                    <div style={{ ...defaultHeaderSx }}> Remove </div>
-                  </TableCell>
-                )}
+                <TableCell
+                  align="right"
+                  size="small"
+                  sx={{ textWrap: "nowrap" }}
+                >
+                  <div style={{ ...defaultHeaderSx }}> Remove </div>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

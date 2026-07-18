@@ -31,6 +31,11 @@ class TestSimulateView(APITestCase):
         self.project = Project.objects.create(
             name="test project", compound=self.compound
         )
+        # every project has a base "Sim-Group 1" group in production
+        # (created by ProjectSerializer.create); mirror that here.
+        self.base_group = SubjectGroup.objects.create(
+            name="Sim-Group 1", project=self.project, dataset=None
+        )
         self.dataset = Dataset.objects.create(name="test dataset", project=self.project)
 
         self.user = User.objects.create_user(username="testuser", password="12345")
@@ -56,15 +61,18 @@ class TestSimulateView(APITestCase):
         au = Unit.objects.get(symbol="mg")
         tu = Unit.objects.get(symbol="h")
         variable = Variable.objects.get(qname="PKCompartment.A1", dosed_pk_model=m)
+        subject_group = SubjectGroup.objects.create(
+            name="my_cool_group",
+            project=self.project,
+        )
         protocol = Protocol.objects.create(
             name="my_cool_protocol",
             compound=self.compound,
             amount_unit=au,
             time_unit=tu,
             variable=variable,
-        )
-        subject_group = SubjectGroup.objects.create(
-            name="my_cool_group",
+            project=self.project,
+            group=subject_group,
         )
         Subject.objects.create(
             id_in_dataset=1,
@@ -118,6 +126,34 @@ class TestSimulateView(APITestCase):
         url = reverse("simulate-combined-model", args=(123,))
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_simulate_with_no_groups_runs_undosed(self):
+        # With no subject groups the simulation still runs, proceeding from
+        # initial conditions without any dosing (a single base result).
+        pd = PharmacodynamicModel.objects.get(
+            name="tumour_growth_gompertz",
+            read_only=False,
+        )
+        pk = PharmacokineticModel.objects.get(name="one_compartment_clinical")
+        m = CombinedModel.objects.create(
+            name="no groups model",
+            pd_model=pd,
+            pk_model=pk,
+            project=self.project,
+        )
+
+        # delete every group for the project (the empty trial-design state)
+        SubjectGroup.objects.filter(project=self.project).delete()
+
+        url = reverse("simulate-combined-model", args=(m.pk,))
+        data = {
+            "outputs": ["PDCompartment.TS", "environment.t"],
+            "variables": {"PDCompartment.TS0": 1.1},
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertTrue(len(response.data[0]["time"]) > 0)
 
     def _uncertainty_model(self):
         pd = PharmacodynamicModel.objects.get(
