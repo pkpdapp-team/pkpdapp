@@ -25,6 +25,7 @@ from .simulation import (
     SimulationViewSet,
 )
 from .auce import AuceView
+from .biomarker import BiomarkerView
 from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
 from .dose import DoseView

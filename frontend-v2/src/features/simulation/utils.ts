@@ -1111,7 +1111,7 @@ type ScatterPlotData = {
   type: string;
   mode: string;
   visible: boolean | "legendonly";
-  marker: { color: string };
+  marker: { color: string; symbol?: string | string[] };
 };
 
 const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
@@ -1140,6 +1140,10 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
     visible: visible ? true : "legendonly",
     marker: {
       color: plotColours[colourIndex % plotColours.length],
+      // excluded datapoints are drawn as open squares
+      symbol: groupBiomarkers?.map((d) =>
+        d?.exclude ? "square-open" : "circle",
+      ),
     },
   };
 };

@@ -5,64 +5,64 @@ import { http, HttpResponse, delay } from "msw";
 
 export const subjects = [
   {
-    id: 6785,
+    id: 1,
     id_in_dataset: 1,
     shape: 0,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2234
+    group: 1
   },
   {
-    id: 6786,
+    id: 2,
     id_in_dataset: 2,
     shape: 9,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2234
+    group: 1
   },
   {
-    id: 6787,
+    id: 3,
     id_in_dataset: 3,
     shape: 18,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2234
+    group: 1
   },
   {
-    id: 6788,
+    id: 4,
     id_in_dataset: 4,
     shape: 27,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2235
+    group: 2
   },
   {
-    id: 6789,
+    id: 5,
     id_in_dataset: 5,
     shape: 37,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2235
+    group: 2
   },
   {
-    id: 6790,
+    id: 6,
     id_in_dataset: 6,
     shape: 47,
     display: true,
     metadata: "{}",
-    dataset: 339,
+    dataset: 1,
     protocol: null,
-    group: 2235
+    group: 2
   }
 ] as unknown as SubjectRead[];
 

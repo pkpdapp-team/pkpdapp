@@ -59,6 +59,28 @@ class TestDataParser(TestCase):
             expected,
         )
 
+    def test_per_body_weight_numeric_column_parsing(self):
+        # When some rows leave the per body weight column blank (e.g. observation
+        # rows), pandas infers the whole column as float64, so "1" arrives as the
+        # float 1.0. This must still be treated as truthy (regression: str(1.0)
+        # is "1.0", which naive string matching would treat as False).
+        header = "id,time,amount,observation,per_body_weight"
+        rows = [
+            "1,0,10,.,1",
+            "1,1,,5.0,",
+            "2,0,10,.,1",
+            "2,1,,6.0,",
+        ]
+        csv_str = "\n".join([header] + rows)
+
+        parser = DataParser()
+        data = parser.parse_from_str(csv_str)
+
+        self.assertEqual(
+            data["PER_BODY_WEIGHT_KG"].tolist(),
+            [True, False, True, False],
+        )
+
     # A CSV where the amount column is populated on every row (dose *and*
     # observation rows) and an event id column distinguishes them: evid 1 =
     # dose, evid 0 = observation. Two subjects, each with one dose row at t=0

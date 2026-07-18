@@ -1,6 +1,7 @@
 import { FC, SyntheticEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
+  useBiomarkerPartialUpdateMutation,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
@@ -16,7 +17,7 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridRowModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
@@ -99,6 +100,7 @@ const Data: FC = () => {
     { skip: !model?.id },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
+  const [updateBiomarker] = useBiomarkerPartialUpdateMutation();
   const csv = generateCSV(
     dataset,
     groups,
@@ -218,6 +220,8 @@ const Data: FC = () => {
           );
           const groupId = group?.id_in_dataset || group?.name;
           return {
+            // use the real biomarker DB id so individual points can be edited
+            id: row.datapointId,
             "Subject ID": row.subjectDatasetId,
             Time: row.time,
             "Time Unit": row.timeUnit?.symbol,
@@ -225,27 +229,51 @@ const Data: FC = () => {
             "Observation Unit": displayUnitSymbol(row.unit?.symbol),
             "Observation ID": row.label,
             "Observation Variable": row.qname,
+            Exclude: row.exclude,
             Group: groupId,
           };
         }),
       )
-      .filter((row) => row.Group === groupId)
-      .map((row, index) => ({ id: index + 1, ...row })) || [];
+      .filter((row) => row.Group === groupId) || [];
   const [firstRow] = observations;
   const columns = firstRow
     ? Object.keys(firstRow)
       .filter((field) => field !== "id")
-      .map((field) => ({
-        field,
-        headerName: field,
-        minWidth:
-          field === "Observation Variable"
-            ? 150
-            : field.length > 10
-              ? 120
-              : 30,
-      }))
+      .map((field) => {
+        if (field === "Exclude") {
+          return {
+            field,
+            headerName: "Exclude from fitting",
+            type: "boolean" as const,
+            editable: true,
+            minWidth: 150,
+          };
+        }
+        return {
+          field,
+          headerName: field,
+          minWidth:
+            field === "Observation Variable"
+              ? 150
+              : field.length > 10
+                ? 120
+                : 30,
+        };
+      })
     : [];
+
+  const processObservationRowUpdate = (
+    newRow: GridRowModel,
+    oldRow: GridRowModel,
+  ) => {
+    if (newRow.Exclude !== oldRow.Exclude && typeof newRow.id === "number") {
+      updateBiomarker({
+        id: newRow.id,
+        patchedBiomarker: { exclude: newRow.Exclude },
+      });
+    }
+    return newRow;
+  };
 
   const noData = !groups.length && !observations.length;
 
@@ -363,6 +391,7 @@ const Data: FC = () => {
                 aria-labelledby="observations-heading"
                 rows={observations}
                 columns={columns}
+                processRowUpdate={processObservationRowUpdate}
               />
             </Box>
           </Box>
@@ -398,7 +427,11 @@ const Data: FC = () => {
                     overflow: "auto",
                   }}
                 >
-                  <DataGrid rows={observations} columns={columns} />
+                  <DataGrid
+                    rows={observations}
+                    columns={columns}
+                    processRowUpdate={processObservationRowUpdate}
+                  />
                 </Box>
               </Box>
             </Box>

@@ -64,6 +64,10 @@ export const api = backendApi.enhanceEndpoints({
             ]
           : [{ type: "BiomarkerType", id: "LIST" }],
     },
+    // Biomarker (individual datapoints)
+    biomarkerPartialUpdate: {
+      invalidatesTags: [{ type: "BiomarkerType", id: "LIST" }],
+    },
     // Doses
     doseList: {
       providesTags: (result) => [{ type: "Dose", id: "LIST" }],

@@ -14,6 +14,145 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/biomarker/:
+    get:
+      operationId: biomarker_list
+      tags:
+      - biomarker
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Biomarker'
+          description: ''
+    post:
+      operationId: biomarker_create
+      tags:
+      - biomarker
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+          description: ''
+  /api/biomarker/{id}/:
+    get:
+      operationId: biomarker_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker.
+        required: true
+      tags:
+      - biomarker
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+          description: ''
+    put:
+      operationId: biomarker_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker.
+        required: true
+      tags:
+      - biomarker
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Biomarker'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+          description: ''
+    patch:
+      operationId: biomarker_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker.
+        required: true
+      tags:
+      - biomarker
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarker'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarker'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBiomarker'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Biomarker'
+          description: ''
+    delete:
+      operationId: biomarker_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this biomarker.
+        required: true
+      tags:
+      - biomarker
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/biomarker_type/:
     get:
       operationId: biomarker_type_list
@@ -3425,6 +3564,39 @@ paths:
           description: No response body
 components:
   schemas:
+    Biomarker:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        time:
+          type: number
+          format: double
+          readOnly: true
+          description: time point of measurement, in hours.
+        value:
+          type: number
+          format: double
+          readOnly: true
+          description: value of the measurement
+        exclude:
+          type: boolean
+          description: if true, this datapoint is excluded from fitting
+        subject:
+          type: integer
+          readOnly: true
+          description: subject associated with this biomarker
+        biomarker_type:
+          type: integer
+          readOnly: true
+          description: biomarker type, for example "concentration in mg"
+      required:
+      - biomarker_type
+      - id
+      - subject
+      - time
+      - value
     BiomarkerType:
       type: object
       properties:
@@ -4397,6 +4569,33 @@ components:
       - sigma_use_log_space
       - sigma_variables
       - starting
+    PatchedBiomarker:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        time:
+          type: number
+          format: double
+          readOnly: true
+          description: time point of measurement, in hours.
+        value:
+          type: number
+          format: double
+          readOnly: true
+          description: value of the measurement
+        exclude:
+          type: boolean
+          description: if true, this datapoint is excluded from fitting
+        subject:
+          type: integer
+          readOnly: true
+          description: subject associated with this biomarker
+        biomarker_type:
+          type: integer
+          readOnly: true
+          description: biomarker type, for example "concentration in mg"
     PatchedBiomarkerType:
       type: object
       properties:

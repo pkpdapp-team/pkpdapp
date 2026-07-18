@@ -1044,6 +1044,7 @@ class OptimiseContext(SimulateContext):
         biomarkers = Biomarker.objects.filter(
             biomarker_type__in=biomarker_type_list,
             subject__dataset__project=self._project,
+            exclude=False,
         ).select_related(
             "biomarker_type",
             "biomarker_type__variable",

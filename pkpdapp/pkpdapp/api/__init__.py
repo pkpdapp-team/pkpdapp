@@ -19,6 +19,7 @@ from .views import (
     SimulatePdView,
     OptimiseCombinedView,
     UnitView,
+    BiomarkerView,
     BiomarkerTypeView,
     VariableView,
     CorrelationView,
