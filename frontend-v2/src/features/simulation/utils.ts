@@ -185,8 +185,15 @@ export function getDefaultOptimiseInputs({
     starting,
     bounds: [lowerBounds, upperBounds],
     // One flag per model parameter (parallel to inputs); defaults to log space
-    // where the lower bound is non-negative (log space is undefined otherwise).
-    use_log_space: lowerBounds.map((lb) => lb >= 0),
+    // where the lower bound is non-negative (log space is undefined otherwise),
+    // EXCEPT for parameters with a fixed upper bound set in the database, which
+    // default to linear space.
+    use_log_space: inputs.map((variableId, index) => {
+      const variable = variables.find((item) => item.id === variableId);
+      const hasFixedUpperBound =
+        variable?.upper_bound !== undefined && variable?.upper_bound !== null;
+      return lowerBounds[index] >= 0 && !hasFixedUpperBound;
+    }),
     biomarker_types,
     subject_groups: subjectGroups,
     // The sidebar "Fit" is a one-click uniform fit: apply the same noise model

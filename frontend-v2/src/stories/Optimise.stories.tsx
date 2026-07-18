@@ -111,7 +111,13 @@ const expectedSliders = simulations[0].sliders.map((slider) => {
   const min = variable?.lower_bound ?? start / SLIDER_RANGE;
   const max =
     variable?.upper_bound ?? (start === 0 ? SLIDER_RANGE : start * SLIDER_RANGE);
-  return { variable, start, min, max };
+  // Log space is the default only when the lower bound is non-negative AND the
+  // variable has no fixed upper bound set in the database (mirrors the rule in
+  // getDefaultOptimiseInputs). A fixed upper bound defaults to linear space.
+  const logScale =
+    min >= 0 &&
+    (variable?.upper_bound === undefined || variable?.upper_bound === null);
+  return { variable, start, min, max, logScale };
 });
 
 const meta: Meta<typeof Simulations> = {
@@ -203,6 +209,18 @@ export const OpenSettings: Story = {
       expect(startFields[index]).toHaveValue(start);
       expect(minFields[index]).toHaveValue(min);
       expect(maxFields[index]).toHaveValue(max);
+    });
+
+    // Each slider row has a "Log scale" checkbox. Parameters with a fixed upper
+    // bound in the database default to linear (unchecked); others default to log
+    // (checked). The first sliders.length checkboxes are the slider rows; the
+    // per-observation sigma rows append more after them.
+    const logScaleChecks = screen.getAllByRole("checkbox", {
+      name: "Log scale",
+    });
+    expect(logScaleChecks.length).toBeGreaterThanOrEqual(expectedSliders.length);
+    expectedSliders.forEach(({ logScale }, index) => {
+      expect(logScaleChecks[index]).toHaveProperty("checked", logScale);
     });
 
     // The custom optimise action should be available.
