@@ -13,6 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='biomarker',
             name='exclude',
-            field=models.BooleanField(default=False, help_text='if true, this datapoint is excluded from fitting'),
+            field=models.BooleanField(
+                default=False,
+                help_text='if true, this datapoint is excluded from fitting',
+            ),
         ),
     ]
