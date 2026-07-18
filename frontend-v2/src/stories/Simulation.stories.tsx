@@ -261,7 +261,20 @@ export const WithGroups: Story = {
             const url = new URL(request.url);
             const projectId = url.searchParams.get("project_id");
             if (projectId) {
-              return HttpResponse.json(dataset.groups, { status: 200 });
+              // the subject_group list includes project-level groups (the base
+              // "Sim-Group 1") alongside the dataset's groups.
+              const baseGroup = {
+                id: 9991,
+                name: "Sim-Group 1",
+                id_in_dataset: null,
+                dataset: null,
+                project: project.id,
+                subjects: [],
+                protocols: [],
+              };
+              return HttpResponse.json([baseGroup, ...dataset.groups], {
+                status: 200,
+              });
             }
             return HttpResponse.json([], { status: 200 });
           }),

@@ -446,26 +446,32 @@ class SimulateContext:
         return protocols
 
     def _build_simulation_groups(self) -> tuple[SimulationGroupContext, ...]:
-        groups = [
-            self._simulation_group_context(
-                group_id=None,
-                group_name=None,
-                protocols=self._protocols_for_group(None),
-            )
-        ]
-
+        # every group (including the base "Sim-Group 1") is a real SubjectGroup;
+        # sort "Sim"-prefixed groups first so the base group stays first.
         subject_groups = sorted(
             self._load_subject_groups(),
             key=lambda group: (not group.name.startswith("Sim"), group.name),
         )
-        for group in subject_groups:
-            groups.append(
+        if not subject_groups:
+            # No subject groups configured (a bare/library model, or a project
+            # whose groups were all deleted). Fall back to a single base run:
+            # the simulation proceeds from initial conditions using any
+            # group-less protocols (undosed if there are none).
+            return (
                 self._simulation_group_context(
-                    group_id=group.id,
-                    group_name=group.name,
-                    protocols=self._protocols_for_group(group.id),
-                )
+                    group_id=None,
+                    group_name=None,
+                    protocols=self._protocols_for_group(None),
+                ),
             )
+        groups = [
+            self._simulation_group_context(
+                group_id=group.id,
+                group_name=group.name,
+                protocols=self._protocols_for_group(group.id),
+            )
+            for group in subject_groups
+        ]
         return tuple(groups)
 
     def _load_subject_groups(self):

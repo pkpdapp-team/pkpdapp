@@ -516,7 +516,6 @@ export function generatePlotData(
   visibleGroups: string[],
   colour: string,
   dash: "dot" | "solid",
-  index: number,
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
@@ -526,10 +525,7 @@ export function generatePlotData(
   xConversionFactor: number,
   isReference?: boolean,
 ): Partial<ScatterDataWithVariable> {
-  const visible =
-    index === 0
-      ? visibleGroups.includes("Sim-Group 1")
-      : visibleGroups.includes(group?.name || "");
+  const visible = visibleGroups.includes(group?.name || "");
   const variableValues = d.outputs[y_axis.variable];
   const variable = variables.find((v) => v.id === y_axis.variable);
   const variableName = variable?.name;
@@ -566,8 +562,8 @@ export function generatePlotData(
     : 1.0;
 
   const name = variableValues
-    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "Sim-Group 1"}`
-    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "Sim-Group 1"}`;
+    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || ""}`
+    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || ""}`;
   const x = variableValues ? d.time.map((t) => t * xConversionFactor) : [];
   const y = variableValues
     ? variableValues.map((v) => v * yConversionFactor)
@@ -592,7 +588,6 @@ export function generateUncertaintyBandData(
   uncertainty: SimulateResponse,
   visibleGroups: string[],
   colour: string,
-  index: number,
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
@@ -602,10 +597,7 @@ export function generateUncertaintyBandData(
   xConversionFactor: number,
   isReference?: boolean,
 ): Partial<ScatterDataWithVariable>[] {
-  const visible =
-    index === 0
-      ? visibleGroups.includes("Sim-Group 1")
-      : visibleGroups.includes(group?.name || "");
+  const visible = visibleGroups.includes(group?.name || "");
 
   const bounds = getQuantileBounds(uncertainty, y_axis.variable);
   if (!bounds) {
@@ -734,7 +726,6 @@ const createPlot =
       visibleGroups,
       colour,
       style,
-      index,
       group,
       y_axis,
       plot,
@@ -784,7 +775,6 @@ export const createPlots = ({
         uncertainty,
         visibleGroups,
         colour,
-        index,
         group,
         y_axis,
         plot,
@@ -804,7 +794,6 @@ export const createPlots = ({
           uncertainty,
           visibleGroups,
           colour,
-          index,
           group,
           y_axis,
           plot,

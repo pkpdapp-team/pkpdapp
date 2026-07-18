@@ -2,6 +2,7 @@
 import {
   ProjectRead,
   ProtocolRead,
+  SubjectGroupRead,
   UnitRead,
   VariableRead,
 } from "../app/backendApi";
@@ -52,7 +53,7 @@ export const projectProtocols: ProtocolRead[] = [
     compound: null,
     time_unit: 9,
     amount_unit: 66,
-    group: null,
+    group: 1,
   },
 ];
 export const variables: VariableRead[] = [
@@ -5524,4 +5525,14 @@ export const units = [
     multiplier: -15,
   },
 ] as unknown as UnitRead[];
-export const groups = [];
+export const groups: SubjectGroupRead[] = [
+  {
+    id: 1,
+    name: "Sim-Group 1",
+    id_in_dataset: null,
+    dataset: null,
+    project: 65,
+    subjects: [],
+    protocols: [projectProtocols[0]],
+  },
+];

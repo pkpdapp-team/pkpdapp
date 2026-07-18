@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 from rest_framework import serializers
-from pkpdapp.models import ProjectAccess, Project
+from pkpdapp.models import ProjectAccess, Project, SubjectGroup
 
 
 class ProjectAccessSerializer(serializers.ModelSerializer):
@@ -37,6 +37,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             user["project"] = project
             serializer = ProjectAccessSerializer()
             serializer.create(user)
+        # every project starts with a base simulation group ("Sim-Group 1")
+        SubjectGroup.objects.create(name="Sim-Group 1", project=project, dataset=None)
         return project
 
     def update(self, instance, validated_data):

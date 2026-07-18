@@ -175,7 +175,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   units,
 }) => {
   const groupNames = useMemo(
-    () => ["Sim-Group 1", ...groups.map((group) => group.name)],
+    () => groups.map((group) => group.name),
     [groups],
   );
   const initialGroupVisibility: { [key: string]: boolean } = {};
