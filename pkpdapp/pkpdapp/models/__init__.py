@@ -47,3 +47,4 @@ from .simulation import (
     SimulationPlot,
 )
 from .tag import Tag
+from .conversation import Conversation, Message

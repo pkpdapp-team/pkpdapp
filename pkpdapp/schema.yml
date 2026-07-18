@@ -161,6 +161,16 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/chatbot/:
+    post:
+      operationId: chatbot_create
+      tags:
+      - chatbot
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/combined_model/:
     get:
       operationId: combined_model_list
@@ -564,6 +574,89 @@ paths:
         required: true
       tags:
       - compound
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/conversations/:
+    get:
+      operationId: conversations_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter conversations by project ID
+      tags:
+      - conversations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+          description: ''
+    post:
+      operationId: conversations_create
+      tags:
+      - conversations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Conversation'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+  /api/conversations/{id}/:
+    get:
+      operationId: conversations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this conversation.
+        required: true
+      tags:
+      - conversations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+          description: ''
+    delete:
+      operationId: conversations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this conversation.
+        required: true
+      tags:
+      - conversations
       security:
       - cookieAuth: []
       responses:
@@ -1189,6 +1282,50 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/messages/:
+    get:
+      operationId: messages_list
+      parameters:
+      - in: query
+        name: conversation_id
+        schema:
+          type: integer
+        description: Filter messages by conversation ID
+        required: true
+      tags:
+      - messages
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+          description: ''
+  /api/messages/{id}/:
+    get:
+      operationId: messages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this message.
+        required: true
+      tags:
+      - messages
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: ''
   /api/nca/:
     post:
       operationId: nca_create
@@ -3612,6 +3749,34 @@ components:
       description: |-
         * `SM` - Small Molecule
         * `LM` - Large Molecule
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          maxLength: 200
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_message_preview:
+          type: string
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - last_message_preview
+      - updated_at
     Correlation:
       type: object
       properties:
@@ -3886,6 +4051,26 @@ components:
       description: |-
         * `MS` - Microsomes
         * `HC` - Hepatocytes
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        content:
+          type: string
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - id
+      - role
     ModelTypeEnum:
       enum:
       - PK
@@ -5635,6 +5820,18 @@ components:
       - id
       - name
       - rows
+    RoleEnum:
+      enum:
+      - user
+      - assistant
+      - tool_call
+      - tool_result
+      type: string
+      description: |-
+        * `user` - User
+        * `assistant` - Assistant
+        * `tool_call` - Tool Call
+        * `tool_result` - Tool Result
     RowsEnum:
       enum:
       - parameters

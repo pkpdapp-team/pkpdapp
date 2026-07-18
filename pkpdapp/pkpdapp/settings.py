@@ -47,6 +47,14 @@ LOGGING = {
             "level": "DEBUG",
             "formatter": "verbose",
         },
+        "chatbot_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, "chatbot.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 3,
+            "level": "DEBUG",
+            "formatter": "chatbot",
+        },
     },
     "loggers": {
         "django": {
@@ -70,11 +78,20 @@ LOGGING = {
             "level": "WARNING",
             "propagate": True,
         },
+        "pkpdapp.utils.chatbot": {
+            "handlers": ["console", "chatbot_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
     "formatters": {
         "simple": {"format": "%(levelname)s %(message)s"},
         "verbose": {
             "format": "%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s"  # noqa: E501
+        },
+        "chatbot": {
+            "format": "%(asctime)s.%(msecs)03d %(levelname)-5s %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
 }
@@ -288,6 +305,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "chatbot": "30/min",
+    },
 }
 
 SPECTACULAR_SETTINGS = {
@@ -296,6 +316,11 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+# Chatbot / LLM (Portkey) configuration
+CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "gpt-5-nano-2025-08-07")
+CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL")
+PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
 
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"

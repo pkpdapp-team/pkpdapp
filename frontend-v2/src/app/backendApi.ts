@@ -60,6 +60,12 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    chatbotCreate: build.mutation<
+      ChatbotCreateApiResponse,
+      ChatbotCreateApiArg
+    >({
+      query: () => ({ url: `/api/chatbot/`, method: "POST" }),
+    }),
     combinedModelList: build.query<
       CombinedModelListApiResponse,
       CombinedModelListApiArg
@@ -194,6 +200,42 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/compound/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    conversationsList: build.query<
+      ConversationsListApiResponse,
+      ConversationsListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    conversationsCreate: build.mutation<
+      ConversationsCreateApiResponse,
+      ConversationsCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/`,
+        method: "POST",
+        body: queryArg.conversation,
+      }),
+    }),
+    conversationsRetrieve: build.query<
+      ConversationsRetrieveApiResponse,
+      ConversationsRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/conversations/${queryArg.id}/` }),
+    }),
+    conversationsDestroy: build.mutation<
+      ConversationsDestroyApiResponse,
+      ConversationsDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/${queryArg.id}/`,
         method: "DELETE",
       }),
     }),
@@ -410,6 +452,20 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/efficacy_experiment/${queryArg.id}/`,
         method: "DELETE",
       }),
+    }),
+    messagesList: build.query<MessagesListApiResponse, MessagesListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/messages/`,
+        params: {
+          conversation_id: queryArg.conversationId,
+        },
+      }),
+    }),
+    messagesRetrieve: build.query<
+      MessagesRetrieveApiResponse,
+      MessagesRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/messages/${queryArg.id}/` }),
     }),
     ncaCreate: build.mutation<NcaCreateApiResponse, NcaCreateApiArg>({
       query: () => ({ url: `/api/nca/`, method: "POST" }),
@@ -1164,6 +1220,8 @@ export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
+export type ChatbotCreateApiResponse = unknown;
+export type ChatbotCreateApiArg = void;
 export type CombinedModelListApiResponse =
   /** status 200  */ CombinedModelRead[];
 export type CombinedModelListApiArg = {
@@ -1247,6 +1305,28 @@ export type CompoundPartialUpdateApiArg = {
 export type CompoundDestroyApiResponse = unknown;
 export type CompoundDestroyApiArg = {
   /** A unique integer value identifying this compound. */
+  id: number;
+};
+export type ConversationsListApiResponse =
+  /** status 200  */ ConversationRead[];
+export type ConversationsListApiArg = {
+  /** Filter conversations by project ID */
+  projectId?: number;
+};
+export type ConversationsCreateApiResponse =
+  /** status 201  */ ConversationRead;
+export type ConversationsCreateApiArg = {
+  conversation: Conversation;
+};
+export type ConversationsRetrieveApiResponse =
+  /** status 200  */ ConversationRead;
+export type ConversationsRetrieveApiArg = {
+  /** A unique integer value identifying this conversation. */
+  id: number;
+};
+export type ConversationsDestroyApiResponse = unknown;
+export type ConversationsDestroyApiArg = {
+  /** A unique integer value identifying this conversation. */
   id: number;
 };
 export type CorrelationListApiResponse = /** status 200  */ CorrelationRead[];
@@ -1382,6 +1462,16 @@ export type EfficacyExperimentPartialUpdateApiArg = {
 export type EfficacyExperimentDestroyApiResponse = unknown;
 export type EfficacyExperimentDestroyApiArg = {
   /** A unique integer value identifying this efficacy experiment. */
+  id: number;
+};
+export type MessagesListApiResponse = /** status 200  */ MessageRead[];
+export type MessagesListApiArg = {
+  /** Filter messages by conversation ID */
+  conversationId: number;
+};
+export type MessagesRetrieveApiResponse = /** status 200  */ MessageRead;
+export type MessagesRetrieveApiArg = {
+  /** A unique integer value identifying this message. */
   id: number;
 };
 export type NcaCreateApiResponse = unknown;
@@ -2545,6 +2635,18 @@ export type PatchedCompoundRead = {
   /** unit for dissociation constant */
   dissociation_unit?: number;
 };
+export type Conversation = {
+  project?: number | null;
+  title?: string;
+};
+export type ConversationRead = {
+  id: number;
+  project?: number | null;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+  last_message_preview: string;
+};
 export type Correlation = {
   /** first distribution of the correlated pair */
   distribution_1: number;
@@ -2835,6 +2937,19 @@ export type PatchedEfficacyExperimentRead = {
   c50_unit?: number;
   /** compound for efficacy experiment */
   compound?: number;
+};
+export type RoleEnum = "user" | "assistant" | "tool_call" | "tool_result";
+export type Message = {
+  role: RoleEnum;
+  content: string;
+  metadata?: any;
+};
+export type MessageRead = {
+  id: number;
+  role: RoleEnum;
+  content: string;
+  metadata?: any;
+  created_at: string;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
 export type BlankEnum = "";
@@ -4043,6 +4158,7 @@ export const {
   useBiomarkerTypeUpdateMutation,
   useBiomarkerTypePartialUpdateMutation,
   useBiomarkerTypeDestroyMutation,
+  useChatbotCreateMutation,
   useCombinedModelListQuery,
   useCombinedModelCreateMutation,
   useCombinedModelRetrieveQuery,
@@ -4058,6 +4174,10 @@ export const {
   useCompoundUpdateMutation,
   useCompoundPartialUpdateMutation,
   useCompoundDestroyMutation,
+  useConversationsListQuery,
+  useConversationsCreateMutation,
+  useConversationsRetrieveQuery,
+  useConversationsDestroyMutation,
   useCorrelationListQuery,
   useCorrelationCreateMutation,
   useCorrelationRetrieveQuery,
@@ -4083,6 +4203,8 @@ export const {
   useEfficacyExperimentUpdateMutation,
   useEfficacyExperimentPartialUpdateMutation,
   useEfficacyExperimentDestroyMutation,
+  useMessagesListQuery,
+  useMessagesRetrieveQuery,
   useNcaCreateMutation,
   usePharmacodynamicListQuery,
   usePharmacodynamicCreateMutation,

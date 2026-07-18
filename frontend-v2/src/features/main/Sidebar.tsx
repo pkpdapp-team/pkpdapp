@@ -49,6 +49,8 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionContext";
 import "../../App.css";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
+import ChatButton from "../chat/ChatButton";
+import { selectChatOpen, selectChatWidth } from "../chat/chatSlice";
 
 const drawerExpandedWidth = 240;
 const drawerCollapsedWidth = 50;
@@ -63,6 +65,8 @@ export default function Sidebar() {
     (state: RootState) => state.main.selectedProject,
   );
   const { groups } = useSubjectGroups();
+  const isChatOpen = useSelector(selectChatOpen);
+  const chatWidth = useSelector(selectChatWidth);
   const dirtyCount = useSelector((state: RootState) => state.main.dirtyCount);
   const projectId = useSelector(
     (state: RootState) => state.main.selectedProject,
@@ -89,11 +93,12 @@ export default function Sidebar() {
   );
 
   const [intervals] = useModelTimeIntervals();
-  const { VITE_APP_ROCHE } = import.meta.env;
+  const { VITE_APP_ROCHE, VITE_ENABLE_CHATBOT } = import.meta.env;
   const isRocheLogo =
     typeof VITE_APP_ROCHE === "string"
       ? VITE_APP_ROCHE === "true"
       : VITE_APP_ROCHE;
+  const isChatbotEnabled = VITE_ENABLE_CHATBOT === "true";
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
@@ -517,7 +522,8 @@ export default function Sidebar() {
               </Tooltip>
             </Box>
           )}
-          <div style={{ display: "flex" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {isChatbotEnabled && <ChatButton />}
             <Typography
               variant="subtitle1"
               noWrap
@@ -618,6 +624,8 @@ export default function Sidebar() {
           p: 3,
           overflowX: "hidden",
           paddingBottom: 0,
+          marginRight: isChatOpen ? `${chatWidth}px` : 0,
+          transition: "margin-right .3s ease",
         }}
       >
         <Toolbar />

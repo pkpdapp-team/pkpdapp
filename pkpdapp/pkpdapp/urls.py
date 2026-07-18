@@ -39,6 +39,8 @@ router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacody
 
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
 router.register("simulation", api.SimulationViewSet, basename="simulation")
+router.register("conversations", api.ConversationViewSet, basename="conversation")
+router.register("messages", api.MessageViewSet, basename="message")
 
 urlpatterns = [
     path("admin/doc/", include("django.contrib.admindocs.urls")),
@@ -49,6 +51,7 @@ urlpatterns = [
     path("api/", include(router.urls), name="api"),
     path("api/nca/", api.NcaView.as_view(), name="nca"),
     path("api/auce/", api.AuceView.as_view(), name="auce"),
+    path("api/chatbot/", api.ChatbotView.as_view(), name="chatbot"),
     path(
         "api/combined_model/<int:pk>/simulate",
         api.SimulateCombinedView.as_view(),

@@ -78,6 +78,15 @@ Users can also sign up / log in via Google or GitHub. Register an OAuth app with
 - `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`: Google OAuth credentials
 - `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET`: GitHub OAuth credentials
 
+**Chatbot / LLM (Optional):**
+
+The chatbot feature uses an LLM via [Portkey] as a gateway. Set the following variables to enable it:
+
+- `VITE_ENABLE_CHATBOT`: set to `true` to show the chat button in the UI
+- `CHATBOT_BASE_URL`: base URL of the Portkey (or compatible OpenAI-API) gateway
+- `PORTKEY_API_KEY`: Portkey API key
+- `CHATBOT_MODEL`: model identifier to use (default `gpt-5-nano-2025-08-07`)
+
 ### Frontend Environment Variables
 
 The frontend is configured with a number of `VITE_` variables that are baked into the React build. **For the production Docker build, set these in the root `.env.prod` file** — the Dockerfile copies `.env.prod` to `frontend-v2/.env` before `yarn build`, so `.env.prod` is the single source of truth. (`frontend-v2/.env` is used only for local development outside Docker.)
@@ -87,6 +96,7 @@ The frontend is configured with a number of `VITE_` variables that are baked int
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
 - `VITE_ENABLE_SIGNUP`: set to true to enable user sign up (should match the backend `ENABLE_SIGNUP`)
 - `VITE_APP_ACK_TXT`: Acknowledgment text for login and signup pages
+- `VITE_ENABLE_CHATBOT`: set to `true` to show the chatbot button (requires backend chatbot config above)
 
 ## SSL Certificate
 

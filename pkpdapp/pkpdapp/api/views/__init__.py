@@ -54,3 +54,5 @@ from .user import UserView
 from .variable import VariableView
 from .correlation import CorrelationView
 from .tag import TagView
+from .chatbot import ChatbotView
+from .conversation import ConversationViewSet, MessageViewSet
