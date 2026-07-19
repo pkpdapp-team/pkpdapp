@@ -36,6 +36,45 @@ class SubjectGroup(models.Model):
         help_text="Project that this group belongs to.",
     )
 
+    # --- virtual-population fields (used for covariate simulation) ---------
+    # These describe the population from which the standard weight/age/sex
+    # covariates are sampled. They are nullable so dataset-derived groups (which
+    # have no virtual population) fall back to the default sample count.
+
+    class Region(models.TextChoices):
+        US = "US", "United States"
+        EU = "EU", "Europe"
+        ASIA = "ASIA", "Asia"
+        CUSTOM = "CUSTOM", "Custom"
+
+    study_size = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="number of virtual individuals (N) in this population",
+    )
+    age_min = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="minimum age of the population (age is sampled uniformly)",
+    )
+    age_max = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="maximum age of the population (age is sampled uniformly)",
+    )
+    m2f_ratio = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="male-to-female ratio, i.e. probability an individual is male",
+    )
+    population_region = models.CharField(
+        max_length=6,
+        choices=Region.choices,
+        null=True,
+        blank=True,
+        help_text="region used to sample body weight",
+    )
+
     def get_project(self):
         return self.project
 
@@ -52,6 +91,11 @@ class SubjectGroup(models.Model):
             id_in_dataset=self.id_in_dataset,
             dataset=new_dataset,
             project=new_project,
+            study_size=self.study_size,
+            age_min=self.age_min,
+            age_max=self.age_max,
+            m2f_ratio=self.m2f_ratio,
+            population_region=self.population_region,
         )
 
         # copy subjects in this group

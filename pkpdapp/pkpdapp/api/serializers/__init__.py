@@ -27,6 +27,8 @@ from .nca import NcaSerializer
 from .project import ProjectSerializer, ProjectAccessSerializer
 from .protocol import ProtocolSerializer
 from .results_table import ResultsTableSerializer
+from .covariate import CovariateSerializer
+from .covariate_population import CovariatePopulationSerializer
 from .subject_group import SubjectGroupSerializer
 from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer

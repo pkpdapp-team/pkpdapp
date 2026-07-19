@@ -9,6 +9,8 @@ from django.db.models import Q
 from pkpdapp.models import (
     Conversation,
     Correlation,
+    Covariate,
+    CovariatePopulation,
     Dataset,
     Project,
     PharmacodynamicModel,
@@ -147,6 +149,12 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = Subject.objects.filter(dataset__project=project)
                 elif queryset.model == SubjectGroup:
                     queryset = project.groups.all()
+                elif queryset.model == Covariate:
+                    queryset = project.covariates.all()
+                elif queryset.model == CovariatePopulation:
+                    queryset = CovariatePopulation.objects.filter(
+                        subject_group__project=project
+                    )
                 elif queryset.model == ResultsTable:
                     queryset = project.results.all()
                 elif queryset.model == Variable:

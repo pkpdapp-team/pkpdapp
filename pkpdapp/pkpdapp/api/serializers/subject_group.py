@@ -7,11 +7,15 @@
 from rest_framework import serializers
 from pkpdapp.models import SubjectGroup
 from pkpdapp.api.serializers import ProtocolSerializer
+from pkpdapp.api.serializers.covariate_population import (
+    CovariatePopulationSerializer,
+)
 
 
 class SubjectGroupSerializer(serializers.ModelSerializer):
     subjects = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     protocols = ProtocolSerializer(many=True)
+    covariate_populations = CovariatePopulationSerializer(many=True, read_only=True)
 
     class Meta:
         model = SubjectGroup

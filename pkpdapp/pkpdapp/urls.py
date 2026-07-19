@@ -21,6 +21,12 @@ router.register("user", api.UserView, basename="user")
 router.register("results_table", api.ResultsTableView, basename="results")
 router.register("subject", api.SubjectView, basename="subject")
 router.register("subject_group", api.SubjectGroupView, basename="subject_group")
+router.register("covariate", api.CovariateView, basename="covariate")
+router.register(
+    "covariate_population",
+    api.CovariatePopulationView,
+    basename="covariate_population",
+)
 router.register("compound", api.CompoundView, basename="compound")
 router.register(
     "efficacy_experiment", api.EfficacyExperimentView, basename="efficacy_experiment"

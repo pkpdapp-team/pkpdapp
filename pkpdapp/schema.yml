@@ -953,6 +953,300 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/covariate/:
+    get:
+      operationId: covariate_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - covariate
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Covariate'
+          description: ''
+    post:
+      operationId: covariate_create
+      tags:
+      - covariate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Covariate'
+          description: ''
+  /api/covariate/{id}/:
+    get:
+      operationId: covariate_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate.
+        required: true
+      tags:
+      - covariate
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Covariate'
+          description: ''
+    put:
+      operationId: covariate_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate.
+        required: true
+      tags:
+      - covariate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Covariate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Covariate'
+          description: ''
+    patch:
+      operationId: covariate_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate.
+        required: true
+      tags:
+      - covariate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Covariate'
+          description: ''
+    delete:
+      operationId: covariate_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate.
+        required: true
+      tags:
+      - covariate
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/covariate_population/:
+    get:
+      operationId: covariate_population_list
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter results by project ID
+      tags:
+      - covariate_population
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CovariatePopulation'
+          description: ''
+    post:
+      operationId: covariate_population_create
+      tags:
+      - covariate_population
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CovariatePopulation'
+          description: ''
+  /api/covariate_population/{id}/:
+    get:
+      operationId: covariate_population_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate population.
+        required: true
+      tags:
+      - covariate_population
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CovariatePopulation'
+          description: ''
+    put:
+      operationId: covariate_population_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate population.
+        required: true
+      tags:
+      - covariate_population
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CovariatePopulation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CovariatePopulation'
+          description: ''
+    patch:
+      operationId: covariate_population_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate population.
+        required: true
+      tags:
+      - covariate_population
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariatePopulation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariatePopulation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCovariatePopulation'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CovariatePopulation'
+          description: ''
+    delete:
+      operationId: covariate_population_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this covariate population.
+        required: true
+      tags:
+      - covariate_population
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/dataset/:
     get:
       operationId: dataset_list
@@ -3971,6 +4265,85 @@ components:
       - distribution_1
       - distribution_2
       - id
+    Covariate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the covariate (e.g. albumin)
+          maxLength: 100
+        type:
+          allOf:
+          - $ref: '#/components/schemas/CovariateTypeEnum'
+          description: |-
+            whether the covariate is continuous or categorical
+
+            * `CONT` - Continuous
+            * `CAT` - Categorical
+        n_categories:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: number of categories (categorical covariates only)
+        category_names:
+          nullable: true
+          description: optional labels for each category (categorical covariates only);
+            index 0 is the base category
+        project:
+          type: integer
+          description: Project that this covariate belongs to.
+        unit:
+          type: integer
+          nullable: true
+          description: unit of the covariate (continuous covariates only)
+      required:
+      - id
+      - name
+      - project
+    CovariatePopulation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        median:
+          type: number
+          format: double
+          nullable: true
+          description: median value of the covariate (continuous covariates only)
+        variance:
+          type: number
+          format: double
+          nullable: true
+          description: variance of the log-normal random effect (continuous covariates
+            only)
+        category_probabilities:
+          nullable: true
+          description: probability of each category (categorical covariates only);
+            one entry per category, index 0 is the base category
+        subject_group:
+          type: integer
+          description: subject group (virtual population) this distribution is for
+        covariate:
+          type: integer
+          description: custom covariate this distribution describes
+      required:
+      - covariate
+      - id
+      - subject_group
+    CovariateTypeEnum:
+      enum:
+      - CONT
+      - CAT
+      type: string
+      description: |-
+        * `CONT` - Continuous
+        * `CAT` - Categorical
     Dataset:
       type: object
       properties:
@@ -4048,7 +4421,7 @@ components:
           description: datetime the object was stored.
         type:
           allOf:
-          - $ref: '#/components/schemas/TypeEnum'
+          - $ref: '#/components/schemas/DerivedVariableTypeEnum'
           description: |-
             type of derived variable
 
@@ -4067,6 +4440,11 @@ components:
             * `NPW` - Negative Power
             * `TDI` - Exponential Decay
             * `IND` - Exponential Increase
+            * `WTC` - Weight covariate
+            * `AGC` - Age covariate
+            * `SXC` - Sex covariate
+            * `CCC` - Custom continuous covariate
+            * `CCT` - Custom categorical covariate
         pkpd_model:
           type: integer
           description: PKPD model that this derived variable is for
@@ -4077,11 +4455,59 @@ components:
           type: integer
           nullable: true
           description: secondary variable
+        covariate:
+          type: integer
+          nullable: true
+          description: custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only)
       required:
       - id
       - pk_variable
       - pkpd_model
       - type
+    DerivedVariableTypeEnum:
+      enum:
+      - AUC
+      - RO
+      - FUP
+      - BPR
+      - TLG
+      - MM
+      - EMM
+      - EMX
+      - IMX
+      - TEM
+      - TIM
+      - POW
+      - NPW
+      - TDI
+      - IND
+      - WTC
+      - AGC
+      - SXC
+      - CCC
+      - CCT
+      type: string
+      description: |-
+        * `AUC` - area under curve
+        * `RO` - receptor occupancy
+        * `FUP` - fraction unbound plasma
+        * `BPR` - blood plasma ratio
+        * `TLG` - dosing lag time
+        * `MM` - Michaelis-Menten
+        * `EMM` - Extended Michaelis-Menten
+        * `EMX` - Emax
+        * `IMX` - Imax
+        * `TEM` - Time Emax
+        * `TIM` - Time Imax
+        * `POW` - Power
+        * `NPW` - Negative Power
+        * `TDI` - Exponential Decay
+        * `IND` - Exponential Increase
+        * `WTC` - Weight covariate
+        * `AGC` - Age covariate
+        * `SXC` - Sex covariate
+        * `CCC` - Custom continuous covariate
+        * `CCT` - Custom categorical covariate
     DiffSLOutput:
       type: object
       properties:
@@ -4876,6 +5302,69 @@ components:
           maximum: 1.0
           minimum: -1.0
           description: Pearson correlation coefficient of the ETAs, in [-1, 1]
+    PatchedCovariate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: name of the covariate (e.g. albumin)
+          maxLength: 100
+        type:
+          allOf:
+          - $ref: '#/components/schemas/CovariateTypeEnum'
+          description: |-
+            whether the covariate is continuous or categorical
+
+            * `CONT` - Continuous
+            * `CAT` - Categorical
+        n_categories:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: number of categories (categorical covariates only)
+        category_names:
+          nullable: true
+          description: optional labels for each category (categorical covariates only);
+            index 0 is the base category
+        project:
+          type: integer
+          description: Project that this covariate belongs to.
+        unit:
+          type: integer
+          nullable: true
+          description: unit of the covariate (continuous covariates only)
+    PatchedCovariatePopulation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        median:
+          type: number
+          format: double
+          nullable: true
+          description: median value of the covariate (continuous covariates only)
+        variance:
+          type: number
+          format: double
+          nullable: true
+          description: variance of the log-normal random effect (continuous covariates
+            only)
+        category_probabilities:
+          nullable: true
+          description: probability of each category (categorical covariates only);
+            one entry per category, index 0 is the base category
+        subject_group:
+          type: integer
+          description: subject group (virtual population) this distribution is for
+        covariate:
+          type: integer
+          description: custom covariate this distribution describes
     PatchedDataset:
       type: object
       properties:
@@ -5391,6 +5880,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Protocol'
+        covariate_populations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CovariatePopulation'
+          readOnly: true
         name:
           type: string
           description: name of the group
@@ -5400,6 +5894,41 @@ components:
           nullable: true
           description: unique identifier in the dataset
           maxLength: 20
+        study_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: number of virtual individuals (N) in this population
+        age_min:
+          type: number
+          format: double
+          nullable: true
+          description: minimum age of the population (age is sampled uniformly)
+        age_max:
+          type: number
+          format: double
+          nullable: true
+          description: maximum age of the population (age is sampled uniformly)
+        m2f_ratio:
+          type: number
+          format: double
+          nullable: true
+          description: male-to-female ratio, i.e. probability an individual is male
+        population_region:
+          nullable: true
+          description: |-
+            region used to sample body weight
+
+            * `US` - United States
+            * `EU` - Europe
+            * `ASIA` - Asia
+            * `CUSTOM` - Custom
+          oneOf:
+          - $ref: '#/components/schemas/PopulationRegionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         dataset:
           type: integer
           nullable: true
@@ -5785,6 +6314,18 @@ components:
       - pk_variable
       - pkpd_model
       - read_only
+    PopulationRegionEnum:
+      enum:
+      - US
+      - EU
+      - ASIA
+      - CUSTOM
+      type: string
+      description: |-
+        * `US` - United States
+        * `EU` - Europe
+        * `ASIA` - Asia
+        * `CUSTOM` - Custom
     Profile:
       type: object
       properties:
@@ -6347,6 +6888,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Protocol'
+        covariate_populations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CovariatePopulation'
+          readOnly: true
         name:
           type: string
           description: name of the group
@@ -6356,6 +6902,41 @@ components:
           nullable: true
           description: unique identifier in the dataset
           maxLength: 20
+        study_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          description: number of virtual individuals (N) in this population
+        age_min:
+          type: number
+          format: double
+          nullable: true
+          description: minimum age of the population (age is sampled uniformly)
+        age_max:
+          type: number
+          format: double
+          nullable: true
+          description: maximum age of the population (age is sampled uniformly)
+        m2f_ratio:
+          type: number
+          format: double
+          nullable: true
+          description: male-to-female ratio, i.e. probability an individual is male
+        population_region:
+          nullable: true
+          description: |-
+            region used to sample body weight
+
+            * `US` - United States
+            * `EU` - Europe
+            * `ASIA` - Asia
+            * `CUSTOM` - Custom
+          oneOf:
+          - $ref: '#/components/schemas/PopulationRegionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
         dataset:
           type: integer
           nullable: true
@@ -6365,6 +6946,7 @@ components:
           nullable: true
           description: Project that this group belongs to.
       required:
+      - covariate_populations
       - id
       - name
       - protocols
@@ -6416,40 +6998,6 @@ components:
       - pkpd_model
       - start_time
       - unit
-    TypeEnum:
-      enum:
-      - AUC
-      - RO
-      - FUP
-      - BPR
-      - TLG
-      - MM
-      - EMM
-      - EMX
-      - IMX
-      - TEM
-      - TIM
-      - POW
-      - NPW
-      - TDI
-      - IND
-      type: string
-      description: |-
-        * `AUC` - area under curve
-        * `RO` - receptor occupancy
-        * `FUP` - fraction unbound plasma
-        * `BPR` - blood plasma ratio
-        * `TLG` - dosing lag time
-        * `MM` - Michaelis-Menten
-        * `EMM` - Extended Michaelis-Menten
-        * `EMX` - Emax
-        * `IMX` - Imax
-        * `TEM` - Time Emax
-        * `TIM` - Time Imax
-        * `POW` - Power
-        * `NPW` - Negative Power
-        * `TDI` - Exponential Decay
-        * `IND` - Exponential Increase
     UncertaintySummary:
       type: object
       properties:

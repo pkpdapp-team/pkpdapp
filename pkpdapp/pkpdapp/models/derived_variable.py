@@ -31,6 +31,15 @@ class DerivedVariable(StoredModel):
         null=True,
     )
 
+    covariate = models.ForeignKey(
+        "Covariate",
+        on_delete=models.CASCADE,
+        related_name="derived_variables",
+        help_text="custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only)",
+        blank=True,
+        null=True,
+    )
+
     class Type(models.TextChoices):
         AREA_UNDER_CURVE = "AUC", "area under curve"
         RECEPTOR_OCCUPANCY = "RO", "receptor occupancy"
@@ -47,6 +56,22 @@ class DerivedVariable(StoredModel):
         NEGATIVE_POWER = "NPW", "Negative Power"
         EXP_DECAY = "TDI", "Exponential Decay"
         EXP_INCREASE = "IND", "Exponential Increase"
+        WEIGHT_COVARIATE = "WTC", "Weight covariate"
+        AGE_COVARIATE = "AGC", "Age covariate"
+        SEX_COVARIATE = "SXC", "Sex covariate"
+        CUSTOM_CONT_COVARIATE = "CCC", "Custom continuous covariate"
+        CUSTOM_CAT_COVARIATE = "CCT", "Custom categorical covariate"
+
+    #: covariate types, whose builders live in utils/covariate_effects.py
+    COVARIATE_TYPES = frozenset(
+        {
+            Type.WEIGHT_COVARIATE,
+            Type.AGE_COVARIATE,
+            Type.SEX_COVARIATE,
+            Type.CUSTOM_CONT_COVARIATE,
+            Type.CUSTOM_CAT_COVARIATE,
+        }
+    )
 
     type = models.CharField(
         max_length=3,
@@ -55,10 +80,17 @@ class DerivedVariable(StoredModel):
     )
 
     __original_pk_variable = None
+    __original_type = None
+    __original_covariate_id = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_pk_variable = self.pk_variable
+        self.__original_type = self.type
+        self.__original_covariate_id = self.covariate_id
+
+    def is_covariate(self):
+        return self.type in self.COVARIATE_TYPES
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
@@ -74,10 +106,18 @@ class DerivedVariable(StoredModel):
         if self.read_only:
             return
 
-        if created or self.pk_variable != self.__original_pk_variable:
+        changed = (
+            created
+            or self.pk_variable != self.__original_pk_variable
+            or self.type != self.__original_type
+            or self.covariate_id != self.__original_covariate_id
+        )
+        if changed:
             self.pkpd_model.update_model()
 
         self.__original_pk_variable = self.pk_variable
+        self.__original_type = self.type
+        self.__original_covariate_id = self.covariate_id
 
     def delete(self):
         pkpd_model = self.pkpd_model
@@ -95,6 +135,7 @@ class DerivedVariable(StoredModel):
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
             "secondary_variable": new_secondary_variable,
+            "covariate": self.covariate,
             "read_only": self.read_only,
             "type": self.type,
         }

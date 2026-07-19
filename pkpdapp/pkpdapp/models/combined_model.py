@@ -25,6 +25,7 @@ from pkpdapp.utils.derived_variables import (
     add_pk_variable,
     add_pd_variable,
 )
+from pkpdapp.utils.covariate_effects import add_covariate_effect
 
 logger = logging.getLogger(__name__)
 
@@ -512,6 +513,17 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 pkpd_model=pkpd_model,
                 project=self.project,
             )
+
+        # inject covariate relationships (weight/age/sex/custom). These add the
+        # covariate value as a shared input variable, the new a_/d_ parameters,
+        # and splice the covariate factor into the affected parameter.
+        for derived_variable in self.derived_variables.all():
+            if derived_variable.is_covariate():
+                add_covariate_effect(
+                    derived_variable=derived_variable,
+                    pkpd_model=pkpd_model,
+                    project=self.project,
+                )
 
         # do mappings
         for mapping in self.mappings.all():

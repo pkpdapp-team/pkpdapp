@@ -54,6 +54,8 @@ from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
 from .correlation import CorrelationView
+from .covariate import CovariateView
+from .covariate_population import CovariatePopulationView
 from .tag import TagView
 from .chatbot import ChatbotView
 from .conversation import ConversationViewSet, MessageViewSet
