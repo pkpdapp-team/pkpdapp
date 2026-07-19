@@ -163,11 +163,23 @@ const ParameterRow: FC<Props> = ({
     ];
   }
 
+  // covariate derived variables live on the same field array but are handled by
+  // the Covariates column, so they must be ignored here
+  const covariateTypes: DerivedVariableTypeEnum[] = [
+    "WTC",
+    "AGC",
+    "SXC",
+    "CCC",
+    "CCT",
+  ];
   let nonlinearityValue = "";
   let nonlinearityIndex = -1;
   let nonlinearityConcentration: null | undefined | number = null;
   for (let i = 0; i < derivedVariables.length; i++) {
-    if (derivedVariables[i].pk_variable === variable.id) {
+    if (
+      derivedVariables[i].pk_variable === variable.id &&
+      !covariateTypes.includes(derivedVariables[i].type)
+    ) {
       if (
         derivedVariables[i].type === "MM" ||
         derivedVariables[i].type === "EMM"
@@ -274,13 +286,6 @@ const ParameterRow: FC<Props> = ({
   // are the three built-ins plus any custom covariate defined for the project.
   // Keys are the covariate type for built-ins and "<type>:<covariateId>" for
   // custom covariates (so the same custom type can appear more than once).
-  const COVARIATE_TYPES: DerivedVariableTypeEnum[] = [
-    "WTC",
-    "AGC",
-    "SXC",
-    "CCC",
-    "CCT",
-  ];
   const covariateOptions: { key: string; label: string }[] = [
     { key: "WTC", label: "Weight" },
     { key: "AGC", label: "Age" },
@@ -302,7 +307,7 @@ const ParameterRow: FC<Props> = ({
   derivedVariables.forEach((dv, index) => {
     if (
       dv.pk_variable === variable.id &&
-      COVARIATE_TYPES.includes(dv.type as DerivedVariableTypeEnum)
+      covariateTypes.includes(dv.type as DerivedVariableTypeEnum)
     ) {
       const key = covariateKeyForDerived(dv);
       selectedCovariateKeys.push(key);

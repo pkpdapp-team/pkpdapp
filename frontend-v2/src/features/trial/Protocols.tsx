@@ -410,7 +410,7 @@ export const Protocols: FC<ProtocolsProps> = ({
       <Box role="tabpanel" id={`group-tabpanel`}>
         <TableContainer
           sx={{
-            height: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+            maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
           }}
         >
           <Table stickyHeader>
