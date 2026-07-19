@@ -174,6 +174,35 @@ class TestCovariateApi(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class TestCovariatePopulationDefaults(TestCase):
+    def setUp(self):
+        compound = Compound.objects.create(name="demo")
+        self.project = Project.objects.create(name="demo", compound=compound)
+        self.group = SubjectGroup.objects.create(name="G1", project=self.project)
+
+    def test_continuous_population_defaults(self):
+        covariate = Covariate.objects.create(
+            project=self.project, name="albumin", type=Covariate.Type.CONTINUOUS
+        )
+        population = CovariatePopulation.objects.create(
+            subject_group=self.group, covariate=covariate
+        )
+        self.assertEqual(population.median, 1.0)
+        self.assertEqual(population.variance, 0.09)
+
+    def test_categorical_population_defaults_to_uniform(self):
+        covariate = Covariate.objects.create(
+            project=self.project,
+            name="eth",
+            type=Covariate.Type.CATEGORICAL,
+            n_categories=4,
+        )
+        population = CovariatePopulation.objects.create(
+            subject_group=self.group, covariate=covariate
+        )
+        self.assertEqual(population.category_probabilities, [0.25, 0.25, 0.25, 0.25])
+
+
 class TestCovariateInjection(TestCase):
     def setUp(self):
         compound = Compound.objects.create(name="demo")

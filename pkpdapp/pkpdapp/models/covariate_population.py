@@ -34,20 +34,18 @@ class CovariatePopulation(models.Model):
         help_text="custom covariate this distribution describes",
     )
     median = models.FloatField(
-        null=True,
-        blank=True,
+        default=1.0,
         help_text="median value of the covariate (continuous covariates only)",
     )
     variance = models.FloatField(
-        null=True,
-        blank=True,
+        default=0.09,
         help_text=(
             "variance of the log-normal random effect "
             "(continuous covariates only)"
         ),
     )
     category_probabilities = models.JSONField(
-        null=True,
+        default=list,
         blank=True,
         help_text=(
             "probability of each category (categorical covariates only); "
@@ -65,6 +63,21 @@ class CovariatePopulation(models.Model):
 
     def get_project(self):
         return self.subject_group.get_project()
+
+    def save(self, *args, **kwargs):
+        # default a categorical covariate to a uniform distribution over its
+        # categories when no probabilities have been provided
+        from pkpdapp.models import Covariate
+
+        if (
+            self.covariate_id
+            and not self.category_probabilities
+            and self.covariate.type == Covariate.Type.CATEGORICAL
+            and self.covariate.n_categories
+        ):
+            n = self.covariate.n_categories
+            self.category_probabilities = [1.0 / n] * n
+        super().save(*args, **kwargs)
 
     def copy(self, new_subject_group, new_covariate):
         """Copy this distribution onto ``new_subject_group`` / ``new_covariate``."""

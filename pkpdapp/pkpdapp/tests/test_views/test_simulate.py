@@ -182,12 +182,14 @@ class TestSimulateView(APITestCase):
             pdf=Distribution.PDF.LOGNORMAL,
             variance=0.04,
         )
+        # the population size (N) is driven by the subject group's study_size
+        self.base_group.study_size = 20
+        self.base_group.save()
 
         url = reverse('simulate-combined-model', args=(m.pk,))
         data = {
             'outputs': ['PDCompartment.TS', 'environment.t'],
             'variables': {'PDCompartment.TS0': 1.1},
-            'sample_count': 20,
             'seed': 42,
         }
 

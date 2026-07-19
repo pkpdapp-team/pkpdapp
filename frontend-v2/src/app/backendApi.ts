@@ -3089,11 +3089,11 @@ export type PatchedCovariateRead = {
 };
 export type CovariatePopulation = {
   /** median value of the covariate (continuous covariates only) */
-  median?: number | null;
+  median?: number;
   /** variance of the log-normal random effect (continuous covariates only) */
-  variance?: number | null;
+  variance?: number;
   /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
-  category_probabilities?: any | null;
+  category_probabilities?: any;
   /** subject group (virtual population) this distribution is for */
   subject_group: number;
   /** custom covariate this distribution describes */
@@ -3102,11 +3102,11 @@ export type CovariatePopulation = {
 export type CovariatePopulationRead = {
   id: number;
   /** median value of the covariate (continuous covariates only) */
-  median?: number | null;
+  median?: number;
   /** variance of the log-normal random effect (continuous covariates only) */
-  variance?: number | null;
+  variance?: number;
   /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
-  category_probabilities?: any | null;
+  category_probabilities?: any;
   /** subject group (virtual population) this distribution is for */
   subject_group: number;
   /** custom covariate this distribution describes */
@@ -3114,11 +3114,11 @@ export type CovariatePopulationRead = {
 };
 export type PatchedCovariatePopulation = {
   /** median value of the covariate (continuous covariates only) */
-  median?: number | null;
+  median?: number;
   /** variance of the log-normal random effect (continuous covariates only) */
-  variance?: number | null;
+  variance?: number;
   /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
-  category_probabilities?: any | null;
+  category_probabilities?: any;
   /** subject group (virtual population) this distribution is for */
   subject_group?: number;
   /** custom covariate this distribution describes */
@@ -3127,11 +3127,11 @@ export type PatchedCovariatePopulation = {
 export type PatchedCovariatePopulationRead = {
   id?: number;
   /** median value of the covariate (continuous covariates only) */
-  median?: number | null;
+  median?: number;
   /** variance of the log-normal random effect (continuous covariates only) */
-  variance?: number | null;
+  variance?: number;
   /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
-  category_probabilities?: any | null;
+  category_probabilities?: any;
   /** subject group (virtual population) this distribution is for */
   subject_group?: number;
   /** custom covariate this distribution describes */
@@ -3240,7 +3240,6 @@ export type ProtocolRead = {
   group?: number | null;
 };
 export type PopulationRegionEnum = "US" | "EU" | "ASIA" | "CUSTOM";
-export type NullEnum = null;
 export type SubjectGroup = {
   protocols: Protocol[];
   /** name of the group */
@@ -3248,20 +3247,20 @@ export type SubjectGroup = {
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
   /** number of virtual individuals (N) in this population */
-  study_size?: number | null;
+  study_size?: number;
   /** minimum age of the population (age is sampled uniformly) */
-  age_min?: number | null;
+  age_min?: number;
   /** maximum age of the population (age is sampled uniformly) */
-  age_max?: number | null;
+  age_max?: number;
   /** male-to-female ratio, i.e. probability an individual is male */
-  m2f_ratio?: number | null;
+  m2f_ratio?: number;
   /** region used to sample body weight
     
     * `US` - United States
     * `EU` - Europe
     * `ASIA` - Asia
     * `CUSTOM` - Custom */
-  population_region?: (PopulationRegionEnum | BlankEnum | NullEnum) | null;
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -3277,20 +3276,20 @@ export type SubjectGroupRead = {
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
   /** number of virtual individuals (N) in this population */
-  study_size?: number | null;
+  study_size?: number;
   /** minimum age of the population (age is sampled uniformly) */
-  age_min?: number | null;
+  age_min?: number;
   /** maximum age of the population (age is sampled uniformly) */
-  age_max?: number | null;
+  age_max?: number;
   /** male-to-female ratio, i.e. probability an individual is male */
-  m2f_ratio?: number | null;
+  m2f_ratio?: number;
   /** region used to sample body weight
     
     * `US` - United States
     * `EU` - Europe
     * `ASIA` - Asia
     * `CUSTOM` - Custom */
-  population_region?: (PopulationRegionEnum | BlankEnum | NullEnum) | null;
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -3441,6 +3440,7 @@ export type MessageRead = {
   created_at: string;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
+export type NullEnum = null;
 export type Pharmacodynamic = {
   mmt?: string;
   /** true if object has been stored */
@@ -4245,20 +4245,20 @@ export type PatchedSubjectGroup = {
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
   /** number of virtual individuals (N) in this population */
-  study_size?: number | null;
+  study_size?: number;
   /** minimum age of the population (age is sampled uniformly) */
-  age_min?: number | null;
+  age_min?: number;
   /** maximum age of the population (age is sampled uniformly) */
-  age_max?: number | null;
+  age_max?: number;
   /** male-to-female ratio, i.e. probability an individual is male */
-  m2f_ratio?: number | null;
+  m2f_ratio?: number;
   /** region used to sample body weight
     
     * `US` - United States
     * `EU` - Europe
     * `ASIA` - Asia
     * `CUSTOM` - Custom */
-  population_region?: (PopulationRegionEnum | BlankEnum | NullEnum) | null;
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -4274,20 +4274,20 @@ export type PatchedSubjectGroupRead = {
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
   /** number of virtual individuals (N) in this population */
-  study_size?: number | null;
+  study_size?: number;
   /** minimum age of the population (age is sampled uniformly) */
-  age_min?: number | null;
+  age_min?: number;
   /** maximum age of the population (age is sampled uniformly) */
-  age_max?: number | null;
+  age_max?: number;
   /** male-to-female ratio, i.e. probability an individual is male */
-  m2f_ratio?: number | null;
+  m2f_ratio?: number;
   /** region used to sample body weight
     
     * `US` - United States
     * `EU` - Europe
     * `ASIA` - Asia
     * `CUSTOM` - Custom */
-  population_region?: (PopulationRegionEnum | BlankEnum | NullEnum) | null;
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */

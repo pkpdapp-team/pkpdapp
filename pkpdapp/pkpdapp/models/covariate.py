@@ -108,33 +108,26 @@ class Covariate(models.Model):
             from pkpdapp.utils.weight_populations import sample_weight
 
             region = population.subject_group.population_region
-            return sample_weight(region, sex if sex is not None else 0, rng)
+            return sample_weight(region, sex, rng)
 
         if self.builtin == self.Builtin.AGE:
             group = population.subject_group
-            low = group.age_min if group.age_min is not None else 0.0
-            high = group.age_max if group.age_max is not None else low
-            return float(rng.uniform(low, high)) if high > low else float(low)
+            return float(rng.uniform(group.age_min, group.age_max))
 
         if self.builtin == self.Builtin.SEX:
             if sex is not None:
                 return float(sex)
-            m2f = population.subject_group.m2f_ratio or 0.0
-            return float(1 if rng.random() < m2f else 0)
+            return float(1 if rng.random() < population.subject_group.m2f_ratio else 0)
 
         if self.type == self.Type.CATEGORICAL:
-            probabilities = population.category_probabilities
-            if not probabilities:
-                return 0.0
-            weights = np.asarray(probabilities, dtype=float)
+            weights = np.asarray(population.category_probabilities, dtype=float)
             weights = weights / weights.sum()
             return float(rng.choice(len(weights), p=weights))
 
         # custom continuous covariate: log-normal about the population median
-        if population.median is None:
-            return 1.0
-        variance = population.variance or 0.0
-        return float(population.median * np.exp(rng.normal(0.0, np.sqrt(variance))))
+        return float(
+            population.median * np.exp(rng.normal(0.0, np.sqrt(population.variance)))
+        )
 
     def centering_value(self, population):
         """Return the population median used to centre a continuous covariate.
@@ -155,18 +148,16 @@ class Covariate(models.Model):
 
             group = population.subject_group
             region = group.population_region
-            m2f = group.m2f_ratio if group.m2f_ratio is not None else 0.5
+            m2f = group.m2f_ratio
             return m2f * reference_median_weight(region, MALE) + (
                 1.0 - m2f
             ) * reference_median_weight(region, FEMALE)
 
         if self.builtin == self.Builtin.AGE:
             group = population.subject_group
-            if group.age_min is not None and group.age_max is not None:
-                return (group.age_min + group.age_max) / 2.0
-            return 1.0
+            return (group.age_min + group.age_max) / 2.0
 
-        return population.median if population.median else 1.0
+        return population.median
 
     def copy(self, new_project):
         """Create a copy of this covariate in ``new_project``."""

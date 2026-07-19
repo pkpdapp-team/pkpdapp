@@ -222,14 +222,21 @@ class UncertaintySimulationMixin:
             else None
         )
 
+        # a population run draws many individuals (from distributions and/or
+        # covariates); a deterministic run is a single individual
+        is_population = bool(variable_distributions) or bool(covariate_bindings)
+
         uncertainty_results = []
         for simulation_group in base_context.simulation_groups:
             # each subject group is a virtual population of study_size (N)
-            # individuals; fall back to sample_count when N is not set
+            # individuals for a population run, one individual otherwise.
+            # sample_count is only used for the group-less case (a bare/library
+            # model with no subject groups at all).
             group = self._subject_group(simulation_group.group_id)
-            group_n = sample_count
-            if group is not None and group.study_size:
-                group_n = group.study_size
+            if group is None:
+                group_n = sample_count
+            else:
+                group_n = group.study_size if is_population else 1
 
             # resolve each covariate's population once per group, along with its
             # (constant across the population) centring median
@@ -279,7 +286,7 @@ class UncertaintySimulationMixin:
                 if covariate_bindings:
                     sex = None
                     if group is not None:
-                        sex = 1 if rng.random() < (group.m2f_ratio or 0.0) else 0
+                        sex = 1 if rng.random() < group.m2f_ratio else 0
                     for binding in covariate_bindings:
                         sampled_values_by_id[binding.input_id] = (
                             binding.covariate.sample(

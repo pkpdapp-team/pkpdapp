@@ -38,8 +38,8 @@ class SubjectGroup(models.Model):
 
     # --- virtual-population fields (used for covariate simulation) ---------
     # These describe the population from which the standard weight/age/sex
-    # covariates are sampled. They are nullable so dataset-derived groups (which
-    # have no virtual population) fall back to the default sample count.
+    # covariates are sampled. They are mandatory with sensible defaults so every
+    # group is a complete virtual population.
 
     class Region(models.TextChoices):
         US = "US", "United States"
@@ -48,30 +48,25 @@ class SubjectGroup(models.Model):
         CUSTOM = "CUSTOM", "Custom"
 
     study_size = models.PositiveIntegerField(
-        null=True,
-        blank=True,
+        default=200,
         help_text="number of virtual individuals (N) in this population",
     )
     age_min = models.FloatField(
-        null=True,
-        blank=True,
+        default=20,
         help_text="minimum age of the population (age is sampled uniformly)",
     )
     age_max = models.FloatField(
-        null=True,
-        blank=True,
+        default=60,
         help_text="maximum age of the population (age is sampled uniformly)",
     )
     m2f_ratio = models.FloatField(
-        null=True,
-        blank=True,
+        default=0.5,
         help_text="male-to-female ratio, i.e. probability an individual is male",
     )
     population_region = models.CharField(
         max_length=6,
         choices=Region.choices,
-        null=True,
-        blank=True,
+        default=Region.EU,
         help_text="region used to sample body weight",
     )
 

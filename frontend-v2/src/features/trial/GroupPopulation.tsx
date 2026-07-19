@@ -39,12 +39,13 @@ const REGION_OPTIONS: { value: PopulationRegionEnum; label: string }[] = [
   { value: "CUSTOM", label: "Custom" },
 ];
 
-// A number input that patches on blur, seeded from the group value.
+// A number input that patches on blur, seeded from the group value. These are
+// mandatory fields, so an empty value is ignored rather than cleared.
 const NumberField: FC<{
   label: string;
   defaultValue: number | null | undefined;
   disabled: boolean;
-  onCommit: (value: number | null) => void;
+  onCommit: (value: number) => void;
 }> = ({ label, defaultValue, disabled, onCommit }) => (
   <TextField
     size="small"
@@ -55,7 +56,9 @@ const NumberField: FC<{
     defaultValue={defaultValue ?? ""}
     onBlur={(event) => {
       const raw = event.target.value;
-      onCommit(raw === "" ? null : parseFloat(raw));
+      if (raw !== "") {
+        onCommit(parseFloat(raw));
+      }
     }}
   />
 );
@@ -175,15 +178,13 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
         />
         <Select
           size="small"
-          displayEmpty
           disabled={disabled}
           sx={{ width: "11rem" }}
-          value={group.population_region ?? ""}
+          value={group.population_region ?? "EU"}
           onChange={(event) =>
-            patchGroup({ population_region: event.target.value || null })
+            patchGroup({ population_region: event.target.value })
           }
         >
-          <MenuItem value="">Region…</MenuItem>
           {REGION_OPTIONS.map((option) => (
             <MenuItem value={option.value} key={option.value}>
               {option.label}
@@ -277,14 +278,13 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
                     sx={{ width: "9rem" }}
                     disabled={disabled}
                     defaultValue={population?.median ?? ""}
-                    onBlur={(event) =>
-                      commitPopulation(covariate, {
-                        median:
-                          event.target.value === ""
-                            ? null
-                            : parseFloat(event.target.value),
-                      })
-                    }
+                    onBlur={(event) => {
+                      if (event.target.value !== "") {
+                        commitPopulation(covariate, {
+                          median: parseFloat(event.target.value),
+                        });
+                      }
+                    }}
                   />
                   <TextField
                     size="small"
@@ -293,14 +293,13 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
                     sx={{ width: "9rem" }}
                     disabled={disabled}
                     defaultValue={population?.variance ?? ""}
-                    onBlur={(event) =>
-                      commitPopulation(covariate, {
-                        variance:
-                          event.target.value === ""
-                            ? null
-                            : parseFloat(event.target.value),
-                      })
-                    }
+                    onBlur={(event) => {
+                      if (event.target.value !== "") {
+                        commitPopulation(covariate, {
+                          variance: parseFloat(event.target.value),
+                        });
+                      }
+                    }}
                   />
                 </>
               )}
