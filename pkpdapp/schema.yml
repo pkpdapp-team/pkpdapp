@@ -3965,6 +3965,16 @@ components:
     BlankEnum:
       enum:
       - ''
+    BuiltinEnum:
+      enum:
+      - WT
+      - AGE
+      - SEX
+      type: string
+      description: |-
+        * `WT` - Weight
+        * `AGE` - Age
+        * `SEX` - Sex
     ColumnsEnum:
       enum:
       - parameters
@@ -4283,6 +4293,16 @@ components:
 
             * `CONT` - Continuous
             * `CAT` - Categorical
+        builtin:
+          description: |-
+            standard covariate kind (weight/age/sex); blank for custom
+
+            * `WT` - Weight
+            * `AGE` - Age
+            * `SEX` - Sex
+          oneOf:
+          - $ref: '#/components/schemas/BuiltinEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         n_categories:
           type: integer
           maximum: 9223372036854775807
@@ -4296,6 +4316,7 @@ components:
             index 0 is the base category
         project:
           type: integer
+          nullable: true
           description: Project that this covariate belongs to.
         unit:
           type: integer
@@ -4304,7 +4325,6 @@ components:
       required:
       - id
       - name
-      - project
     CovariatePopulation:
       type: object
       properties:
@@ -5320,6 +5340,16 @@ components:
 
             * `CONT` - Continuous
             * `CAT` - Categorical
+        builtin:
+          description: |-
+            standard covariate kind (weight/age/sex); blank for custom
+
+            * `WT` - Weight
+            * `AGE` - Age
+            * `SEX` - Sex
+          oneOf:
+          - $ref: '#/components/schemas/BuiltinEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         n_categories:
           type: integer
           maximum: 9223372036854775807
@@ -5333,6 +5363,7 @@ components:
             index 0 is the base category
         project:
           type: integer
+          nullable: true
           description: Project that this covariate belongs to.
         unit:
           type: integer

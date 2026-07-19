@@ -78,6 +78,21 @@ class SubjectGroup(models.Model):
     def get_project(self):
         return self.project
 
+    def covariate_population_for(self, covariate):
+        """Return the :class:`CovariatePopulation` describing ``covariate`` here.
+
+        Built-in covariates (weight/age/sex) have no stored distribution: an
+        ephemeral (unsaved) population carrying this group is returned so
+        :meth:`Covariate.sample` can read the group's region / age range / m2f
+        ratio. Custom covariates return their stored row, or ``None`` when the
+        distribution has not been configured for this group.
+        """
+        from pkpdapp.models import CovariatePopulation
+
+        if covariate.builtin:
+            return CovariatePopulation(subject_group=self)
+        return self.covariate_populations.filter(covariate=covariate).first()
+
     def __str__(self):
         return self.name
 

@@ -92,6 +92,45 @@ class DerivedVariable(StoredModel):
     def is_covariate(self):
         return self.type in self.COVARIATE_TYPES
 
+    def get_covariate(self):
+        """Return the :class:`Covariate` this derived variable samples.
+
+        Custom covariate types return their stored ``covariate`` row; the
+        built-in types return an ephemeral (unsaved) ``Covariate`` carrying the
+        matching ``builtin`` kind so the sampling logic has a single home.
+        """
+        from pkpdapp.models import Covariate
+
+        if self.covariate_id:
+            return self.covariate
+        builtins = {
+            self.Type.WEIGHT_COVARIATE: (
+                "weight",
+                Covariate.Type.CONTINUOUS,
+                Covariate.Builtin.WEIGHT,
+                None,
+            ),
+            self.Type.AGE_COVARIATE: (
+                "age",
+                Covariate.Type.CONTINUOUS,
+                Covariate.Builtin.AGE,
+                None,
+            ),
+            self.Type.SEX_COVARIATE: (
+                "sex",
+                Covariate.Type.CATEGORICAL,
+                Covariate.Builtin.SEX,
+                2,
+            ),
+        }
+        spec = builtins.get(self.type)
+        if spec is None:
+            return None
+        name, cov_type, builtin, n_categories = spec
+        return Covariate(
+            name=name, type=cov_type, builtin=builtin, n_categories=n_categories
+        )
+
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
         created = not self.pk
 

@@ -10,78 +10,75 @@ from django.test import SimpleTestCase, TestCase
 from pkpdapp.models import (
     CombinedModel,
     Covariate,
+    CovariatePopulation,
     DerivedVariable,
     PharmacokineticModel,
     Project,
     Compound,
     SubjectGroup,
-    CovariatePopulation,
 )
-from pkpdapp.models.uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 
-class _SamplingHost(UncertaintySimulationMixin):
-    """Bare host for the pure covariate sampling helpers (no DB needed)."""
+class TestCovariateSampling(SimpleTestCase):
+    """The sampling logic lives on Covariate and needs no database."""
 
-
-class TestCovariateSamplingHelpers(SimpleTestCase):
-    def setUp(self):
-        self.host = _SamplingHost()
-
-    def test_no_group_config_yields_neutral_values(self):
-        specs = [
-            {"cov_name": "WT", "kind": "weight", "input_id": 1,
-             "covariate_id": None, "mu_id": 10},
-            {"cov_name": "SEX", "kind": "sex", "input_id": 2,
-             "covariate_id": None, "mu_id": None},
-        ]
+    def test_none_population_yields_neutral_values(self):
+        continuous = Covariate(name="albumin", type=Covariate.Type.CONTINUOUS)
+        categorical = Covariate(name="eth", type=Covariate.Type.CATEGORICAL)
         rng = np.random.default_rng(0)
-        values = self.host._sample_individual_covariates(specs, None, rng)
-        self.assertEqual(values[1], 1.0)  # continuous -> 1 so WT/mu == 1
-        self.assertEqual(values[2], 0.0)  # categorical -> base category
-        mu = self.host._covariate_group_mu(specs, None)
-        self.assertEqual(mu[10], 1.0)
+        # neutral values collapse the covariate factor to 1
+        self.assertEqual(continuous.sample(None, rng), 1.0)
+        self.assertEqual(categorical.sample(None, rng), 0.0)
+        self.assertEqual(continuous.centering_value(None), 1.0)
 
-    def test_weight_mu_is_m2f_weighted_region_median(self):
+    def test_weight_centering_is_m2f_weighted_region_median(self):
         from pkpdapp.utils.weight_populations import (
             FEMALE,
             MALE,
             reference_median_weight,
         )
 
-        specs = [
-            {"cov_name": "WT", "kind": "weight", "input_id": 1,
-             "covariate_id": None, "mu_id": 10},
-        ]
-        config = {
-            "study_size": 100, "region": "US", "age_min": None,
-            "age_max": None, "m2f_ratio": 0.25, "populations": {},
-        }
-        mu = self.host._covariate_group_mu(specs, config)
+        covariate = Covariate(
+            name="weight",
+            type=Covariate.Type.CONTINUOUS,
+            builtin=Covariate.Builtin.WEIGHT,
+        )
+        group = SubjectGroup(population_region="US", m2f_ratio=0.25)
+        population = CovariatePopulation(subject_group=group)
         expected = 0.25 * reference_median_weight("US", MALE) + 0.75 * (
             reference_median_weight("US", FEMALE)
         )
-        self.assertAlmostEqual(mu[10], expected)
+        self.assertAlmostEqual(covariate.centering_value(population), expected)
+
+    def test_sex_sample_uses_supplied_value(self):
+        covariate = Covariate(
+            name="sex",
+            type=Covariate.Type.CATEGORICAL,
+            builtin=Covariate.Builtin.SEX,
+        )
+        group = SubjectGroup(m2f_ratio=1.0)
+        population = CovariatePopulation(subject_group=group)
+        rng = np.random.default_rng(0)
+        # weight's already-drawn sex is reused rather than redrawn
+        self.assertEqual(covariate.sample(population, rng, sex=0), 0.0)
+        self.assertEqual(covariate.sample(population, rng, sex=1), 1.0)
 
     def test_custom_categorical_respects_probabilities(self):
-        class _Pop:
-            median = None
-            variance = None
-            category_probabilities = [0.0, 1.0, 0.0]
-
-        specs = [
-            {"cov_name": "eth", "kind": "custom_cat", "input_id": 5,
-             "covariate_id": 42, "mu_id": None},
-        ]
-        config = {
-            "study_size": 10, "region": None, "age_min": None,
-            "age_max": None, "m2f_ratio": 0.5, "populations": {42: _Pop()},
-        }
+        covariate = Covariate(
+            name="eth", type=Covariate.Type.CATEGORICAL, n_categories=3
+        )
+        population = CovariatePopulation(category_probabilities=[0.0, 1.0, 0.0])
         rng = np.random.default_rng(1)
         # all probability mass on category 1
         for _ in range(20):
-            values = self.host._sample_individual_covariates(specs, config, rng)
-            self.assertEqual(values[5], 1.0)
+            self.assertEqual(covariate.sample(population, rng), 1.0)
+
+    def test_custom_continuous_is_lognormal_about_median(self):
+        covariate = Covariate(name="albumin", type=Covariate.Type.CONTINUOUS)
+        population = CovariatePopulation(median=40.0, variance=0.0)
+        rng = np.random.default_rng(2)
+        # zero variance collapses to the median
+        self.assertAlmostEqual(covariate.sample(population, rng), 40.0)
 
 
 class TestCovariateApi(TestCase):

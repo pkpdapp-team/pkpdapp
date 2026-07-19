@@ -15,106 +15,6 @@ if TYPE_CHECKING:
 class UncertaintySimulationMixin:
     DEFAULT_SIMULATION_QUANTILES = [0.05, 0.5, 0.95]
 
-    _CONTINUOUS_COVARIATE_KINDS = frozenset({"weight", "age", "custom_cont"})
-
-    def _covariate_group_mu(self, covariate_specs, group_config):
-        """Return ``{mu_variable_id: population_median}`` for continuous covariates.
-
-        The centring median is a per-population constant (not the empirical median
-        of the drawn sample), so results are reproducible across sample sizes.
-        """
-        from pkpdapp.utils.weight_populations import (
-            FEMALE,
-            MALE,
-            reference_median_weight,
-        )
-
-        mu_values = {}
-        for spec in covariate_specs:
-            if spec["mu_id"] is None:
-                continue
-            value = 1.0
-            if group_config is not None:
-                kind = spec["kind"]
-                if kind == "weight":
-                    region = group_config.get("region")
-                    m2f = group_config.get("m2f_ratio")
-                    m2f = 0.5 if m2f is None else m2f
-                    value = m2f * reference_median_weight(region, MALE) + (
-                        1.0 - m2f
-                    ) * reference_median_weight(region, FEMALE)
-                elif kind == "age":
-                    age_min = group_config.get("age_min")
-                    age_max = group_config.get("age_max")
-                    if age_min is not None and age_max is not None:
-                        value = (age_min + age_max) / 2.0
-                elif kind == "custom_cont":
-                    population = group_config["populations"].get(
-                        spec["covariate_id"]
-                    )
-                    if population is not None and population.median is not None:
-                        value = population.median
-            mu_values[spec["mu_id"]] = float(value) if value else 1.0
-        return mu_values
-
-    def _sample_individual_covariates(self, covariate_specs, group_config, rng):
-        """Draw one individual's covariate values as ``{input_variable_id: value}``.
-
-        Sex is drawn once and reused so a person's weight (which depends on sex)
-        and any sex covariate stay consistent. When ``group_config`` is ``None``
-        (no virtual population) every covariate takes its neutral value so the
-        covariate factor is 1.
-        """
-        from pkpdapp.utils.weight_populations import sample_weight
-
-        values = {}
-        if group_config is None:
-            for spec in covariate_specs:
-                values[spec["input_id"]] = (
-                    1.0 if spec["kind"] in self._CONTINUOUS_COVARIATE_KINDS else 0.0
-                )
-            return values
-
-        m2f = group_config.get("m2f_ratio")
-        sex = 1 if (m2f is not None and rng.random() < m2f) else 0
-        for spec in covariate_specs:
-            kind = spec["kind"]
-            if kind == "sex":
-                values[spec["input_id"]] = float(sex)
-            elif kind == "weight":
-                values[spec["input_id"]] = sample_weight(
-                    group_config.get("region"), sex, rng
-                )
-            elif kind == "age":
-                age_min = group_config.get("age_min")
-                age_max = group_config.get("age_max")
-                if age_min is None or age_max is None:
-                    values[spec["input_id"]] = 1.0
-                else:
-                    values[spec["input_id"]] = float(rng.uniform(age_min, age_max))
-            elif kind == "custom_cont":
-                population = group_config["populations"].get(spec["covariate_id"])
-                if population is None or population.median is None:
-                    values[spec["input_id"]] = 1.0
-                else:
-                    variance = population.variance or 0.0
-                    values[spec["input_id"]] = float(
-                        population.median * np.exp(rng.normal(0.0, np.sqrt(variance)))
-                    )
-            elif kind == "custom_cat":
-                population = group_config["populations"].get(spec["covariate_id"])
-                if population is None or not population.category_probabilities:
-                    values[spec["input_id"]] = 0.0
-                else:
-                    probabilities = np.asarray(
-                        population.category_probabilities, dtype=float
-                    )
-                    probabilities = probabilities / probabilities.sum()
-                    values[spec["input_id"]] = float(
-                        rng.choice(len(probabilities), p=probabilities)
-                    )
-        return values
-
     def _validate_quantiles(self, quantiles):
         if quantiles is None:
             quantiles = self.DEFAULT_SIMULATION_QUANTILES
@@ -237,7 +137,7 @@ class UncertaintySimulationMixin:
         time_max: float | None = None,
         variable_distributions: dict[str, "Distribution"] | None = None,
         variable_correlations: dict[tuple[str, str], float] | None = None,
-        covariate_specs: list[dict] | None = None,
+        covariate_bindings: list | None = None,
         covariate_input_ids: list[int] | None = None,
         covariate_mu_ids: list[int] | None = None,
         sample_count: int = 200,
@@ -277,8 +177,8 @@ class UncertaintySimulationMixin:
         if variable_correlations is None:
             variable_correlations = {}
 
-        if covariate_specs is None:
-            covariate_specs = []
+        if covariate_bindings is None:
+            covariate_bindings = []
         if covariate_input_ids is None:
             covariate_input_ids = []
         if covariate_mu_ids is None:
@@ -326,15 +226,26 @@ class UncertaintySimulationMixin:
         for simulation_group in base_context.simulation_groups:
             # each subject group is a virtual population of study_size (N)
             # individuals; fall back to sample_count when N is not set
-            group_config = self._load_group_covariate_config(
-                simulation_group.group_id
-            )
+            group = self._subject_group(simulation_group.group_id)
             group_n = sample_count
-            if group_config is not None and group_config.get("study_size"):
-                group_n = group_config["study_size"]
+            if group is not None and group.study_size:
+                group_n = group.study_size
 
-            # centring medians are constant across the population
-            mu_values = self._covariate_group_mu(covariate_specs, group_config)
+            # resolve each covariate's population once per group, along with its
+            # (constant across the population) centring median
+            populations = {}
+            mu_values = {}
+            for binding in covariate_bindings:
+                population = (
+                    group.covariate_population_for(binding.covariate)
+                    if group is not None
+                    else None
+                )
+                populations[binding.input_id] = population
+                if binding.mu_id is not None:
+                    mu_values[binding.mu_id] = binding.covariate.centering_value(
+                        population
+                    )
 
             sampled_outputs = []
             t_eval = None
@@ -363,13 +274,19 @@ class UncertaintySimulationMixin:
                     if qname in variable_distributions
                 }
                 # per-individual covariate values (dimensionless model inputs)
-                # plus the per-population centring medians
-                sampled_values_by_id.update(
-                    self._sample_individual_covariates(
-                        covariate_specs, group_config, rng
-                    )
-                )
-                sampled_values_by_id.update(mu_values)
+                # plus the per-population centring medians. Sex is drawn once and
+                # shared so weight (sex-dependent) stays consistent.
+                if covariate_bindings:
+                    sex = None
+                    if group is not None:
+                        sex = 1 if rng.random() < (group.m2f_ratio or 0.0) else 0
+                    for binding in covariate_bindings:
+                        sampled_values_by_id[binding.input_id] = (
+                            binding.covariate.sample(
+                                populations[binding.input_id], rng, sex=sex
+                            )
+                        )
+                    sampled_values_by_id.update(mu_values)
 
                 result = base_context.simulate_model(
                     simulation_group,

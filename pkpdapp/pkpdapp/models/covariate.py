@@ -4,32 +4,42 @@
 # copyright notice and full license details.
 #
 
+import numpy as np
 from django.db import models
 
 
 class Covariate(models.Model):
     """
-    A project-scoped definition of a *custom* covariate (e.g. albumin,
-    glomerular filtration rate, ethnicity).
+    A definition of a covariate together with the logic for sampling an
+    individual's covariate value from a :class:`CovariatePopulation`.
 
-    The three standard covariates (weight, age, sex) are built in and do not
-    need a ``Covariate`` row: they are represented directly by the
-    ``WEIGHT_COVARIATE`` / ``AGE_COVARIATE`` / ``SEX_COVARIATE`` types of
-    :class:`DerivedVariable` and their per-population parameters live on the
-    :class:`SubjectGroup`. This model only describes user-defined covariates,
-    which the ``CUSTOM_CONT_COVARIATE`` / ``CUSTOM_CAT_COVARIATE`` derived
-    variables point at, and whose per-population distributions are stored on
+    Custom covariates (e.g. albumin, GFR, ethnicity) are stored as rows and
+    pointed at by ``CUSTOM_CONT_COVARIATE`` / ``CUSTOM_CAT_COVARIATE`` derived
+    variables; their per-population distributions are stored in
     :class:`CovariatePopulation`.
+
+    The three standard covariates (weight, age, sex) are represented by ephemeral
+    (unsaved) instances built by :meth:`DerivedVariable.get_covariate`; their
+    per-population parameters are read from the :class:`SubjectGroup` via an
+    ephemeral :class:`CovariatePopulation` (see
+    :meth:`SubjectGroup.covariate_population_for`).
     """
 
     class Type(models.TextChoices):
         CONTINUOUS = "CONT", "Continuous"
         CATEGORICAL = "CAT", "Categorical"
 
+    class Builtin(models.TextChoices):
+        WEIGHT = "WT", "Weight"
+        AGE = "AGE", "Age"
+        SEX = "SEX", "Sex"
+
     project = models.ForeignKey(
         "Project",
         on_delete=models.CASCADE,
         related_name="covariates",
+        null=True,
+        blank=True,
         help_text="Project that this covariate belongs to.",
     )
     name = models.CharField(
@@ -41,6 +51,13 @@ class Covariate(models.Model):
         choices=Type.choices,
         default=Type.CONTINUOUS,
         help_text="whether the covariate is continuous or categorical",
+    )
+    builtin = models.CharField(
+        max_length=3,
+        choices=Builtin.choices,
+        blank=True,
+        default="",
+        help_text="standard covariate kind (weight/age/sex); blank for custom",
     )
     n_categories = models.PositiveIntegerField(
         null=True,
@@ -70,12 +87,94 @@ class Covariate(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def is_continuous(self):
+        return self.type == self.Type.CONTINUOUS
+
+    def sample(self, population, rng, sex=None):
+        """Draw one individual's value of this covariate.
+
+        ``population`` is a :class:`CovariatePopulation` (a real row for custom
+        covariates, an ephemeral one carrying the :class:`SubjectGroup` for
+        built-ins), or ``None`` when the group has no configured distribution, in
+        which case the neutral value (covariate factor 1) is returned. ``sex``
+        is the individual's already-drawn sex (0 female, 1 male) so weight (which
+        depends on sex) stays consistent with the sampled sex.
+        """
+        if population is None:
+            return 0.0 if self.type == self.Type.CATEGORICAL else 1.0
+
+        if self.builtin == self.Builtin.WEIGHT:
+            from pkpdapp.utils.weight_populations import sample_weight
+
+            region = population.subject_group.population_region
+            return sample_weight(region, sex if sex is not None else 0, rng)
+
+        if self.builtin == self.Builtin.AGE:
+            group = population.subject_group
+            low = group.age_min if group.age_min is not None else 0.0
+            high = group.age_max if group.age_max is not None else low
+            return float(rng.uniform(low, high)) if high > low else float(low)
+
+        if self.builtin == self.Builtin.SEX:
+            if sex is not None:
+                return float(sex)
+            m2f = population.subject_group.m2f_ratio or 0.0
+            return float(1 if rng.random() < m2f else 0)
+
+        if self.type == self.Type.CATEGORICAL:
+            probabilities = population.category_probabilities
+            if not probabilities:
+                return 0.0
+            weights = np.asarray(probabilities, dtype=float)
+            weights = weights / weights.sum()
+            return float(rng.choice(len(weights), p=weights))
+
+        # custom continuous covariate: log-normal about the population median
+        if population.median is None:
+            return 1.0
+        variance = population.variance or 0.0
+        return float(population.median * np.exp(rng.normal(0.0, np.sqrt(variance))))
+
+    def centering_value(self, population):
+        """Return the population median used to centre a continuous covariate.
+
+        Deterministic (not the empirical median of the drawn sample), so results
+        reproduce across sample sizes and seeds. Returns 1 when there is nothing
+        to centre against (so the covariate factor collapses to 1).
+        """
+        if population is None:
+            return 1.0
+
+        if self.builtin == self.Builtin.WEIGHT:
+            from pkpdapp.utils.weight_populations import (
+                FEMALE,
+                MALE,
+                reference_median_weight,
+            )
+
+            group = population.subject_group
+            region = group.population_region
+            m2f = group.m2f_ratio if group.m2f_ratio is not None else 0.5
+            return m2f * reference_median_weight(region, MALE) + (
+                1.0 - m2f
+            ) * reference_median_weight(region, FEMALE)
+
+        if self.builtin == self.Builtin.AGE:
+            group = population.subject_group
+            if group.age_min is not None and group.age_max is not None:
+                return (group.age_min + group.age_max) / 2.0
+            return 1.0
+
+        return population.median if population.median else 1.0
+
     def copy(self, new_project):
         """Create a copy of this covariate in ``new_project``."""
         return Covariate.objects.create(
             project=new_project,
             name=self.name,
             type=self.type,
+            builtin=self.builtin,
             n_categories=self.n_categories,
             category_names=self.category_names,
             unit=self.unit,

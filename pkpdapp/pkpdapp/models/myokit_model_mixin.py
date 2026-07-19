@@ -6,6 +6,7 @@
 
 import logging
 import threading
+from collections import namedtuple
 
 import myokit
 import numpy as np
@@ -23,6 +24,10 @@ from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
+
+# Links a covariate to the model Variable ids of its sampled-value input and,
+# for continuous covariates, its per-population centring median.
+CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id", "mu_id"])
 
 
 class MyokitModelMixin(UncertaintySimulationMixin):
@@ -320,89 +325,62 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variable_correlations[(qname_1, qname_2)] = correlation.coefficient
         return variable_correlations
 
-    def _collect_covariate_effects(self):
-        """Return the covariate sampling specs for this model.
+    def _covariate_bindings(self):
+        """Return the covariate bindings for this model.
 
         A covariate's value is a single input variable in the ``Covariates``
-        component, shared across every parameter that uses it, so specs are
-        deduplicated by covariate. Returns ``(specs, input_ids, mu_ids)`` where
-        each spec is a dict describing how to sample that covariate's value, and
-        the id sets are used to extend the Monte-Carlo dynamic inputs.
+        component, shared across every parameter that uses it, so bindings are
+        deduplicated by covariate. Each binding pairs a :class:`Covariate` (the
+        home of the sampling logic) with the model ``Variable`` ids of its value
+        input and, for continuous covariates, its centring median. The two id
+        lists are used to extend the Monte-Carlo dynamic inputs.
         """
-        from pkpdapp.models import DerivedVariable
         from pkpdapp.utils.covariate_effects import covariate_input_name
 
-        kinds = {
-            DerivedVariable.Type.WEIGHT_COVARIATE: "weight",
-            DerivedVariable.Type.AGE_COVARIATE: "age",
-            DerivedVariable.Type.SEX_COVARIATE: "sex",
-            DerivedVariable.Type.CUSTOM_CONT_COVARIATE: "custom_cont",
-            DerivedVariable.Type.CUSTOM_CAT_COVARIATE: "custom_cat",
-        }
-        continuous = {"weight", "age", "custom_cont"}
-
-        specs = {}
+        bindings = []
         input_ids = []
         mu_ids = []
         if not hasattr(self, "derived_variables"):
-            return [], input_ids, mu_ids
+            return bindings, input_ids, mu_ids
 
+        seen = set()
         for dv in self.derived_variables.all():
             if not dv.is_covariate():
                 continue
             cov_name = covariate_input_name(dv)
-            if cov_name in specs:
+            if cov_name in seen:
                 continue
+            seen.add(cov_name)
             input_var = self.variables.filter(
                 qname=f"Covariates.{cov_name}"
             ).first()
             if input_var is None:
                 continue
-            kind = kinds[dv.type]
-            spec = {
-                "cov_name": cov_name,
-                "kind": kind,
-                "input_id": input_var.id,
-                "covariate_id": dv.covariate_id,
-                "mu_id": None,
-            }
-            input_ids.append(input_var.id)
-            if kind in continuous:
+            covariate = dv.get_covariate()
+            mu_id = None
+            if covariate.is_continuous:
                 mu_var = self.variables.filter(
                     qname=f"Covariates.mu_{cov_name}"
                 ).first()
                 if mu_var is not None:
-                    spec["mu_id"] = mu_var.id
+                    mu_id = mu_var.id
                     mu_ids.append(mu_var.id)
-            specs[cov_name] = spec
+            bindings.append(
+                CovariateBinding(
+                    covariate=covariate, input_id=input_var.id, mu_id=mu_id
+                )
+            )
+            input_ids.append(input_var.id)
 
-        return list(specs.values()), input_ids, mu_ids
+        return bindings, input_ids, mu_ids
 
-    def _load_group_covariate_config(self, group_id):
-        """Load per-population covariate settings for a subject group.
-
-        Returns ``None`` for the no-group case and dataset-derived groups, so
-        covariate inputs fall back to their defaults (covariate factor 1).
-        """
+    def _subject_group(self, group_id):
+        """Return the :class:`SubjectGroup` for ``group_id`` (``None`` if none)."""
         if group_id is None:
             return None
         from pkpdapp.models import SubjectGroup
 
-        group = SubjectGroup.objects.filter(id=group_id).first()
-        if group is None:
-            return None
-        populations = {
-            population.covariate_id: population
-            for population in group.covariate_populations.all()
-        }
-        return {
-            "study_size": group.study_size,
-            "region": group.population_region,
-            "age_min": group.age_min,
-            "age_max": group.age_max,
-            "m2f_ratio": group.m2f_ratio,
-            "populations": populations,
-        }
+        return SubjectGroup.objects.filter(id=group_id).first()
 
     def simulate(
         self,
@@ -456,13 +434,13 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         variable_correlations = self._collect_variable_correlations(
             variable_distributions
         )
-        covariate_specs, covariate_input_ids, covariate_mu_ids = (
-            self._collect_covariate_effects()
+        covariate_bindings, covariate_input_ids, covariate_mu_ids = (
+            self._covariate_bindings()
         )
         # validate all distributions up front so the sampling pipeline
         # (simulate_uncertainty) can assume everything is valid
         self._validate_variable_distributions(variables, variable_distributions)
-        if not variable_distributions and not covariate_specs:
+        if not variable_distributions and not covariate_bindings:
             # deterministic run: a single sample gives std=0 and quantiles==mean
             sample_count = 1
         elif sample_count is None:
@@ -474,7 +452,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             time_max=time_max,
             variable_distributions=variable_distributions,
             variable_correlations=variable_correlations,
-            covariate_specs=covariate_specs,
+            covariate_bindings=covariate_bindings,
             covariate_input_ids=covariate_input_ids,
             covariate_mu_ids=covariate_mu_ids,
             sample_count=sample_count,

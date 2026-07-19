@@ -2991,6 +2991,8 @@ export type PatchedCorrelationRead = {
   coefficient?: number;
 };
 export type CovariateTypeEnum = "CONT" | "CAT";
+export type BuiltinEnum = "WT" | "AGE" | "SEX";
+export type BlankEnum = "";
 export type Covariate = {
   /** name of the covariate (e.g. albumin) */
   name: string;
@@ -2999,12 +3001,18 @@ export type Covariate = {
     * `CONT` - Continuous
     * `CAT` - Categorical */
   type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
   /** number of categories (categorical covariates only) */
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
   /** Project that this covariate belongs to. */
-  project: number;
+  project?: number | null;
   /** unit of the covariate (continuous covariates only) */
   unit?: number | null;
 };
@@ -3017,12 +3025,18 @@ export type CovariateRead = {
     * `CONT` - Continuous
     * `CAT` - Categorical */
   type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
   /** number of categories (categorical covariates only) */
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
   /** Project that this covariate belongs to. */
-  project: number;
+  project?: number | null;
   /** unit of the covariate (continuous covariates only) */
   unit?: number | null;
 };
@@ -3034,12 +3048,18 @@ export type PatchedCovariate = {
     * `CONT` - Continuous
     * `CAT` - Categorical */
   type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
   /** number of categories (categorical covariates only) */
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
   /** Project that this covariate belongs to. */
-  project?: number;
+  project?: number | null;
   /** unit of the covariate (continuous covariates only) */
   unit?: number | null;
 };
@@ -3052,12 +3072,18 @@ export type PatchedCovariateRead = {
     * `CONT` - Continuous
     * `CAT` - Categorical */
   type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
   /** number of categories (categorical covariates only) */
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
   /** Project that this covariate belongs to. */
-  project?: number;
+  project?: number | null;
   /** unit of the covariate (continuous covariates only) */
   unit?: number | null;
 };
@@ -3214,7 +3240,6 @@ export type ProtocolRead = {
   group?: number | null;
 };
 export type PopulationRegionEnum = "US" | "EU" | "ASIA" | "CUSTOM";
-export type BlankEnum = "";
 export type NullEnum = null;
 export type SubjectGroup = {
   protocols: Protocol[];
