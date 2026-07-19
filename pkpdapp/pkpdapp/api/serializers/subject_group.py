@@ -22,9 +22,17 @@ class SubjectGroupSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        from pkpdapp.models import CovariatePopulation
+
         protocols = validated_data.pop("protocols")
         subject_group = SubjectGroup.objects.create(**validated_data)
         for protocol in protocols:
             protocol["group"] = subject_group
             ProtocolSerializer().create(protocol)
+        # give this new group a default population for every existing covariate
+        if subject_group.project_id:
+            for covariate in subject_group.project.covariates.all():
+                CovariatePopulation.objects.create(
+                    subject_group=subject_group, covariate=covariate
+                )
         return subject_group

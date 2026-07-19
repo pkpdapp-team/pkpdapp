@@ -134,6 +134,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
     });
     setNewName("");
     refetchCovariates();
+    // the backend creates default populations for every group; refresh so the
+    // pre-filled defaults show immediately
+    refetchPopulations();
   };
 
   const removeCovariate = async (covariate: CovariateRead) => {
@@ -146,7 +149,8 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
       <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
         Population{" "}
         <HelpButton title="Population">
-          Describe the virtual population for this group. The study size sets the
+          This information is only used if a covariate is selected for one or more
+          parameters (on the Model &rarr; Parameters tab). The study size sets the
           number of simulated individuals; age, male-to-female ratio and region
           drive the built-in weight/age/sex covariates.
         </HelpButton>
@@ -234,7 +238,11 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
             }
           />
         )}
-        <Button variant="contained" onClick={addCovariate} disabled={disabled}>
+        <Button
+          variant="contained"
+          onClick={addCovariate}
+          disabled={disabled || newName.trim() === ""}
+        >
           Add covariate
         </Button>
       </Stack>

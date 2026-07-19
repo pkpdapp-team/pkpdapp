@@ -333,6 +333,16 @@ const ParameterRow: FC<Props> = ({
   const showCovariates =
     (isPK || isPD) && !isNonlin && !variable.qname.startsWith("Covariates.");
 
+  // a parameter may have a nonlinearity or covariate(s), but not both
+  const hasCovariates = selectedCovariateKeys.length > 0;
+  const hasNonlinearity = nonlinearityIndex !== -1;
+  const nonlinearityDisabledReason =
+    "A parameter cannot have both a nonlinearity and a covariate. " +
+    "Remove the selected covariate(s) to choose a nonlinearity.";
+  const covariatesDisabledReason =
+    "A parameter cannot have both a nonlinearity and a covariate. " +
+    "Set the nonlinearity to None to choose covariates.";
+
   const distribution = watch("distribution");
   const distributionOptions: { value: PdfEnum; label: string }[] = [
     { value: "normal", label: "Normal" },
@@ -470,19 +480,23 @@ const ParameterRow: FC<Props> = ({
       <TableCell size="small" sx={{ width: "20rem" }}>
         {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
-            <Select
-              size="small"
-              value={nonlinearityValue}
-              onChange={handleNonlinearityChange}
-              displayEmpty
-              {...defaultProps}
-            >
-              {nonlinearityOptions.map((option) => (
-                <MenuItem value={option.value} key={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
+            <Tooltip title={hasCovariates ? nonlinearityDisabledReason : ""}>
+              <span>
+                <Select
+                  size="small"
+                  value={nonlinearityValue}
+                  onChange={handleNonlinearityChange}
+                  displayEmpty
+                  disabled={defaultProps.disabled || hasCovariates}
+                >
+                  {nonlinearityOptions.map((option) => (
+                    <MenuItem value={option.value} key={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </span>
+            </Tooltip>
             {nonlinearityConcentration && (
               <Select
                 size="small"
@@ -515,33 +529,37 @@ const ParameterRow: FC<Props> = ({
       </TableCell>
       <TableCell size="small" sx={{ width: "16rem" }}>
         {showCovariates && (
-          <Select
-            size="small"
-            multiple
-            displayEmpty
-            sx={{ minWidth: "10rem" }}
-            value={selectedCovariateKeys}
-            onChange={handleCovariatesChange}
-            renderValue={(selected) =>
-              selected.length === 0
-                ? "None"
-                : covariateOptions
-                    .filter((option) => selected.includes(option.key))
-                    .map((option) => option.label)
-                    .join(", ")
-            }
-            {...defaultProps}
-          >
-            {covariateOptions.map((option) => (
-              <MenuItem value={option.key} key={option.key}>
-                <MuiCheckbox
-                  size="small"
-                  checked={selectedCovariateKeys.includes(option.key)}
-                />
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
+          <Tooltip title={hasNonlinearity ? covariatesDisabledReason : ""}>
+            <span>
+              <Select
+                size="small"
+                multiple
+                displayEmpty
+                sx={{ minWidth: "10rem" }}
+                value={selectedCovariateKeys}
+                onChange={handleCovariatesChange}
+                disabled={defaultProps.disabled || hasNonlinearity}
+                renderValue={(selected) =>
+                  selected.length === 0
+                    ? "None"
+                    : covariateOptions
+                        .filter((option) => selected.includes(option.key))
+                        .map((option) => option.label)
+                        .join(", ")
+                }
+              >
+                {covariateOptions.map((option) => (
+                  <MenuItem value={option.key} key={option.key}>
+                    <MuiCheckbox
+                      size="small"
+                      checked={selectedCovariateKeys.includes(option.key)}
+                    />
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </span>
+          </Tooltip>
         )}
       </TableCell>
     </TableRow>

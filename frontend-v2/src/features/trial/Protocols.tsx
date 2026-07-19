@@ -408,14 +408,6 @@ export const Protocols: FC<ProtocolsProps> = ({
         </Box>
       </Box>
       <Box role="tabpanel" id={`group-tabpanel`}>
-        {subjectGroup && (
-          <GroupPopulation
-            key={subjectGroup.id}
-            group={subjectGroup}
-            project={project}
-            disabled={isSharedWithMe}
-          />
-        )}
         <TableContainer
           sx={{
             height: getTableHeight({ steps: TABLE_BREAKPOINTS }),
@@ -493,6 +485,14 @@ export const Protocols: FC<ProtocolsProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
+        {subjectGroup && (
+          <GroupPopulation
+            key={subjectGroup.id}
+            group={subjectGroup}
+            project={project}
+            disabled={isSharedWithMe}
+          />
+        )}
       </Box>
     </>
   );

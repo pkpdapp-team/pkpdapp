@@ -153,6 +153,66 @@ class TestCovariateApi(TestCase):
         self.assertEqual(group_response.status_code, 200)
         self.assertEqual(len(group_response.data["covariate_populations"]), 1)
 
+    def test_adding_covariate_creates_default_populations(self):
+        group_a = SubjectGroup.objects.create(name="A", project=self.project)
+        group_b = SubjectGroup.objects.create(name="B", project=self.project)
+        url = self.reverse("covariate-list")
+
+        # categorical covariate -> uniform probabilities per group
+        response = self.client.post(
+            url,
+            data={
+                "project": self.project.id,
+                "name": "eth",
+                "type": Covariate.Type.CATEGORICAL,
+                "n_categories": 4,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        covariate = Covariate.objects.get(id=response.data["id"])
+        populations = covariate.populations.all()
+        self.assertEqual(populations.count(), 2)
+        self.assertEqual(
+            {p.subject_group_id for p in populations}, {group_a.id, group_b.id}
+        )
+        for population in populations:
+            self.assertEqual(
+                population.category_probabilities, [0.25, 0.25, 0.25, 0.25]
+            )
+
+        # continuous covariate -> default median/variance per group
+        response = self.client.post(
+            url,
+            data={
+                "project": self.project.id,
+                "name": "albumin",
+                "type": Covariate.Type.CONTINUOUS,
+            },
+            format="json",
+        )
+        covariate = Covariate.objects.get(id=response.data["id"])
+        for population in covariate.populations.all():
+            self.assertEqual(population.median, 1.0)
+            self.assertEqual(population.variance, 0.09)
+
+    def test_adding_group_creates_populations_for_existing_covariates(self):
+        covariate = Covariate.objects.create(
+            project=self.project, name="albumin", type=Covariate.Type.CONTINUOUS
+        )
+        url = self.reverse("subject_group-list")
+        response = self.client.post(
+            url,
+            data={"name": "new group", "project": self.project.id, "protocols": []},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertTrue(
+            covariate.populations.filter(
+                subject_group_id=response.data["id"]
+            ).exists()
+        )
+
     def test_categorical_population_length_validation(self):
         covariate = Covariate.objects.create(
             project=self.project,

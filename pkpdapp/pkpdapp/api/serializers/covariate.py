@@ -5,13 +5,25 @@
 #
 
 from rest_framework import serializers
-from pkpdapp.models import Covariate
+from pkpdapp.models import Covariate, CovariatePopulation
 
 
 class CovariateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Covariate
         fields = "__all__"
+
+    def create(self, validated_data):
+        covariate = super().create(validated_data)
+        # give every group in the project a population for this covariate,
+        # pre-filled with sensible defaults (CovariatePopulation.save fills a
+        # uniform distribution for categorical covariates based on n_categories)
+        if covariate.project_id:
+            for group in covariate.project.groups.all():
+                CovariatePopulation.objects.create(
+                    subject_group=group, covariate=covariate
+                )
+        return covariate
 
     def validate(self, data):
         cov_type = data.get("type", getattr(self.instance, "type", None))
