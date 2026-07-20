@@ -344,6 +344,63 @@ class TestCovariateApi(TestCase):
         self.assertEqual(create_response.status_code, 403)
         self.assertEqual(update_response.status_code, 403)
 
+    def test_covariate_structural_fields_are_immutable(self):
+        categorical = Covariate.objects.create(
+            project=self.project,
+            name="ethnicity",
+            type=Covariate.Type.CATEGORICAL,
+            n_categories=3,
+        )
+        model = CombinedModel.objects.create(
+            name="covariate model",
+            project=self.project,
+            pk_model=PharmacokineticModel.objects.get(name="1-compartmental model"),
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=model,
+            pk_variable=model.variables.get(qname="PKCompartment.CL"),
+            covariate=categorical,
+            type=DerivedVariable.Type.CUSTOM_CAT_COVARIATE,
+        )
+        detail_url = self.reverse("covariate-detail", args=(categorical.id,))
+
+        type_response = self.client.patch(
+            detail_url, data={"type": Covariate.Type.CONTINUOUS}, format="json"
+        )
+        category_response = self.client.patch(
+            detail_url, data={"n_categories": 4}, format="json"
+        )
+        rename_response = self.client.patch(
+            detail_url, data={"name": "ancestry"}, format="json"
+        )
+        self.assertEqual(type_response.status_code, 400)
+        self.assertEqual(category_response.status_code, 400)
+        self.assertEqual(rename_response.status_code, 200)
+        categorical.refresh_from_db()
+        self.assertEqual(categorical.name, "ancestry")
+        self.assertEqual(categorical.type, Covariate.Type.CATEGORICAL)
+        self.assertEqual(categorical.n_categories, 3)
+        self.assertTrue(
+            model.variables.filter(
+                qname=f"Covariates.d_COV_{categorical.id}_PKCompartment_CL_2"
+            ).exists()
+        )
+        self.assertFalse(
+            model.variables.filter(
+                qname=f"Covariates.d_COV_{categorical.id}_PKCompartment_CL_3"
+            ).exists()
+        )
+
+        unreferenced = Covariate.objects.create(
+            project=self.project, name="albumin", type=Covariate.Type.CONTINUOUS
+        )
+        unreferenced_response = self.client.patch(
+            self.reverse("covariate-detail", args=(unreferenced.id,)),
+            data={"type": Covariate.Type.CATEGORICAL, "n_categories": 2},
+            format="json",
+        )
+        self.assertEqual(unreferenced_response.status_code, 400)
+
 
 class TestCovariatePopulationDefaults(TestCase):
     def setUp(self):

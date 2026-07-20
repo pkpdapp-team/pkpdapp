@@ -26,6 +26,20 @@ class CovariateSerializer(serializers.ModelSerializer):
         return covariate
 
     def validate(self, data):
+        if self.instance is not None:
+            errors = {}
+            if "type" in data and data["type"] != self.instance.type:
+                errors["type"] = "covariate type cannot be changed after creation"
+            if (
+                "n_categories" in data
+                and data["n_categories"] != self.instance.n_categories
+            ):
+                errors["n_categories"] = (
+                    "category count cannot be changed after creation"
+                )
+            if errors:
+                raise serializers.ValidationError(errors)
+
         cov_type = data.get("type", getattr(self.instance, "type", None))
         if cov_type == Covariate.Type.CATEGORICAL:
             n_categories = data.get(
