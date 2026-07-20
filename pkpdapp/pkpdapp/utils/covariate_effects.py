@@ -44,8 +44,9 @@ def _sanitize(name: str) -> str:
 def covariate_input_name(derived_variable: DerivedVariable) -> str:
     """Return the shared myokit variable name for a covariate's value.
 
-    Built-in covariates use fixed names; custom covariates use their (sanitised)
-    name so the same covariate is shared across every parameter it affects.
+    Built-in covariates use fixed names. Custom covariates use their database ID
+    so the same covariate is shared across every parameter it affects without
+    colliding with a display name or a built-in input.
     """
     type_ = derived_variable.type
     if type_ == DerivedVariable.Type.WEIGHT_COVARIATE:
@@ -55,7 +56,7 @@ def covariate_input_name(derived_variable: DerivedVariable) -> str:
     if type_ == DerivedVariable.Type.SEX_COVARIATE:
         return "SEX"
     if derived_variable.covariate is not None:
-        return _sanitize(derived_variable.covariate.name)
+        return f"COV_{derived_variable.covariate_id}"
     raise ValueError(
         f"custom covariate derived variable {derived_variable.id} has no covariate"
     )

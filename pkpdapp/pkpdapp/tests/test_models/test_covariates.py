@@ -448,9 +448,57 @@ class TestCovariateInjection(TestCase):
         model = self.pkpd_model.get_myokit_model()
         model.validate()
         qnames = [v.qname() for v in model.variables()]
-        self.assertIn("Covariates.ethnicity", qnames)
-        self.assertIn("Covariates.d_ethnicity_PKCompartment_CL_1", qnames)
-        self.assertIn("Covariates.d_ethnicity_PKCompartment_CL_2", qnames)
+        input_name = f"COV_{cov.id}"
+        self.assertIn(f"Covariates.{input_name}", qnames)
+        self.assertIn(f"Covariates.d_{input_name}_PKCompartment_CL_1", qnames)
+        self.assertIn(f"Covariates.d_{input_name}_PKCompartment_CL_2", qnames)
+
+    def test_custom_covariates_with_colliding_names_have_distinct_inputs(self):
+        covariate_1 = Covariate.objects.create(
+            project=self.project, name="foo-bar", type=Covariate.Type.CONTINUOUS
+        )
+        covariate_2 = Covariate.objects.create(
+            project=self.project, name="foo_bar", type=Covariate.Type.CONTINUOUS
+        )
+        for covariate in (covariate_1, covariate_2):
+            DerivedVariable.objects.create(
+                pkpd_model=self.pkpd_model,
+                pk_variable=self._cl_variable(),
+                covariate=covariate,
+                type=DerivedVariable.Type.CUSTOM_CONT_COVARIATE,
+            )
+
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        qnames = {v.qname for v in self.pkpd_model.variables.all()}
+        for covariate in (covariate_1, covariate_2):
+            input_name = f"COV_{covariate.id}"
+            self.assertIn(f"Covariates.{input_name}", qnames)
+            self.assertIn(f"Covariates.mu_{input_name}", qnames)
+            self.assertIn(
+                f"Covariates.a_{input_name}_PKCompartment_CL", qnames
+            )
+
+        bindings, _, _ = self.pkpd_model._covariate_bindings()
+        self.assertEqual({binding.covariate.id for binding in bindings}, {
+            covariate_1.id,
+            covariate_2.id,
+        })
+
+    def test_custom_covariate_cannot_collide_with_builtin_input(self):
+        covariate = Covariate.objects.create(
+            project=self.project, name="WT", type=Covariate.Type.CONTINUOUS
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            covariate=covariate,
+            type=DerivedVariable.Type.CUSTOM_CONT_COVARIATE,
+        )
+
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        qnames = {v.qname for v in self.pkpd_model.variables.all()}
+        self.assertIn(f"Covariates.COV_{covariate.id}", qnames)
+        self.assertNotIn("Covariates.WT", qnames)
 
     def test_two_covariates_share_input_and_compose(self):
         cl = self._cl_variable()
