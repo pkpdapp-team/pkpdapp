@@ -268,7 +268,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         sbml_writer = myokit.formats.sbml.SBMLWriter()
         return sbml_writer.write_string(sbml_model)
 
-    def copy(self, project):
+    def copy(self, project, covariate_map=None):
         stored_model_kwargs = {
             "name": self.name,
             "project": project,
@@ -297,7 +297,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             new_variables[variable.qname] = variable
 
         for dv in self.derived_variables.all():
-            dv.copy(stored_model, new_variables)
+            dv.copy(stored_model, new_variables, covariate_map)
 
         # variables might have changed so get the new ones
         new_variables = {}

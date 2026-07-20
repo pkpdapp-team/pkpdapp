@@ -50,7 +50,7 @@ class Dataset(models.Model):
         help_text='Project that "owns" this model',
     )
 
-    def copy(self, new_project):
+    def copy(self, new_project, group_map=None):
         """
         Create a copy of this dataset with the same values but a different project.
         """
@@ -67,13 +67,19 @@ class Dataset(models.Model):
         # or subjects with no group) are still copied across. Protocols are
         # copied later (during model/variable copy), so subject protocols are
         # linked at that point (see Protocol.copy).
-        group_map = {}
+        if group_map is None:
+            group_map = {}
         for group in self.groups.all():
             group_map[group.id] = SubjectGroup.objects.create(
                 name=group.name,
                 id_in_dataset=group.id_in_dataset,
                 dataset=new_dataset,
                 project=new_project,
+                study_size=group.study_size,
+                age_min=group.age_min,
+                age_max=group.age_max,
+                m2f_ratio=group.m2f_ratio,
+                population_region=group.population_region,
             )
 
         for subject in self.subjects.all():

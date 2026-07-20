@@ -163,7 +163,7 @@ class DerivedVariable(StoredModel):
         super().delete()
         pkpd_model.update_model()
 
-    def copy(self, new_pkpd_model, new_variables):
+    def copy(self, new_pkpd_model, new_variables, covariate_map=None):
         new_pk_variable = new_variables[self.pk_variable.qname]
         new_secondary_variable = (
             new_variables[self.secondary_variable.qname]
@@ -174,7 +174,11 @@ class DerivedVariable(StoredModel):
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
             "secondary_variable": new_secondary_variable,
-            "covariate": self.covariate,
+            "covariate": (
+                covariate_map[self.covariate_id]
+                if self.covariate_id and covariate_map is not None
+                else self.covariate
+            ),
             "read_only": self.read_only,
             "type": self.type,
         }
