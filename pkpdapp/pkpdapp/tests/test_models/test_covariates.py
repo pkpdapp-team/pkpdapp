@@ -14,6 +14,7 @@ from pkpdapp.models import (
     DerivedVariable,
     PharmacokineticModel,
     Project,
+    ProjectAccess,
     Compound,
     SubjectGroup,
 )
@@ -89,6 +90,9 @@ class TestCovariateApi(TestCase):
 
         self.reverse = reverse
         self.user = User.objects.create_user(username="covuser", password="12345")
+        self.other_user = User.objects.create_user(
+            username="othercovuser", password="12345"
+        )
         compound = Compound.objects.create(name="demo")
         self.project = Project.objects.create(name="demo", compound=compound)
         self.project.users.add(self.user)
@@ -232,6 +236,113 @@ class TestCovariateApi(TestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_covariate_endpoints_only_list_accessible_projects(self):
+        local_covariate = Covariate.objects.create(
+            project=self.project, name="local", type=Covariate.Type.CONTINUOUS
+        )
+        local_group = SubjectGroup.objects.create(name="local", project=self.project)
+        local_population = CovariatePopulation.objects.create(
+            subject_group=local_group, covariate=local_covariate
+        )
+        foreign_project = Project.objects.create(
+            name="foreign", compound=Compound.objects.create(name="foreign")
+        )
+        foreign_project.users.add(self.other_user)
+        foreign_covariate = Covariate.objects.create(
+            project=foreign_project, name="foreign", type=Covariate.Type.CONTINUOUS
+        )
+        foreign_group = SubjectGroup.objects.create(
+            name="foreign", project=foreign_project
+        )
+        CovariatePopulation.objects.create(
+            subject_group=foreign_group, covariate=foreign_covariate
+        )
+
+        covariate_response = self.client.get(self.reverse("covariate-list"))
+        population_response = self.client.get(self.reverse("covariate_population-list"))
+        self.assertEqual(covariate_response.status_code, 200)
+        self.assertEqual(population_response.status_code, 200)
+        self.assertEqual(
+            [row["id"] for row in covariate_response.data], [local_covariate.id]
+        )
+        self.assertEqual(
+            [row["id"] for row in population_response.data], [local_population.id]
+        )
+
+        self.assertEqual(
+            self.client.get(
+                self.reverse("covariate-list"), {"project_id": foreign_project.id}
+            ).data,
+            [],
+        )
+        self.assertEqual(
+            self.client.get(
+                self.reverse("covariate_population-list"),
+                {"project_id": foreign_project.id},
+            ).data,
+            [],
+        )
+
+    def test_covariate_population_rejects_mismatched_projects(self):
+        group = SubjectGroup.objects.create(name="local", project=self.project)
+        foreign_project = Project.objects.create(
+            name="foreign", compound=Compound.objects.create(name="foreign")
+        )
+        foreign_covariate = Covariate.objects.create(
+            project=foreign_project, name="foreign", type=Covariate.Type.CONTINUOUS
+        )
+        foreign_group = SubjectGroup.objects.create(
+            name="foreign", project=foreign_project
+        )
+
+        mismatched_response = self.client.post(
+            self.reverse("covariate_population-list"),
+            data={"subject_group": group.id, "covariate": foreign_covariate.id},
+            format="json",
+        )
+        inaccessible_response = self.client.post(
+            self.reverse("covariate_population-list"),
+            data={"subject_group": foreign_group.id, "covariate": foreign_covariate.id},
+            format="json",
+        )
+        self.assertEqual(mismatched_response.status_code, 400)
+        self.assertEqual(inaccessible_response.status_code, 403)
+        self.assertFalse(
+            CovariatePopulation.objects.filter(
+                subject_group=group, covariate=foreign_covariate
+            ).exists()
+        )
+        self.assertFalse(
+            CovariatePopulation.objects.filter(
+                subject_group=foreign_group, covariate=foreign_covariate
+            ).exists()
+        )
+
+    def test_read_only_user_cannot_change_covariate_population(self):
+        covariate = Covariate.objects.create(
+            project=self.project, name="local", type=Covariate.Type.CONTINUOUS
+        )
+        group = SubjectGroup.objects.create(name="local", project=self.project)
+        population = CovariatePopulation.objects.create(
+            subject_group=group, covariate=covariate
+        )
+        access = ProjectAccess.objects.get(user=self.user, project=self.project)
+        access.read_only = True
+        access.save()
+
+        create_response = self.client.post(
+            self.reverse("covariate_population-list"),
+            data={"subject_group": group.id, "covariate": covariate.id},
+            format="json",
+        )
+        update_response = self.client.patch(
+            self.reverse("covariate_population-detail", args=(population.id,)),
+            data={"median": 2.0},
+            format="json",
+        )
+        self.assertEqual(create_response.status_code, 403)
+        self.assertEqual(update_response.status_code, 403)
 
 
 class TestCovariatePopulationDefaults(TestCase):

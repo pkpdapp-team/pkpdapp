@@ -10,6 +10,7 @@ from drf_spectacular.types import OpenApiTypes
 from pkpdapp.api.views import (
     ProjectFilter,
     CheckAccessToProject,
+    UserAccessFilter,
 )
 from pkpdapp.api.serializers import CovariateSerializer
 from pkpdapp.models import Covariate
@@ -18,7 +19,7 @@ from pkpdapp.models import Covariate
 class CovariateView(viewsets.ModelViewSet):
     queryset = Covariate.objects.all()  # this is overridden in the filters
     serializer_class = CovariateSerializer
-    filter_backends = [ProjectFilter]
+    filter_backends = [ProjectFilter, UserAccessFilter]
     permission_classes = [IsAuthenticated & CheckAccessToProject]
 
     @extend_schema(
