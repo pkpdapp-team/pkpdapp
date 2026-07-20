@@ -237,6 +237,8 @@ class UncertaintySimulationMixin:
                 group_n = sample_count
             else:
                 group_n = group.study_size if is_population else 1
+            if group_n <= 0:
+                raise ValueError("study_size must be greater than 0")
 
             # resolve each covariate's population once per group, along with its
             # (constant across the population) centring median

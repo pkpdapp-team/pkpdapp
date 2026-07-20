@@ -45,8 +45,10 @@ const NumberField: FC<{
   label: string;
   defaultValue: number | null | undefined;
   disabled: boolean;
+  min?: number;
+  integer?: boolean;
   onCommit: (value: number) => void;
-}> = ({ label, defaultValue, disabled, onCommit }) => (
+}> = ({ label, defaultValue, disabled, min, integer, onCommit }) => (
   <TextField
     size="small"
     type="number"
@@ -54,10 +56,20 @@ const NumberField: FC<{
     disabled={disabled}
     sx={{ width: "9rem" }}
     defaultValue={defaultValue ?? ""}
+    inputProps={{ min, step: integer ? 1 : "any" }}
     onBlur={(event) => {
       const raw = event.target.value;
       if (raw !== "") {
-        onCommit(parseFloat(raw));
+        const value = parseFloat(raw);
+        if (
+          !Number.isFinite(value) ||
+          (min !== undefined && value < min) ||
+          (integer && !Number.isInteger(value))
+        ) {
+          event.target.value = String(defaultValue ?? "");
+          return;
+        }
+        onCommit(value);
       }
     }}
   />
@@ -160,6 +172,8 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           label="Study size (N)"
           defaultValue={group.study_size}
           disabled={disabled}
+          min={1}
+          integer
           onCommit={(value) => patchGroup({ study_size: value })}
         />
         <NumberField

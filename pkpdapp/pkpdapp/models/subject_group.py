@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -49,6 +50,7 @@ class SubjectGroup(models.Model):
 
     study_size = models.PositiveIntegerField(
         default=200,
+        validators=[MinValueValidator(1)],
         help_text="number of virtual individuals (N) in this population",
     )
     age_min = models.FloatField(
@@ -69,6 +71,14 @@ class SubjectGroup(models.Model):
         default=Region.EU,
         help_text="region used to sample body weight",
     )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name="subject_group_study_size_gte_1",
+                condition=models.Q(study_size__gte=1),
+            ),
+        ]
 
     def get_project(self):
         return self.project

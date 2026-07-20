@@ -5,6 +5,8 @@
 #
 
 import numpy as np
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
 
 from pkpdapp.models import (
@@ -327,13 +329,16 @@ class TestCovariateApi(TestCase):
         population = CovariatePopulation.objects.create(
             subject_group=group, covariate=covariate
         )
+        second_covariate = Covariate.objects.create(
+            project=self.project, name="other", type=Covariate.Type.CONTINUOUS
+        )
         access = ProjectAccess.objects.get(user=self.user, project=self.project)
         access.read_only = True
         access.save()
 
         create_response = self.client.post(
             self.reverse("covariate_population-list"),
-            data={"subject_group": group.id, "covariate": covariate.id},
+            data={"subject_group": group.id, "covariate": second_covariate.id},
             format="json",
         )
         update_response = self.client.patch(
@@ -343,6 +348,17 @@ class TestCovariateApi(TestCase):
         )
         self.assertEqual(create_response.status_code, 403)
         self.assertEqual(update_response.status_code, 403)
+
+    def test_study_size_must_be_at_least_one(self):
+        group = SubjectGroup.objects.create(name="G1", project=self.project)
+        response = self.client.patch(
+            self.reverse("subject_group-detail", args=(group.id,)),
+            data={"study_size": 0},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        group.refresh_from_db()
+        self.assertEqual(group.study_size, 200)
 
     def test_covariate_structural_fields_are_immutable(self):
         categorical = Covariate.objects.create(
@@ -417,6 +433,14 @@ class TestCovariatePopulationDefaults(TestCase):
         )
         self.assertEqual(population.median, 1.0)
         self.assertEqual(population.variance, 0.09)
+
+    def test_study_size_validation_and_constraint(self):
+        self.group.study_size = 0
+        with self.assertRaises(ValidationError):
+            self.group.full_clean()
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                SubjectGroup.objects.filter(pk=self.group.pk).update(study_size=0)
 
     def test_categorical_population_defaults_to_uniform(self):
         covariate = Covariate.objects.create(
