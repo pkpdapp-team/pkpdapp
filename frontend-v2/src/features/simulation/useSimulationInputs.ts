@@ -59,7 +59,10 @@ const getSimulateOutputs = (
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
+        // constant y-axis variables are histogram plots (of a parameter's
+        // sampled values); they are not model outputs and cannot be requested
+        // as such — their samples come back in the response's `parameters`.
+        if (variable && !variable.constant && !outputs.includes(variable.qname)) {
           outputs.push(variable.qname);
         }
       }
@@ -68,7 +71,7 @@ const getSimulateOutputs = (
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
+        if (variable && !variable.constant && !outputs.includes(variable.qname)) {
           outputs.push(variable.qname);
         }
       }
