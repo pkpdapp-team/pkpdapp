@@ -41,6 +41,25 @@ def _sanitize(name: str) -> str:
     return token
 
 
+def remap_covariate_qname(qname: str, id_map: dict) -> str:
+    """Rewrite the covariate id embedded in a covariate variable's qname.
+
+    Custom covariate variables are named ``COV_<covariate_id>`` (see
+    :func:`covariate_input_name`), so copying a model to another project (where
+    covariates get new ids) changes their qnames. ``id_map`` maps old covariate
+    ids to new ones; a qname with no ``COV_<id>`` token is returned unchanged.
+    Done in a single pass so overlapping id ranges never double-remap.
+    """
+    if not id_map:
+        return qname
+
+    def replace(match):
+        old_id = int(match.group(1))
+        return f"COV_{id_map.get(old_id, old_id)}"
+
+    return re.sub(r"COV_(\d+)", replace, qname)
+
+
 def covariate_input_name(derived_variable: DerivedVariable) -> str:
     """Return the shared myokit variable name for a covariate's value.
 

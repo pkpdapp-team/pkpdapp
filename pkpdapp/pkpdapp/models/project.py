@@ -140,11 +140,19 @@ class Project(models.Model):
                 covariate_map[population.covariate_id],
             )
 
+        from pkpdapp.utils.covariate_effects import remap_covariate_qname
+
+        old_to_new_covariate = {
+            old: new.id for old, new in covariate_map.items()
+        }
         variable_map = {}
         for model in self.pk_models.all():
             new_model = model.copy(new_project, covariate_map)
             for variable in model.variables.all():
-                new_variable = new_model.variables.get(qname=variable.qname)
+                new_qname = remap_covariate_qname(
+                    variable.qname, old_to_new_covariate
+                )
+                new_variable = new_model.variables.get(qname=new_qname)
                 variable_map[variable] = new_variable
 
         for simulation in self.simulations.all():
