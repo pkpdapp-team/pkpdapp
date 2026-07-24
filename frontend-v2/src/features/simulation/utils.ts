@@ -14,7 +14,7 @@ import {
   Y2ScaleEnum,
 } from "../../app/backendApi";
 import { CentralSimulateResponse } from "./types";
-import { Layout, ScatterData, Shape } from "plotly.js";
+import { Data, Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import {
@@ -757,6 +757,78 @@ type PlotsProps = {
   visibleGroups: string[];
   xConversionFactor: number;
 };
+
+// Number of bins used for the sampled-parameter histograms.
+const HISTOGRAM_BIN_COUNT = 30;
+
+// Build one overlaid histogram trace per subject group of a parameter's
+// Monte-Carlo sampled values, returned by the simulate endpoint under
+// `parameters` (keyed by variable id). Bins are computed here (as `bar` traces)
+// rather than using plotly's `histogram` type, which is not in the basic plotly
+// bundle used by the app; sharing a single set of bin edges across groups keeps
+// the overlaid bars aligned. Groups that are not currently visible are added as
+// "legendonly" so they can be toggled on from the legend. When the model has no
+// subject groups there is a single (group-less) response that is always shown.
+export function generateHistogramPlots(
+  uncertaintyData: SimulateResponse[],
+  groups: SubjectGroupRead[] | undefined,
+  visibleGroups: string[],
+  variableId: number,
+): Partial<Data>[] {
+  const series = uncertaintyData
+    .map((uncertainty) => ({
+      uncertainty,
+      samples: uncertainty.parameters?.[variableId],
+    }))
+    .filter(
+      (
+        s,
+      ): s is { uncertainty: SimulateResponse; samples: number[] } =>
+        Array.isArray(s.samples) && s.samples.length > 0,
+    );
+  if (series.length === 0) {
+    return [];
+  }
+
+  // shared bin edges across every group's samples so overlaid bars line up
+  let min = Infinity;
+  let max = -Infinity;
+  series.forEach(({ samples }) => {
+    samples.forEach((v) => {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    });
+  });
+  const width = (max - min) / HISTOGRAM_BIN_COUNT || 1;
+  const centres = Array.from(
+    { length: HISTOGRAM_BIN_COUNT },
+    (_, i) => min + (i + 0.5) * width,
+  );
+
+  return series.map(({ uncertainty, samples }, index) => {
+    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
+    samples.forEach((v) => {
+      let bin = Math.floor((v - min) / width);
+      if (bin < 0) bin = 0;
+      if (bin >= HISTOGRAM_BIN_COUNT) bin = HISTOGRAM_BIN_COUNT - 1;
+      counts[bin] += 1;
+    });
+    const group = groups?.find((g) => g.id === uncertainty.group);
+    const colour = plotColours[index % plotColours.length];
+    const visible = group ? visibleGroups.includes(group.name) : true;
+    return {
+      type: "bar",
+      x: centres,
+      y: counts,
+      width,
+      name: group?.name || "All",
+      marker: { color: colour },
+      opacity: 0.6,
+      visible: visible ? true : "legendonly",
+      showlegend: true,
+    } as Partial<Data>;
+  });
+}
 
 export const createPlots = ({
   data,

@@ -5922,7 +5922,7 @@ components:
         study_size:
           type: integer
           maximum: 9223372036854775807
-          minimum: 0
+          minimum: 1
           format: int64
           description: number of virtual individuals (N) in this population
         age_min:
@@ -6652,6 +6652,13 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/UncertaintySummary'
+        parameters:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+              format: double
       required:
       - outputs
       - sample_count
@@ -6923,7 +6930,7 @@ components:
         study_size:
           type: integer
           maximum: 9223372036854775807
-          minimum: 0
+          minimum: 1
           format: int64
           description: number of virtual individuals (N) in this population
         age_min:

@@ -257,6 +257,20 @@ class UncertaintySimulationMixin:
                     )
 
             sampled_outputs = []
+            # per-individual sampled parameter values, keyed by model Variable id:
+            # the ETA-sampled distributed parameters and the sampled covariate inputs
+            # (the constant centring medians in covariate_mu_ids are excluded). These
+            # are surfaced so the frontend can plot a histogram of each parameter.
+            reported_parameter_ids = list(
+                dict.fromkeys(
+                    [
+                        self.variables.get(qname=qname).id
+                        for qname in variable_distributions
+                    ]
+                    + list(covariate_input_ids)
+                )
+            )
+            sampled_parameters = {pid: [] for pid in reported_parameter_ids}
             t_eval = None
             correlated_etas = (
                 self._draw_correlated_etas(
@@ -297,6 +311,10 @@ class UncertaintySimulationMixin:
                         )
                     sampled_values_by_id.update(mu_values)
 
+                # record this individual's sampled parameter values for histograms
+                for pid in reported_parameter_ids:
+                    sampled_parameters[pid].append(sampled_values_by_id[pid])
+
                 result = base_context.simulate_model(
                     simulation_group,
                     values_by_id=sampled_values_by_id,
@@ -318,6 +336,7 @@ class UncertaintySimulationMixin:
                 {
                     "time": self._extract_time_values(sampled_outputs[0]),
                     "outputs": aggregated_outputs,
+                    "parameters": sampled_parameters,
                     "sample_count": group_n,
                     "group_id": simulation_group.group_id,
                 }

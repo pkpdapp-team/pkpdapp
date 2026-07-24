@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { http, HttpResponse } from "msw";
@@ -150,6 +150,52 @@ const plot = {
   max2: null,
 } as unknown as Simulation["plots"][number] & { id: string };
 
+// A constant parameter (with a distribution) whose sampled values are plotted as
+// a histogram. Its id keys the `parameters` map on the simulate response.
+const paramId = 20;
+const paramVariable: VariableRead = {
+  ...variables[1],
+  id: paramId,
+  name: "CL",
+  description: "Clearance",
+  qname: "PKCompartment.CL",
+  constant: true,
+  distribution: { id: 1, pdf: "lognormal", variance: 0.09 },
+};
+
+// a deterministic lognormal-ish spread of 200 sampled values
+const paramSamples = Array.from(
+  { length: 200 },
+  (_, i) => 5 * Math.exp(0.3 * Math.sin(i)),
+);
+
+const histogramUncertaintyData: SimulateResponse[] = [
+  {
+    time: baseSimulation.time,
+    group: GROUP_ID,
+    sample_count: 200,
+    outputs: {},
+    parameters: { [String(paramId)]: paramSamples },
+  },
+];
+
+const histogramPlot = {
+  id: "plot-hist",
+  index: 0,
+  y_axes: [{ variable: paramId, right: false }],
+  cx_lines: [],
+  x_scale: "lin",
+  y_scale: "lin",
+  y2_scale: "lin",
+  x_unit: 1,
+  y_unit: null,
+  y_unit2: null,
+  min: null,
+  max: null,
+  min2: null,
+  max2: null,
+} as unknown as Simulation["plots"][number] & { id: string };
+
 const model = {
   is_library_model: true,
   number_of_effect_compartments: 0,
@@ -184,6 +230,46 @@ const PlotHarness = () => {
         dataReference={[]}
         uncertaintyReferenceData={[]}
         variables={variables}
+        control={control}
+        setValue={setValue}
+        remove={() => {}}
+        units={units}
+        compound={compound}
+        model={model}
+        visibleGroups={["Group 1"]}
+        shouldShowLegend={true}
+        isVertical={false}
+        isHorizontal={false}
+        dimensions={{ width: 900, height: 520 }}
+        plotCount={1}
+      />
+    </div>
+  );
+};
+
+const HistogramHarness = () => {
+  const { control, setValue } = useForm<Simulation>({
+    defaultValues: {
+      name: "Histogram simulation",
+      sliders: [],
+      plots: [],
+      project: 1,
+      time_max_unit: 2,
+    },
+  });
+
+  const data = useMemo(() => [{ ...baseSimulation, group: GROUP_ID }], []);
+
+  return (
+    <div style={{ height: 520, width: 900 }}>
+      <SimulationPlotView
+        index={0}
+        plot={histogramPlot}
+        data={data}
+        uncertaintyData={histogramUncertaintyData}
+        dataReference={[]}
+        uncertaintyReferenceData={[]}
+        variables={[...variables, paramVariable]}
         control={control}
         setValue={setValue}
         remove={() => {}}
@@ -247,5 +333,31 @@ export const WithUncertaintyBands: Story = {
 
     const graph = canvasElement.querySelector(".js-plotly-plot");
     expect(graph).toBeInTheDocument();
+  },
+};
+
+export const Histogram: Story = {
+  render: () => <HistogramHarness />,
+  play: async ({ canvasElement }) => {
+    // the plot renders, and a histogram trace (plotly bar layer) is drawn
+    await within(canvasElement)
+      .findByTestId("plotly-root", {}, { timeout: 5000 })
+      .catch(() => null);
+    const gd = canvasElement.querySelector(
+      ".js-plotly-plot",
+    ) as (HTMLElement & { data?: { type?: string }[] }) | null;
+    expect(gd).toBeInTheDocument();
+    // the trace passed to plotly is a (binned) bar histogram of the samples
+    expect(gd?.data?.[0]?.type).toBe("bar");
+    // plotly draws histogram/bar traces into the bar layer as <path> points
+    await waitFor(
+      () => {
+        const bars = canvasElement.querySelectorAll(
+          ".barlayer .point, .trace.bars .point",
+        );
+        expect(bars.length).toBeGreaterThan(0);
+      },
+      { timeout: 5000 },
+    );
   },
 };

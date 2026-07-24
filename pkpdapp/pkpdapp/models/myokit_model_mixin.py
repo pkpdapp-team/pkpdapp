@@ -427,6 +427,9 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                 - "sample_count": number of samples drawn
                 - "time": list of time values
                 - "outputs": {<variable id>: {"mean", "std", "quantiles"}}
+                - "parameters": {<variable id>: [sampled value per individual]} for
+                  each distributed parameter and covariate input (empty for a
+                  deterministic run)
         """
 
         variables = dict(variables or {})

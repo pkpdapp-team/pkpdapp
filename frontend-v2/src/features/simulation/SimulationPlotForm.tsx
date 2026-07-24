@@ -264,6 +264,43 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     type: "search",
   };
 
+  // A plot whose y-axis variable is a constant parameter is a histogram of that
+  // parameter's sampled values. Only the x-axis (the parameter) is configurable;
+  // the y-axis / y2-axis / reference-line controls do not apply, and the single
+  // y_axes entry (which holds the parameter) is left untouched.
+  const histogramVariable = variables.find(
+    (v) => v.id === plot.y_axes[0]?.variable,
+  );
+  if (histogramVariable?.constant) {
+    const xUnit = units.find((u) => u.id === plot.x_unit);
+    const xTitleDefault = `${histogramVariable.name}${
+      xUnit?.symbol ? ` (${xUnit.symbol})` : ""
+    }`;
+    return (
+      <Stack>
+        <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
+          Parameter distribution (histogram)
+        </Typography>
+        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          <TextField
+            label="X Axis Label"
+            name={`plots.${index}.x_label`}
+            control={control}
+            textFieldProps={axisLabelProps}
+            defaultValue={xTitleDefault}
+          />
+          <SelectField
+            label="X Axis Scale"
+            name={`plots.${index}.x_scale`}
+            options={axisScaleOptions}
+            control={control}
+            selectProps={defaultProps}
+          />
+        </Stack>
+      </Stack>
+    );
+  }
+
   return (
     <Stack>
       <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>

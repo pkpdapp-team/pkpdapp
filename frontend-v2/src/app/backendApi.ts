@@ -2764,6 +2764,9 @@ export type SimulateResponse = {
   outputs: {
     [key: string]: UncertaintySummary;
   };
+  parameters?: {
+    [key: string]: number[];
+  };
 };
 export type Simulate = {
   outputs: string[];

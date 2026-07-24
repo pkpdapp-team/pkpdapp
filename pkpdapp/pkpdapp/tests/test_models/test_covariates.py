@@ -14,6 +14,7 @@ from pkpdapp.models import (
     Covariate,
     CovariatePopulation,
     DerivedVariable,
+    Distribution,
     PharmacokineticModel,
     Project,
     ProjectAccess,
@@ -649,6 +650,72 @@ class TestCovariateInjection(TestCase):
         # weight covariate on CL produces between-individual variability
         std = np.array(group_result["outputs"][c1.id]["std"])
         self.assertGreater(float(np.max(std)), 0.0)
+
+    def test_simulate_returns_sampled_parameters(self):
+        from pkpdapp.models import Protocol, Dose, Unit, Variable
+
+        # a virtual population driven by a weight covariate on CL and a random
+        # effect (distribution) on V1
+        group = SubjectGroup.objects.create(
+            name="Sim-Group 1",
+            project=self.project,
+            study_size=15,
+            population_region=SubjectGroup.Region.US,
+            m2f_ratio=0.5,
+            age_min=20.0,
+            age_max=60.0,
+        )
+        dose_var = Variable.objects.get(
+            qname="PKCompartment.A1", dosed_pk_model=self.pkpd_model
+        )
+        protocol = Protocol.objects.create(
+            name="cov protocol",
+            compound=self.project.compound,
+            amount_unit=Unit.objects.get(symbol="mg"),
+            time_unit=Unit.objects.get(symbol="h"),
+            variable=dose_var,
+            project=self.project,
+            group=group,
+        )
+        Dose.objects.create(protocol=protocol, start_time=0, amount=100)
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.WEIGHT_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        v1 = self.pkpd_model.variables.get(qname="PKCompartment.V1")
+        Distribution.objects.create(
+            variable=v1, pdf=Distribution.PDF.NORMAL, variance=0.1
+        )
+
+        wt = self.pkpd_model.variables.get(qname="Covariates.WT")
+        mu_wt = self.pkpd_model.variables.get(qname="Covariates.mu_WT")
+
+        time_qname = self.pkpd_model.get_myokit_model().binding("time").qname()
+        results = self.pkpd_model.simulate(
+            outputs=["PKCompartment.C1", time_qname], seed=123
+        )
+        group_result = next(r for r in results if r["group_id"] == group.id)
+        parameters = group_result["parameters"]
+
+        # the distributed parameter and the covariate input are reported, keyed by
+        # variable id, one value per individual (study_size)
+        self.assertIn(v1.id, parameters)
+        self.assertIn(wt.id, parameters)
+        self.assertEqual(len(parameters[v1.id]), 15)
+        self.assertEqual(len(parameters[wt.id]), 15)
+        # the constant centring median is not reported
+        self.assertNotIn(mu_wt.id, parameters)
+        # a random effect actually varies the sampled values
+        self.assertGreater(float(np.std(parameters[v1.id])), 0.0)
+
+    def test_deterministic_simulation_returns_no_parameters(self):
+        # no distribution and no covariate -> a deterministic run with no samples
+        results = self.pkpd_model.simulate(outputs=["PKCompartment.C1"], seed=1)
+        for group_result in results:
+            self.assertEqual(group_result["parameters"], {})
 
     def test_delete_removes_injected_parameters(self):
         dv = DerivedVariable.objects.create(
