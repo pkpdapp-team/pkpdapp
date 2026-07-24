@@ -11,7 +11,9 @@ from .compound import Compound
 from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
 from .results_table import ResultsTable
+from .covariate import Covariate
 from .subject_group import SubjectGroup
+from .covariate_population import CovariatePopulation
 from .protocol import Protocol
 from .dose import Dose
 from .subject import Subject

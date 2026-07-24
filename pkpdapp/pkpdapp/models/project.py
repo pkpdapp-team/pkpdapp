@@ -111,7 +111,8 @@ class Project(models.Model):
             compound=new_compound,
             created=new_created,
         )
-        new_dataset = self.datasets.first().copy(new_project)
+        group_map = {}
+        new_dataset = self.datasets.first().copy(new_project, group_map)
         new_project.datasets.set([new_dataset])
         new_project.save()
 
@@ -120,13 +121,38 @@ class Project(models.Model):
         # groups are already copied in Dataset.copy. Protocol.copy later does a
         # groups.get(name=...) so pre-creating these keeps copy idempotent.
         for group in self.groups.filter(dataset__isnull=True):
-            group.copy(new_protocol=None, new_project=new_project, new_dataset=None)
+            group_map[group.id] = group.copy(
+                new_protocol=None, new_project=new_project, new_dataset=None
+            )
 
+        covariate_map = {
+            covariate.id: covariate.copy(new_project)
+            for covariate in self.covariates.all()
+        }
+        from pkpdapp.models import CovariatePopulation
+
+        for population in CovariatePopulation.objects.filter(
+            subject_group_id__in=group_map,
+            covariate_id__in=covariate_map,
+        ):
+            population.copy(
+                group_map[population.subject_group_id],
+                covariate_map[population.covariate_id],
+            )
+
+        from pkpdapp.utils.covariate_effects import remap_covariate_qname
+
+        old_to_new_covariate = {
+            old: new.id for old, new in covariate_map.items()
+        }
         variable_map = {}
         for model in self.pk_models.all():
-            new_model = model.copy(new_project)
+            new_model = model.copy(new_project, covariate_map)
             for variable in model.variables.all():
-                new_variable = new_model.variables.get(qname=variable.qname)
+                new_qname = remap_covariate_qname(
+                    variable.qname, old_to_new_covariate
+                )
+                new_variable = new_model.variables.get(qname=new_qname)
                 variable_map[variable] = new_variable
 
         for simulation in self.simulations.all():

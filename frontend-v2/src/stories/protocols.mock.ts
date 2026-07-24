@@ -5534,5 +5534,6 @@ export const groups: SubjectGroupRead[] = [
     project: 65,
     subjects: [],
     protocols: [projectProtocols[0]],
+    covariate_populations: [],
   },
 ];

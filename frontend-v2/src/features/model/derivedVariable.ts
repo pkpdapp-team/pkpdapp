@@ -1,6 +1,10 @@
-import { DerivedVariable, TypeEnum, VariableRead } from "../../app/backendApi";
+import {
+  DerivedVariable,
+  DerivedVariableTypeEnum,
+  VariableRead,
+} from "../../app/backendApi";
 
-export type DerivedVariableType = TypeEnum;
+export type DerivedVariableType = DerivedVariableTypeEnum;
 
 export function derivedIndex(
   type: DerivedVariableType,

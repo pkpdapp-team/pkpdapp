@@ -16,6 +16,14 @@ export const getConstVariables = (
   model: CombinedModelRead,
 ) => {
   let constVariables = variables.filter((variable) => variable.constant);
+  // hide the internal covariate machinery (the sampled covariate value inputs
+  // and their centring medians) but keep the editable a_/d_ coefficients.
+  constVariables = constVariables.filter(
+    (variable) =>
+      !variable.qname.startsWith("Covariates.") ||
+      variable.name.startsWith("a_") ||
+      variable.name.startsWith("d_"),
+  );
   if (model.is_library_model) {
     constVariables = constVariables.filter(
       (variable) => variable.name !== "C_Drug",

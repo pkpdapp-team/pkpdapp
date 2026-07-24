@@ -36,6 +36,8 @@ from .views import (
     WhoAmIView,
     SimulationViewSet,
     SubjectGroupView,
+    CovariateView,
+    CovariatePopulationView,
     ResultsTableView,
     TagView,
     EfficacyExperimentView,

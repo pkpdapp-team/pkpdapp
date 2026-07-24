@@ -137,6 +137,9 @@ class UncertaintySimulationMixin:
         time_max: float | None = None,
         variable_distributions: dict[str, "Distribution"] | None = None,
         variable_correlations: dict[tuple[str, str], float] | None = None,
+        covariate_bindings: list | None = None,
+        covariate_input_ids: list[int] | None = None,
+        covariate_mu_ids: list[int] | None = None,
         sample_count: int = 200,
         seed: int | None = None,
         use_diffsol: bool = True,
@@ -174,12 +177,25 @@ class UncertaintySimulationMixin:
         if variable_correlations is None:
             variable_correlations = {}
 
+        if covariate_bindings is None:
+            covariate_bindings = []
+        if covariate_input_ids is None:
+            covariate_input_ids = []
+        if covariate_mu_ids is None:
+            covariate_mu_ids = []
+
         quantiles = self._validate_quantiles(quantiles)
         from pkpdapp.models.simulate_context import SimulateContext
 
-        dynamic_input_ids = [
-            self.variables.get(qname=qname).id for qname in variable_distributions
-        ]
+        # dynamic inputs are the union of the ETA-distributed parameters and the
+        # per-individual covariate inputs (value + centring median), deduped.
+        dynamic_input_ids = list(
+            dict.fromkeys(
+                [self.variables.get(qname=qname).id for qname in variable_distributions]
+                + list(covariate_input_ids)
+                + list(covariate_mu_ids)
+            )
+        )
         rng = np.random.default_rng(seed)
 
         base_context = SimulateContext(
@@ -206,18 +222,50 @@ class UncertaintySimulationMixin:
             else None
         )
 
+        # a population run draws many individuals (from distributions and/or
+        # covariates); a deterministic run is a single individual
+        is_population = bool(variable_distributions) or bool(covariate_bindings)
+
         uncertainty_results = []
         for simulation_group in base_context.simulation_groups:
+            # each subject group is a virtual population of study_size (N)
+            # individuals for a population run, one individual otherwise.
+            # sample_count is only used for the group-less case (a bare/library
+            # model with no subject groups at all).
+            group = self._subject_group(simulation_group.group_id)
+            if group is None:
+                group_n = sample_count
+            else:
+                group_n = group.study_size if is_population else 1
+            if group_n <= 0:
+                raise ValueError("study_size must be greater than 0")
+
+            # resolve each covariate's population once per group, along with its
+            # (constant across the population) centring median
+            populations = {}
+            mu_values = {}
+            for binding in covariate_bindings:
+                population = (
+                    group.covariate_population_for(binding.covariate)
+                    if group is not None
+                    else None
+                )
+                populations[binding.input_id] = population
+                if binding.mu_id is not None:
+                    mu_values[binding.mu_id] = binding.covariate.centering_value(
+                        population
+                    )
+
             sampled_outputs = []
             t_eval = None
             correlated_etas = (
                 self._draw_correlated_etas(
-                    correlated_qnames, covariance, sample_count, rng
+                    correlated_qnames, covariance, group_n, rng
                 )
                 if covariance is not None
                 else None
             )
-            for i in range(sample_count):
+            for i in range(group_n):
                 sampled_variables = self._sample_variables(
                     variables=variables,
                     variable_distributions=variable_distributions,
@@ -234,6 +282,21 @@ class UncertaintySimulationMixin:
                     for qname, sampled_value in sampled_variables.items()
                     if qname in variable_distributions
                 }
+                # per-individual covariate values (dimensionless model inputs)
+                # plus the per-population centring medians. Sex is drawn once and
+                # shared so weight (sex-dependent) stays consistent.
+                if covariate_bindings:
+                    sex = None
+                    if group is not None:
+                        sex = 1 if rng.random() < group.m2f_ratio else 0
+                    for binding in covariate_bindings:
+                        sampled_values_by_id[binding.input_id] = (
+                            binding.covariate.sample(
+                                populations[binding.input_id], rng, sex=sex
+                            )
+                        )
+                    sampled_values_by_id.update(mu_values)
+
                 result = base_context.simulate_model(
                     simulation_group,
                     values_by_id=sampled_values_by_id,
@@ -255,7 +318,7 @@ class UncertaintySimulationMixin:
                 {
                     "time": self._extract_time_values(sampled_outputs[0]),
                     "outputs": aggregated_outputs,
-                    "sample_count": sample_count,
+                    "sample_count": group_n,
                     "group_id": simulation_group.group_id,
                 }
             )

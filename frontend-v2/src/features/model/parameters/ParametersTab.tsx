@@ -158,12 +158,24 @@ const ParametersTab: FC<Props> = ({
                   </HelpButton>{" "}
                 </div>
               </TableCell>
+              <TableCell sx={{ width: "16rem" }}>
+                <div style={{ ...defaultHeaderSx }}>
+                  Covariates{" "}
+                  <HelpButton title="Covariates">
+                    Make this parameter depend on individual characteristics
+                    (weight, age, sex, or a custom covariate defined under Trial
+                    Design). Each covariate adds an editable coefficient
+                    parameter; per-individual covariate values are sampled from
+                    the population of each subject group when simulating.
+                  </HelpButton>{" "}
+                </div>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {constVariables.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9}>No variables found</TableCell>
+                <TableCell colSpan={10}>No variables found</TableCell>
               </TableRow>
             )}
             {constVariables.map((variable) => (

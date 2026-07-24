@@ -9,6 +9,8 @@ from django.db.models import Q
 from pkpdapp.models import (
     Conversation,
     Correlation,
+    Covariate,
+    CovariatePopulation,
     Dataset,
     Project,
     PharmacodynamicModel,
@@ -34,13 +36,22 @@ class UserAccessFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         user = request.user
+        if user.is_superuser:
+            return queryset
         if queryset.model == Project:
             queryset = queryset.filter(users=user)
         elif queryset.model == Compound:
             queryset = queryset.filter(project__users=user)
+        elif queryset.model == Covariate:
+            queryset = queryset.filter(project__users=user)
+        elif queryset.model == CovariatePopulation:
+            queryset = queryset.filter(
+                subject_group__project__users=user,
+                covariate__project__users=user,
+            )
         else:
             raise RuntimeError(queryset_model_not_recognised_text)
-        return queryset
+        return queryset.distinct()
 
 
 class DosedPkModelFilter(filters.BaseFilterBackend):
@@ -147,6 +158,12 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = Subject.objects.filter(dataset__project=project)
                 elif queryset.model == SubjectGroup:
                     queryset = project.groups.all()
+                elif queryset.model == Covariate:
+                    queryset = project.covariates.all()
+                elif queryset.model == CovariatePopulation:
+                    queryset = CovariatePopulation.objects.filter(
+                        subject_group__project=project
+                    )
                 elif queryset.model == ResultsTable:
                     queryset = project.results.all()
                 elif queryset.model == Variable:

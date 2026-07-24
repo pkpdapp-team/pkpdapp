@@ -6,6 +6,7 @@
 
 import logging
 import threading
+from collections import namedtuple
 
 import myokit
 import numpy as np
@@ -23,6 +24,10 @@ from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
+
+# Links a covariate to the model Variable ids of its sampled-value input and,
+# for continuous covariates, its per-population centring median.
+CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id", "mu_id"])
 
 
 class MyokitModelMixin(UncertaintySimulationMixin):
@@ -320,6 +325,63 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variable_correlations[(qname_1, qname_2)] = correlation.coefficient
         return variable_correlations
 
+    def _covariate_bindings(self):
+        """Return the covariate bindings for this model.
+
+        A covariate's value is a single input variable in the ``Covariates``
+        component, shared across every parameter that uses it, so bindings are
+        deduplicated by covariate. Each binding pairs a :class:`Covariate` (the
+        home of the sampling logic) with the model ``Variable`` ids of its value
+        input and, for continuous covariates, its centring median. The two id
+        lists are used to extend the Monte-Carlo dynamic inputs.
+        """
+        from pkpdapp.utils.covariate_effects import covariate_input_name
+
+        bindings = []
+        input_ids = []
+        mu_ids = []
+        if not hasattr(self, "derived_variables"):
+            return bindings, input_ids, mu_ids
+
+        seen = set()
+        for dv in self.derived_variables.all():
+            if not dv.is_covariate():
+                continue
+            cov_name = covariate_input_name(dv)
+            if cov_name in seen:
+                continue
+            seen.add(cov_name)
+            input_var = self.variables.filter(
+                qname=f"Covariates.{cov_name}"
+            ).first()
+            if input_var is None:
+                continue
+            covariate = dv.get_covariate()
+            mu_id = None
+            if covariate.is_continuous:
+                mu_var = self.variables.filter(
+                    qname=f"Covariates.mu_{cov_name}"
+                ).first()
+                if mu_var is not None:
+                    mu_id = mu_var.id
+                    mu_ids.append(mu_var.id)
+            bindings.append(
+                CovariateBinding(
+                    covariate=covariate, input_id=input_var.id, mu_id=mu_id
+                )
+            )
+            input_ids.append(input_var.id)
+
+        return bindings, input_ids, mu_ids
+
+    def _subject_group(self, group_id):
+        """Return the :class:`SubjectGroup` for ``group_id`` (``None`` if none)."""
+        if group_id is None:
+            return None
+        from pkpdapp.models import SubjectGroup
+
+        return SubjectGroup.objects.filter(id=group_id).first()
+
     def simulate(
         self,
         outputs=None,
@@ -372,10 +434,13 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         variable_correlations = self._collect_variable_correlations(
             variable_distributions
         )
+        covariate_bindings, covariate_input_ids, covariate_mu_ids = (
+            self._covariate_bindings()
+        )
         # validate all distributions up front so the sampling pipeline
         # (simulate_uncertainty) can assume everything is valid
         self._validate_variable_distributions(variables, variable_distributions)
-        if not variable_distributions:
+        if not variable_distributions and not covariate_bindings:
             # deterministic run: a single sample gives std=0 and quantiles==mean
             sample_count = 1
         elif sample_count is None:
@@ -387,6 +452,9 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             time_max=time_max,
             variable_distributions=variable_distributions,
             variable_correlations=variable_correlations,
+            covariate_bindings=covariate_bindings,
+            covariate_input_ids=covariate_input_ids,
+            covariate_mu_ids=covariate_mu_ids,
             sample_count=sample_count,
             seed=seed,
             use_diffsol=use_diffsol,

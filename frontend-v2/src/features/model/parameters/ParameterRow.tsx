@@ -20,6 +20,8 @@ import {
   PdfEnum,
   CombinedModelRead,
   useVariableRetrieveQuery,
+  useCovariateListQuery,
+  DerivedVariableTypeEnum,
 } from "../../../app/backendApi";
 import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import UnitField from "../../../components/UnitField";
@@ -78,6 +80,10 @@ const ParameterRow: FC<Props> = ({
     values: variable,
   });
   const [updateVariable] = useVariableUpdateMutation();
+  const { data: covariates } = useCovariateListQuery(
+    { projectId: project.id },
+    { skip: !project.id },
+  );
   useDirty(isDirty);
 
   const isSharedWithMe = useSelector((state: RootState) =>
@@ -157,11 +163,23 @@ const ParameterRow: FC<Props> = ({
     ];
   }
 
+  // covariate derived variables live on the same field array but are handled by
+  // the Covariates column, so they must be ignored here
+  const covariateTypes: DerivedVariableTypeEnum[] = [
+    "WTC",
+    "AGC",
+    "SXC",
+    "CCC",
+    "CCT",
+  ];
   let nonlinearityValue = "";
   let nonlinearityIndex = -1;
   let nonlinearityConcentration: null | undefined | number = null;
   for (let i = 0; i < derivedVariables.length; i++) {
-    if (derivedVariables[i].pk_variable === variable.id) {
+    if (
+      derivedVariables[i].pk_variable === variable.id &&
+      !covariateTypes.includes(derivedVariables[i].type)
+    ) {
       if (
         derivedVariables[i].type === "MM" ||
         derivedVariables[i].type === "EMM"
@@ -262,6 +280,73 @@ const ParameterRow: FC<Props> = ({
   };
 
   const variable_name = parameterDisplayName(variable, model);
+
+  // --- covariates -----------------------------------------------------------
+  // Each option toggles a covariate derived variable on this parameter. Options
+  // are the three built-ins plus any custom covariate defined for the project.
+  // Keys are the covariate type for built-ins and "<type>:<covariateId>" for
+  // custom covariates (so the same custom type can appear more than once).
+  const covariateOptions: { key: string; label: string }[] = [
+    { key: "WTC", label: "Weight" },
+    { key: "AGC", label: "Age" },
+    { key: "SXC", label: "Sex" },
+    ...(covariates || []).map((covariate) => ({
+      key: `${covariate.type === "CAT" ? "CCT" : "CCC"}:${covariate.id}`,
+      label: covariate.name,
+    })),
+  ];
+  const covariateKeyForDerived = (dv: {
+    type: DerivedVariableTypeEnum;
+    covariate?: number | null;
+  }): string =>
+    dv.type === "CCC" || dv.type === "CCT"
+      ? `${dv.type}:${dv.covariate}`
+      : dv.type;
+  const selectedCovariateKeys: string[] = [];
+  const covariateIndexByKey: Record<string, number> = {};
+  derivedVariables.forEach((dv, index) => {
+    if (
+      dv.pk_variable === variable.id &&
+      covariateTypes.includes(dv.type as DerivedVariableTypeEnum)
+    ) {
+      const key = covariateKeyForDerived(dv);
+      selectedCovariateKeys.push(key);
+      covariateIndexByKey[key] = index;
+    }
+  });
+  const handleCovariatesChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    const newKeys = typeof value === "string" ? value.split(",") : value;
+    const toRemove = selectedCovariateKeys.filter((k) => !newKeys.includes(k));
+    const toAdd = newKeys.filter((k) => !selectedCovariateKeys.includes(k));
+    const removeIndices = toRemove
+      .map((k) => covariateIndexByKey[k])
+      .filter((i) => i !== undefined);
+    if (removeIndices.length > 0) {
+      derivedVariablesRemove(removeIndices);
+    }
+    toAdd.forEach((key) => {
+      const [type, covariateId] = key.split(":");
+      derivedVariablesAppend({
+        pk_variable: variable.id,
+        pkpd_model: model.id,
+        type: type as DerivedVariableType,
+        covariate: covariateId ? parseInt(covariateId) : undefined,
+      });
+    });
+  };
+  const showCovariates =
+    (isPK || isPD) && !isNonlin && !variable.qname.startsWith("Covariates.");
+
+  // a parameter may have a nonlinearity or covariate(s), but not both
+  const hasCovariates = selectedCovariateKeys.length > 0;
+  const hasNonlinearity = nonlinearityIndex !== -1;
+  const nonlinearityDisabledReason =
+    "A parameter cannot have both a nonlinearity and a covariate. " +
+    "Remove the selected covariate(s) to choose a nonlinearity.";
+  const covariatesDisabledReason =
+    "A parameter cannot have both a nonlinearity and a covariate. " +
+    "Set the nonlinearity to None to choose covariates.";
 
   const distribution = watch("distribution");
   const distributionOptions: { value: PdfEnum; label: string }[] = [
@@ -400,19 +485,23 @@ const ParameterRow: FC<Props> = ({
       <TableCell size="small" sx={{ width: "20rem" }}>
         {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
-            <Select
-              size="small"
-              value={nonlinearityValue}
-              onChange={handleNonlinearityChange}
-              displayEmpty
-              {...defaultProps}
-            >
-              {nonlinearityOptions.map((option) => (
-                <MenuItem value={option.value} key={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
+            <Tooltip title={hasCovariates ? nonlinearityDisabledReason : ""}>
+              <span>
+                <Select
+                  size="small"
+                  value={nonlinearityValue}
+                  onChange={handleNonlinearityChange}
+                  displayEmpty
+                  disabled={defaultProps.disabled || hasCovariates}
+                >
+                  {nonlinearityOptions.map((option) => (
+                    <MenuItem value={option.value} key={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </span>
+            </Tooltip>
             {nonlinearityConcentration && (
               <Select
                 size="small"
@@ -441,6 +530,41 @@ const ParameterRow: FC<Props> = ({
               </HelpButton>
             )}
           </Stack>
+        )}
+      </TableCell>
+      <TableCell size="small" sx={{ width: "16rem" }}>
+        {showCovariates && (
+          <Tooltip title={hasNonlinearity ? covariatesDisabledReason : ""}>
+            <span>
+              <Select
+                size="small"
+                multiple
+                displayEmpty
+                sx={{ minWidth: "10rem" }}
+                value={selectedCovariateKeys}
+                onChange={handleCovariatesChange}
+                disabled={defaultProps.disabled || hasNonlinearity}
+                renderValue={(selected) =>
+                  selected.length === 0
+                    ? "None"
+                    : covariateOptions
+                        .filter((option) => selected.includes(option.key))
+                        .map((option) => option.label)
+                        .join(", ")
+                }
+              >
+                {covariateOptions.map((option) => (
+                  <MenuItem value={option.key} key={option.key}>
+                    <MuiCheckbox
+                      size="small"
+                      checked={selectedCovariateKeys.includes(option.key)}
+                    />
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </span>
+          </Tooltip>
         )}
       </TableCell>
     </TableRow>

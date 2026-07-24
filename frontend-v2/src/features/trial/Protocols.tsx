@@ -34,6 +34,7 @@ import { useUnits } from "../results/useUnits";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
+import GroupPopulation from "./GroupPopulation";
 import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
@@ -409,7 +410,7 @@ export const Protocols: FC<ProtocolsProps> = ({
       <Box role="tabpanel" id={`group-tabpanel`}>
         <TableContainer
           sx={{
-            height: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+            maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
           }}
         >
           <Table stickyHeader>
@@ -484,6 +485,14 @@ export const Protocols: FC<ProtocolsProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
+        {subjectGroup && (
+          <GroupPopulation
+            key={subjectGroup.id}
+            group={subjectGroup}
+            project={project}
+            disabled={isSharedWithMe}
+          />
+        )}
       </Box>
     </>
   );

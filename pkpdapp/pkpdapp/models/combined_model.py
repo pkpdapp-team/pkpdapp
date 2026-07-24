@@ -25,6 +25,7 @@ from pkpdapp.utils.derived_variables import (
     add_pk_variable,
     add_pd_variable,
 )
+from pkpdapp.utils.covariate_effects import add_covariate_effect
 
 logger = logging.getLogger(__name__)
 
@@ -267,7 +268,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         sbml_writer = myokit.formats.sbml.SBMLWriter()
         return sbml_writer.write_string(sbml_model)
 
-    def copy(self, project):
+    def copy(self, project, covariate_map=None):
         stored_model_kwargs = {
             "name": self.name,
             "project": project,
@@ -296,7 +297,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             new_variables[variable.qname] = variable
 
         for dv in self.derived_variables.all():
-            dv.copy(stored_model, new_variables)
+            dv.copy(stored_model, new_variables, covariate_map)
 
         # variables might have changed so get the new ones
         new_variables = {}
@@ -306,10 +307,33 @@ class CombinedModel(MyokitModelMixin, StoredModel):
         for mapping in self.mappings.all():
             mapping.copy(stored_model, new_variables)
 
+        # custom-covariate variable qnames embed the covariate id, which changes
+        # when covariates are copied to a new project; map new ids back to old
+        # ones to find the matching source variable
+        from pkpdapp.utils.covariate_effects import remap_covariate_qname
+
+        new_to_old_covariate = (
+            {new.id: old for old, new in covariate_map.items()}
+            if covariate_map
+            else {}
+        )
+
         # update the variable values of the new model
         for variable in stored_model.variables.all():
-            old_var = self.variables.get(qname=variable.qname)
-            variable.copy(old_var, project)
+            old_qname = remap_covariate_qname(variable.qname, new_to_old_covariate)
+            if old_qname == variable.qname:
+                old_var = self.variables.get(qname=old_qname)
+                variable.copy(old_var, project)
+            else:
+                # a custom-covariate machinery variable: its name/qname embed the
+                # covariate id (which changed on copy), so keep the new name and
+                # only carry over the editable value/bounds (e.g. an edited a_/d_)
+                old_var = self.variables.filter(qname=old_qname).first()
+                if old_var is not None:
+                    variable.default_value = old_var.default_value
+                    variable.lower_bound = old_var.lower_bound
+                    variable.upper_bound = old_var.upper_bound
+                    variable.save()
 
         # copy the correlations between the newly-copied distributions. Each
         # variable's distribution was copied by variable.copy above; here we map
@@ -322,7 +346,8 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             new_distribution = getattr(variable, "distribution", None)
             if new_distribution is None:
                 continue
-            old_var = self.variables.get(qname=variable.qname)
+            old_qname = remap_covariate_qname(variable.qname, new_to_old_covariate)
+            old_var = self.variables.get(qname=old_qname)
             old_distribution = getattr(old_var, "distribution", None)
             if old_distribution is not None:
                 old_to_new_distribution[old_distribution.id] = new_distribution
@@ -512,6 +537,17 @@ class CombinedModel(MyokitModelMixin, StoredModel):
                 pkpd_model=pkpd_model,
                 project=self.project,
             )
+
+        # inject covariate relationships (weight/age/sex/custom). These add the
+        # covariate value as a shared input variable, the new a_/d_ parameters,
+        # and splice the covariate factor into the affected parameter.
+        for derived_variable in self.derived_variables.all():
+            if derived_variable.is_covariate():
+                add_covariate_effect(
+                    derived_variable=derived_variable,
+                    pkpd_model=pkpd_model,
+                    project=self.project,
+                )
 
         # do mappings
         for mapping in self.mappings.all():

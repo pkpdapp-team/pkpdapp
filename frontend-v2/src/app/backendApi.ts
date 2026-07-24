@@ -344,6 +344,117 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    covariateList: build.query<CovariateListApiResponse, CovariateListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/covariate/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    covariateCreate: build.mutation<
+      CovariateCreateApiResponse,
+      CovariateCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/`,
+        method: "POST",
+        body: queryArg.covariate,
+      }),
+    }),
+    covariateRetrieve: build.query<
+      CovariateRetrieveApiResponse,
+      CovariateRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/covariate/${queryArg.id}/` }),
+    }),
+    covariateUpdate: build.mutation<
+      CovariateUpdateApiResponse,
+      CovariateUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.covariate,
+      }),
+    }),
+    covariatePartialUpdate: build.mutation<
+      CovariatePartialUpdateApiResponse,
+      CovariatePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCovariate,
+      }),
+    }),
+    covariateDestroy: build.mutation<
+      CovariateDestroyApiResponse,
+      CovariateDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    covariatePopulationList: build.query<
+      CovariatePopulationListApiResponse,
+      CovariatePopulationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    covariatePopulationCreate: build.mutation<
+      CovariatePopulationCreateApiResponse,
+      CovariatePopulationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/`,
+        method: "POST",
+        body: queryArg.covariatePopulation,
+      }),
+    }),
+    covariatePopulationRetrieve: build.query<
+      CovariatePopulationRetrieveApiResponse,
+      CovariatePopulationRetrieveApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+      }),
+    }),
+    covariatePopulationUpdate: build.mutation<
+      CovariatePopulationUpdateApiResponse,
+      CovariatePopulationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.covariatePopulation,
+      }),
+    }),
+    covariatePopulationPartialUpdate: build.mutation<
+      CovariatePopulationPartialUpdateApiResponse,
+      CovariatePopulationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCovariatePopulation,
+      }),
+    }),
+    covariatePopulationDestroy: build.mutation<
+      CovariatePopulationDestroyApiResponse,
+      CovariatePopulationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     datasetList: build.query<DatasetListApiResponse, DatasetListApiArg>({
       query: (queryArg) => ({
         url: `/api/dataset/`,
@@ -1440,6 +1551,74 @@ export type CorrelationDestroyApiArg = {
   /** A unique integer value identifying this correlation. */
   id: number;
 };
+export type CovariateListApiResponse = /** status 200  */ CovariateRead[];
+export type CovariateListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CovariateCreateApiResponse = /** status 201  */ CovariateRead;
+export type CovariateCreateApiArg = {
+  covariate: Covariate;
+};
+export type CovariateRetrieveApiResponse = /** status 200  */ CovariateRead;
+export type CovariateRetrieveApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+};
+export type CovariateUpdateApiResponse = /** status 200  */ CovariateRead;
+export type CovariateUpdateApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+  covariate: Covariate;
+};
+export type CovariatePartialUpdateApiResponse =
+  /** status 200  */ CovariateRead;
+export type CovariatePartialUpdateApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+  patchedCovariate: PatchedCovariate;
+};
+export type CovariateDestroyApiResponse = unknown;
+export type CovariateDestroyApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+};
+export type CovariatePopulationListApiResponse =
+  /** status 200  */ CovariatePopulationRead[];
+export type CovariatePopulationListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CovariatePopulationCreateApiResponse =
+  /** status 201  */ CovariatePopulationRead;
+export type CovariatePopulationCreateApiArg = {
+  covariatePopulation: CovariatePopulation;
+};
+export type CovariatePopulationRetrieveApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationRetrieveApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+};
+export type CovariatePopulationUpdateApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationUpdateApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+  covariatePopulation: CovariatePopulation;
+};
+export type CovariatePopulationPartialUpdateApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationPartialUpdateApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+  patchedCovariatePopulation: PatchedCovariatePopulation;
+};
+export type CovariatePopulationDestroyApiResponse = unknown;
+export type CovariatePopulationDestroyApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+};
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
 export type DatasetListApiArg = {
   /** Filter results by project ID */
@@ -2165,7 +2344,7 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum =
+export type DerivedVariableTypeEnum =
   | "AUC"
   | "RO"
   | "FUP"
@@ -2180,7 +2359,12 @@ export type TypeEnum =
   | "POW"
   | "NPW"
   | "TDI"
-  | "IND";
+  | "IND"
+  | "WTC"
+  | "AGC"
+  | "SXC"
+  | "CCC"
+  | "CCT";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -2202,14 +2386,21 @@ export type DerivedVariable = {
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
-    * `IND` - Exponential Increase */
-  type: TypeEnum;
+    * `IND` - Exponential Increase
+    * `WTC` - Weight covariate
+    * `AGC` - Age covariate
+    * `SXC` - Sex covariate
+    * `CCC` - Custom continuous covariate
+    * `CCT` - Custom categorical covariate */
+  type: DerivedVariableTypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
   /** base variable */
   pk_variable: number;
   /** secondary variable */
   secondary_variable?: number | null;
+  /** custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only) */
+  covariate?: number | null;
 };
 export type DerivedVariableRead = {
   id: number;
@@ -2233,14 +2424,21 @@ export type DerivedVariableRead = {
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
-    * `IND` - Exponential Increase */
-  type: TypeEnum;
+    * `IND` - Exponential Increase
+    * `WTC` - Weight covariate
+    * `AGC` - Age covariate
+    * `SXC` - Sex covariate
+    * `CCC` - Custom continuous covariate
+    * `CCT` - Custom categorical covariate */
+  type: DerivedVariableTypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
   /** base variable */
   pk_variable: number;
   /** secondary variable */
   secondary_variable?: number | null;
+  /** custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only) */
+  covariate?: number | null;
 };
 export type TimeInterval = {
   /** true if object has been stored */
@@ -2792,6 +2990,153 @@ export type PatchedCorrelationRead = {
   /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
   coefficient?: number;
 };
+export type CovariateTypeEnum = "CONT" | "CAT";
+export type BuiltinEnum = "WT" | "AGE" | "SEX";
+export type BlankEnum = "";
+export type Covariate = {
+  /** name of the covariate (e.g. albumin) */
+  name: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type CovariateRead = {
+  id: number;
+  /** name of the covariate (e.g. albumin) */
+  name: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type PatchedCovariate = {
+  /** name of the covariate (e.g. albumin) */
+  name?: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type PatchedCovariateRead = {
+  id?: number;
+  /** name of the covariate (e.g. albumin) */
+  name?: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type CovariatePopulation = {
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group: number;
+  /** custom covariate this distribution describes */
+  covariate: number;
+};
+export type CovariatePopulationRead = {
+  id: number;
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group: number;
+  /** custom covariate this distribution describes */
+  covariate: number;
+};
+export type PatchedCovariatePopulation = {
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group?: number;
+  /** custom covariate this distribution describes */
+  covariate?: number;
+};
+export type PatchedCovariatePopulationRead = {
+  id?: number;
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group?: number;
+  /** custom covariate this distribution describes */
+  covariate?: number;
+};
 export type Dataset = {
   /** name of the dataset */
   name: string;
@@ -2894,12 +3239,28 @@ export type ProtocolRead = {
   /** Group that uses this protocol */
   group?: number | null;
 };
+export type PopulationRegionEnum = "US" | "EU" | "ASIA" | "CUSTOM";
 export type SubjectGroup = {
   protocols: Protocol[];
   /** name of the group */
   name: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -2909,10 +3270,26 @@ export type SubjectGroupRead = {
   id: number;
   subjects: number[];
   protocols: ProtocolRead[];
+  covariate_populations: CovariatePopulationRead[];
   /** name of the group */
   name: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -3063,7 +3440,6 @@ export type MessageRead = {
   created_at: string;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
-export type BlankEnum = "";
 export type NullEnum = null;
 export type Pharmacodynamic = {
   mmt?: string;
@@ -3868,6 +4244,21 @@ export type PatchedSubjectGroup = {
   name?: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -3877,10 +4268,26 @@ export type PatchedSubjectGroupRead = {
   id?: number;
   subjects?: number[];
   protocols?: ProtocolRead[];
+  covariate_populations?: CovariatePopulationRead[];
   /** name of the group */
   name?: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -4301,6 +4708,18 @@ export const {
   useCorrelationUpdateMutation,
   useCorrelationPartialUpdateMutation,
   useCorrelationDestroyMutation,
+  useCovariateListQuery,
+  useCovariateCreateMutation,
+  useCovariateRetrieveQuery,
+  useCovariateUpdateMutation,
+  useCovariatePartialUpdateMutation,
+  useCovariateDestroyMutation,
+  useCovariatePopulationListQuery,
+  useCovariatePopulationCreateMutation,
+  useCovariatePopulationRetrieveQuery,
+  useCovariatePopulationUpdateMutation,
+  useCovariatePopulationPartialUpdateMutation,
+  useCovariatePopulationDestroyMutation,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useDatasetRetrieveQuery,
