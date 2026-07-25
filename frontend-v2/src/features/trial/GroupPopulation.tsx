@@ -403,7 +403,10 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           size="small"
           disabled={disabled}
           sx={{ width: "11rem" }}
-          value={group.population_region ?? "EU"}
+          // uncontrolled (like the NumberFields above) so the selection shows
+          // immediately; re-seeded per group via the parent Stack's key. The
+          // cache is refreshed by subjectGroupPartialUpdate's tag invalidation.
+          defaultValue={group.population_region ?? "EU"}
           onChange={(event) =>
             patchGroup({ population_region: event.target.value })
           }

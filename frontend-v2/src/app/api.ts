@@ -218,6 +218,14 @@ export const api = backendApi.enhanceEndpoints({
     subjectGroupDestroy: {
       invalidatesTags: [{ type: "CovariatePopulation", id: "LIST" }],
     },
+    // refresh the cached group so controlled inputs (e.g. the region select)
+    // reflect edits without a page refresh
+    subjectGroupPartialUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
+    subjectGroupUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
     // CovariatePopulation
     covariatePopulationList: {
       providesTags: [{ type: "CovariatePopulation", id: "LIST" }],
