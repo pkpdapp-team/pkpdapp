@@ -12,11 +12,14 @@ covariate value itself becomes a single input variable in a dedicated
 ``Covariates`` component (shared by every parameter that uses it), and new
 editable parameters are injected:
 
-* continuous covariate ``C``:  ``P_i = P * (C / mu_C) ** a_C_P``
-  where ``a_C_P`` is a per-parameter exponent (default depends on P's units) and
+* continuous covariate ``C``:  ``P_i = P * (C / mu_C) ** P_a_C``
+  where ``P_a_C`` is a per-parameter exponent (default depends on P's units) and
   ``mu_C`` is the population median (set per subject group at simulate time).
 * categorical covariate ``C`` with ``n`` categories (base = index 0):
-  ``P_i = P * (1 + sum_k d_C_P_k * [C == k])`` for ``k in 1..n-1``.
+  ``P_i = P * (1 + sum_k P_d_C_k * [C == k])`` for ``k in 1..n-1``.
+
+The injected per-parameter variables are named after the parameter's *local*
+name (without its compartment), e.g. ``CL_cov``, ``CL_a_WT``, ``CL_d_SEX_1``.
 
 Multiple covariates on the same ``P`` compose multiplicatively. The injected
 constants are materialised as editable :class:`Variable` rows by
@@ -31,6 +34,9 @@ import myokit
 from pkpdapp.models import DerivedVariable
 
 COVARIATES_COMPONENT = "Covariates"
+
+# fixed centring reference for the built-in age covariate (years)
+AGE_REFERENCE = 25.0
 
 
 def _sanitize(name: str) -> str:
@@ -136,16 +142,23 @@ def _ensure_input(component: myokit.Component, name: str) -> myokit.Variable:
     return var
 
 
-def _ensure_median(component: myokit.Component, cov_name: str) -> myokit.Variable:
-    """Get/create the (shared) population-median centring constant for ``cov``."""
-    name = f"mu_{cov_name}"
-    if component.has_variable(name):
-        return component.get(name)
-    var = component.add_variable(name)
-    var.meta["desc"] = f"population median of {cov_name}"
-    var.set_unit(myokit.units.dimensionless)
-    var.set_rhs(myokit.Number(1))
-    return var
+def _reference_value(derived_variable: DerivedVariable, project) -> float:
+    """Fixed centring reference for a continuous covariate, baked into the model.
+
+    Decoupled from the sampling distribution: weight is centred on the project
+    species weight (kg, matching the kg-valued weight samples), age on a fixed
+    reference of 25, and a custom continuous covariate on its own
+    ``reference_value``. Falls back to 1 (a no-op factor) for non-positive values.
+    """
+    dtype = derived_variable.type
+    if dtype == DerivedVariable.Type.WEIGHT_COVARIATE:
+        if project is not None and project.species_weight:
+            return float(project.species_weight)
+        return 1.0
+    if dtype == DerivedVariable.Type.AGE_COVARIATE:
+        return AGE_REFERENCE
+    covariate = derived_variable.get_covariate()
+    return float(covariate.reference_value or 1.0)
 
 
 def add_covariate_effect(
@@ -155,8 +168,10 @@ def add_covariate_effect(
 ) -> None:
     """Inject one covariate relationship into ``pkpd_model``.
 
-    Idempotent w.r.t. the shared covariate-value/median inputs, and composes
+    Idempotent w.r.t. the shared covariate-value input, and composes
     multiplicatively with any covariate already applied to the same parameter.
+    The continuous centring reference is a fixed value baked into the equation
+    (see :func:`_reference_value`), so no per-group median is passed at run time.
     """
     try:
         base_var = pkpd_model.get(derived_variable.pk_variable.qname)
@@ -166,11 +181,11 @@ def add_covariate_effect(
     component = _get_component(pkpd_model)
     cov_name = covariate_input_name(derived_variable)
     cov_input = _ensure_input(component, cov_name)
-    p_token = _sanitize(base_var.qname())
+    # the parameter's local name (no compartment), e.g. PKCompartment.CL -> CL
+    p_token = _sanitize(base_var.name())
 
     if _is_continuous(derived_variable):
-        median = _ensure_median(component, cov_name)
-        a_name = f"a_{cov_name}_{p_token}"
+        a_name = f"{p_token}_a_{cov_name}"
         if component.has_variable(a_name):
             return  # this covariate already applied to this parameter
         a_var = component.add_variable(a_name)
@@ -179,17 +194,20 @@ def add_covariate_effect(
         )
         a_var.set_unit(myokit.units.dimensionless)
         a_var.set_rhs(myokit.Number(_default_exponent(base_var)))
+        # centre on a fixed reference baked into the equation (not the sampling
+        # distribution median), so no per-group centring value is passed in
+        reference = _reference_value(derived_variable, project)
         factor = myokit.Power(
-            myokit.Divide(myokit.Name(cov_input), myokit.Name(median)),
+            myokit.Divide(myokit.Name(cov_input), myokit.Number(reference)),
             myokit.Name(a_var),
         )
     else:
-        first_d_name = f"d_{cov_name}_{p_token}_1"
+        first_d_name = f"{p_token}_d_{cov_name}_1"
         if component.has_variable(first_d_name):
             return  # this covariate already applied to this parameter
         factor = myokit.Number(1)
         for k in range(1, _n_categories(derived_variable)):
-            d_var = component.add_variable(f"d_{cov_name}_{p_token}_{k}")
+            d_var = component.add_variable(f"{p_token}_d_{cov_name}_{k}")
             d_var.meta["desc"] = (
                 f"delta of {derived_variable.pk_variable.name} for "
                 f"{cov_name} category {k}"

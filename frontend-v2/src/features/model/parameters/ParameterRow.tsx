@@ -287,7 +287,9 @@ const ParameterRow: FC<Props> = ({
   // Keys are the covariate type for built-ins and "<type>:<covariateId>" for
   // custom covariates (so the same custom type can appear more than once).
   const covariateOptions: { key: string; label: string }[] = [
-    { key: "WTC", label: "Weight" },
+    // Weight is centred on the project species weight, so it is only offered for
+    // human-species projects (which have a sensible default weight).
+    ...(project.species === "H" ? [{ key: "WTC", label: "Weight" }] : []),
     { key: "AGC", label: "Age" },
     { key: "SXC", label: "Sex" },
     ...(covariates || []).map((covariate) => ({

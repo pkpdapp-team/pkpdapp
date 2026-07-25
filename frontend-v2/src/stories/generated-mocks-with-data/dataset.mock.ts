@@ -323,8 +323,14 @@ export const datasets = [
             group: 1
           }
         ],
+        covariate_populations: [],
         name: "Data-Group 1",
         id_in_dataset: "1",
+        study_size: 200,
+        age_min: 20.0,
+        age_max: 60.0,
+        m2f_ratio: 0.5,
+        population_region: "EU",
         dataset: 1,
         project: 1
       },
@@ -366,8 +372,14 @@ export const datasets = [
             group: 2
           }
         ],
+        covariate_populations: [],
         name: "Data-Group 2",
         id_in_dataset: "2",
+        study_size: 200,
+        age_min: 20.0,
+        age_max: 60.0,
+        m2f_ratio: 0.5,
+        population_region: "EU",
         dataset: 1,
         project: 1
       }
@@ -758,8 +770,14 @@ export const dataset = {
           group: 1
         }
       ],
+      covariate_populations: [],
       name: "Data-Group 1",
       id_in_dataset: "1",
+      study_size: 200,
+      age_min: 20.0,
+      age_max: 60.0,
+      m2f_ratio: 0.5,
+      population_region: "EU",
       dataset: 1,
       project: 1
     },
@@ -801,8 +819,14 @@ export const dataset = {
           group: 2
         }
       ],
+      covariate_populations: [],
       name: "Data-Group 2",
       id_in_dataset: "2",
+      study_size: 200,
+      age_min: 20.0,
+      age_max: 60.0,
+      m2f_ratio: 0.5,
+      population_region: "EU",
       dataset: 1,
       project: 1
     }

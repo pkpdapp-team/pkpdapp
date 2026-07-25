@@ -1,0 +1,124 @@
+name: Generated files up to date
+
+# Fails if any committed generated/synced file is out of date with its source.
+# Each job regenerates the file(s) and runs `git diff` — regenerate locally and
+# commit the result to fix a failure.
+#
+#   - weight populations : frontend-v2/src/shared/weightPopulations.ts
+#   - API client         : frontend-v2/src/app/backendApi.ts
+#   - API schema         : pkpdapp/schema.yml
+#   - storybook mocks    : frontend-v2/src/stories/generated-mocks[-with-data]
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+
+jobs:
+  weight-populations:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-v2
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/krypton"
+
+      # the sync script uses only Node built-ins, so no `yarn install` is needed
+      # (invoke node directly rather than via `yarn`, which needs corepack setup)
+      - name: Regenerate shared constants
+        run: node scripts/sync-weight-populations.mjs
+
+      - name: Check the generated file is committed and up to date
+        run: |
+          if ! git diff --exit-code src/shared/weightPopulations.ts; then
+            echo "::error::src/shared/weightPopulations.ts is out of sync with pkpdapp/pkpdapp/utils/weight_populations.json. Run 'yarn sync:weight-populations' in frontend-v2 and commit the result."
+            exit 1
+          fi
+
+  api-client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-v2
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/krypton"
+          cache: "yarn"
+          cache-dependency-path: ./frontend-v2/yarn.lock
+
+      # the codegen tool + prettier + typescript are devDependencies
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # regenerates from the committed pkpdapp/schema.yml (no Django needed)
+      - name: Regenerate the RTK Query API client
+        run: npx @rtk-query/codegen-openapi openapi-config.json
+
+      - name: Check the API client is committed and up to date
+        run: |
+          if ! git diff --exit-code src/app/backendApi.ts; then
+            echo "::error::frontend-v2/src/app/backendApi.ts is out of date with pkpdapp/schema.yml. Run 'npx @rtk-query/codegen-openapi openapi-config.json' in frontend-v2 and commit the result."
+            exit 1
+          fi
+
+  backend-generated:
+    # the API schema and the storybook mocks both need the full backend, so they
+    # share one job (the backend install is the expensive part)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            libsundials-dev libsasl2-dev python3-dev libldap2-dev libssl-dev
+
+      - name: Install pkpdapp
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+
+      - name: Regenerate schema and storybook mocks
+        run: |
+          cd pkpdapp
+          python manage.py spectacular --color --file schema.yml
+          # mocks need seed data from the data migrations (a fresh SQLite DB)
+          python manage.py migrate --noinput
+          python manage.py generate_storybook_mocks
+
+      - name: Check the schema and mocks are committed and up to date
+        run: |
+          status=0
+          if ! git diff --exit-code -- pkpdapp/schema.yml; then
+            echo "::error::pkpdapp/schema.yml is out of date. Run 'python manage.py spectacular --color --file schema.yml' in pkpdapp and commit the result."
+            status=1
+          fi
+          # generate_storybook_mocks stamps a fresh project `created` timestamp
+          # each run, so ignore hunks that only change that line; stage first so
+          # any newly generated file is included in the diff.
+          mock_dirs="frontend-v2/src/stories/generated-mocks frontend-v2/src/stories/generated-mocks-with-data"
+          git add -A $mock_dirs
+          if ! git diff --cached -I 'created: ' --exit-code -- $mock_dirs; then
+            echo "::error::Storybook mocks are out of date. Run 'python manage.py generate_storybook_mocks' in pkpdapp and commit the result (see docs/generate-storybook-mocks.md)."
+            status=1
+          fi
+          exit $status

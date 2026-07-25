@@ -3014,6 +3014,8 @@ export type Covariate = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3038,6 +3040,8 @@ export type CovariateRead = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3061,6 +3065,8 @@ export type PatchedCovariate = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3085,6 +3091,8 @@ export type PatchedCovariateRead = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */

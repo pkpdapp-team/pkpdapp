@@ -25,9 +25,10 @@ logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
 
-# Links a covariate to the model Variable ids of its sampled-value input and,
-# for continuous covariates, its per-population centring median.
-CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id", "mu_id"])
+# Links a covariate to the model Variable id of its sampled-value input. The
+# centring reference is baked into the model as a fixed constant (see
+# ``covariate_effects._reference_value``), so it is not passed at run time.
+CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id"])
 
 
 class MyokitModelMixin(UncertaintySimulationMixin):
@@ -262,8 +263,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         outputs = [
             cls._serialise_variable(o) for o in c.variables(const=False, sort=True)
         ]
+        # sort equations by their string form so the serialised order is stable
+        # (myokit's equations() iteration order is not deterministic across runs)
         equations = [
-            cls._serialise_equation(e) for e in c.equations(bound=False, const=False)
+            cls._serialise_equation(e)
+            for e in sorted(c.equations(bound=False, const=False), key=str)
         ]
         return {
             "name": c.name(),
@@ -325,23 +329,22 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variable_correlations[(qname_1, qname_2)] = correlation.coefficient
         return variable_correlations
 
-    def _covariate_bindings(self):
+    def _covariate_bindings(self) -> list[CovariateBinding]:
         """Return the covariate bindings for this model.
 
         A covariate's value is a single input variable in the ``Covariates``
         component, shared across every parameter that uses it, so bindings are
         deduplicated by covariate. Each binding pairs a :class:`Covariate` (the
-        home of the sampling logic) with the model ``Variable`` ids of its value
-        input and, for continuous covariates, its centring median. The two id
-        lists are used to extend the Monte-Carlo dynamic inputs.
+        home of the sampling logic) with the model ``Variable`` id of its value
+        input, used to extend the Monte-Carlo dynamic inputs (see
+        ``simulate_uncertainty``). The centring reference is baked into the model,
+        so no median id is needed.
         """
         from pkpdapp.utils.covariate_effects import covariate_input_name
 
-        bindings = []
-        input_ids = []
-        mu_ids = []
+        bindings: list[CovariateBinding] = []
         if not hasattr(self, "derived_variables"):
-            return bindings, input_ids, mu_ids
+            return bindings
 
         seen = set()
         for dv in self.derived_variables.all():
@@ -357,22 +360,11 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             if input_var is None:
                 continue
             covariate = dv.get_covariate()
-            mu_id = None
-            if covariate.is_continuous:
-                mu_var = self.variables.filter(
-                    qname=f"Covariates.mu_{cov_name}"
-                ).first()
-                if mu_var is not None:
-                    mu_id = mu_var.id
-                    mu_ids.append(mu_var.id)
             bindings.append(
-                CovariateBinding(
-                    covariate=covariate, input_id=input_var.id, mu_id=mu_id
-                )
+                CovariateBinding(covariate=covariate, input_id=input_var.id)
             )
-            input_ids.append(input_var.id)
 
-        return bindings, input_ids, mu_ids
+        return bindings
 
     def _subject_group(self, group_id):
         """Return the :class:`SubjectGroup` for ``group_id`` (``None`` if none)."""
@@ -437,9 +429,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         variable_correlations = self._collect_variable_correlations(
             variable_distributions
         )
-        covariate_bindings, covariate_input_ids, covariate_mu_ids = (
-            self._covariate_bindings()
-        )
+        covariate_bindings = self._covariate_bindings()
         # validate all distributions up front so the sampling pipeline
         # (simulate_uncertainty) can assume everything is valid
         self._validate_variable_distributions(variables, variable_distributions)
@@ -456,8 +446,6 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             variable_distributions=variable_distributions,
             variable_correlations=variable_correlations,
             covariate_bindings=covariate_bindings,
-            covariate_input_ids=covariate_input_ids,
-            covariate_mu_ids=covariate_mu_ids,
             sample_count=sample_count,
             seed=seed,
             use_diffsol=use_diffsol,

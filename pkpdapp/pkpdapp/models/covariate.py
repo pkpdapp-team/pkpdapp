@@ -80,6 +80,13 @@ class Covariate(models.Model):
         related_name="covariates",
         help_text="unit of the covariate (continuous covariates only)",
     )
+    reference_value = models.FloatField(
+        default=1.0,
+        help_text=(
+            "reference value used to centre this covariate's effect "
+            "(continuous covariates only): P_i = tvP * (cov_i / reference)^a"
+        ),
+    )
 
     def get_project(self):
         return self.project
@@ -129,36 +136,6 @@ class Covariate(models.Model):
             population.median * np.exp(rng.normal(0.0, np.sqrt(population.variance)))
         )
 
-    def centering_value(self, population):
-        """Return the population median used to centre a continuous covariate.
-
-        Deterministic (not the empirical median of the drawn sample), so results
-        reproduce across sample sizes and seeds. Returns 1 when there is nothing
-        to centre against (so the covariate factor collapses to 1).
-        """
-        if population is None:
-            return 1.0
-
-        if self.builtin == self.Builtin.WEIGHT:
-            from pkpdapp.utils.weight_populations import (
-                FEMALE,
-                MALE,
-                reference_median_weight,
-            )
-
-            group = population.subject_group
-            region = group.population_region
-            m2f = group.m2f_ratio
-            return m2f * reference_median_weight(region, MALE) + (
-                1.0 - m2f
-            ) * reference_median_weight(region, FEMALE)
-
-        if self.builtin == self.Builtin.AGE:
-            group = population.subject_group
-            return (group.age_min + group.age_max) / 2.0
-
-        return population.median
-
     def copy(self, new_project):
         """Create a copy of this covariate in ``new_project``."""
         return Covariate.objects.create(
@@ -169,4 +146,5 @@ class Covariate(models.Model):
             n_categories=self.n_categories,
             category_names=self.category_names,
             unit=self.unit,
+            reference_value=self.reference_value,
         )

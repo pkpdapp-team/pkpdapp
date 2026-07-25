@@ -1,0 +1,20 @@
+{
+  "regions": {
+    "US": {
+      "female": { "median": 77.0, "variance": 0.05 },
+      "male": { "median": 89.0, "variance": 0.05 }
+    },
+    "EU": {
+      "female": { "median": 70.0, "variance": 0.05 },
+      "male": { "median": 84.0, "variance": 0.05 }
+    },
+    "ASIA": {
+      "female": { "median": 59.0, "variance": 0.05 },
+      "male": { "median": 69.0, "variance": 0.05 }
+    }
+  },
+  "default": {
+    "female": { "median": 70.0, "variance": 0.05 },
+    "male": { "median": 84.0, "variance": 0.05 }
+  }
+}

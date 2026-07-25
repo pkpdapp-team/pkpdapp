@@ -170,6 +170,22 @@ npx @rtk-query/codegen-openapi openapi-config.json
 
 This creates the `frontend-v2/src/app/backendApi.ts` file with the generated client.
 
+### Sync Shared Constants (Frontend)
+
+Some reference data is defined once in the backend and consumed by both sides. The
+body-weight population data lives in
+`pkpdapp/pkpdapp/utils/weight_populations.json` (the single source of truth; the
+backend reads it directly). After editing that JSON, regenerate the committed
+frontend copy:
+
+```bash
+cd frontend-v2
+yarn sync:weight-populations
+```
+
+This regenerates `frontend-v2/src/shared/weightPopulations.ts` (a generated file —
+do not edit it by hand).
+
 ## Cache Setup
 
 Memcached is installed as part of the system dependencies. Run memcached:

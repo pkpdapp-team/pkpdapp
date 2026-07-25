@@ -4314,6 +4314,11 @@ components:
           nullable: true
           description: optional labels for each category (categorical covariates only);
             index 0 is the base category
+        reference_value:
+          type: number
+          format: double
+          description: 'reference value used to centre this covariate''s effect (continuous
+            covariates only): P_i = tvP * (cov_i / reference)^a'
         project:
           type: integer
           nullable: true
@@ -5358,6 +5363,11 @@ components:
           nullable: true
           description: optional labels for each category (categorical covariates only);
             index 0 is the base category
+        reference_value:
+          type: number
+          format: double
+          description: 'reference value used to centre this covariate''s effect (continuous
+            covariates only): P_i = tvP * (cov_i / reference)^a'
         project:
           type: integer
           nullable: true

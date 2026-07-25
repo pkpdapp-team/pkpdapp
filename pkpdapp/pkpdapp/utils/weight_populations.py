@@ -9,12 +9,20 @@ Body-weight distributions by population region.
 Weight is sampled from a log-normal per region and sex:
 ``WT_i = median * exp(N(0, variance))``.
 
+The numbers are the single source of truth in ``weight_populations.json`` (next
+to this file), which is also consumed by the frontend (synced into
+``frontend-v2/src/shared/weightPopulations.ts``). Edit the JSON, not this module,
+and re-run the frontend sync (``yarn sync:weight-populations``).
+
 .. warning::
-    The values below are **DUMMY PLACEHOLDER DATA**. Replace with real
+    The values in the JSON are **DUMMY PLACEHOLDER DATA**. Replace with real
     region-specific values (e.g. from NHANES / WHO) when available. The shape of
-    ``WEIGHT_LOGNORMAL`` and the two helper functions are the stable interface;
-    only the numbers should change.
+    the JSON and the two helper functions are the stable interface; only the
+    numbers should change.
 """
+
+import json
+from pathlib import Path
 
 import numpy as np
 
@@ -22,28 +30,24 @@ import numpy as np
 FEMALE = 0
 MALE = 1
 
-# DUMMY DATA — replace with real NHANES / WHO values.
-# median in kg, variance of the log-normal random effect (dimensionless).
+_DATA_PATH = Path(__file__).with_name("weight_populations.json")
+with _DATA_PATH.open() as _data_file:
+    _DATA = json.load(_data_file)
+
+
+def _to_int_sex_table(table):
+    """Rekey a {"female"/"male": params} block by the integer sex codes."""
+    return {FEMALE: table["female"], MALE: table["male"]}
+
+
+# median in kg, variance of the log-normal random effect (dimensionless),
+# keyed by region then integer sex. Built from the shared JSON source of truth.
 WEIGHT_LOGNORMAL = {
-    "US": {
-        FEMALE: {"median": 77.0, "variance": 0.05},
-        MALE: {"median": 89.0, "variance": 0.05},
-    },
-    "EU": {
-        FEMALE: {"median": 70.0, "variance": 0.05},
-        MALE: {"median": 84.0, "variance": 0.05},
-    },
-    "ASIA": {
-        FEMALE: {"median": 59.0, "variance": 0.05},
-        MALE: {"median": 69.0, "variance": 0.05},
-    },
+    region: _to_int_sex_table(table) for region, table in _DATA["regions"].items()
 }
 
 # fallback used when a region is unknown / not set
-_DEFAULT = {
-    FEMALE: {"median": 70.0, "variance": 0.05},
-    MALE: {"median": 84.0, "variance": 0.05},
-}
+_DEFAULT = _to_int_sex_table(_DATA["default"])
 
 
 def _params(region, sex):
