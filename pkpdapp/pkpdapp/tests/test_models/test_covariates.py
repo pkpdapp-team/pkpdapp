@@ -207,10 +207,15 @@ class TestCovariateApi(TestCase):
             },
             format="json",
         )
+        # defaults correspond to arithmetic mean 1, std 0.3 (stored as the
+        # log-normal median + log-space variance)
+        from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+
+        default_median, default_variance = mean_std_to_median_logvar(1.0, 0.3)
         covariate = Covariate.objects.get(id=response.data["id"])
         for population in covariate.populations.all():
-            self.assertEqual(population.median, 1.0)
-            self.assertEqual(population.variance, 0.09)
+            self.assertAlmostEqual(population.median, default_median)
+            self.assertAlmostEqual(population.variance, default_variance)
 
     def test_adding_group_creates_populations_for_existing_covariates(self):
         covariate = Covariate.objects.create(
@@ -441,8 +446,12 @@ class TestCovariatePopulationDefaults(TestCase):
         population = CovariatePopulation.objects.create(
             subject_group=self.group, covariate=covariate
         )
-        self.assertEqual(population.median, 1.0)
-        self.assertEqual(population.variance, 0.09)
+        # defaults correspond to arithmetic mean 1, std 0.3
+        from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+
+        default_median, default_variance = mean_std_to_median_logvar(1.0, 0.3)
+        self.assertAlmostEqual(population.median, default_median)
+        self.assertAlmostEqual(population.variance, default_variance)
 
     def test_study_size_validation_and_constraint(self):
         self.group.study_size = 0

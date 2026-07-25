@@ -88,17 +88,16 @@ const formatNumber = (value: number) => String(Number(value.toPrecision(6)));
 // The backend stores the log-normal median and log-space variance; users enter
 // the arithmetic mean and standard deviation, which are converted here. Local
 // state keeps both values together so editing either commits a consistent
-// (median, variance) pair. Seeded from the population, or the backend defaults
-// (median 1, variance 0.09) when the group has no population yet.
+// (median, variance) pair. Seeded by converting the population's stored values,
+// or the default mean 1 / std 0.3 when the group has no population yet.
 const ContinuousCovariateFields: FC<{
   population: CovariatePopulationRead | undefined;
   disabled: boolean;
   onCommit: (patch: { median: number; variance: number }) => void;
 }> = ({ population, disabled, onCommit }) => {
-  const seed = medianVarianceToMeanStd(
-    population?.median ?? 1.0,
-    population?.variance ?? 0.09,
-  );
+  const seed = population
+    ? medianVarianceToMeanStd(population.median ?? 1.0, population.variance ?? 0.09)
+    : { mean: 1.0, std: 0.3 };
   const [mean, setMean] = useState(formatNumber(seed.mean));
   const [std, setStd] = useState(formatNumber(seed.std));
 
@@ -164,7 +163,6 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<"CONT" | "CAT">("CONT");
   const [newCategories, setNewCategories] = useState(2);
-  const [newReference, setNewReference] = useState(1);
 
   const patchGroup = (patch: Record<string, unknown>) => {
     updateSubjectGroup({
@@ -213,11 +211,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
         name: newName,
         type: newType,
         n_categories: newType === "CAT" ? newCategories : undefined,
-        reference_value: newType === "CONT" ? newReference : undefined,
       },
     });
     setNewName("");
-    setNewReference(1);
     refetchCovariates();
     // the backend creates default populations for every group; refresh so the
     // pre-filled defaults show immediately
@@ -381,20 +377,6 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
             disabled={disabled}
             onChange={(event) =>
               setNewCategories(Math.max(2, parseInt(event.target.value) || 2))
-            }
-          />
-        )}
-        {newType === "CONT" && (
-          <TextField
-            size="small"
-            type="number"
-            label="Reference value"
-            sx={{ width: "9rem" }}
-            value={newReference}
-            disabled={disabled}
-            inputProps={{ min: 0, step: "any" }}
-            onChange={(event) =>
-              setNewReference(parseFloat(event.target.value) || 0)
             }
           />
         )}

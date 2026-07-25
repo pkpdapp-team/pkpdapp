@@ -4,7 +4,18 @@
 # copyright notice and full license details.
 #
 
+import math
+
 from django.db import models
+
+# stored as the log-normal median + log-space variance, but defaulted from the
+# user-facing arithmetic mean (1) and standard deviation (0.3) so the UI shows
+# those round defaults for a new continuous covariate (mirrors
+# pkpdapp.utils.lognormal.mean_std_to_median_logvar; kept inline to avoid a
+# circular import from the models package).
+_DEFAULT_CV2 = (0.3 / 1.0) ** 2
+_DEFAULT_MEDIAN = 1.0 / math.sqrt(1.0 + _DEFAULT_CV2)
+_DEFAULT_VARIANCE = math.log1p(_DEFAULT_CV2)
 
 
 class CovariatePopulation(models.Model):
@@ -34,11 +45,11 @@ class CovariatePopulation(models.Model):
         help_text="custom covariate this distribution describes",
     )
     median = models.FloatField(
-        default=1.0,
+        default=_DEFAULT_MEDIAN,
         help_text="median value of the covariate (continuous covariates only)",
     )
     variance = models.FloatField(
-        default=0.09,
+        default=_DEFAULT_VARIANCE,
         help_text=(
             "variance of the log-normal random effect "
             "(continuous covariates only)"

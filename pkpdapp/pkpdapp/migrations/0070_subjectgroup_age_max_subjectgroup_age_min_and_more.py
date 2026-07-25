@@ -66,8 +66,8 @@ class Migration(migrations.Migration):
             name='CovariatePopulation',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('median', models.FloatField(default=1.0, help_text='median value of the covariate (continuous covariates only)')),
-                ('variance', models.FloatField(default=0.09, help_text='variance of the log-normal random effect (continuous covariates only)')),
+                ('median', models.FloatField(default=0.9578262852211513, help_text='median value of the covariate (continuous covariates only)')),
+                ('variance', models.FloatField(default=0.08617769624105233, help_text='variance of the log-normal random effect (continuous covariates only)')),
                 ('category_probabilities', models.JSONField(blank=True, default=list, help_text='probability of each category (categorical covariates only); one entry per category, index 0 is the base category')),
                 ('covariate', models.ForeignKey(help_text='custom covariate this distribution describes', on_delete=django.db.models.deletion.CASCADE, related_name='populations', to='pkpdapp.covariate')),
                 ('subject_group', models.ForeignKey(help_text='subject group (virtual population) this distribution is for', on_delete=django.db.models.deletion.CASCADE, related_name='covariate_populations', to='pkpdapp.subjectgroup')),
