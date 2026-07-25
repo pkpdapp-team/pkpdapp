@@ -112,12 +112,17 @@ jobs:
             echo "::error::pkpdapp/schema.yml is out of date. Run 'python manage.py spectacular --color --file schema.yml' in pkpdapp and commit the result."
             status=1
           fi
-          # generate_storybook_mocks stamps a fresh project `created` timestamp
-          # each run, so ignore hunks that only change that line; stage first so
-          # any newly generated file is included in the diff.
+          # Ignore hunks that only change lines we can't make reproducible:
+          #  - `created:` — generate_storybook_mocks stamps a fresh project
+          #    timestamp each run.
+          #  - `sbml:` — myokit's SBML exporter orders <parameter>/<...Rule>
+          #    elements non-deterministically across environments (even for the
+          #    same pinned commit); the field is display-only, and real model
+          #    changes are still caught by the checked `code`/`equations` fields.
+          # Stage first so any newly generated file is included in the diff.
           mock_dirs="frontend-v2/src/stories/generated-mocks frontend-v2/src/stories/generated-mocks-with-data"
           git add -A $mock_dirs
-          if ! git diff --cached -I 'created: ' --exit-code -- $mock_dirs; then
+          if ! git diff --cached -I 'created: ' -I 'sbml: ' --exit-code -- $mock_dirs; then
             echo "::error::Storybook mocks are out of date. Run 'python manage.py generate_storybook_mocks' in pkpdapp and commit the result (see docs/generate-storybook-mocks.md)."
             status=1
           fi
