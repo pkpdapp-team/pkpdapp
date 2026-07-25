@@ -308,56 +308,41 @@ export const EditCategoricalPopulation: Story = {
   },
 };
 
-export const ShowsCategoryProbabilityError: Story = {
-  parameters: {
-    msw: {
-      handlers: {
-        // override just the populations handlers so PATCH rejects a
-        // wrong-length probability list (ethnicity has 3 categories)
-        populations: [
-          http.get("/api/covariate_population", async () => {
-            await delay();
-            return HttpResponse.json(populationMocks, { status: 200 });
-          }),
-          http.patch(
-            "/api/covariate_population/:id",
-            async ({ request, params }) => {
-              await delay();
-              const body =
-                (await request.json()) as Partial<CovariatePopulationRead>;
-              if ((body.category_probabilities || []).length !== 3) {
-                return HttpResponse.json(
-                  {
-                    non_field_errors: [
-                      "category_probabilities must have one entry per category",
-                    ],
-                  },
-                  { status: 400 },
-                );
-              }
-              const id = parseInt(params.id as string, 10);
-              return HttpResponse.json({ id, ...body }, { status: 200 });
-            },
-          ),
-        ],
-      },
-    },
-  },
+export const RejectsWrongCategoryCount: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByText("ethnicity");
     const probabilities = canvas.getByLabelText(/Category probabilities/i);
-    // only two values for a three-category covariate -> backend 400
+    // two values for a three-category covariate -> client-side count error,
+    // and no request is sent to the backend
     await userEvent.clear(probabilities);
     await userEvent.type(probabilities, "0.5, 0.5");
     await userEvent.tab();
     await waitFor(() =>
       expect(
-        canvas.getByText(
-          "category_probabilities must have one entry per category",
-        ),
+        canvas.getByText("Enter 3 probabilities, one per category"),
       ).toBeInTheDocument(),
     );
+    expect(populationPatchSpy).not.toHaveBeenCalled();
+  },
+};
+
+export const RejectsBadlyFormattedProbabilities: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText("ethnicity");
+    const probabilities = canvas.getByLabelText(/Category probabilities/i);
+    // not a comma-separated list of numbers -> client-side format error, and
+    // no request is sent to the backend
+    await userEvent.clear(probabilities);
+    await userEvent.type(probabilities, "0.5 0.5");
+    await userEvent.tab();
+    await waitFor(() =>
+      expect(
+        canvas.getByText(/Enter a comma-separated list of numbers/i),
+      ).toBeInTheDocument(),
+    );
+    expect(populationPatchSpy).not.toHaveBeenCalled();
   },
 };
 

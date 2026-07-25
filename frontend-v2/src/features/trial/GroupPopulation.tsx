@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, FocusEvent, useState } from "react";
 import {
   Box,
   Button,
@@ -106,14 +106,56 @@ const apiErrorMessage = (error: unknown): string => {
   return "Could not save this value. Please check it and try again.";
 };
 
-// Category-probabilities input for a categorical covariate. Shows any backend
-// validation error (e.g. wrong number of categories) inline on the field.
+// Parse and validate the comma-separated category-probabilities entry. Returns
+// the parsed values, an error message, or null when the field is empty (a
+// no-op). The count is checked here too so a wrong-length list gets a clearer
+// message than the backend's (which is only reached for other errors).
+const parseCategoryProbabilities = (
+  raw: string,
+  nCategories: number | null | undefined,
+): { values: number[] } | { error: string } | null => {
+  if (raw.trim() === "") {
+    return null;
+  }
+  const tokens = raw.split(",").map((token) => token.trim());
+  const values = tokens.map(Number);
+  if (tokens.some((token, i) => token === "" || !Number.isFinite(values[i]))) {
+    return {
+      error: "Enter a comma-separated list of numbers, e.g. 0.5, 0.3, 0.2",
+    };
+  }
+  if (nCategories != null && values.length !== nCategories) {
+    return { error: `Enter ${nCategories} probabilities, one per category` };
+  }
+  return { values };
+};
+
+// Category-probabilities input for a categorical covariate. Validates the entry
+// client-side and shows any backend validation error inline on the field.
 const CategoricalCovariateField: FC<{
   population: CovariatePopulationRead | undefined;
+  nCategories: number | null | undefined;
   disabled: boolean;
   onCommit: (patch: { category_probabilities: number[] }) => Promise<CommitResult>;
-}> = ({ population, disabled, onCommit }) => {
+}> = ({ population, nCategories, disabled, onCommit }) => {
   const [error, setError] = useState<string | null>(null);
+
+  const handleBlur = async (
+    event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const parsed = parseCategoryProbabilities(event.target.value, nCategories);
+    if (parsed === null) {
+      setError(null); // empty field: leave the stored value untouched
+      return;
+    }
+    if ("error" in parsed) {
+      setError(parsed.error);
+      return;
+    }
+    const result = await onCommit({ category_probabilities: parsed.values });
+    setError(result?.error ? apiErrorMessage(result.error) : null);
+  };
+
   return (
     <TextField
       size="small"
@@ -123,14 +165,7 @@ const CategoricalCovariateField: FC<{
       error={!!error}
       helperText={error ?? undefined}
       defaultValue={(population?.category_probabilities || []).join(", ")}
-      onBlur={async (event) => {
-        const probabilities = event.target.value
-          .split(",")
-          .map((value) => parseFloat(value.trim()))
-          .filter((value) => !Number.isNaN(value));
-        const result = await onCommit({ category_probabilities: probabilities });
-        setError(result?.error ? apiErrorMessage(result.error) : null);
-      }}
+      onBlur={handleBlur}
     />
   );
 };
@@ -455,6 +490,7 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
               {covariate.type === "CAT" ? (
                 <CategoricalCovariateField
                   population={population}
+                  nCategories={covariate.n_categories}
                   disabled={disabled}
                   onCommit={(patch) => commitPopulation(covariate, patch)}
                 />
