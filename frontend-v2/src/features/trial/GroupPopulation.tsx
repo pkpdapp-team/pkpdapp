@@ -84,6 +84,57 @@ const NumberField: FC<{
 // display helper: trim floating-point noise from converted values
 const formatNumber = (value: number) => String(Number(value.toPrecision(6)));
 
+// A committed mutation resolves to { data } on success or { error } on failure.
+type CommitResult = { error?: unknown } | undefined;
+
+// Pull a human-readable message out of an RTK Query error. DRF serialises
+// validation errors as { field: [msg, ...] } (non-field errors under
+// "non_field_errors"), so surface the first string we find.
+const apiErrorMessage = (error: unknown): string => {
+  const data = (error as { data?: unknown } | undefined)?.data;
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data && typeof data === "object") {
+    const first = Object.values(data as Record<string, unknown>)
+      .flat()
+      .find((value) => typeof value === "string");
+    if (typeof first === "string") {
+      return first;
+    }
+  }
+  return "Could not save this value. Please check it and try again.";
+};
+
+// Category-probabilities input for a categorical covariate. Shows any backend
+// validation error (e.g. wrong number of categories) inline on the field.
+const CategoricalCovariateField: FC<{
+  population: CovariatePopulationRead | undefined;
+  disabled: boolean;
+  onCommit: (patch: { category_probabilities: number[] }) => Promise<CommitResult>;
+}> = ({ population, disabled, onCommit }) => {
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <TextField
+      size="small"
+      label="Category probabilities (comma separated)"
+      sx={{ width: "20rem" }}
+      disabled={disabled}
+      error={!!error}
+      helperText={error ?? undefined}
+      defaultValue={(population?.category_probabilities || []).join(", ")}
+      onBlur={async (event) => {
+        const probabilities = event.target.value
+          .split(",")
+          .map((value) => parseFloat(value.trim()))
+          .filter((value) => !Number.isNaN(value));
+        const result = await onCommit({ category_probabilities: probabilities });
+        setError(result?.error ? apiErrorMessage(result.error) : null);
+      }}
+    />
+  );
+};
+
 // Mean / std-deviation inputs for a continuous covariate's per-group log-normal.
 // The backend stores the log-normal median and log-space variance; users enter
 // the arithmetic mean and standard deviation, which are converted here. Local
@@ -179,26 +230,27 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
   ): CovariatePopulationRead | undefined =>
     groupPopulations.find((population) => population.covariate === covariate.id);
 
+  // returns the RTK mutation result ({ data } | { error }) so callers can show
+  // any backend validation error against the offending field
   const commitPopulation = async (
     covariate: CovariateRead,
     patch: Partial<CovariatePopulationRead>,
   ) => {
     const existing = populationFor(covariate);
-    if (existing) {
-      await updatePopulation({
-        id: existing.id,
-        patchedCovariatePopulation: patch,
-      });
-    } else {
-      await createPopulation({
-        covariatePopulation: {
-          subject_group: group.id,
-          covariate: covariate.id,
-          ...patch,
-        },
-      });
-    }
+    const result = existing
+      ? await updatePopulation({
+          id: existing.id,
+          patchedCovariatePopulation: patch,
+        })
+      : await createPopulation({
+          covariatePopulation: {
+            subject_group: group.id,
+            covariate: covariate.id,
+            ...patch,
+          },
+        });
     refetchPopulations();
+    return result;
   };
 
   const addCovariate = async () => {
@@ -401,23 +453,10 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
             >
               <Typography sx={{ width: "10rem" }}>{covariate.name}</Typography>
               {covariate.type === "CAT" ? (
-                <TextField
-                  size="small"
-                  label="Category probabilities (comma separated)"
-                  sx={{ width: "20rem" }}
+                <CategoricalCovariateField
+                  population={population}
                   disabled={disabled}
-                  defaultValue={(population?.category_probabilities || []).join(
-                    ", ",
-                  )}
-                  onBlur={(event) => {
-                    const probabilities = event.target.value
-                      .split(",")
-                      .map((value) => parseFloat(value.trim()))
-                      .filter((value) => !Number.isNaN(value));
-                    commitPopulation(covariate, {
-                      category_probabilities: probabilities,
-                    });
-                  }}
+                  onCommit={(patch) => commitPopulation(covariate, patch)}
                 />
               ) : (
                 <>
