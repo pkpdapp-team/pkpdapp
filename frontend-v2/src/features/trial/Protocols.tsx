@@ -489,7 +489,6 @@ export const Protocols: FC<ProtocolsProps> = ({
         </TableContainer>
         {subjectGroup && (
           <GroupPopulation
-            key={subjectGroup.id}
             group={subjectGroup}
             project={project}
             disabled={isSharedWithMe}

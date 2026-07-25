@@ -364,7 +364,15 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           </ul>
         </HelpButton>
       </Typography>
-      <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", marginTop: 1 }}>
+      <Stack
+        // GroupPopulation stays mounted across group-tab switches (so an
+        // in-flight save from onBlur is not aborted); re-seed these uncontrolled
+        // fields when the group changes by remounting them
+        key={group.id}
+        direction="row"
+        spacing={2}
+        sx={{ flexWrap: "wrap", marginTop: 1 }}
+      >
         <NumberField
           label="Study size (N)"
           defaultValue={group.study_size}
