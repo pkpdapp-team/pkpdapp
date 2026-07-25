@@ -5920,6 +5920,12 @@ components:
           items:
             $ref: '#/components/schemas/CovariatePopulation'
           readOnly: true
+        copy_covariates_from:
+          type: integer
+          writeOnly: true
+          nullable: true
+          description: on create, copy covariate population values from this group;
+            defaults are used when unset or from another project
         name:
           type: string
           description: name of the group
@@ -6928,6 +6934,12 @@ components:
           items:
             $ref: '#/components/schemas/CovariatePopulation'
           readOnly: true
+        copy_covariates_from:
+          type: integer
+          writeOnly: true
+          nullable: true
+          description: on create, copy covariate population values from this group;
+            defaults are used when unset or from another project
         name:
           type: string
           description: name of the group

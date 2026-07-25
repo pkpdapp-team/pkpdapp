@@ -251,6 +251,8 @@ export const Protocols: FC<ProtocolsProps> = ({
         name: newGroupName,
         id_in_dataset: `${newGroupId}`,
         project: project.id,
+        // seed covariate population values from the currently selected group
+        copy_covariates_from: typeof tab === "number" ? tab : undefined,
         protocols: filteredProtocols.map((p) => {
           const { project, ...newProtocol } = p;
           return {

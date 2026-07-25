@@ -234,6 +234,47 @@ class TestCovariateApi(TestCase):
             ).exists()
         )
 
+    def test_adding_group_copies_covariate_values_from_source_group(self):
+        continuous = Covariate.objects.create(
+            project=self.project, name="albumin", type=Covariate.Type.CONTINUOUS
+        )
+        categorical = Covariate.objects.create(
+            project=self.project,
+            name="eth",
+            type=Covariate.Type.CATEGORICAL,
+            n_categories=3,
+        )
+        source = SubjectGroup.objects.create(name="source", project=self.project)
+        # give the source group non-default values
+        CovariatePopulation.objects.create(
+            subject_group=source, covariate=continuous, median=42.0, variance=0.16
+        )
+        CovariatePopulation.objects.create(
+            subject_group=source,
+            covariate=categorical,
+            category_probabilities=[0.1, 0.3, 0.6],
+        )
+
+        url = self.reverse("subject_group-list")
+        response = self.client.post(
+            url,
+            data={
+                "name": "copy",
+                "project": self.project.id,
+                "protocols": [],
+                "copy_covariates_from": source.id,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+
+        new_id = response.data["id"]
+        copied_continuous = continuous.populations.get(subject_group_id=new_id)
+        self.assertEqual(copied_continuous.median, 42.0)
+        self.assertEqual(copied_continuous.variance, 0.16)
+        copied_categorical = categorical.populations.get(subject_group_id=new_id)
+        self.assertEqual(copied_categorical.category_probabilities, [0.1, 0.3, 0.6])
+
     def test_categorical_population_length_validation(self):
         covariate = Covariate.objects.create(
             project=self.project,
