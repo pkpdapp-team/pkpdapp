@@ -1347,8 +1347,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mi>PDCompartment.kge</mi><mo>*</mo><msup><mi>PDCompartment.TS</mi><mi>PDCompartment.gamma</mi></msup></mrow></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mi>PDCompartment.kge</mi><mo>*</mo><msup><mi>PDCompartment.TS</mi><mi>PDCompartment.gamma</mi></msup></mrow></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -1380,8 +1380,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mrow><mi>PDCompartment.TS</mi><mo>*</mo><mi>PDCompartment.beta</mi></mrow><mo>*</mo><mrow><mi>ln</mi><mfenced><mfrac><mi>PDCompartment.TSmax</mi><mi>PDCompartment.TS</mi></mfrac></mfenced></mrow></mrow></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mrow><mi>PDCompartment.TS</mi><mo>*</mo><mi>PDCompartment.beta</mi></mrow><mo>*</mo><mrow><mi>ln</mi><mfenced><mfrac><mi>PDCompartment.TSmax</mi><mi>PDCompartment.TS</mi></mfrac></mfenced></mrow></mrow></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -1413,8 +1413,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mi>PDCompartment.kgl</mi></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mi>PDCompartment.kgl</mi></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -1446,8 +1446,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.TS</mi><mi>PDCompartment.TSmax</mi></mfrac></mrow></mfenced></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.TS</mi><mi>PDCompartment.TSmax</mi></mfrac></mrow></mfenced></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -1479,8 +1479,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -1512,10 +1512,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
@@ -1548,10 +1548,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
@@ -1584,10 +1584,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
@@ -1840,11 +1840,11 @@ export const pdModels = [
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr1_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr2_victim</mi><mo>-</mo><mi>PDCompartment.Atr1_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr2_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr3_victim</mi><mo>-</mo><mi>PDCompartment.Atr2_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr3_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.ktrA_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Atr3_victim</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mn>1.0</mn></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinact</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDI</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C1_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A1_victim</mi><mi>PDCompartment.V1_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C2_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A2_victim</mi><mi>PDCompartment.V2_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C3_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A3_victim</mi><mi>PDCompartment.V3_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.CLh</mi><mo>=</mo><mfrac><mrow><mfrac><mrow><mfenced><mrow><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>*</mo><mi>PDCompartment.Qh</mi></mrow><mfenced><mrow><mfrac><mrow><mfenced><mrow><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>+</mo><mi>PDCompartment.Qh</mi></mrow></mfenced></mfrac></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mn>1.0</mn></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinact</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDI</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FH</mi><mo>=</mo><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.CLh</mi><mi>PDCompartment.Qh</mi></mfrac></mrow></mrow></math>"
         ]
       },
@@ -1887,11 +1887,11 @@ export const pdModels = [
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr1_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr2_victim</mi><mo>-</mo><mi>PDCompartment.Atr1_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr2_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr3_victim</mi><mo>-</mo><mi>PDCompartment.Atr2_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr3_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.ktrA_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Atr3_victim</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mfenced><mrow><mrow><mn>1.0</mn><mo>*</mo><mi>PDCompartment.IND</mi></mrow><mo>-</mo><mi>PDCompartment.Enzyme</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C1_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A1_victim</mi><mi>PDCompartment.V1_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C2_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A2_victim</mi><mi>PDCompartment.V2_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C3_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A3_victim</mi><mi>PDCompartment.V3_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.CLh</mi><mo>=</mo><mfrac><mrow><mfrac><mrow><mfenced><mrow><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>*</mo><mi>PDCompartment.Qh</mi></mrow><mfenced><mrow><mfrac><mrow><mfenced><mrow><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>+</mo><mi>PDCompartment.Qh</mi></mrow></mfenced></mfrac></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mfenced><mrow><mrow><mn>1.0</mn><mo>*</mo><mi>PDCompartment.IND</mi></mrow><mo>-</mo><mi>PDCompartment.Enzyme</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FH</mi><mo>=</mo><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.CLh</mi><mi>PDCompartment.Qh</mi></mfrac></mrow></mrow></math>"
         ]
       },
@@ -1934,11 +1934,11 @@ export const pdModels = [
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr1_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr2_victim</mi><mo>-</mo><mi>PDCompartment.Atr1_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr2_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.ktrA_victim</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.Atr3_victim</mi><mo>-</mo><mi>PDCompartment.Atr2_victim</mi></mrow></mfenced></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Atr3_victim</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.ktrA_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Atr3_victim</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mn>1.0</mn></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinact</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDI</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C1_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A1_victim</mi><mi>PDCompartment.V1_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C2_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A2_victim</mi><mi>PDCompartment.V2_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C3_victim</mi><mo>=</mo><mfrac><mi>PDCompartment.A3_victim</mi><mi>PDCompartment.V3_victim</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.CLh</mi><mo>=</mo><mfrac><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>*</mo><mi>PDCompartment.Qh</mi></mrow><mfenced><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mi>PDCompartment.fm_victim</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLint</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_victim</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_victim</mi></mrow><mi>PDCompartment.BP_victim</mi></mfrac><mo>+</mo><mi>PDCompartment.Qh</mi></mrow></mfenced></mfrac></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mn>1.0</mn></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinact</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDI</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FH</mi><mo>=</mo><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.CLh</mi><mi>PDCompartment.Qh</mi></mfrac></mrow></mrow></math>"
         ]
       },
@@ -2180,8 +2180,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mi>PDCompartment.kge</mi><mo>*</mo><msup><mi>PDCompartment.TS</mi><mi>PDCompartment.gamma</mi></msup></mrow></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mi>PDCompartment.kge</mi><mo>*</mo><msup><mi>PDCompartment.TS</mi><mi>PDCompartment.gamma</mi></msup></mrow></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -2215,8 +2215,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mrow><mi>PDCompartment.TS</mi><mo>*</mo><mi>PDCompartment.beta</mi></mrow><mo>*</mo><mrow><mi>ln</mi><mfenced><mfrac><mi>PDCompartment.TSmax</mi><mi>PDCompartment.TS</mi></mfrac></mfenced></mrow></mrow></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mrow><mrow><mi>PDCompartment.TS</mi><mo>*</mo><mi>PDCompartment.beta</mi></mrow><mo>*</mo><mrow><mi>ln</mi><mfenced><mfrac><mi>PDCompartment.TSmax</mi><mi>PDCompartment.TS</mi></mfrac></mfenced></mrow></mrow></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -2250,8 +2250,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mi>PDCompartment.kgl</mi></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mi>PDCompartment.kgl</mi></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -2285,8 +2285,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.TS</mi><mi>PDCompartment.TSmax</mi></mfrac></mrow></mfenced></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.TS</mi><mi>PDCompartment.TSmax</mi></mfrac></mrow></mfenced></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -2320,8 +2320,8 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>",
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>"
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mi>PDCompartment.Growth</mi></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.Growth</mi><mo>=</mo><piecewise><piece><mn>0.0</mn><mrow><mi>PDCompartment.TS</mi><mo>&gt;</mo><mn>1.00000000000000000e+12</mn></mrow></piece><otherwise><mfrac><mrow><mi>PDCompartment.kge</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><msup><mrow><mn>1.0</mn><mo>+</mo><msup><mrow><mfrac><mi>PDCompartment.kge</mi><mi>PDCompartment.kgl</mi></mfrac><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mi>PDCompartment.psi</mi></msup></mrow><mfrac><mn>1.0</mn><mi>PDCompartment.psi</mi></mfrac></msup></mfrac></otherwise></piecewise></mrow></math>"
         ]
       },
       {
@@ -2355,10 +2355,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
@@ -2393,10 +2393,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
@@ -2431,10 +2431,10 @@ export const pdModels = [
         variables: [],
         outputs: [],
         equations: [
-          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS1</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mi>PDCompartment.Kill</mi><mo>*</mo><mi>PDCompartment.TS</mi></mrow><mo>-</mo><mfrac><mi>PDCompartment.TS1</mi><mi>PDCompartment.tau</mi></mfrac></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS2</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS1</mi><mo>-</mo><mi>PDCompartment.TS2</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS3</mi><mi>dt</mi></mfrac><mo>=</mo><mfrac><mfenced><mrow><mi>PDCompartment.TS2</mi><mo>-</mo><mi>PDCompartment.TS3</mi></mrow></mfenced><mi>PDCompartment.tau</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.TS</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Kill</mi></mrow><mo>*</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>",
           "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.TSTotal</mi><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.TS1</mi><mo>+</mo><mi>PDCompartment.TS2</mi></mrow><mo>+</mo><mi>PDCompartment.TS3</mi></mrow><mo>+</mo><mi>PDCompartment.TS</mi></mrow></mrow></math>"
         ]
       },
