@@ -515,6 +515,29 @@ class TestCovariateInjection(TestCase):
         self.assertIn("70", rhs)
         self.assertNotIn("mu_", rhs)
 
+    def test_weight_reference_is_converted_to_kg(self):
+        # species weight entered in grams must be converted to kg (the unit of
+        # the sampled weights) before being baked in as the centring reference
+        from pkpdapp.models import Unit
+
+        self.project.species_weight = 70000.0
+        self.project.species_weight_unit = Unit.objects.get(symbol="g")
+        self.project.save()
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.WEIGHT_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        model = self.pkpd_model.get_myokit_model()
+        model.validate()
+
+        # 70000 g -> 70 kg baked into the (WT / reference) factor
+        rhs = str(model.get("Covariates.CL_cov").rhs())
+        self.assertIn("70", rhs)
+        self.assertNotIn("70000", rhs)
+
     def test_age_covariate_uses_fixed_reference(self):
         DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,

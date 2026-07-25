@@ -140,9 +140,10 @@ const ParametersTab: FC<Props> = ({
                   <HelpButton title="Population">
                     Tick to make this a population parameter and run a population
                     (Monte-Carlo) simulation. The parameter value is the typical
-                    value; the variance sets the spread of the random effect. The
-                    distribution defaults from the bounds (logit for a parameter
-                    bounded to 0–1, otherwise log-normal) and can be changed.
+                    value; the standard deviation sets the spread of the random
+                    effect. The distribution defaults from the bounds (logit for a
+                    parameter bounded to 0–1, otherwise log-normal) and can be
+                    changed.
                   </HelpButton>{" "}
                 </div>
               </TableCell>

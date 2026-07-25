@@ -142,18 +142,33 @@ def _ensure_input(component: myokit.Component, name: str) -> myokit.Variable:
     return var
 
 
+def _species_weight_kg(project) -> float:
+    """Project species weight converted to kg.
+
+    The weight covariate is centred on the project species weight, and the
+    sampled weights (see :func:`pkpdapp.utils.weight_populations.sample_weight`)
+    are in kg, so the reference must be in kg too. ``species_weight`` is stored in
+    ``species_weight_unit`` (default kg but user-changeable), so convert it.
+    """
+    weight = float(project.species_weight)
+    unit = project.species_weight_unit
+    if unit is None:
+        return weight
+    return weight * unit.convert_to(myokit.parse_unit("kg"))
+
+
 def _reference_value(derived_variable: DerivedVariable, project) -> float:
     """Fixed centring reference for a continuous covariate, baked into the model.
 
     Decoupled from the sampling distribution: weight is centred on the project
-    species weight (kg, matching the kg-valued weight samples), age on a fixed
-    reference of 25, and a custom continuous covariate on its own
+    species weight (converted to kg, matching the kg-valued weight samples), age
+    on a fixed reference of 25, and a custom continuous covariate on its own
     ``reference_value``. Falls back to 1 (a no-op factor) for non-positive values.
     """
     dtype = derived_variable.type
     if dtype == DerivedVariable.Type.WEIGHT_COVARIATE:
         if project is not None and project.species_weight:
-            return float(project.species_weight)
+            return _species_weight_kg(project)
         return 1.0
     if dtype == DerivedVariable.Type.AGE_COVARIATE:
         return AGE_REFERENCE

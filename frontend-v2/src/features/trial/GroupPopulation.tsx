@@ -27,6 +27,10 @@ import {
 } from "../../app/backendApi";
 import HelpButton from "../../components/HelpButton";
 import { weightPopulations } from "../../shared/weightPopulations";
+import {
+  meanStdToMedianVariance,
+  medianVarianceToMeanStd,
+} from "../../shared/lognormal";
 
 interface Props {
   group: SubjectGroupRead;
@@ -76,6 +80,69 @@ const NumberField: FC<{
     }}
   />
 );
+
+// display helper: trim floating-point noise from converted values
+const formatNumber = (value: number) => String(Number(value.toPrecision(6)));
+
+// Mean / std-deviation inputs for a continuous covariate's per-group log-normal.
+// The backend stores the log-normal median and log-space variance; users enter
+// the arithmetic mean and standard deviation, which are converted here. Local
+// state keeps both values together so editing either commits a consistent
+// (median, variance) pair. Seeded from the population, or the backend defaults
+// (median 1, variance 0.09) when the group has no population yet.
+const ContinuousCovariateFields: FC<{
+  population: CovariatePopulationRead | undefined;
+  disabled: boolean;
+  onCommit: (patch: { median: number; variance: number }) => void;
+}> = ({ population, disabled, onCommit }) => {
+  const seed = medianVarianceToMeanStd(
+    population?.median ?? 1.0,
+    population?.variance ?? 0.09,
+  );
+  const [mean, setMean] = useState(formatNumber(seed.mean));
+  const [std, setStd] = useState(formatNumber(seed.std));
+
+  const commit = (rawMean: string, rawStd: string) => {
+    const meanValue = parseFloat(rawMean);
+    const stdValue = parseFloat(rawStd);
+    if (
+      !Number.isFinite(meanValue) ||
+      meanValue <= 0 ||
+      !Number.isFinite(stdValue) ||
+      stdValue < 0
+    ) {
+      return;
+    }
+    onCommit(meanStdToMedianVariance(meanValue, stdValue));
+  };
+
+  return (
+    <>
+      <TextField
+        size="small"
+        type="number"
+        label="Mean"
+        sx={{ width: "9rem" }}
+        disabled={disabled}
+        value={mean}
+        inputProps={{ min: 0, step: "any" }}
+        onChange={(event) => setMean(event.target.value)}
+        onBlur={() => commit(mean, std)}
+      />
+      <TextField
+        size="small"
+        type="number"
+        label="Std deviation"
+        sx={{ width: "9rem" }}
+        disabled={disabled}
+        value={std}
+        inputProps={{ min: 0, step: "any" }}
+        onChange={(event) => setStd(event.target.value)}
+        onBlur={() => commit(mean, std)}
+      />
+    </>
+  );
+};
 
 const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
   const [updateSubjectGroup] = useSubjectGroupPartialUpdateMutation();
@@ -162,11 +229,6 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
     refetchCovariates();
   };
 
-  // help-text figures derived from the shared weight-population data (single
-  // source of truth in the backend, synced to weightPopulations.ts)
-  const weightVariance = weightPopulations.default.female.variance;
-  const weightSpreadPct = Math.round(Math.sqrt(weightVariance) * 100);
-
   return (
     <Box sx={{ padding: "1rem 0" }}>
       <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
@@ -195,12 +257,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
               (0&nbsp;=&nbsp;female, 1&nbsp;=&nbsp;male).
             </li>
             <li>
-              <strong>Weight</strong> &mdash; sampled from a log-normal:
-              weight&nbsp;=&nbsp;median&nbsp;&times;&nbsp;exp(N(0,&nbsp;&sigma;&sup2;))
-              with a fixed log-space variance
-              &sigma;&sup2;&nbsp;=&nbsp;{weightVariance} (&asymp;&nbsp;
-              {weightSpreadPct}% spread). The median depends on the region and
-              the individual&apos;s sex (indicative default values, kg):
+              <strong>Weight</strong> &mdash; sampled from a log-normal whose
+              arithmetic mean and standard deviation (kg) depend on the region
+              and the individual&apos;s sex (indicative default values):
               <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
                 {REGION_OPTIONS.map(({ value, label }) => {
                   const weights =
@@ -208,8 +267,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
                     weightPopulations.default;
                   return (
                     <li key={value}>
-                      {label} &mdash; female {weights.female.median}, male{" "}
-                      {weights.male.median}
+                      {label} &mdash; female {weights.female.mean}&nbsp;&plusmn;
+                      &nbsp;{weights.female.std}, male {weights.male.mean}
+                      &nbsp;&plusmn;&nbsp;{weights.male.std}
                     </li>
                   );
                 })}
@@ -279,12 +339,11 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           <p>Per-individual values are sampled from the distribution you set:</p>
           <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
             <li>
-              <strong>Continuous</strong> &mdash; sampled log-normal about the
-              per-group median:
-              value&nbsp;=&nbsp;median&nbsp;&times;&nbsp;exp(N(0,&nbsp;variance)),
-              where variance is the variance of the normal random effect in log
-              space. Its effect is centred on the covariate&apos;s reference value
-              (a separate, per-covariate value), not on the sampling median.
+              <strong>Continuous</strong> &mdash; sampled from a log-normal with
+              the arithmetic <em>mean</em> and <em>standard deviation</em> you
+              set for this group. Its effect is centred on the covariate&apos;s
+              reference value (a separate, per-covariate value), not on the
+              sampling mean.
             </li>
             <li>
               <strong>Categorical</strong> &mdash; each category is drawn with
@@ -380,35 +439,10 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
                 />
               ) : (
                 <>
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Median"
-                    sx={{ width: "9rem" }}
+                  <ContinuousCovariateFields
+                    population={population}
                     disabled={disabled}
-                    defaultValue={population?.median ?? ""}
-                    onBlur={(event) => {
-                      if (event.target.value !== "") {
-                        commitPopulation(covariate, {
-                          median: parseFloat(event.target.value),
-                        });
-                      }
-                    }}
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Variance"
-                    sx={{ width: "9rem" }}
-                    disabled={disabled}
-                    defaultValue={population?.variance ?? ""}
-                    onBlur={(event) => {
-                      if (event.target.value !== "") {
-                        commitPopulation(covariate, {
-                          variance: parseFloat(event.target.value),
-                        });
-                      }
-                    }}
+                    onCommit={(patch) => commitPopulation(covariate, patch)}
                   />
                   {/* reference is per-covariate (centres the effect), not per-group */}
                   <TextField

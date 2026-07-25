@@ -1,9 +1,16 @@
-import { FC, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { ModelFormData } from "../modelFormState";
-import { Control, useFieldArray, useForm } from "react-hook-form";
+import {
+  Control,
+  useFieldArray,
+  useForm,
+  useWatch,
+  UseFormSetValue,
+} from "react-hook-form";
 import {
   TableCell,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
   Select,
@@ -38,6 +45,46 @@ import parameterDisplayName from "./parameterDisplayName";
 
 // Variance pre-filled when a parameter is first made a population parameter.
 export const DEFAULT_POPULATION_VARIANCE = 0.09;
+
+// display helper: trim floating-point noise from converted values
+const formatNumber = (value: number) => String(Number(value.toPrecision(6)));
+
+// The random-effect spread is stored as the ETA variance (distribution.variance)
+// but entered as a standard deviation, which is more intuitive. This shows
+// sqrt(variance) and commits value^2 back to the form (triggering the row's
+// dirty -> auto-save). A local buffer keeps typing smooth; when not editing, the
+// display tracks the stored variance (e.g. after a pdf change or the toggle).
+const StdDeviationField: FC<{
+  control: Control<VariableRead>;
+  setValue: UseFormSetValue<VariableRead>;
+  disabled: boolean;
+}> = ({ control, setValue, disabled }) => {
+  const variance = useWatch({ control, name: "distribution.variance" }) ?? 0;
+  const [buffer, setBuffer] = useState<string | null>(null);
+  const display =
+    buffer ?? formatNumber(Math.sqrt(Math.max(0, variance as number)));
+  return (
+    <TextField
+      sx={{ minWidth: "4rem" }}
+      size="small"
+      type="number"
+      label="Std deviation"
+      disabled={disabled}
+      value={display}
+      inputProps={{ min: 0, step: "any" }}
+      onChange={(event) => setBuffer(event.target.value)}
+      onBlur={() => {
+        if (buffer !== null) {
+          const std = parseFloat(buffer);
+          if (Number.isFinite(std) && std >= 0) {
+            setValue("distribution.variance", std * std, { shouldDirty: true });
+          }
+          setBuffer(null);
+        }
+      }}
+    />
+  );
+};
 
 // The default distribution for a newly-ticked population parameter: logit for a
 // parameter bounded to exactly [0, 1] (a probability/fraction), lognormal otherwise.
@@ -472,13 +519,10 @@ const ParameterRow: FC<Props> = ({
                   </MenuItem>
                 ))}
               </Select>
-              <FloatField
-                sx={{ minWidth: "4rem" }}
-                size="small"
-                name="distribution.variance"
+              <StdDeviationField
                 control={control}
-                label="Variance"
-                textFieldProps={defaultProps}
+                setValue={setValue}
+                disabled={defaultProps.disabled}
               />
             </>
           )}

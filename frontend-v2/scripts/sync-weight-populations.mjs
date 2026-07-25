@@ -26,8 +26,8 @@ const banner = `// GENERATED FILE — do not edit by hand.
 `;
 
 const body = `export interface WeightParams {
-  median: number;
-  variance: number;
+  mean: number;
+  std: number;
 }
 export interface RegionWeights {
   female: WeightParams;

@@ -3,8 +3,8 @@
 // Regenerate with: yarn sync:weight-populations
 
 export interface WeightParams {
-  median: number;
-  variance: number;
+  mean: number;
+  std: number;
 }
 export interface RegionWeights {
   female: WeightParams;
@@ -19,43 +19,43 @@ export const weightPopulations: WeightPopulations = {
   "regions": {
     "US": {
       "female": {
-        "median": 77,
-        "variance": 0.05
+        "mean": 77.5,
+        "std": 21
       },
       "male": {
-        "median": 89,
-        "variance": 0.05
+        "mean": 90.6,
+        "std": 19.5
       }
     },
     "EU": {
       "female": {
-        "median": 70,
-        "variance": 0.05
+        "mean": 67.5,
+        "std": 13.8
       },
       "male": {
-        "median": 84,
-        "variance": 0.05
+        "mean": 78.5,
+        "std": 13.5
       }
     },
     "ASIA": {
       "female": {
-        "median": 59,
-        "variance": 0.05
+        "mean": 54,
+        "std": 9.5
       },
       "male": {
-        "median": 69,
-        "variance": 0.05
+        "mean": 65.3,
+        "std": 12.5
       }
     }
   },
   "default": {
     "female": {
-      "median": 70,
-      "variance": 0.05
+      "mean": 67.5,
+      "std": 13.8
     },
     "male": {
-      "median": 84,
-      "variance": 0.05
+      "mean": 78.5,
+      "std": 13.5
     }
   }
 };
