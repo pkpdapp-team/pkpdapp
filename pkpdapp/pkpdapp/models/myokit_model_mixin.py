@@ -263,12 +263,14 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         outputs = [
             cls._serialise_variable(o) for o in c.variables(const=False, sort=True)
         ]
-        # sort equations by their string form so the serialised order is stable
-        # (myokit's equations() iteration order is not deterministic across runs)
-        equations = [
+        # sort equations by their serialised MathML so the order is stable across
+        # runs AND myokit versions/environments (myokit's equations() iteration
+        # order is non-deterministic, and its Equation.__str__ form — used as a
+        # previous sort key — varies between versions, reordering the output)
+        equations = sorted(
             cls._serialise_equation(e)
-            for e in sorted(c.equations(bound=False, const=False), key=str)
-        ]
+            for e in c.equations(bound=False, const=False)
+        )
         return {
             "name": c.name(),
             "states": states,
