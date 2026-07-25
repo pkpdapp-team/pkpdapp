@@ -489,6 +489,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
               <Typography sx={{ width: "10rem" }}>{covariate.name}</Typography>
               {covariate.type === "CAT" ? (
                 <CategoricalCovariateField
+                  // remount (re-seed the field) once the population loads or
+                  // changes, e.g. after a new group copies values from another
+                  key={population?.id ?? "new"}
                   population={population}
                   nCategories={covariate.n_categories}
                   disabled={disabled}
@@ -497,6 +500,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
               ) : (
                 <>
                   <ContinuousCovariateFields
+                    // remount (re-seed the fields) once the population loads or
+                    // changes, e.g. after a new group copies values from another
+                    key={population?.id ?? "new"}
                     population={population}
                     disabled={disabled}
                     onCommit={(patch) => commitPopulation(covariate, patch)}
