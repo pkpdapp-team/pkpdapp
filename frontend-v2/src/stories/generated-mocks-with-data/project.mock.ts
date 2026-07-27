@@ -23,7 +23,7 @@ export const project = {
   ],
   name: "Storybook Test Project",
   description: "Automatically generated for Storybook mocks",
-  created: "2026-07-18T21:48:17.605562Z",
+  created: "2026-07-25T22:03:39.328719Z",
   tags: "",
   species: "R",
   species_weight: 0.25,
