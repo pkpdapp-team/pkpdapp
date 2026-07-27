@@ -37,6 +37,7 @@
     "build": "npx tsc && eslint src && vite build",
     "serve": "vite preview",
     "lint": "eslint src",
+    "sync:weight-populations": "node scripts/sync-weight-populations.mjs",
     "format": "prettier --write ./src",
     "test": "npx tsc && eslint src && vitest --project=storybook",
     "storybook": "storybook dev -p 6006",

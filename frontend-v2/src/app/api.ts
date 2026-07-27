@@ -15,6 +15,7 @@ export const api = backendApi.enhanceEndpoints({
     "BiomarkerType",
     "EfficacyExperiment",
     "Conversation",
+    "CovariatePopulation",
   ],
   endpoints: {
     // EfficacyExperiment
@@ -209,6 +210,25 @@ export const api = backendApi.enhanceEndpoints({
               { type: "SubjectGroup", id: "LIST" },
             ]
           : [{ type: "SubjectGroup", id: "LIST" }],
+    },
+    // creating/deleting a group also creates/removes its covariate populations
+    subjectGroupCreate: {
+      invalidatesTags: [{ type: "CovariatePopulation", id: "LIST" }],
+    },
+    subjectGroupDestroy: {
+      invalidatesTags: [{ type: "CovariatePopulation", id: "LIST" }],
+    },
+    // refresh the cached group so controlled inputs (e.g. the region select)
+    // reflect edits without a page refresh
+    subjectGroupPartialUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
+    subjectGroupUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
+    // CovariatePopulation
+    covariatePopulationList: {
+      providesTags: [{ type: "CovariatePopulation", id: "LIST" }],
     },
     // CombinedModel
     combinedModelSetParamsToDefaultsUpdate: {

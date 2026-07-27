@@ -246,11 +246,20 @@ export const Protocols: FC<ProtocolsProps> = ({
       nextSimGroupValue++;
       newGroupName = `Sim-Group ${nextSimGroupValue}`;
     }
+    // seed the new group's population settings from the currently selected group
+    const sourceGroup = groups?.find((g) => g.id === tab);
     const newGroup = await createSubjectGroup({
       subjectGroup: {
         name: newGroupName,
         id_in_dataset: `${newGroupId}`,
         project: project.id,
+        study_size: sourceGroup?.study_size,
+        age_min: sourceGroup?.age_min,
+        age_max: sourceGroup?.age_max,
+        m2f_ratio: sourceGroup?.m2f_ratio,
+        population_region: sourceGroup?.population_region,
+        // seed covariate population values from the currently selected group
+        copy_covariates_from: typeof tab === "number" ? tab : undefined,
         protocols: filteredProtocols.map((p) => {
           const { project, ...newProtocol } = p;
           return {
@@ -487,7 +496,6 @@ export const Protocols: FC<ProtocolsProps> = ({
         </TableContainer>
         {subjectGroup && (
           <GroupPopulation
-            key={subjectGroup.id}
             group={subjectGroup}
             project={project}
             disabled={isSharedWithMe}

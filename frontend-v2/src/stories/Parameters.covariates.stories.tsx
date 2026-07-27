@@ -20,7 +20,13 @@ const model = {
   number_of_effect_compartments: 0,
 } as CombinedModelRead;
 
-const project = { id: 1, user_access: [] } as unknown as ProjectRead;
+// human species so the built-in Weight covariate is offered (it is centred on
+// the project species weight and gated to human-species projects)
+const project = {
+  id: 1,
+  user_access: [],
+  species: "H",
+} as unknown as ProjectRead;
 
 const makeVariable = (over: Partial<VariableRead>): VariableRead => ({
   id: 0,

@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, FocusEvent, useState } from "react";
 import {
   Box,
   Button,
@@ -19,12 +19,18 @@ import {
   useCovariateCreateMutation,
   useCovariateDestroyMutation,
   useCovariateListQuery,
+  useCovariatePartialUpdateMutation,
   useCovariatePopulationCreateMutation,
   useCovariatePopulationListQuery,
   useCovariatePopulationPartialUpdateMutation,
   useSubjectGroupPartialUpdateMutation,
 } from "../../app/backendApi";
 import HelpButton from "../../components/HelpButton";
+import { weightPopulations } from "../../shared/weightPopulations";
+import {
+  meanStdToMedianVariance,
+  medianVarianceToMeanStd,
+} from "../../shared/lognormal";
 
 interface Props {
   group: SubjectGroupRead;
@@ -75,6 +81,154 @@ const NumberField: FC<{
   />
 );
 
+// display helper: trim floating-point noise from converted values
+const formatNumber = (value: number) => String(Number(value.toPrecision(6)));
+
+// A committed mutation resolves to { data } on success or { error } on failure.
+type CommitResult = { error?: unknown } | undefined;
+
+// Pull a human-readable message out of an RTK Query error. DRF serialises
+// validation errors as { field: [msg, ...] } (non-field errors under
+// "non_field_errors"), so surface the first string we find.
+const apiErrorMessage = (error: unknown): string => {
+  const data = (error as { data?: unknown } | undefined)?.data;
+  if (typeof data === "string") {
+    return data;
+  }
+  if (data && typeof data === "object") {
+    const first = Object.values(data as Record<string, unknown>)
+      .flat()
+      .find((value) => typeof value === "string");
+    if (typeof first === "string") {
+      return first;
+    }
+  }
+  return "Could not save this value. Please check it and try again.";
+};
+
+// Parse and validate the comma-separated category-probabilities entry. Returns
+// the parsed values, an error message, or null when the field is empty (a
+// no-op). The count is checked here too so a wrong-length list gets a clearer
+// message than the backend's (which is only reached for other errors).
+const parseCategoryProbabilities = (
+  raw: string,
+  nCategories: number | null | undefined,
+): { values: number[] } | { error: string } | null => {
+  if (raw.trim() === "") {
+    return null;
+  }
+  const tokens = raw.split(",").map((token) => token.trim());
+  const values = tokens.map(Number);
+  if (tokens.some((token, i) => token === "" || !Number.isFinite(values[i]))) {
+    return {
+      error: "Enter a comma-separated list of numbers, e.g. 0.5, 0.3, 0.2",
+    };
+  }
+  if (nCategories != null && values.length !== nCategories) {
+    return { error: `Enter ${nCategories} probabilities, one per category` };
+  }
+  return { values };
+};
+
+// Category-probabilities input for a categorical covariate. Validates the entry
+// client-side and shows any backend validation error inline on the field.
+const CategoricalCovariateField: FC<{
+  population: CovariatePopulationRead | undefined;
+  nCategories: number | null | undefined;
+  disabled: boolean;
+  onCommit: (patch: { category_probabilities: number[] }) => Promise<CommitResult>;
+}> = ({ population, nCategories, disabled, onCommit }) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleBlur = async (
+    event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const parsed = parseCategoryProbabilities(event.target.value, nCategories);
+    if (parsed === null) {
+      setError(null); // empty field: leave the stored value untouched
+      return;
+    }
+    if ("error" in parsed) {
+      setError(parsed.error);
+      return;
+    }
+    const result = await onCommit({ category_probabilities: parsed.values });
+    setError(result?.error ? apiErrorMessage(result.error) : null);
+  };
+
+  return (
+    <TextField
+      size="small"
+      label="Category probabilities (comma separated)"
+      sx={{ width: "20rem" }}
+      disabled={disabled}
+      error={!!error}
+      helperText={error ?? undefined}
+      defaultValue={(population?.category_probabilities || []).join(", ")}
+      onBlur={handleBlur}
+    />
+  );
+};
+
+// Mean / std-deviation inputs for a continuous covariate's per-group log-normal.
+// The backend stores the log-normal median and log-space variance; users enter
+// the arithmetic mean and standard deviation, which are converted here. Local
+// state keeps both values together so editing either commits a consistent
+// (median, variance) pair. Seeded by converting the population's stored values,
+// or the default mean 1 / std 0.3 when the group has no population yet.
+const ContinuousCovariateFields: FC<{
+  population: CovariatePopulationRead | undefined;
+  disabled: boolean;
+  onCommit: (patch: { median: number; variance: number }) => void;
+}> = ({ population, disabled, onCommit }) => {
+  const seed = population
+    ? medianVarianceToMeanStd(population.median ?? 1.0, population.variance ?? 0.09)
+    : { mean: 1.0, std: 0.3 };
+  const [mean, setMean] = useState(formatNumber(seed.mean));
+  const [std, setStd] = useState(formatNumber(seed.std));
+
+  const commit = (rawMean: string, rawStd: string) => {
+    const meanValue = parseFloat(rawMean);
+    const stdValue = parseFloat(rawStd);
+    if (
+      !Number.isFinite(meanValue) ||
+      meanValue <= 0 ||
+      !Number.isFinite(stdValue) ||
+      stdValue < 0
+    ) {
+      return;
+    }
+    onCommit(meanStdToMedianVariance(meanValue, stdValue));
+  };
+
+  return (
+    <>
+      <TextField
+        size="small"
+        type="number"
+        label="Mean"
+        sx={{ width: "9rem" }}
+        disabled={disabled}
+        value={mean}
+        inputProps={{ min: 0, step: "any" }}
+        onChange={(event) => setMean(event.target.value)}
+        onBlur={() => commit(mean, std)}
+      />
+      <TextField
+        size="small"
+        type="number"
+        label="Std deviation"
+        sx={{ width: "9rem" }}
+        disabled={disabled}
+        value={std}
+        inputProps={{ min: 0, step: "any" }}
+        onChange={(event) => setStd(event.target.value)}
+        onBlur={() => commit(mean, std)}
+      />
+    </>
+  );
+};
+
 const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
   const [updateSubjectGroup] = useSubjectGroupPartialUpdateMutation();
   const { data: covariates, refetch: refetchCovariates } = useCovariateListQuery(
@@ -88,6 +242,7 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
     );
   const [createCovariate] = useCovariateCreateMutation();
   const [destroyCovariate] = useCovariateDestroyMutation();
+  const [updateCovariate] = useCovariatePartialUpdateMutation();
   const [createPopulation] = useCovariatePopulationCreateMutation();
   const [updatePopulation] = useCovariatePopulationPartialUpdateMutation();
 
@@ -110,26 +265,27 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
   ): CovariatePopulationRead | undefined =>
     groupPopulations.find((population) => population.covariate === covariate.id);
 
+  // returns the RTK mutation result ({ data } | { error }) so callers can show
+  // any backend validation error against the offending field
   const commitPopulation = async (
     covariate: CovariateRead,
     patch: Partial<CovariatePopulationRead>,
   ) => {
     const existing = populationFor(covariate);
-    if (existing) {
-      await updatePopulation({
-        id: existing.id,
-        patchedCovariatePopulation: patch,
-      });
-    } else {
-      await createPopulation({
-        covariatePopulation: {
-          subject_group: group.id,
-          covariate: covariate.id,
-          ...patch,
-        },
-      });
-    }
+    const result = existing
+      ? await updatePopulation({
+          id: existing.id,
+          patchedCovariatePopulation: patch,
+        })
+      : await createPopulation({
+          covariatePopulation: {
+            subject_group: group.id,
+            covariate: covariate.id,
+            ...patch,
+          },
+        });
     refetchPopulations();
+    return result;
   };
 
   const addCovariate = async () => {
@@ -161,13 +317,62 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
       <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
         Population{" "}
         <HelpButton title="Population">
-          This information is only used if a covariate is selected for one or more
-          parameters (on the Model &rarr; Parameters tab). The study size sets the
-          number of simulated individuals; age, male-to-female ratio and region
-          drive the built-in weight/age/sex covariates.
+          <p>
+            This information is only used if a covariate is selected for one or
+            more parameters (on the Model &rarr; Parameters tab). The study size
+            sets the number of simulated individuals; age, male-to-female ratio
+            and region drive the built-in weight/age/sex covariates.
+          </p>
+          <p>
+            Each individual&apos;s built-in covariates are <em>sampled</em> as
+            below; a continuous covariate&apos;s effect is then <em>centred</em>
+            on a fixed reference value (separate from the sampling distribution):
+          </p>
+          <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+            <li>
+              <strong>Age</strong> &mdash; drawn from a uniform distribution
+              between the Age min and Age max values; centred on a fixed
+              reference of 25.
+            </li>
+            <li>
+              <strong>Sex</strong> &mdash; each individual is male with
+              probability equal to the male:female ratio, otherwise female
+              (0&nbsp;=&nbsp;female, 1&nbsp;=&nbsp;male).
+            </li>
+            <li>
+              <strong>Weight</strong> &mdash; sampled from a log-normal whose
+              arithmetic mean and standard deviation (kg) depend on the region
+              and the individual&apos;s sex (indicative default values):
+              <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                {REGION_OPTIONS.map(({ value, label }) => {
+                  const weights =
+                    weightPopulations.regions[value] ??
+                    weightPopulations.default;
+                  return (
+                    <li key={value}>
+                      {label} &mdash; female {weights.female.mean}&nbsp;&plusmn;
+                      &nbsp;{weights.female.std}, male {weights.male.mean}
+                      &nbsp;&plusmn;&nbsp;{weights.male.std}
+                    </li>
+                  );
+                })}
+              </ul>
+              The weight effect is centred on the project&apos;s species weight,
+              so the weight covariate is only available for human-species
+              projects.
+            </li>
+          </ul>
         </HelpButton>
       </Typography>
-      <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", marginTop: 1 }}>
+      <Stack
+        // GroupPopulation stays mounted across group-tab switches (so an
+        // in-flight save from onBlur is not aborted); re-seed these uncontrolled
+        // fields when the group changes by remounting them
+        key={group.id}
+        direction="row"
+        spacing={2}
+        sx={{ flexWrap: "wrap", marginTop: 1 }}
+      >
         <NumberField
           label="Study size (N)"
           defaultValue={group.study_size}
@@ -198,7 +403,10 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           size="small"
           disabled={disabled}
           sx={{ width: "11rem" }}
-          value={group.population_region ?? "EU"}
+          // uncontrolled (like the NumberFields above) so the selection shows
+          // immediately; re-seeded per group via the parent Stack's key. The
+          // cache is refreshed by subjectGroupPartialUpdate's tag invalidation.
+          defaultValue={group.population_region ?? "EU"}
           onChange={(event) =>
             patchGroup({ population_region: event.target.value })
           }
@@ -217,9 +425,27 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
       >
         Custom covariates{" "}
         <HelpButton title="Custom covariates">
-          Define your own covariates (e.g. albumin, GFR, ethnicity) and set their
-          distribution for this population. Attach them to parameters on the
-          Model → Parameters tab.
+          <p>
+            Define your own covariates (e.g. albumin, GFR, ethnicity) and set
+            their distribution for this population. Attach them to parameters on
+            the Model → Parameters tab.
+          </p>
+          <p>Per-individual values are sampled from the distribution you set:</p>
+          <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+            <li>
+              <strong>Continuous</strong> &mdash; sampled from a log-normal with
+              the arithmetic <em>mean</em> and <em>standard deviation</em> you
+              set for this group. Its effect is centred on the covariate&apos;s
+              reference value (a separate, per-covariate value), not on the
+              sampling mean.
+            </li>
+            <li>
+              <strong>Categorical</strong> &mdash; each category is drawn with
+              the probability you assign to it (probabilities are normalised to
+              sum to 1); if left unset they default to a uniform distribution
+              over the categories. Category&nbsp;0 is the base category.
+            </li>
+          </ul>
         </HelpButton>
       </Typography>
       <Stack direction="row" spacing={1} alignItems="center" sx={{ marginTop: 1 }}>
@@ -273,53 +499,42 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
             >
               <Typography sx={{ width: "10rem" }}>{covariate.name}</Typography>
               {covariate.type === "CAT" ? (
-                <TextField
-                  size="small"
-                  label="Category probabilities (comma separated)"
-                  sx={{ width: "20rem" }}
+                <CategoricalCovariateField
+                  // remount (re-seed the field) once the population loads or
+                  // changes, e.g. after a new group copies values from another
+                  key={population?.id ?? "new"}
+                  population={population}
+                  nCategories={covariate.n_categories}
                   disabled={disabled}
-                  defaultValue={(population?.category_probabilities || []).join(
-                    ", ",
-                  )}
-                  onBlur={(event) => {
-                    const probabilities = event.target.value
-                      .split(",")
-                      .map((value) => parseFloat(value.trim()))
-                      .filter((value) => !Number.isNaN(value));
-                    commitPopulation(covariate, {
-                      category_probabilities: probabilities,
-                    });
-                  }}
+                  onCommit={(patch) => commitPopulation(covariate, patch)}
                 />
               ) : (
                 <>
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Median"
-                    sx={{ width: "9rem" }}
+                  <ContinuousCovariateFields
+                    // remount (re-seed the fields) once the population loads or
+                    // changes, e.g. after a new group copies values from another
+                    key={population?.id ?? "new"}
+                    population={population}
                     disabled={disabled}
-                    defaultValue={population?.median ?? ""}
-                    onBlur={(event) => {
-                      if (event.target.value !== "") {
-                        commitPopulation(covariate, {
-                          median: parseFloat(event.target.value),
-                        });
-                      }
-                    }}
+                    onCommit={(patch) => commitPopulation(covariate, patch)}
                   />
+                  {/* reference is per-covariate (centres the effect), not per-group */}
                   <TextField
                     size="small"
                     type="number"
-                    label="Variance"
+                    label="Reference value"
                     sx={{ width: "9rem" }}
                     disabled={disabled}
-                    defaultValue={population?.variance ?? ""}
-                    onBlur={(event) => {
-                      if (event.target.value !== "") {
-                        commitPopulation(covariate, {
-                          variance: parseFloat(event.target.value),
+                    defaultValue={covariate.reference_value ?? ""}
+                    inputProps={{ min: 0, step: "any" }}
+                    onBlur={async (event) => {
+                      const value = parseFloat(event.target.value);
+                      if (event.target.value !== "" && value > 0) {
+                        await updateCovariate({
+                          id: covariate.id,
+                          patchedCovariate: { reference_value: value },
                         });
+                        refetchCovariates();
                       }
                     }}
                   />

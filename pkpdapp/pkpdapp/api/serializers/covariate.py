@@ -49,4 +49,12 @@ class CovariateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "categorical covariates need at least 2 categories"
                 )
+
+        # reference_value centres a continuous covariate's effect, so it must be a
+        # positive divisor; it is not used by categorical covariates.
+        if cov_type == Covariate.Type.CONTINUOUS and "reference_value" in data:
+            if data["reference_value"] is None or data["reference_value"] <= 0:
+                raise serializers.ValidationError(
+                    {"reference_value": "reference_value must be positive"}
+                )
         return data

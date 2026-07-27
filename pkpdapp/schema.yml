@@ -4314,6 +4314,11 @@ components:
           nullable: true
           description: optional labels for each category (categorical covariates only);
             index 0 is the base category
+        reference_value:
+          type: number
+          format: double
+          description: 'reference value used to centre this covariate''s effect (continuous
+            covariates only): P_i = tvP * (cov_i / reference)^a'
         project:
           type: integer
           nullable: true
@@ -5358,6 +5363,11 @@ components:
           nullable: true
           description: optional labels for each category (categorical covariates only);
             index 0 is the base category
+        reference_value:
+          type: number
+          format: double
+          description: 'reference value used to centre this covariate''s effect (continuous
+            covariates only): P_i = tvP * (cov_i / reference)^a'
         project:
           type: integer
           nullable: true
@@ -5910,6 +5920,12 @@ components:
           items:
             $ref: '#/components/schemas/CovariatePopulation'
           readOnly: true
+        copy_covariates_from:
+          type: integer
+          writeOnly: true
+          nullable: true
+          description: on create, copy covariate population values from this group;
+            defaults are used when unset or from another project
         name:
           type: string
           description: name of the group
@@ -5922,7 +5938,7 @@ components:
         study_size:
           type: integer
           maximum: 9223372036854775807
-          minimum: 0
+          minimum: 1
           format: int64
           description: number of virtual individuals (N) in this population
         age_min:
@@ -6652,6 +6668,13 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/UncertaintySummary'
+        parameters:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+              format: double
       required:
       - outputs
       - sample_count
@@ -6911,6 +6934,12 @@ components:
           items:
             $ref: '#/components/schemas/CovariatePopulation'
           readOnly: true
+        copy_covariates_from:
+          type: integer
+          writeOnly: true
+          nullable: true
+          description: on create, copy covariate population values from this group;
+            defaults are used when unset or from another project
         name:
           type: string
           description: name of the group
@@ -6923,7 +6952,7 @@ components:
         study_size:
           type: integer
           maximum: 9223372036854775807
-          minimum: 0
+          minimum: 1
           format: int64
           description: number of virtual individuals (N) in this population
         age_min:

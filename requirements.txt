@@ -8,7 +8,7 @@ whitenoise>=5.0.1
 docutils>=0.16
 python-markdown-math>=0.8
 pints~=0.6.1
-myokit @ git+https://github.com/myokit/myokit.git@main
+myokit @ git+https://github.com/myokit/myokit.git@561884bd0b92fbdafe1143d4ba2be536da7cc77a
 django-extensions>=3.1.1
 jsonfield>=3.1.0
 djangorestframework>=3.12.4
@@ -21,11 +21,11 @@ drf-writable-nested>=0.6.3
 tdigest>=0.5.2.2
 django-auth-ldap>=4.1.0
 pyyaml>=6.0.0
-drf-spectacular>=0.26.2
+drf-spectacular==0.29.0
 openpyxl>=3.1.2
 django-user-visit>=2.0.0
 snapshottest==1.0.0a1
 django-cprofile-middleware>=1.0.5
 ipython
-pydiffsol>=0.6.0
+pydiffsol>=0.6.2
 portkey-ai>=2.2.0,<3.0

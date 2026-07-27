@@ -1626,7 +1626,7 @@ export type DatasetListApiArg = {
 };
 export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
-  dataset: Dataset;
+  dataset: DatasetWrite;
 };
 export type DatasetRetrieveApiResponse = /** status 200  */ DatasetRead;
 export type DatasetRetrieveApiArg = {
@@ -1637,13 +1637,13 @@ export type DatasetUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
-  dataset: Dataset;
+  dataset: DatasetWrite;
 };
 export type DatasetPartialUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetPartialUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
-  patchedDataset: PatchedDataset;
+  patchedDataset: PatchedDatasetWrite;
 };
 export type DatasetDestroyApiResponse = unknown;
 export type DatasetDestroyApiArg = {
@@ -2033,7 +2033,7 @@ export type SubjectGroupListApiArg = {
 };
 export type SubjectGroupCreateApiResponse = /** status 201  */ SubjectGroupRead;
 export type SubjectGroupCreateApiArg = {
-  subjectGroup: SubjectGroup;
+  subjectGroup: SubjectGroupWrite;
 };
 export type SubjectGroupRetrieveApiResponse =
   /** status 200  */ SubjectGroupRead;
@@ -2045,14 +2045,14 @@ export type SubjectGroupUpdateApiResponse = /** status 200  */ SubjectGroupRead;
 export type SubjectGroupUpdateApiArg = {
   /** A unique integer value identifying this subject group. */
   id: number;
-  subjectGroup: SubjectGroup;
+  subjectGroup: SubjectGroupWrite;
 };
 export type SubjectGroupPartialUpdateApiResponse =
   /** status 200  */ SubjectGroupRead;
 export type SubjectGroupPartialUpdateApiArg = {
   /** A unique integer value identifying this subject group. */
   id: number;
-  patchedSubjectGroup: PatchedSubjectGroup;
+  patchedSubjectGroup: PatchedSubjectGroupWrite;
 };
 export type SubjectGroupDestroyApiResponse = unknown;
 export type SubjectGroupDestroyApiArg = {
@@ -2764,6 +2764,9 @@ export type SimulateResponse = {
   outputs: {
     [key: string]: UncertaintySummary;
   };
+  parameters?: {
+    [key: string]: number[];
+  };
 };
 export type Simulate = {
   outputs: string[];
@@ -3011,6 +3014,8 @@ export type Covariate = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3035,6 +3040,8 @@ export type CovariateRead = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3058,6 +3065,8 @@ export type PatchedCovariate = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3082,6 +3091,8 @@ export type PatchedCovariateRead = {
   n_categories?: number | null;
   /** optional labels for each category (categorical covariates only); index 0 is the base category */
   category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
   /** Project that this covariate belongs to. */
   project?: number | null;
   /** unit of the covariate (continuous covariates only) */
@@ -3295,12 +3306,50 @@ export type SubjectGroupRead = {
   /** Project that this group belongs to. */
   project?: number | null;
 };
+export type SubjectGroupWrite = {
+  protocols: Protocol[];
+  /** on create, copy covariate population values from this group; defaults are used when unset or from another project */
+  copy_covariates_from?: number | null;
+  /** name of the group */
+  name: string;
+  /** unique identifier in the dataset */
+  id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
+  /** Dataset that this group belongs to. */
+  dataset?: number | null;
+  /** Project that this group belongs to. */
+  project?: number | null;
+};
 export type DatasetRead = {
   id: number;
   biomarker_types: BiomarkerTypeRead[];
   subjects: number[];
   groups: SubjectGroupRead[];
   protocols: ProtocolRead[];
+  /** name of the dataset */
+  name: string;
+  /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
+  datetime?: string | null;
+  /** short description of the dataset */
+  description?: string;
+  /** Project that "owns" this model */
+  project?: number | null;
+};
+export type DatasetWrite = {
   /** name of the dataset */
   name: string;
   /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
@@ -3326,6 +3375,16 @@ export type PatchedDatasetRead = {
   subjects?: number[];
   groups?: SubjectGroupRead[];
   protocols?: ProtocolRead[];
+  /** name of the dataset */
+  name?: string;
+  /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
+  datetime?: string | null;
+  /** short description of the dataset */
+  description?: string;
+  /** Project that "owns" this model */
+  project?: number | null;
+};
+export type PatchedDatasetWrite = {
   /** name of the dataset */
   name?: string;
   /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
@@ -4269,6 +4328,34 @@ export type PatchedSubjectGroupRead = {
   subjects?: number[];
   protocols?: ProtocolRead[];
   covariate_populations?: CovariatePopulationRead[];
+  /** name of the group */
+  name?: string;
+  /** unique identifier in the dataset */
+  id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
+  /** Dataset that this group belongs to. */
+  dataset?: number | null;
+  /** Project that this group belongs to. */
+  project?: number | null;
+};
+export type PatchedSubjectGroupWrite = {
+  protocols?: Protocol[];
+  /** on create, copy covariate population values from this group; defaults are used when unset or from another project */
+  copy_covariates_from?: number | null;
   /** name of the group */
   name?: string;
   /** unique identifier in the dataset */

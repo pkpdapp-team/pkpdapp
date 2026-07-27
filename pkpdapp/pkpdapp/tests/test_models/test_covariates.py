@@ -14,6 +14,7 @@ from pkpdapp.models import (
     Covariate,
     CovariatePopulation,
     DerivedVariable,
+    Distribution,
     PharmacokineticModel,
     Project,
     ProjectAccess,
@@ -32,26 +33,6 @@ class TestCovariateSampling(SimpleTestCase):
         # neutral values collapse the covariate factor to 1
         self.assertEqual(continuous.sample(None, rng), 1.0)
         self.assertEqual(categorical.sample(None, rng), 0.0)
-        self.assertEqual(continuous.centering_value(None), 1.0)
-
-    def test_weight_centering_is_m2f_weighted_region_median(self):
-        from pkpdapp.utils.weight_populations import (
-            FEMALE,
-            MALE,
-            reference_median_weight,
-        )
-
-        covariate = Covariate(
-            name="weight",
-            type=Covariate.Type.CONTINUOUS,
-            builtin=Covariate.Builtin.WEIGHT,
-        )
-        group = SubjectGroup(population_region="US", m2f_ratio=0.25)
-        population = CovariatePopulation(subject_group=group)
-        expected = 0.25 * reference_median_weight("US", MALE) + 0.75 * (
-            reference_median_weight("US", FEMALE)
-        )
-        self.assertAlmostEqual(covariate.centering_value(population), expected)
 
     def test_sex_sample_uses_supplied_value(self):
         covariate = Covariate(
@@ -133,6 +114,35 @@ class TestCovariateApi(TestCase):
         self.assertEqual(bad.status_code, 400)
         return covariate_id
 
+    def test_reference_value_round_trip_and_validation(self):
+        url = self.reverse("covariate-list")
+        # a continuous covariate carries a user-provided reference value
+        response = self.client.post(
+            url,
+            data={
+                "project": self.project.id,
+                "name": "albumin",
+                "type": Covariate.Type.CONTINUOUS,
+                "reference_value": 42.0,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["reference_value"], 42.0)
+
+        # the reference value must be positive (it is a divisor)
+        bad = self.client.post(
+            url,
+            data={
+                "project": self.project.id,
+                "name": "gfr",
+                "type": Covariate.Type.CONTINUOUS,
+                "reference_value": 0.0,
+            },
+            format="json",
+        )
+        self.assertEqual(bad.status_code, 400)
+
     def test_covariate_population_round_trip(self):
         covariate = Covariate.objects.create(
             project=self.project,
@@ -197,10 +207,15 @@ class TestCovariateApi(TestCase):
             },
             format="json",
         )
+        # defaults correspond to arithmetic mean 1, std 0.3 (stored as the
+        # log-normal median + log-space variance)
+        from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+
+        default_median, default_variance = mean_std_to_median_logvar(1.0, 0.3)
         covariate = Covariate.objects.get(id=response.data["id"])
         for population in covariate.populations.all():
-            self.assertEqual(population.median, 1.0)
-            self.assertEqual(population.variance, 0.09)
+            self.assertAlmostEqual(population.median, default_median)
+            self.assertAlmostEqual(population.variance, default_variance)
 
     def test_adding_group_creates_populations_for_existing_covariates(self):
         covariate = Covariate.objects.create(
@@ -218,6 +233,47 @@ class TestCovariateApi(TestCase):
                 subject_group_id=response.data["id"]
             ).exists()
         )
+
+    def test_adding_group_copies_covariate_values_from_source_group(self):
+        continuous = Covariate.objects.create(
+            project=self.project, name="albumin", type=Covariate.Type.CONTINUOUS
+        )
+        categorical = Covariate.objects.create(
+            project=self.project,
+            name="eth",
+            type=Covariate.Type.CATEGORICAL,
+            n_categories=3,
+        )
+        source = SubjectGroup.objects.create(name="source", project=self.project)
+        # give the source group non-default values
+        CovariatePopulation.objects.create(
+            subject_group=source, covariate=continuous, median=42.0, variance=0.16
+        )
+        CovariatePopulation.objects.create(
+            subject_group=source,
+            covariate=categorical,
+            category_probabilities=[0.1, 0.3, 0.6],
+        )
+
+        url = self.reverse("subject_group-list")
+        response = self.client.post(
+            url,
+            data={
+                "name": "copy",
+                "project": self.project.id,
+                "protocols": [],
+                "copy_covariates_from": source.id,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+
+        new_id = response.data["id"]
+        copied_continuous = continuous.populations.get(subject_group_id=new_id)
+        self.assertEqual(copied_continuous.median, 42.0)
+        self.assertEqual(copied_continuous.variance, 0.16)
+        copied_categorical = categorical.populations.get(subject_group_id=new_id)
+        self.assertEqual(copied_categorical.category_probabilities, [0.1, 0.3, 0.6])
 
     def test_categorical_population_length_validation(self):
         covariate = Covariate.objects.create(
@@ -398,12 +454,12 @@ class TestCovariateApi(TestCase):
         self.assertEqual(categorical.n_categories, 3)
         self.assertTrue(
             model.variables.filter(
-                qname=f"Covariates.d_COV_{categorical.id}_PKCompartment_CL_2"
+                qname=f"Covariates.CL_d_COV_{categorical.id}_2"
             ).exists()
         )
         self.assertFalse(
             model.variables.filter(
-                qname=f"Covariates.d_COV_{categorical.id}_PKCompartment_CL_3"
+                qname=f"Covariates.CL_d_COV_{categorical.id}_3"
             ).exists()
         )
 
@@ -431,8 +487,12 @@ class TestCovariatePopulationDefaults(TestCase):
         population = CovariatePopulation.objects.create(
             subject_group=self.group, covariate=covariate
         )
-        self.assertEqual(population.median, 1.0)
-        self.assertEqual(population.variance, 0.09)
+        # defaults correspond to arithmetic mean 1, std 0.3
+        from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+
+        default_median, default_variance = mean_std_to_median_logvar(1.0, 0.3)
+        self.assertAlmostEqual(population.median, default_median)
+        self.assertAlmostEqual(population.variance, default_variance)
 
     def test_study_size_validation_and_constraint(self):
         self.group.study_size = 0
@@ -458,7 +518,10 @@ class TestCovariatePopulationDefaults(TestCase):
 class TestCovariateInjection(TestCase):
     def setUp(self):
         compound = Compound.objects.create(name="demo")
-        self.project = Project.objects.create(name="demo", compound=compound)
+        # a realistic species weight so the weight covariate centres sensibly
+        self.project = Project.objects.create(
+            name="demo", compound=compound, species_weight=70.0
+        )
         self.pk_model = PharmacokineticModel.objects.get(
             name="1-compartmental model"
         )
@@ -482,20 +545,91 @@ class TestCovariateInjection(TestCase):
         model.validate()
         qnames = [v.qname() for v in model.variables()]
         self.assertIn("Covariates.WT", qnames)
-        self.assertIn("Covariates.mu_WT", qnames)
-        self.assertIn("Covariates.a_WT_PKCompartment_CL", qnames)
-        self.assertIn("Covariates.PKCompartment_CL_cov", qnames)
+        self.assertIn("Covariates.CL_a_WT", qnames)
+        self.assertIn("Covariates.CL_cov", qnames)
+        # the centring reference is baked in, not a mu_ input variable
+        self.assertNotIn("Covariates.mu_WT", qnames)
 
         # CL is clearance [L/h] so the default exponent should be 0.75
         a_var = self.pkpd_model.variables.get(
-            qname="Covariates.a_WT_PKCompartment_CL"
+            qname="Covariates.CL_a_WT"
         )
         self.assertAlmostEqual(a_var.get_default_value(), 0.75)
 
-        # the adjusted value multiplies CL by (WT/mu_WT)^a
-        adj = model.get("Covariates.PKCompartment_CL_cov")
-        self.assertIn("PKCompartment.CL", str(adj.rhs()))
-        self.assertIn("Covariates.WT", str(adj.rhs()))
+        # the adjusted value multiplies CL by (WT / species_weight)^a, with the
+        # species weight (70) baked in as a literal (no mu_ variable)
+        adj = model.get("Covariates.CL_cov")
+        rhs = str(adj.rhs())
+        self.assertIn("PKCompartment.CL", rhs)
+        self.assertIn("Covariates.WT", rhs)
+        self.assertIn("70", rhs)
+        self.assertNotIn("mu_", rhs)
+
+    def test_weight_reference_is_converted_to_kg(self):
+        # species weight entered in grams must be converted to kg (the unit of
+        # the sampled weights) before being baked in as the centring reference
+        from pkpdapp.models import Unit
+
+        self.project.species_weight = 70000.0
+        self.project.species_weight_unit = Unit.objects.get(symbol="g")
+        self.project.save()
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.WEIGHT_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        model = self.pkpd_model.get_myokit_model()
+        model.validate()
+
+        # 70000 g -> 70 kg baked into the (WT / reference) factor
+        rhs = str(model.get("Covariates.CL_cov").rhs())
+        self.assertIn("70", rhs)
+        self.assertNotIn("70000", rhs)
+
+    def test_age_covariate_uses_fixed_reference(self):
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.AGE_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        model = self.pkpd_model.get_myokit_model()
+        model.validate()
+        # age is centred on the fixed reference of 25, baked in (no mu_ variable)
+        rhs = str(model.get("Covariates.CL_cov").rhs())
+        self.assertIn("Covariates.AGE", rhs)
+        self.assertIn("25", rhs)
+        self.assertFalse(
+            self.pkpd_model.variables.filter(qname="Covariates.mu_AGE").exists()
+        )
+
+    def test_custom_continuous_uses_reference_value(self):
+        covariate = Covariate.objects.create(
+            project=self.project,
+            name="albumin",
+            type=Covariate.Type.CONTINUOUS,
+            reference_value=40.0,
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            covariate=covariate,
+            type=DerivedVariable.Type.CUSTOM_CONT_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        model = self.pkpd_model.get_myokit_model()
+        model.validate()
+        # centred on the covariate's own reference value (40), baked in, no mu_
+        rhs = str(model.get("Covariates.CL_cov").rhs())
+        self.assertIn(f"Covariates.COV_{covariate.id}", rhs)
+        self.assertIn("40", rhs)
+        self.assertFalse(
+            self.pkpd_model.variables.filter(
+                qname=f"Covariates.mu_COV_{covariate.id}"
+            ).exists()
+        )
 
     def test_sex_covariate_injects_single_delta(self):
         DerivedVariable.objects.create(
@@ -508,9 +642,9 @@ class TestCovariateInjection(TestCase):
         model.validate()
         qnames = [v.qname() for v in model.variables()]
         self.assertIn("Covariates.SEX", qnames)
-        self.assertIn("Covariates.d_SEX_PKCompartment_CL_1", qnames)
+        self.assertIn("Covariates.CL_d_SEX_1", qnames)
         # only one delta for two categories
-        self.assertNotIn("Covariates.d_SEX_PKCompartment_CL_2", qnames)
+        self.assertNotIn("Covariates.CL_d_SEX_2", qnames)
 
     def test_custom_categorical_injects_delta_per_category(self):
         cov = Covariate.objects.create(
@@ -531,8 +665,8 @@ class TestCovariateInjection(TestCase):
         qnames = [v.qname() for v in model.variables()]
         input_name = f"COV_{cov.id}"
         self.assertIn(f"Covariates.{input_name}", qnames)
-        self.assertIn(f"Covariates.d_{input_name}_PKCompartment_CL_1", qnames)
-        self.assertIn(f"Covariates.d_{input_name}_PKCompartment_CL_2", qnames)
+        self.assertIn(f"Covariates.CL_d_{input_name}_1", qnames)
+        self.assertIn(f"Covariates.CL_d_{input_name}_2", qnames)
 
     def test_custom_covariates_with_colliding_names_have_distinct_inputs(self):
         covariate_1 = Covariate.objects.create(
@@ -554,12 +688,12 @@ class TestCovariateInjection(TestCase):
         for covariate in (covariate_1, covariate_2):
             input_name = f"COV_{covariate.id}"
             self.assertIn(f"Covariates.{input_name}", qnames)
-            self.assertIn(f"Covariates.mu_{input_name}", qnames)
+            self.assertNotIn(f"Covariates.mu_{input_name}", qnames)
             self.assertIn(
-                f"Covariates.a_{input_name}_PKCompartment_CL", qnames
+                f"Covariates.CL_a_{input_name}", qnames
             )
 
-        bindings, _, _ = self.pkpd_model._covariate_bindings()
+        bindings = self.pkpd_model._covariate_bindings()
         self.assertEqual({binding.covariate.id for binding in bindings}, {
             covariate_1.id,
             covariate_2.id,
@@ -598,11 +732,11 @@ class TestCovariateInjection(TestCase):
         model = self.pkpd_model.get_myokit_model()
         model.validate()
         qnames = [v.qname() for v in model.variables()]
-        # single shared weight input + median, one exponent per parameter
+        # single shared weight input, one exponent per parameter, no mu_ variable
         self.assertEqual(qnames.count("Covariates.WT"), 1)
-        self.assertEqual(qnames.count("Covariates.mu_WT"), 1)
-        self.assertIn("Covariates.a_WT_PKCompartment_CL", qnames)
-        self.assertIn("Covariates.a_WT_PKCompartment_V1", qnames)
+        self.assertEqual(qnames.count("Covariates.mu_WT"), 0)
+        self.assertIn("Covariates.CL_a_WT", qnames)
+        self.assertIn("Covariates.V1_a_WT", qnames)
 
     def test_simulation_uses_study_size_and_varies_output(self):
         from pkpdapp.models import Protocol, Dose, Unit, Variable
@@ -650,6 +784,73 @@ class TestCovariateInjection(TestCase):
         std = np.array(group_result["outputs"][c1.id]["std"])
         self.assertGreater(float(np.max(std)), 0.0)
 
+    def test_simulate_returns_sampled_parameters(self):
+        from pkpdapp.models import Protocol, Dose, Unit, Variable
+
+        # a virtual population driven by a weight covariate on CL and a random
+        # effect (distribution) on V1
+        group = SubjectGroup.objects.create(
+            name="Sim-Group 1",
+            project=self.project,
+            study_size=15,
+            population_region=SubjectGroup.Region.US,
+            m2f_ratio=0.5,
+            age_min=20.0,
+            age_max=60.0,
+        )
+        dose_var = Variable.objects.get(
+            qname="PKCompartment.A1", dosed_pk_model=self.pkpd_model
+        )
+        protocol = Protocol.objects.create(
+            name="cov protocol",
+            compound=self.project.compound,
+            amount_unit=Unit.objects.get(symbol="mg"),
+            time_unit=Unit.objects.get(symbol="h"),
+            variable=dose_var,
+            project=self.project,
+            group=group,
+        )
+        Dose.objects.create(protocol=protocol, start_time=0, amount=100)
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.WEIGHT_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        v1 = self.pkpd_model.variables.get(qname="PKCompartment.V1")
+        Distribution.objects.create(
+            variable=v1, pdf=Distribution.PDF.NORMAL, variance=0.1
+        )
+
+        wt = self.pkpd_model.variables.get(qname="Covariates.WT")
+        # the centring reference is baked into the model, so there is no mu_ variable
+        self.assertFalse(
+            self.pkpd_model.variables.filter(qname="Covariates.mu_WT").exists()
+        )
+
+        time_qname = self.pkpd_model.get_myokit_model().binding("time").qname()
+        results = self.pkpd_model.simulate(
+            outputs=["PKCompartment.C1", time_qname], seed=123
+        )
+        group_result = next(r for r in results if r["group_id"] == group.id)
+        parameters = group_result["parameters"]
+
+        # the distributed parameter and the covariate input are reported, keyed by
+        # variable id, one value per individual (study_size)
+        self.assertIn(v1.id, parameters)
+        self.assertIn(wt.id, parameters)
+        self.assertEqual(len(parameters[v1.id]), 15)
+        self.assertEqual(len(parameters[wt.id]), 15)
+        # a random effect actually varies the sampled values
+        self.assertGreater(float(np.std(parameters[v1.id])), 0.0)
+
+    def test_deterministic_simulation_returns_no_parameters(self):
+        # no distribution and no covariate -> a deterministic run with no samples
+        results = self.pkpd_model.simulate(outputs=["PKCompartment.C1"], seed=1)
+        for group_result in results:
+            self.assertEqual(group_result["parameters"], {})
+
     def test_delete_removes_injected_parameters(self):
         dv = DerivedVariable.objects.create(
             pkpd_model=self.pkpd_model,
@@ -659,13 +860,13 @@ class TestCovariateInjection(TestCase):
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
         self.assertTrue(
             self.pkpd_model.variables.filter(
-                qname="Covariates.a_WT_PKCompartment_CL"
+                qname="Covariates.CL_a_WT"
             ).exists()
         )
         dv.delete()
         self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
         self.assertFalse(
             self.pkpd_model.variables.filter(
-                qname="Covariates.a_WT_PKCompartment_CL"
+                qname="Covariates.CL_a_WT"
             ).exists()
         )

@@ -22,6 +22,7 @@ import {
   VariableRead,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
+  useCovariateListQuery,
   useProjectRetrieveQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
@@ -214,6 +215,10 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const [updateSimulation] = useSimulationUpdateMutation();
   const [updateVariable] = useVariableUpdateMutation();
   const constVariables = useConstVariables();
+  const { data: covariates } = useCovariateListQuery(
+    { projectId: project.id },
+    { skip: !project.id },
+  );
 
   const {
     setSliderValues,
@@ -383,9 +388,44 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const addPlotOptions = outputsSorted.map((variable) =>
-    addPlotVariableOption(renameVariable(variable, model)),
+  // Population/covariate parameters that can be plotted as a histogram of their
+  // Monte-Carlo sampled values: any parameter with a distribution, plus the
+  // covariate value inputs (Covariates.WT / AGE / SEX / COV_<id>). These are the
+  // same variable ids the backend returns under the simulate response's
+  // "parameters" field. A plot is rendered as a histogram whenever its y-axis
+  // variable is constant, so no extra flag is stored on the plot.
+  const covariateLabelByInputName: Record<string, string> = {
+    WT: "Weight",
+    AGE: "Age",
+    SEX: "Sex",
+  };
+  (covariates || []).forEach((covariate) => {
+    covariateLabelByInputName[`COV_${covariate.id}`] = covariate.name;
+  });
+  const isCovariateInput = (variable: VariableRead) =>
+    variable.qname.startsWith("Covariates.") &&
+    (variable.name in covariateLabelByInputName ||
+      variable.name.startsWith("COV_"));
+  const histogramVariables = (variables || []).filter(
+    (variable) =>
+      variable.constant &&
+      (Boolean(variable.distribution) || isCovariateInput(variable)),
   );
+  const histogramOptions = histogramVariables.map((variable) => ({
+    value: variable.id,
+    label: `Histogram: ${
+      isCovariateInput(variable)
+        ? covariateLabelByInputName[variable.name] || variable.name
+        : parameterDisplayName(variable, model)
+    }`,
+  }));
+
+  const addPlotOptions = [
+    ...outputsSorted.map((variable) =>
+      addPlotVariableOption(renameVariable(variable, model)),
+    ),
+    ...histogramOptions,
+  ];
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
@@ -395,6 +435,26 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     const defaultXUnit =
       units?.find((unit: UnitReadWithCompatible) => unit.symbol === "h")?.id ||
       0;
+    // A constant variable is plotted as a histogram of its sampled values: the
+    // parameter itself is the x-axis (its own unit), and there is no y unit.
+    if (variable.constant) {
+      const histogramPlot: SimulationPlotRead = {
+        id: 0,
+        y_axes: [
+          {
+            id: 0,
+            variable: variable.id,
+          },
+        ],
+        cx_lines: [],
+        index: 0,
+        x_unit: variable.unit ?? defaultXUnit,
+        y_unit: null,
+        y_unit2: null,
+      };
+      addSimulationPlot(histogramPlot);
+      return;
+    }
     const { unit: defaultYUnit, scale: defaultYScale } = getYAxisOptions(
       compound,
       variable,

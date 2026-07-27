@@ -10,6 +10,7 @@ import numpy as np
 
 if TYPE_CHECKING:
     from pkpdapp.models import Distribution
+    from pkpdapp.models.myokit_model_mixin import CovariateBinding
 
 
 class UncertaintySimulationMixin:
@@ -137,9 +138,7 @@ class UncertaintySimulationMixin:
         time_max: float | None = None,
         variable_distributions: dict[str, "Distribution"] | None = None,
         variable_correlations: dict[tuple[str, str], float] | None = None,
-        covariate_bindings: list | None = None,
-        covariate_input_ids: list[int] | None = None,
-        covariate_mu_ids: list[int] | None = None,
+        covariate_bindings: list["CovariateBinding"] | None = None,
         sample_count: int = 200,
         seed: int | None = None,
         use_diffsol: bool = True,
@@ -179,21 +178,20 @@ class UncertaintySimulationMixin:
 
         if covariate_bindings is None:
             covariate_bindings = []
-        if covariate_input_ids is None:
-            covariate_input_ids = []
-        if covariate_mu_ids is None:
-            covariate_mu_ids = []
+
+        # the per-individual covariate value inputs (the centring reference is
+        # baked into the model, so it is not a dynamic input)
+        covariate_input_ids = [b.input_id for b in covariate_bindings]
 
         quantiles = self._validate_quantiles(quantiles)
         from pkpdapp.models.simulate_context import SimulateContext
 
         # dynamic inputs are the union of the ETA-distributed parameters and the
-        # per-individual covariate inputs (value + centring median), deduped.
+        # per-individual covariate value inputs, deduped.
         dynamic_input_ids = list(
             dict.fromkeys(
                 [self.variables.get(qname=qname).id for qname in variable_distributions]
-                + list(covariate_input_ids)
-                + list(covariate_mu_ids)
+                + covariate_input_ids
             )
         )
         rng = np.random.default_rng(seed)
@@ -240,10 +238,8 @@ class UncertaintySimulationMixin:
             if group_n <= 0:
                 raise ValueError("study_size must be greater than 0")
 
-            # resolve each covariate's population once per group, along with its
-            # (constant across the population) centring median
+            # resolve each covariate's population once per group
             populations = {}
-            mu_values = {}
             for binding in covariate_bindings:
                 population = (
                     group.covariate_population_for(binding.covariate)
@@ -251,12 +247,21 @@ class UncertaintySimulationMixin:
                     else None
                 )
                 populations[binding.input_id] = population
-                if binding.mu_id is not None:
-                    mu_values[binding.mu_id] = binding.covariate.centering_value(
-                        population
-                    )
 
             sampled_outputs = []
+            # per-individual sampled parameter values, keyed by model Variable id:
+            # the ETA-sampled distributed parameters and the sampled covariate inputs.
+            # These are surfaced so the frontend can plot a histogram of each parameter.
+            reported_parameter_ids = list(
+                dict.fromkeys(
+                    [
+                        self.variables.get(qname=qname).id
+                        for qname in variable_distributions
+                    ]
+                    + list(covariate_input_ids)
+                )
+            )
+            sampled_parameters = {pid: [] for pid in reported_parameter_ids}
             t_eval = None
             correlated_etas = (
                 self._draw_correlated_etas(
@@ -282,9 +287,9 @@ class UncertaintySimulationMixin:
                     for qname, sampled_value in sampled_variables.items()
                     if qname in variable_distributions
                 }
-                # per-individual covariate values (dimensionless model inputs)
-                # plus the per-population centring medians. Sex is drawn once and
-                # shared so weight (sex-dependent) stays consistent.
+                # per-individual covariate values (dimensionless model inputs).
+                # Sex is drawn once and shared so weight (sex-dependent) stays
+                # consistent. The centring reference is baked into the model.
                 if covariate_bindings:
                     sex = None
                     if group is not None:
@@ -295,7 +300,10 @@ class UncertaintySimulationMixin:
                                 populations[binding.input_id], rng, sex=sex
                             )
                         )
-                    sampled_values_by_id.update(mu_values)
+
+                # record this individual's sampled parameter values for histograms
+                for pid in reported_parameter_ids:
+                    sampled_parameters[pid].append(sampled_values_by_id[pid])
 
                 result = base_context.simulate_model(
                     simulation_group,
@@ -318,6 +326,7 @@ class UncertaintySimulationMixin:
                 {
                     "time": self._extract_time_values(sampled_outputs[0]),
                     "outputs": aggregated_outputs,
+                    "parameters": sampled_parameters,
                     "sample_count": group_n,
                     "group_id": simulation_group.group_id,
                 }

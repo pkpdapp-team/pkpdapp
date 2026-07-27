@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 
 import GroupPopulation from "../features/trial/GroupPopulation";
 import { setProject } from "../features/main/mainSlice";
+import { meanStdToMedianVariance } from "../shared/lognormal";
 import { project } from "./project.mock";
 import {
   CovariateRead,
@@ -187,10 +188,10 @@ export const Default: Story = {
     expect(canvas.getByLabelText("Age min")).toBeInTheDocument();
     expect(canvas.getByLabelText("Age max")).toBeInTheDocument();
     expect(canvas.getByLabelText(/Male:female ratio/i)).toBeInTheDocument();
-    // the seeded covariate row renders with its Median/Variance fields
+    // the seeded covariate row renders with its Mean/Std deviation fields
     expect(await canvas.findByText("albumin")).toBeInTheDocument();
-    expect(canvas.getByLabelText("Median")).toBeInTheDocument();
-    expect(canvas.getByLabelText("Variance")).toBeInTheDocument();
+    expect(canvas.getByLabelText("Mean")).toBeInTheDocument();
+    expect(canvas.getByLabelText("Std deviation")).toBeInTheDocument();
     // "Add covariate" is disabled until a name is typed
     expect(canvas.getByRole("button", { name: /Add covariate/i })).toBeDisabled();
   },
@@ -307,36 +308,87 @@ export const EditCategoricalPopulation: Story = {
   },
 };
 
+export const RejectsWrongCategoryCount: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText("ethnicity");
+    const probabilities = canvas.getByLabelText(/Category probabilities/i);
+    // two values for a three-category covariate -> client-side count error,
+    // and no request is sent to the backend
+    await userEvent.clear(probabilities);
+    await userEvent.type(probabilities, "0.5, 0.5");
+    await userEvent.tab();
+    await waitFor(() =>
+      expect(
+        canvas.getByText("Enter 3 probabilities, one per category"),
+      ).toBeInTheDocument(),
+    );
+    expect(populationPatchSpy).not.toHaveBeenCalled();
+  },
+};
+
+export const RejectsBadlyFormattedProbabilities: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText("ethnicity");
+    const probabilities = canvas.getByLabelText(/Category probabilities/i);
+    // not a comma-separated list of numbers -> client-side format error, and
+    // no request is sent to the backend
+    await userEvent.clear(probabilities);
+    await userEvent.type(probabilities, "0.5 0.5");
+    await userEvent.tab();
+    await waitFor(() =>
+      expect(
+        canvas.getByText(/Enter a comma-separated list of numbers/i),
+      ).toBeInTheDocument(),
+    );
+    expect(populationPatchSpy).not.toHaveBeenCalled();
+  },
+};
+
 export const EditCovariatePopulation: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     await canvas.findByText("albumin");
-    // update the existing population for albumin (update branch)
-    const median = canvas.getByLabelText("Median");
-    await userEvent.clear(median);
-    await userEvent.type(median, "55");
+    // update the existing population for albumin (update branch). Mean/std are
+    // entered by the user and converted to the stored median + log-variance.
+    const mean = canvas.getByLabelText("Mean");
+    const std = canvas.getByLabelText("Std deviation");
+    await userEvent.clear(mean);
+    await userEvent.type(mean, "50");
     await userEvent.tab();
+    await userEvent.clear(std);
+    await userEvent.type(std, "10");
+    await userEvent.tab();
+    const expected = meanStdToMedianVariance(50, 10);
     await waitFor(() =>
       expect(populationPatchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ median: 55 }),
+        expect.objectContaining({
+          median: expected.median,
+          variance: expected.variance,
+        }),
       ),
     );
 
-    // add a second covariate that has no population, then edit its median to
-    // exercise the "create population" branch
+    // add a second covariate that has no population, then edit it to exercise
+    // the "create population" branch (it commits converted median + variance)
     await userEvent.type(canvas.getByLabelText("Name"), "creatinine");
     await userEvent.click(canvas.getByRole("button", { name: /Add covariate/i }));
     await canvas.findByText("creatinine");
-    const medianFields = canvas.getAllByLabelText("Median");
-    const newMedian = medianFields[medianFields.length - 1];
-    await userEvent.clear(newMedian);
-    await userEvent.type(newMedian, "1.1");
+    const meanFields = canvas.getAllByLabelText("Mean");
+    const newMean = meanFields[meanFields.length - 1];
+    await userEvent.clear(newMean);
+    await userEvent.type(newMean, "2");
     await userEvent.tab();
-    await waitFor(() =>
-      expect(populationCreateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ median: 1.1 }),
-      ),
-    );
+    await waitFor(() => {
+      const body = populationCreateSpy.mock.calls.find(
+        (args) => args[0]?.covariate === 3,
+      )?.[0];
+      expect(body).toBeTruthy();
+      expect(typeof body?.median).toBe("number");
+      expect(typeof body?.variance).toBe("number");
+      expect(body?.median).toBeGreaterThan(0);
+    });
   },
 };
 

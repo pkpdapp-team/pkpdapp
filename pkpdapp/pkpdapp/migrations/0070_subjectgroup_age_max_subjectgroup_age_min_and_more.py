@@ -52,6 +52,7 @@ class Migration(migrations.Migration):
                 ('builtin', models.CharField(blank=True, choices=[('WT', 'Weight'), ('AGE', 'Age'), ('SEX', 'Sex')], default='', help_text='standard covariate kind (weight/age/sex); blank for custom', max_length=3)),
                 ('n_categories', models.PositiveIntegerField(blank=True, help_text='number of categories (categorical covariates only)', null=True)),
                 ('category_names', models.JSONField(blank=True, help_text='optional labels for each category (categorical covariates only); index 0 is the base category', null=True)),
+                ('reference_value', models.FloatField(default=1.0, help_text="reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a")),
                 ('project', models.ForeignKey(blank=True, help_text='Project that this covariate belongs to.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='covariates', to='pkpdapp.project')),
                 ('unit', models.ForeignKey(blank=True, help_text='unit of the covariate (continuous covariates only)', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='covariates', to='pkpdapp.unit')),
             ],
@@ -65,8 +66,8 @@ class Migration(migrations.Migration):
             name='CovariatePopulation',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('median', models.FloatField(default=1.0, help_text='median value of the covariate (continuous covariates only)')),
-                ('variance', models.FloatField(default=0.09, help_text='variance of the log-normal random effect (continuous covariates only)')),
+                ('median', models.FloatField(default=0.9578262852211513, help_text='median value of the covariate (continuous covariates only)')),
+                ('variance', models.FloatField(default=0.08617769624105233, help_text='variance of the log-normal random effect (continuous covariates only)')),
                 ('category_probabilities', models.JSONField(blank=True, default=list, help_text='probability of each category (categorical covariates only); one entry per category, index 0 is the base category')),
                 ('covariate', models.ForeignKey(help_text='custom covariate this distribution describes', on_delete=django.db.models.deletion.CASCADE, related_name='populations', to='pkpdapp.covariate')),
                 ('subject_group', models.ForeignKey(help_text='subject group (virtual population) this distribution is for', on_delete=django.db.models.deletion.CASCADE, related_name='covariate_populations', to='pkpdapp.subjectgroup')),

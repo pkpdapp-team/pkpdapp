@@ -44,6 +44,12 @@ class SimulateResponseSerializer(serializers.Serializer):
     )
     sample_count = serializers.IntegerField()
     outputs = serializers.DictField(child=UncertaintySummarySerializer())
+    # per-parameter sampled values (keyed by variable id) for histogram plots;
+    # empty for a deterministic run
+    parameters = serializers.DictField(
+        child=serializers.ListField(child=serializers.FloatField()),
+        required=False,
+    )
 
 
 @extend_schema(
