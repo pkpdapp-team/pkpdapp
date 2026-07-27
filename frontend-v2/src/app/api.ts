@@ -77,15 +77,22 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Dose", id }],
     },
     doseUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: "Dose", id }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Dose", id },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     doseCreate: {
-      invalidatesTags: [{ type: "Dose", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Dose", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     doseDestroy: {
       invalidatesTags: (result, error, { id }) => [
         { type: "Dose", id },
         { type: "Dose", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
       ],
     },
     // Projects
@@ -395,14 +402,21 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Protocol", id }],
     },
     protocolUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: "Protocol", id }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Protocol", id },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     protocolCreate: {
-      invalidatesTags: [{ type: "Protocol", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Protocol", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     protocolDestroy: {
       invalidatesTags: (result, error, { id }) => [
         { type: "Protocol", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
       ],
     },
     unitList: {
