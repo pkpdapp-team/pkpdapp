@@ -590,20 +590,20 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
 
   return (
     <Box>
-      {observationTypes.length > 1 && (
-        <Tabs
-          value={activeIndex}
-          onChange={(_e, newValue) => setTab(newValue)}
-          selectionFollowsFocus
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ mb: 1 }}
-        >
-          {observationTypes.map((t, index) => (
-            <Tab key={t.varId} label={t.name} {...a11yProps(index)} />
-          ))}
-        </Tabs>
-      )}
+      {/* Always show the tab bar — it is the only place the observation type's
+          name is displayed, even when there is a single type. */}
+      <Tabs
+        value={activeIndex}
+        onChange={(_e, newValue) => setTab(newValue)}
+        selectionFollowsFocus
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{ mb: 1 }}
+      >
+        {observationTypes.map((t, index) => (
+          <Tab key={t.varId} label={t.name} {...a11yProps(index)} />
+        ))}
+      </Tabs>
       <Box
         role="tabpanel"
         id={`residual-obs-type-tabpanel-${activeIndex}`}
