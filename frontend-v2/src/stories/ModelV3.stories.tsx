@@ -15,9 +15,7 @@ import Model from "../features/model/Model";
 import {
   project,
   projectHandlers,
-  pkModels,
-  pdModels,
-  tags as tagsData,
+  modelHandlers,
   combinedModels,
   protocolHandlers,
   variableHandlers,
@@ -45,157 +43,127 @@ const meta: Meta<typeof Model> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: {
-        project: [
-          http.get("/api/combined_model", async ({ request }) => {
-            await delay();
-            const url = new URL(request.url);
+      // Custom stateful GETs + mutation handlers come first so they shadow the
+      // generated static /api/combined_model and /api/project/:id handlers that
+      // are spread in below (MSW resolves array handlers first-match-wins).
+      handlers: [
+        http.get("/api/combined_model", async ({ request }) => {
+          await delay();
+          const url = new URL(request.url);
 
-            const projectId = url.searchParams.get("project_id");
-            if (projectId) {
-              // Return a clone to prevent RTK Query from caching a mutable reference
-              return HttpResponse.json([structuredClone(mockModel)], {
-                status: 200,
-              });
-            }
-            return HttpResponse.json([], { status: 200 });
-          }),
-          http.get("/api/project/:id", async ({ params }) => {
+          const projectId = url.searchParams.get("project_id");
+          if (projectId) {
+            // Return a clone to prevent RTK Query from caching a mutable reference
+            return HttpResponse.json([structuredClone(mockModel)], {
+              status: 200,
+            });
+          }
+          return HttpResponse.json([], { status: 200 });
+        }),
+        http.get("/api/project/:id", async ({ params }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const projectId = parseInt(params.id, 10);
+          if (projectId === project.id) {
+            // Return a clone to prevent RTK Query from caching a mutable reference
+            return HttpResponse.json(structuredClone(mockProject), {
+              status: 200,
+            });
+          }
+          return HttpResponse.json(
+            { error: "Project not found" },
+            { status: 404 },
+          );
+        }),
+        http.put(
+          "/api/combined_model/:id/set_params_to_defaults",
+          async ({ params, request }) => {
             await delay();
-            //@ts-expect-error params.id is a string
-            const projectId = parseInt(params.id, 10);
-            if (projectId === project.id) {
-              // Return a clone to prevent RTK Query from caching a mutable reference
-              return HttpResponse.json(structuredClone(mockProject), {
-                status: 200,
-              });
-            }
-            return HttpResponse.json(
-              { error: "Project not found" },
-              { status: 404 },
-            );
-          }),
-          http.put(
-            "/api/combined_model/:id/set_params_to_defaults",
-            async ({ params, request }) => {
-              await delay();
-              //@ts-expect-error params.id is a string
-              const modelId = parseInt(params.id, 10);
-              const modelData = await request.json();
-              //@ts-expect-error modelData is DefaultBodyType
-              mockModel = { ...modelData, id: modelId };
-              setParamsToDefaultSpy({ id: modelId, combinedModel: mockModel });
-              // Return a clone to prevent RTK Query from caching a mutable reference
-              return HttpResponse.json(structuredClone(mockModel), {
-                status: 200,
-              });
-            },
-          ),
-          http.put("/api/combined_model/:id", async ({ params, request }) => {
             //@ts-expect-error params.id is a string
             const modelId = parseInt(params.id, 10);
             const modelData = await request.json();
-            modelSpy(modelId, modelData);
-            await delay();
             //@ts-expect-error modelData is DefaultBodyType
-            const timeIntervals = modelData?.time_intervals.map(
-              (interval: TimeIntervalRead, index: number) => {
-                return {
-                  ...interval,
-                  pkpd_model: modelId,
-                  id: interval.id || index + 1, // Ensure each interval has a unique ID
-                };
-              },
-            );
-            //@ts-expect-error modelData is DefaultBodyType
-            const derivedVariables = modelData?.derived_variables.map(
-              (variable: DerivedVariableRead, index: number) => {
-                return {
-                  ...variable,
-                  id: variable.id || index + 1, // Ensure each derived variable has a unique ID
-                };
-              },
-            );
-            mockModel = {
-              //@ts-expect-error modelData is DefaultBodyType
-              ...modelData,
-              id: modelId,
-              time_intervals: timeIntervals,
-              derived_variables: derivedVariables,
-            };
+            mockModel = { ...modelData, id: modelId };
+            setParamsToDefaultSpy({ id: modelId, combinedModel: mockModel });
             // Return a clone to prevent RTK Query from caching a mutable reference
             return HttpResponse.json(structuredClone(mockModel), {
               status: 200,
             });
-          }),
-          http.put("/api/project/:id", async ({ params, request }) => {
-            //@ts-expect-error params.id is a string
-            const projectId = parseInt(params.id, 10);
-            const projectData = await request.json();
-            projectSpy(projectId, projectData);
-            await delay();
-            //@ts-expect-error projectData is DefaultBodyType
-            mockProject = { ...projectData, id: projectId };
-            return HttpResponse.json(mockProject, {
+          },
+        ),
+        http.put("/api/combined_model/:id", async ({ params, request }) => {
+          //@ts-expect-error params.id is a string
+          const modelId = parseInt(params.id, 10);
+          const modelData = await request.json();
+          modelSpy(modelId, modelData);
+          await delay();
+          //@ts-expect-error modelData is DefaultBodyType
+          const timeIntervals = modelData?.time_intervals.map(
+            (interval: TimeIntervalRead, index: number) => {
+              return {
+                ...interval,
+                pkpd_model: modelId,
+                id: interval.id || index + 1, // Ensure each interval has a unique ID
+              };
+            },
+          );
+          //@ts-expect-error modelData is DefaultBodyType
+          const derivedVariables = modelData?.derived_variables.map(
+            (variable: DerivedVariableRead, index: number) => {
+              return {
+                ...variable,
+                id: variable.id || index + 1, // Ensure each derived variable has a unique ID
+              };
+            },
+          );
+          mockModel = {
+            //@ts-expect-error modelData is DefaultBodyType
+            ...modelData,
+            id: modelId,
+            time_intervals: timeIntervals,
+            derived_variables: derivedVariables,
+          };
+          // Return a clone to prevent RTK Query from caching a mutable reference
+          return HttpResponse.json(structuredClone(mockModel), {
+            status: 200,
+          });
+        }),
+        http.put("/api/project/:id", async ({ params, request }) => {
+          //@ts-expect-error params.id is a string
+          const projectId = parseInt(params.id, 10);
+          const projectData = await request.json();
+          projectSpy(projectId, projectData);
+          await delay();
+          //@ts-expect-error projectData is DefaultBodyType
+          mockProject = { ...projectData, id: projectId };
+          return HttpResponse.json(mockProject, {
+            status: 200,
+          });
+        }),
+        http.put("/api/simulation/:id", async ({ params, request }) => {
+          await delay();
+          //@ts-expect-error params.id is a string
+          const simulationId = parseInt(params.id, 10);
+          const simulationData = await request.json();
+          return HttpResponse.json(
+            //@ts-expect-error simulationData is DefaultBodyType
+            { ...simulationData, id: simulationId },
+            {
               status: 200,
-            });
-          }),
-          ...projectHandlers,
-          ...protocolHandlers,
-          ...variableHandlers,
-          ...unitHandlers,
-          ...simulationHandlers,
-          ...subjectGroupHandlers,
-        ],
-        model: [
-          http.get("/api/tag", async () => {
-            await delay();
-            return HttpResponse.json(tagsData, {
-              status: 200,
-            });
-          }),
-          http.get("/api/pharmacokinetic", async () => {
-            await delay();
-            return HttpResponse.json(pkModels, {
-              status: 200,
-            });
-          }),
-          http.get("/api/pharmacodynamic/:id", async ({ params }) => {
-            await delay();
-            //@ts-expect-error params.id is a string
-            const modelId = parseInt(params.id, 10);
-            const pdModel = pdModels.find((m) => m.id === modelId);
-            if (pdModel) {
-              return HttpResponse.json(pdModel, {
-                status: 200,
-              });
-            }
-            return HttpResponse.json(
-              { error: "PD Model not found" },
-              { status: 404 },
-            );
-          }),
-          http.get("/api/pharmacodynamic", async () => {
-            await delay();
-            return HttpResponse.json(pdModels, {
-              status: 200,
-            });
-          }),
-          http.put("/api/simulation/:id", async ({ params, request }) => {
-            await delay();
-            //@ts-expect-error params.id is a string
-            const simulationId = parseInt(params.id, 10);
-            const simulationData = await request.json();
-            return HttpResponse.json(
-              //@ts-expect-error simulationData is DefaultBodyType
-              { ...simulationData, id: simulationId },
-              {
-                status: 200,
-              },
-            );
-          }),
-        ],
-      },
+            },
+          );
+        }),
+        // Generated handlers. The static /api/combined_model and /api/project/:id
+        // GETs here are shadowed by the stateful custom handlers above; the PK/PD/
+        // tag GETs come from modelHandlers.
+        ...projectHandlers,
+        ...modelHandlers,
+        ...protocolHandlers,
+        ...variableHandlers,
+        ...unitHandlers,
+        ...simulationHandlers,
+        ...subjectGroupHandlers,
+      ],
     },
   },
   decorators: [
