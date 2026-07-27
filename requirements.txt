@@ -27,5 +27,5 @@ django-user-visit>=2.0.0
 snapshottest==1.0.0a1
 django-cprofile-middleware>=1.0.5
 ipython
-pydiffsol>=0.6.0
+pydiffsol>=0.6.2
 portkey-ai>=2.2.0,<3.0
