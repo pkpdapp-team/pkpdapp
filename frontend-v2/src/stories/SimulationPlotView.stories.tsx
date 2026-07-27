@@ -2,7 +2,6 @@ import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { http, HttpResponse } from "msw";
 
 import SimulationPlotView from "../features/simulation/SimulationPlotView";
 import {
@@ -15,7 +14,12 @@ import {
 } from "../app/backendApi";
 import { CentralSimulateResponse } from "../features/simulation/types";
 import { simulationData } from "./simulations.mock";
-import { combinedModels, project, protocols, subjectGroups } from "./generated-mocks";
+import {
+  projectHandlers,
+  protocolHandlers,
+  subjectGroupHandlers,
+  modelHandlers,
+} from "./generated-mocks";
 import { computeCompatibleUnits } from "../shared/unitConversion";
 
 const baseSimulation = simulationData[0] as CentralSimulateResponse;
@@ -294,21 +298,10 @@ const meta: Meta<typeof SimulationPlotView> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.get("/api/protocol/", () => {
-          return HttpResponse.json(protocols, { status: 200 });
-        }),
-        http.get("/api/subject_group/", () => {
-          return HttpResponse.json(subjectGroups, { status: 200 });
-        }),
-        http.get("/api/project/:id/", ({ params }) => {
-          if (Number(params.id) === project.id) {
-            return HttpResponse.json(project, { status: 200 });
-          }
-          return HttpResponse.json(null, { status: 404 });
-        }),
-        http.get("/api/combined_model/", () => {
-          return HttpResponse.json(combinedModels, { status: 200 });
-        }),
+        ...projectHandlers,
+        ...protocolHandlers,
+        ...subjectGroupHandlers,
+        ...modelHandlers,
       ],
     },
   },

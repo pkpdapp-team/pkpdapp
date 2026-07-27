@@ -7,66 +7,20 @@ import Data from "../features/data/Data";
 import {
   project,
   projectHandlers,
+  modelHandlers,
   protocolHandlers,
   unitHandlers,
+  variableHandlers,
   simulationHandlers,
-  combinedModels,
-  variables,
+  datasetHandlers,
+  subjectHandlers,
+  subjectGroupHandlers,
+  biomarkerTypeHandlers,
 } from "./generated-mocks";
 import testCSV from "./mockData/Data.File_pkpd.explorer_06.js";
 import dosingUnitsCSV from "./mockData/Data.DosingUnits.js";
 
-import { HttpResponse, http } from "msw";
 import * as XLSX from "xlsx";
-
-const datasetHandlers = [
-  http.get("/api/dataset/:id", () => {
-    return HttpResponse.json(
-      {
-        id: 1,
-        name: "Test Dataset",
-        subjects: [],
-        groups: [],
-      },
-      { status: 200 },
-    );
-  }),
-  http.get("/api/subject_group", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/subject", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/biomarker_type", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/combined_model", ({ request }) => {
-    const url = new URL(request.url);
-    const projectId = url.searchParams.get("project_id");
-    if (projectId && parseInt(projectId) === project.id) {
-      return HttpResponse.json(combinedModels, { status: 200 });
-    }
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/variable", ({ request }) => {
-    const url = new URL(request.url);
-    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
-    if (dosedPkModelId) {
-      const filtered = variables.filter(
-        (v) => v.dosed_pk_model === parseInt(dosedPkModelId, 10),
-      );
-      return HttpResponse.json(filtered, { status: 200 });
-    }
-    return HttpResponse.json(variables, { status: 200 });
-  }),
-  http.get("/api/variable/:id/", ({ params }) => {
-    const variable = variables.find((v) => v.id === Number(params.id));
-    if (variable) {
-      return HttpResponse.json(variable, { status: 200 });
-    }
-    return HttpResponse.json(null, { status: 404 });
-  }),
-];
 
 const meta: Meta<typeof Data> = {
   title: "Data Upload (create dataset)",
@@ -74,15 +28,18 @@ const meta: Meta<typeof Data> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: {
-        project: [
-          ...projectHandlers,
-          ...protocolHandlers,
-          ...unitHandlers,
-          ...simulationHandlers,
-        ],
-        dataset: datasetHandlers,
-      },
+      handlers: [
+        ...projectHandlers,
+        ...modelHandlers,
+        ...protocolHandlers,
+        ...unitHandlers,
+        ...variableHandlers,
+        ...simulationHandlers,
+        ...datasetHandlers,
+        ...subjectHandlers,
+        ...subjectGroupHandlers,
+        ...biomarkerTypeHandlers,
+      ],
     },
   },
   decorators: [
