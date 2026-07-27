@@ -2,7 +2,14 @@ import { FC, useState } from "react";
 import createPlotlyComponent from "react-plotly.js/factory";
 import Plotly from "plotly.js-basic-dist-min";
 import { Data } from "plotly.js";
-import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
 import { SubjectGroupRead, VariableRead } from "../../app/backendApi";
 import { CentralSimulateResponse } from "./types";
 import { plotColours } from "./utils";
@@ -90,91 +97,29 @@ function normalQuantile(p: number): number {
   }
 }
 
+// One observation type (output variable) and its per-group series, ready to plot.
+interface ObservationType {
+  varId: number;
+  name: string;
+  // [groupLabel, points] — one entry per subject group for this variable.
+  seriesEntries: [string, ResidualPoint[]][];
+}
+
 /**
- * Diagnostic Plotly charts:
+ * Diagnostic Plotly charts for a single observation type (output variable):
  *  1. Residuals vs Time
  *  2. Residuals vs Predicted values
  *  3. Normal QQ plot of residuals
  *  4. Observed vs Predicted values
  *
- * Points are coloured by (group × output variable).
+ * Points are coloured by subject group (the variable is fixed within a group).
  */
-const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
-  predictions,
-  residuals,
-  observations,
-  variables,
-  groups,
-}) => {
+const ResidualPlotGroup: FC<{
+  seriesEntries: [string, ResidualPoint[]][];
+}> = ({ seriesEntries }) => {
   const [logTime, setLogTime] = useState(false);
   const [logPred, setLogPred] = useState(true);
   const [logObsPred, setLogObsPred] = useState(true);
-
-  // Build matched (predicted, residual) pairs per (group × variable).
-  // residuals[i] has the same group as predictions[i].
-  // residuals[i].time lists the observed time-points; predictions[i].time is the
-  // full grid — we look up predicted values at each residual time-point.
-  const seriesMap = new Map<string, ResidualPoint[]>();
-
-  residuals.forEach((resGroup, gi) => {
-    const predGroup = predictions[gi];
-    if (!predGroup) return;
-    // observations[gi] mirrors residuals[gi] exactly (same group, same union
-    // time array, same per-output ordering), so observed values align with the
-    // residual values by index.
-    const obsGroup = observations?.[gi];
-
-    // Build a time→index lookup for the prediction time grid.
-    const predTimeIndex = new Map<number, number>();
-    predGroup.time.forEach((t, idx) => predTimeIndex.set(t, idx));
-
-    const groupId = resGroup.group ?? null;
-    const group = groups?.find((g) => g.id === groupId);
-    const groupLabel = group?.name ?? `Group ${gi + 1}`;
-
-    Object.keys(resGroup.outputs).forEach((varIdStr) => {
-      const varId = Number(varIdStr);
-      const variable = variables.find((v) => v.id === varId);
-      const label = `${variable?.name ?? varIdStr} ${groupLabel}`;
-
-      const residualValues = resGroup.outputs[varIdStr];
-      const predValues = predGroup.outputs[varIdStr];
-      const obsValues = obsGroup?.outputs[varIdStr];
-      if (!residualValues || !predValues) return;
-
-      // residuals response has same length as number of observed time-points for
-      // that output variable. The time array in the residuals response is the
-      // union of all observed times (sorted). We match by index within the
-      // variable's residual array — which aligns with the residual time array.
-      const points: ResidualPoint[] = [];
-      resGroup.time.forEach((t, tidx) => {
-        const r = residualValues[tidx];
-        if (r === undefined || r === null || isNaN(r)) return;
-        const predIdx = predTimeIndex.get(t);
-        if (predIdx === undefined) return;
-        const p = predValues[predIdx];
-        if (p === undefined || p === null || isNaN(p)) return;
-        const o = obsValues?.[tidx];
-        const observed = o === undefined || o === null || isNaN(o) ? null : o;
-        points.push({
-          predicted: p,
-          residual: r,
-          observed,
-          time: t,
-          varId,
-          groupId,
-        });
-      });
-
-      if (points.length) {
-        if (!seriesMap.has(label)) seriesMap.set(label, []);
-        seriesMap.get(label)!.push(...points);
-      }
-    });
-  });
-
-  // Assign colours deterministically by series index
-  const seriesEntries = Array.from(seriesMap.entries());
 
   // --- Residuals vs Time traces ---
   const residVsTimeTraces: Partial<Data>[] = seriesEntries.map(
@@ -518,6 +463,158 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
             </Box>
           )}
         </Box>
+      </Box>
+    </Box>
+  );
+};
+
+function a11yProps(index: number) {
+  return {
+    id: `residual-obs-type-tab-${index}`,
+    "aria-controls": `residual-obs-type-tabpanel-${index}`,
+  };
+}
+
+/**
+ * Groups the residual diagnostics by observation type (output variable), one tab
+ * per type. Each tab renders its own {@link ResidualPlotGroup} showing the four
+ * diagnostic charts for that variable only, coloured by subject group.
+ */
+const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
+  predictions,
+  residuals,
+  observations,
+  variables,
+  groups,
+}) => {
+  const [tab, setTab] = useState(0);
+
+  // Build matched (predicted, residual) pairs, grouped by observation type
+  // (varId) and then by subject group.
+  // residuals[i] has the same group as predictions[i].
+  // residuals[i].time lists the observed time-points; predictions[i].time is the
+  // full grid — we look up predicted values at each residual time-point.
+  const typeMap = new Map<number, Map<string, ResidualPoint[]>>();
+
+  residuals.forEach((resGroup, gi) => {
+    const predGroup = predictions[gi];
+    if (!predGroup) return;
+    // observations[gi] mirrors residuals[gi] exactly (same group, same union
+    // time array, same per-output ordering), so observed values align with the
+    // residual values by index.
+    const obsGroup = observations?.[gi];
+
+    // Build a time→index lookup for the prediction time grid.
+    const predTimeIndex = new Map<number, number>();
+    predGroup.time.forEach((t, idx) => predTimeIndex.set(t, idx));
+
+    const groupId = resGroup.group ?? null;
+    const group = groups?.find((g) => g.id === groupId);
+    const groupLabel = group?.name ?? `Group ${gi + 1}`;
+
+    Object.keys(resGroup.outputs).forEach((varIdStr) => {
+      const varId = Number(varIdStr);
+
+      const residualValues = resGroup.outputs[varIdStr];
+      const predValues = predGroup.outputs[varIdStr];
+      const obsValues = obsGroup?.outputs[varIdStr];
+      if (!residualValues || !predValues) return;
+
+      // residuals response has same length as number of observed time-points for
+      // that output variable. The time array in the residuals response is the
+      // union of all observed times (sorted). We match by index within the
+      // variable's residual array — which aligns with the residual time array.
+      const points: ResidualPoint[] = [];
+      resGroup.time.forEach((t, tidx) => {
+        const r = residualValues[tidx];
+        if (r === undefined || r === null || isNaN(r)) return;
+        const predIdx = predTimeIndex.get(t);
+        if (predIdx === undefined) return;
+        const p = predValues[predIdx];
+        if (p === undefined || p === null || isNaN(p)) return;
+        const o = obsValues?.[tidx];
+        const observed = o === undefined || o === null || isNaN(o) ? null : o;
+        points.push({
+          predicted: p,
+          residual: r,
+          observed,
+          time: t,
+          varId,
+          groupId,
+        });
+      });
+
+      if (points.length) {
+        let groupSeries = typeMap.get(varId);
+        if (!groupSeries) {
+          groupSeries = new Map<string, ResidualPoint[]>();
+          typeMap.set(varId, groupSeries);
+        }
+        // Within a tab the variable is fixed, so series are labelled by group.
+        if (!groupSeries.has(groupLabel)) groupSeries.set(groupLabel, []);
+        groupSeries.get(groupLabel)!.push(...points);
+      }
+    });
+  });
+
+  // One observation type per varId, in first-appearance order.
+  const observationTypes: ObservationType[] = Array.from(
+    typeMap.entries(),
+  ).map(([varId, groupSeries]) => ({
+    varId,
+    name: variables.find((v) => v.id === varId)?.name ?? String(varId),
+    seriesEntries: Array.from(groupSeries.entries()),
+  }));
+
+  if (observationTypes.length === 0) {
+    return (
+      <Box
+        sx={{
+          height: 200,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Typography variant="caption" color="text.secondary" align="center">
+          No residual data available to plot.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Guard against a stale index when the set of observation types changes.
+  const activeIndex = tab < observationTypes.length ? tab : 0;
+  const activeType = observationTypes[activeIndex];
+
+  return (
+    <Box>
+      {observationTypes.length > 1 && (
+        <Tabs
+          value={activeIndex}
+          onChange={(_e, newValue) => setTab(newValue)}
+          selectionFollowsFocus
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ mb: 1 }}
+        >
+          {observationTypes.map((t, index) => (
+            <Tab key={t.varId} label={t.name} {...a11yProps(index)} />
+          ))}
+        </Tabs>
+      )}
+      <Box
+        role="tabpanel"
+        id={`residual-obs-type-tabpanel-${activeIndex}`}
+        aria-labelledby={`residual-obs-type-tab-${activeIndex}`}
+      >
+        {/* Remount on tab change so each observation type keeps its own
+            log-axis toggle state. */}
+        <ResidualPlotGroup
+          key={activeType.varId}
+          seriesEntries={activeType.seriesEntries}
+        />
       </Box>
     </Box>
   );
