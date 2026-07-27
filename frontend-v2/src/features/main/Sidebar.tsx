@@ -116,12 +116,9 @@ export default function Sidebar() {
     );
   };
 
-  const protocolsAreComplete = groups?.flatMap((group) => {
-    return group.protocols
-      .map((p) => p.doses.every((d) => d.amount > 0))
-      .some((d) => d);
-  });
-  const groupsAreComplete = protocolsAreComplete?.every((dosing) => dosing);
+  const hasZeroDose = groups?.some((group) =>
+    group.protocols.some((p) => p.doses.some((d) => d.amount <= 0)),
+  );
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
       return acc && dv.type !== "AUC";
@@ -135,7 +132,7 @@ export default function Sidebar() {
     errors[PageName.MODEL] =
       "Model is incomplete, see the Model tab for details";
   }
-  if (!groupsAreComplete) {
+  if (hasZeroDose) {
     warnings[PageName.TRIAL_DESIGN] =
       "Trial design is incomplete, one or more dose amounts are zero";
   }
