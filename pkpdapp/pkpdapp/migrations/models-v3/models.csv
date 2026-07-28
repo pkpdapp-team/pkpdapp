@@ -65,3 +65,9 @@ PK-Models/Extravascular/Ocular-PKPD-bispecific-model.mmt;PK-Extravascular;0;0;0;
 PK-Models/Extravascular/Ocular-PKPD-VEGF-model.mmt;PK-Extravascular;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 PK-Models/Effect-Compartment/Effect-compartment-model_alt.mmt;PK-Effect-Compartment;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 PK-Models/Extravascular/First-order-absorption-model_2Sites.mmt;PK-Extravascular;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+PK-Models/Disposition/TMDD/1-compartmental-full-TMDD-model_1-binding-site-irreversible.mmt;PK-Model;1;0;0;0;1;0;0;0;1;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-full-TMDD-model_1-binding-site-irreversible.mmt;PK-Model;0;1;0;0;1;0;0;0;1;1;0;0;0;0;0
+PK-Models/Disposition/TMDD/1-compartmental-PK-Inactivation-Model_linear.mmt;PK-Model;1;0;0;0;1;0;0;0;0;0;0;0;0;0;0
+PK-Models/Disposition/TMDD/1-compartmental-PK-Inactivation-Model_kinact_KI.mmt;PK-Model;1;0;0;0;1;0;1;0;0;0;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-PK-Inactivation-Model_linear.mmt;PK-Model;0;1;0;0;1;0;0;0;0;0;0;0;0;0;0
+PK-Models/Disposition/TMDD/2-compartmental-PK-Inactivation-Model_kinact_KI.mmt;PK-Model;0;1;0;0;1;0;1;0;0;0;0;0;0;0;0
