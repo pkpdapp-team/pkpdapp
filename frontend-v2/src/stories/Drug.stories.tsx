@@ -5,7 +5,7 @@ import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Drug from "../features/drug/Drug";
 import { project, projectHandlers } from "./project.mock";
-import { http, delay, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 
 import { EfficacyExperimentRead } from "../app/backendApi";
 
@@ -28,7 +28,6 @@ const meta: Meta<typeof Drug> = {
         project: projectHandlers,
         compound: [
           http.put("/api/compound/:id", async ({ params, request }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const compoundId = parseInt(params.id, 10);
             const compoundData = await request.json();
@@ -52,7 +51,6 @@ const meta: Meta<typeof Drug> = {
             );
           }),
           http.get("/api/efficacy_experiment/", async ({ request }) => {
-            await delay();
             const url = new URL(request.url);
             const compoundId = url.searchParams.get("compound_id");
             if (compoundId) {
@@ -67,7 +65,6 @@ const meta: Meta<typeof Drug> = {
             }
           }),
           http.post("/api/efficacy_experiment/", async ({ request }) => {
-            await delay();
             const experimentData = await request.json();
             const newExperiment = {
               id: experimentId++,
@@ -80,7 +77,6 @@ const meta: Meta<typeof Drug> = {
           http.put(
             "/api/efficacy_experiment/:id",
             async ({ params, request }) => {
-              await delay();
               //@ts-expect-error params.id is a string
               const experimentId = parseInt(params.id, 10);
               const experimentData = await request.json();
@@ -98,7 +94,6 @@ const meta: Meta<typeof Drug> = {
             },
           ),
           http.delete("/api/efficacy_experiment/:id", async ({ params }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const experimentId = parseInt(params.id, 10);
             deleteEfficacyExperimentSpy(experimentId);

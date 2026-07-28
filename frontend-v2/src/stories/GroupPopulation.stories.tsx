@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { expect, within, waitFor, waitForElementToBeRemoved, fn } from "storybook/test";
 import { useDispatch } from "react-redux";
 
@@ -83,7 +83,6 @@ const meta: Meta<typeof GroupPopulation> = {
       handlers: {
         covariates: [
           http.get("/api/covariate", async ({ request }) => {
-            await delay();
             const projectId = new URL(request.url).searchParams.get(
               "project_id",
             );
@@ -93,7 +92,6 @@ const meta: Meta<typeof GroupPopulation> = {
             return HttpResponse.json(filtered, { status: 200 });
           }),
           http.post("/api/covariate", async ({ request }) => {
-            await delay();
             const body = (await request.json()) as CovariateRead;
             covariateCreateSpy(body);
             const newCovariate = {
@@ -105,7 +103,6 @@ const meta: Meta<typeof GroupPopulation> = {
             return HttpResponse.json(newCovariate, { status: 201 });
           }),
           http.delete("/api/covariate/:id", async ({ params }) => {
-            await delay();
             const id = parseInt(params.id as string, 10);
             covariateDestroySpy(id);
             covariateMocks = covariateMocks.filter((c) => c.id !== id);
@@ -114,7 +111,6 @@ const meta: Meta<typeof GroupPopulation> = {
         ],
         populations: [
           http.get("/api/covariate_population", async ({ request }) => {
-            await delay();
             const projectId = new URL(request.url).searchParams.get(
               "project_id",
             );
@@ -123,7 +119,6 @@ const meta: Meta<typeof GroupPopulation> = {
             });
           }),
           http.post("/api/covariate_population", async ({ request }) => {
-            await delay();
             const body = (await request.json()) as CovariatePopulationRead;
             populationCreateSpy(body);
             const newPopulation = { ...body, id: populationMocks.length + 100 };
@@ -133,7 +128,6 @@ const meta: Meta<typeof GroupPopulation> = {
           http.patch(
             "/api/covariate_population/:id",
             async ({ request, params }) => {
-              await delay();
               const id = parseInt(params.id as string, 10);
               const body = (await request.json()) as Partial<CovariatePopulationRead>;
               populationPatchSpy(body);
@@ -147,7 +141,6 @@ const meta: Meta<typeof GroupPopulation> = {
         ],
         group: [
           http.patch("/api/subject_group/:id", async ({ request }) => {
-            await delay();
             const body = await request.json();
             groupPatchSpy(body);
             return HttpResponse.json({ ...group, ...(body as object) }, {

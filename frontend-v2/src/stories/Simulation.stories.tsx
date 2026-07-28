@@ -40,7 +40,6 @@ const meta: Meta<typeof Simulations> = {
             );
           }),
           http.get("/api/subject_group", async () => {
-            await delay();
             return HttpResponse.json([], { status: 200 });
           }),
           http.get("/api/subject", () => {
@@ -53,7 +52,6 @@ const meta: Meta<typeof Simulations> = {
         efficacyExperiment: http.get(
           "/api/efficacy_experiment/:id/",
           async ({ params }) => {
-            await delay();
             return HttpResponse.json(
               {
                 id: Number(params.id),
@@ -68,14 +66,12 @@ const meta: Meta<typeof Simulations> = {
         efficacyExperiments: http.get(
           "/api/efficacy_experiment/",
           async () => {
-            await delay();
             return HttpResponse.json([], { status: 200 });
           },
         ),
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
-            await delay();
             const simulationParams = await request.json();
             simulationSpy(simulationParams);
             return HttpResponse.json(simulationData, {
@@ -253,11 +249,9 @@ export const WithGroups: Story = {
       handlers: {
         dataset: [
           http.get(/\/api\/dataset\/\d+\/?$/, async () => {
-            await delay();
             return HttpResponse.json(dataset, { status: 200 });
           }),
           http.get(/\/api\/subject_group\/?$/, async ({ request }) => {
-            await delay();
             const url = new URL(request.url);
             const projectId = url.searchParams.get("project_id");
             if (projectId) {
@@ -279,18 +273,15 @@ export const WithGroups: Story = {
             return HttpResponse.json([], { status: 200 });
           }),
           http.get(/\/api\/subject\/?$/, async () => {
-            await delay();
             return HttpResponse.json(subjects, { status: 200 });
           }),
           http.get(/\/api\/biomarker_type\/?$/, async () => {
-            await delay();
             return HttpResponse.json(biomarkerTypes, { status: 200 });
           }),
         ],
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
-            await delay();
             const simulationParams = await request.json();
             simulationSpy(simulationParams);
             return HttpResponse.json(simulationWithGroupsData, { status: 200 });

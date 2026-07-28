@@ -1,5 +1,5 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import {
   expect,
   within,
@@ -48,7 +48,6 @@ const meta: Meta<typeof Protocols> = {
       handlers: {
         project: [
           http.get("/api/protocol", async ({ request }) => {
-            await delay();
             const searchParams = new URL(request.url).searchParams;
             const projectId = searchParams.get("project_id");
             if (projectId) {
@@ -64,7 +63,6 @@ const meta: Meta<typeof Protocols> = {
         ],
         protocols: [
           http.get("/api/subject_group", async ({ request }) => {
-            await delay();
             const searchParams = new URL(request.url).searchParams;
             const projectId = searchParams.get("project_id");
             if (projectId) {
@@ -77,7 +75,6 @@ const meta: Meta<typeof Protocols> = {
             });
           }),
           http.get("/api/dose/:id", async ({ params }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const doseId = parseInt(params.id, 10);
             const allProtocolDoses = protocolMocks.flatMap(
@@ -95,7 +92,6 @@ const meta: Meta<typeof Protocols> = {
           http.put("/api/protocol/:id", async ({ request }) => {
             const newProtocol = await request.json();
             protocolSpy(newProtocol);
-            await delay();
             let newDoseId = 0;
             // @ts-expect-error newProtocol might be undefined
             newProtocol.doses.forEach((dose: DoseRead) => {
@@ -127,7 +123,6 @@ const meta: Meta<typeof Protocols> = {
             // @ts-expect-error request.json() is DefaultBodyType
             const updatedDose: DoseRead = await request.json();
             doseSpy(doseId, updatedDose);
-            await delay();
             protocolMocks = protocolMocks.map((p) => ({ ...p }));
             protocolMocks.forEach((protocol) => {
               protocol.doses = protocol.doses.map((dose) =>
@@ -147,7 +142,6 @@ const meta: Meta<typeof Protocols> = {
             });
           }),
           http.delete("/api/dose/:id", async ({ params }) => {
-            await delay();
             // @ts-expect-error params.id is a string
             const doseId = parseInt(params.id, 10);
             protocolMocks.forEach((protocol) => {
@@ -170,7 +164,6 @@ const meta: Meta<typeof Protocols> = {
             );
           }),
           http.post("/api/dose", async ({ request }) => {
-            await delay();
             // @ts-expect-error request.json() is DefaultBodyType
             const newDose: DoseRead = await request.json();
             doseSpy(newDose);
@@ -206,7 +199,6 @@ const meta: Meta<typeof Protocols> = {
             });
           }),
           http.post("/api/subject_group", async ({ request }) => {
-            await delay();
             const responseBody = await request.json();
             const newGroup: SubjectGroupRead = {
               // @ts-expect-error responseBody can't be spread
@@ -231,7 +223,6 @@ const meta: Meta<typeof Protocols> = {
             });
           }),
           http.patch("/api/subject_group/:id", async ({ params, request }) => {
-            await delay();
             // @ts-expect-error params.id is a string
             const groupId = parseInt(params.id, 10);
             const body = await request.json();
@@ -243,7 +234,6 @@ const meta: Meta<typeof Protocols> = {
             return HttpResponse.json(updated, { status: 200 });
           }),
           http.delete("/api/subject_group/:id", async ({ params }) => {
-            await delay();
             // @ts-expect-error params.id is a string
             const groupId = parseInt(params.id, 10);
             groupMocks = groupMocks.filter((group) => group.id !== groupId);

@@ -163,8 +163,15 @@ const MapObservations: FC<IMapObservations> = ({
         )
         .forEach((row) => {
           row[observationVariableField] = value;
-          validUnit =
-            validUnit && !!compatibleUnits?.includes(row[observationUnitField]);
+          // Compatible units represent dimensionless with the empty-string
+          // symbol "", but observation rows store it as "dimensionless".
+          // Treat the two as equivalent so a dimensionless observation can be
+          // mapped to a dimensionless variable.
+          const rowUnit =
+            row[observationUnitField] === "dimensionless"
+              ? ""
+              : row[observationUnitField];
+          validUnit = validUnit && !!compatibleUnits?.includes(rowUnit);
         });
       const newNormalisedFields = new Map([
         ...state.normalisedFields.entries(),

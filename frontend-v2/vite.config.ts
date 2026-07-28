@@ -106,6 +106,13 @@ export default ({ mode }) => {
             setupFiles: [".storybook/vitest.setup.ts"],
             retry: 2,
             testTimeout: 30000, // Increase timeout for CI environments
+            // Cap concurrent browser workers. These story tests render heavy MUI
+            // trees; on high-core machines the default (one worker per core) causes
+            // CPU contention that starves in-flight renders/requests and makes
+            // timing-sensitive stories flaky. 4 bounds contention while keeping
+            // parallelism. It's a ceiling, so low-core CI (e.g. 2 cores) is
+            // unaffected.
+            maxWorkers: 4,
           },
         },
       ],
