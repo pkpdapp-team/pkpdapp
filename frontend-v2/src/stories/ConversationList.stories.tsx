@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse } from "msw";
 
 import ConversationList from "../features/chat/ConversationList";
 import { conversationHandlers, conversations } from "./conversation.mock";
@@ -115,7 +115,6 @@ const deleteHandlers = [
   conversationHandlers[0],
   http.delete("/api/conversations/:id/", async ({ params }) => {
     deleteSpy(params.id);
-    await delay();
     return new HttpResponse(null, { status: 204 });
   }),
 ];

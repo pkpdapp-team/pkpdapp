@@ -65,7 +65,6 @@ const optimiseHandler = http.post(
 const simulateHandler = http.post(
   "/api/combined_model/:id/simulate",
   async () => {
-    await delay();
     return HttpResponse.json(simulationData, { status: 200 });
   },
 );
@@ -74,7 +73,6 @@ const simulateHandler = http.post(
 // by project_id the same way the generated handler does.
 const simulationListHandler = (simulation: (typeof simulations)[number]) =>
   http.get("/api/simulation/", async ({ request }) => {
-    await delay();
     const url = new URL(request.url);
     const projectId = url.searchParams.get("project_id");
     if (projectId && simulation.project !== Number(projectId)) {

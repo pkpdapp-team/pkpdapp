@@ -11,7 +11,7 @@ import { setProject as setReduxProject } from "../features/main/mainSlice";
 import Results from "../features/results/Results";
 import { project, projectHandlers } from "./project.mock";
 import { simulationData } from "./simulations.mock";
-import { http, delay, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { SimulationContext } from "../contexts/SimulationContext";
 import { dataset, subjects, biomarkerTypes } from "./dataset.mock";
 
@@ -20,11 +20,9 @@ const simulationDataWithGroups = [simulation, simulation, simulation];
 
 const datasetHandlers = [
   http.get("/api/dataset/:id", async () => {
-    await delay();
     return HttpResponse.json(dataset, { status: 200 });
   }),
   http.get("/api/subject_group", async ({ request }) => {
-    await delay();
     const url = new URL(request.url);
     const datasetId = url.searchParams.get("dataset_id");
     if (datasetId) {
@@ -33,11 +31,9 @@ const datasetHandlers = [
     return HttpResponse.json([], { status: 200 });
   }),
   http.get("/api/subject", async () => {
-    await delay();
     return HttpResponse.json(subjects, { status: 200 });
   }),
   http.get("/api/biomarker_type", async () => {
-    await delay();
     return HttpResponse.json(biomarkerTypes, { status: 200 });
   }),
 ];
@@ -70,7 +66,6 @@ const meta: Meta<typeof Results> = {
         project: [
           ...projectHandlers,
           http.get("/api/results_table", async ({ request }) => {
-            await delay();
             const url = new URL(request.url);
             const projectId = url.searchParams.get("project_id");
             if (!projectId) {
@@ -83,7 +78,6 @@ const meta: Meta<typeof Results> = {
             return HttpResponse.json(mockResultsTables, { status: 200 });
           }),
           http.put("/api/results_table/:id", async ({ params, request }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const tableId = parseInt(params.id, 10);
             const updatedTable = await request.json();
@@ -98,7 +92,6 @@ const meta: Meta<typeof Results> = {
             return HttpResponse.json(newTable, { status: 200 });
           }),
           http.post("/api/results_table", async ({ request }) => {
-            await delay();
             const newTable = await request.json();
             // Simulate creating a new results table
             const createdTable = {
@@ -110,7 +103,6 @@ const meta: Meta<typeof Results> = {
             return HttpResponse.json(createdTable, { status: 201 });
           }),
           http.delete("/api/results_table/:id", async ({ params }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const tableId = parseInt(params.id, 10);
             // Simulate deleting a results table

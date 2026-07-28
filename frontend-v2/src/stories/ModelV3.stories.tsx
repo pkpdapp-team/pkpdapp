@@ -48,7 +48,6 @@ const meta: Meta<typeof Model> = {
       // are spread in below (MSW resolves array handlers first-match-wins).
       handlers: [
         http.get("/api/combined_model", async ({ request }) => {
-          await delay();
           const url = new URL(request.url);
 
           const projectId = url.searchParams.get("project_id");
@@ -61,7 +60,6 @@ const meta: Meta<typeof Model> = {
           return HttpResponse.json([], { status: 200 });
         }),
         http.get("/api/project/:id", async ({ params }) => {
-          await delay();
           //@ts-expect-error params.id is a string
           const projectId = parseInt(params.id, 10);
           if (projectId === project.id) {
@@ -78,7 +76,6 @@ const meta: Meta<typeof Model> = {
         http.put(
           "/api/combined_model/:id/set_params_to_defaults",
           async ({ params, request }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const modelId = parseInt(params.id, 10);
             const modelData = await request.json();
@@ -96,7 +93,6 @@ const meta: Meta<typeof Model> = {
           const modelId = parseInt(params.id, 10);
           const modelData = await request.json();
           modelSpy(modelId, modelData);
-          await delay();
           //@ts-expect-error modelData is DefaultBodyType
           const timeIntervals = modelData?.time_intervals.map(
             (interval: TimeIntervalRead, index: number) => {
@@ -133,7 +129,6 @@ const meta: Meta<typeof Model> = {
           const projectId = parseInt(params.id, 10);
           const projectData = await request.json();
           projectSpy(projectId, projectData);
-          await delay();
           //@ts-expect-error projectData is DefaultBodyType
           mockProject = { ...projectData, id: projectId };
           return HttpResponse.json(mockProject, {
@@ -141,7 +136,6 @@ const meta: Meta<typeof Model> = {
           });
         }),
         http.put("/api/simulation/:id", async ({ params, request }) => {
-          await delay();
           //@ts-expect-error params.id is a string
           const simulationId = parseInt(params.id, 10);
           const simulationData = await request.json();
