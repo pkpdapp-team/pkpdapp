@@ -13,7 +13,7 @@ v3models = importlib.import_module("pkpdapp.migrations.0027_version_3_models")
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("pkpdapp", "0070_subjectgroup_age_max_subjectgroup_age_min_and_more"),
+        ("pkpdapp", "0071_add_pbpk_tag"),
     ]
 
     operations = [

@@ -35,6 +35,7 @@ def load_pkpd_models(apps, schema_editor):
             "TGI",
             "DDI",
             "favorites",
+            "PBPK",
         ]
         for i, col in enumerate(first_row):
             assert col.startswith(first_row_expect[i])

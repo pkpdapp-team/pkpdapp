@@ -1,0 +1,183 @@
+[[model]]
+name: Time-dependent, competitive inhibition, and induction (Model 2)
+author: Michael Gertz
+
+# tag: PBPK
+
+# Initial values:
+PKCompartment.Aa_sub = 0
+PKCompartment.A1_sub = 0
+PKCompartment.A2_sub = 0
+PKCompartment.A3_sub = 0
+PKCompartment.Enzyme_hep = 1
+PKCompartment.Enzyme_gut = 1
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+# --- Hepatic DDI Parameters ---
+Kih = 100000 in [pmol/L]
+	desc: Hepatic competitive inhibition constant
+
+KI_TDIh = 100000 in [pmol/L]
+	desc: Hepatic time-dependent inhibition constant
+	
+kinacth = 0.05 in [1/h]
+	desc: Hepatic inactivation rate constant
+
+Emaxh = 1 in [dimensionless]
+	desc: Maximum fold hepatic induction (1 = baseline)
+
+EC50h = 100000 in [pmol/L]
+	desc: Concentration yielding half-maximal hepatic induction	
+	
+hllh = 1 in [dimensionless]
+	desc: Hill coefficient for hepatic induction	
+
+# --- Intestinal DDI Parameters ---
+Kig = 100000 in [pmol/L]
+	desc: Intestinal competitive inhibition constant
+
+KI_TDIg = 100000 in [pmol/L]
+	desc: Intestinal time-dependent inhibition constant
+	
+kinactg = 0.05 in [1/h]
+	desc: Intestinal inactivation rate constant
+
+Emaxg = 1 in [dimensionless]
+	desc: Maximum fold intestinal induction (1 = baseline)
+
+EC50g = 100000 in [pmol/L]
+	desc: Concentration yielding half-maximal intestinal induction	
+	
+hllg = 1 in [dimensionless]
+	desc: Hill coefficient for intestinal induction	
+	
+
+# --- Victim Drug Parameters ---	
+fm_sub = 0.94 in [dimensionless]
+	desc: metabolic fraction of the inhibited pathway in the liver (limited between 0 and 1)
+	
+ka_sub = 2.5 in [1/h]
+	desc: absorption rate constant of the substrate drug 
+	
+CLpIV_sub = 28 in [L/h]
+	desc: total plasma clearance of the substrate drug following IV dosing
+	
+CLpxhep_sub = 0 in [L/h]
+	desc: extrahepatic clearance (e.g., renal clearance)
+	
+V1_sub = 20 in [L]
+  desc: Volume of the central compartment of the substrate drug
+	
+V2_sub = 40 in [L]
+  desc: Volume of the first peripheral compartment of the substrate drug
+
+V3_sub = 10 in [L]
+  desc: Volume of the second peripheral of the substrate drug
+
+Q1_sub = 10 in [L/h]
+  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment
+	
+Q2_sub = 30 in [L/h]
+  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		
+	
+FG_sub = 0.50 in [dimensionless]
+  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)
+  
+Fa_sub = 1 in [dimensionless]
+  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) 
+
+fup_sub = 0.022 in [dimensionless]
+  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)
+
+BP_sub = 0.55 in [dimensionless]
+  desc: blood-to-plasma ratio of substrate drug
+  
+Peff_sub = 1 in [um/s] 
+  desc: effective intestinal permeability of substrate drug
+
+CLperg_sub = ((Peff_sub * 3600/1000000) * 0.66) * 1000 in [L/h]
+  desc: intestinal permeability clearance 
+
+# --- Physiological Parameters ---
+Qh = 90 in [L/h]
+  desc: hepatic blood flow of a typical individual	
+  
+Qent = 18 in [L/h]
+  desc: enterocytic blood flow of a typical individual	 
+  
+kdegE_hep = 0.01 in [1/h]
+  desc: hepatic enzyme turnover rate constant 
+
+kdegE_gut = 0.03 in [1/h]
+  desc: intestinal enzyme turnover rate constant (faster turnover due to enterocyte shedding)
+	
+
+# --- Systemic Perpetrator Driver & Modulators ---
+C_Drug = 0 in [pmol/L]
+	desc: Single input drug concentration driving both hepatic and intestinal DDI 
+	
+INH_hep = 1 + C_Drug/Kih in [dimensionless]
+	desc: Extent of hepatic competitive inhibition	
+	
+IND_hep = 1 + (Emaxh - 1) * (C_Drug^hllh) / (EC50h^hllh + C_Drug^hllh) in [dimensionless]
+	desc: Extent of hepatic induction 	
+	
+INH_gut = 1 + C_Drug/Kig in [dimensionless]
+	desc: Extent of intestinal competitive inhibition	
+	
+IND_gut = 1 + (Emaxg - 1) * (C_Drug^hllg) / (EC50g^hllg + C_Drug^hllg) in [dimensionless]
+	desc: Extent of intestinal induction 	
+	
+	
+# --- Hepatic Back-calculation ---
+CLinth_sub = (CLpIV_sub-CLpxhep_sub)/BP_sub/(fup_sub/BP_sub*(1-(CLpIV_sub-CLpxhep_sub)/(Qh*BP_sub))) in [L/h]
+	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)
+	
+CLh_sub = (CLinth_sub*fm_sub*Enzyme_hep/INH_hep+CLinth_sub*(1-fm_sub))*fup_sub/BP_sub*Qh/((CLinth_sub*fm_sub*Enzyme_hep/INH_hep+CLinth_sub*(1-fm_sub))*fup_sub/BP_sub+Qh) in [L/h]
+	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)
+
+FHt_sub = 1-(CLh_sub/Qh) in [dimensionless]
+	desc: hepatic availability of the substrate drug (contributor to bioavailability)
+	
+
+# --- Intestinal Back-calculation ---
+CLintg_sub = BP_sub*CLperg_sub*Qent*(1-FG_sub)/(FG_sub*(BP_sub*Qent+CLperg_sub*fup_sub)) in [L/h]
+	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	
+	
+FGt_sub = Qent*CLperg_sub/(CLintg_sub*Enzyme_gut/INH_gut*CLperg_sub*fup_sub/BP_sub + Qent*(CLintg_sub*Enzyme_gut/INH_gut+CLperg_sub)) in [dimensionless]
+	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)
+	
+	
+# --- Victim ODEs ---
+C1_sub = A1_sub/V1_sub in [pmol/L]
+  desc: Concentration of VICTIM drug in the central compartment
+
+C2_sub = A2_sub/V2_sub in [pmol/L]
+  desc: Concentration of VICTIM drug in the first peripheral compartment
+
+C3_sub = A3_sub/V3_sub in [pmol/L]
+  desc: Concentration of VICTIM drug in the second peripheral compartment
+	
+	
+dot(Aa_sub) = -Aa_sub*ka_sub in [pmol]
+    desc: Amount of drug in absorption compartment
+
+dot(A1_sub) = Aa_sub*ka_sub * Fa_sub * FGt_sub * FHt_sub - (CLh_sub*BP_sub + CLpxhep_sub)*C1_sub - Q1_sub*(C1_sub - C2_sub) - Q2_sub*(C1_sub - C3_sub) in [pmol]
+  desc: Amount of VICTIM drug in the central compartment 
+
+dot(A2_sub) = Q1_sub*(C1_sub - C2_sub) in [pmol]
+  desc: Amount of VICTIM drug in the first peripheral compartment 
+	
+dot(A3_sub) = Q2_sub*(C1_sub - C3_sub) in [pmol]
+  desc: Amount of VICTIM drug in the second peripheral compartment 
+  
+dot(Enzyme_hep) = kdegE_hep*1*IND_hep - Enzyme_hep*(kdegE_hep + kinacth * C_Drug/(C_Drug+KI_TDIh)) in [dimensionless]  
+  desc: Relative hepatic enzyme expression
+
+dot(Enzyme_gut) = kdegE_gut*1*IND_gut - Enzyme_gut*(kdegE_gut + kinactg * C_Drug/(C_Drug+KI_TDIg)) in [dimensionless]  
+  desc: Relative intestinal enzyme expression
