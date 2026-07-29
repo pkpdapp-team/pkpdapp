@@ -73,3 +73,4 @@ PK-Models/Disposition/TMDD/2-compartmental-PK-Inactivation-Model_linear.mmt;PK-M
 PK-Models/Disposition/TMDD/2-compartmental-PK-Inactivation-Model_kinact_KI.mmt;PK-Model;0;1;0;0;1;0;1;0;0;0;0;0;0;0;0;0
 PD-Models/Indirect-Effects/DDI/Induction-TDI-competitive_DDI_1_Fin.mmt;PD-Model;0;0;0;0;0;0;0;0;0;0;0;1;0;1;0;1
 PD-Models/Indirect-Effects/DDI/Induction-TDI-competitive_DDI_2_Fin.mmt;PD-Model;0;0;0;0;0;0;0;0;0;0;0;1;0;1;0;1
+PK-Models/Extravascular/Ocular-FOTE-PK-model.mmt;PK-Extravascular;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
