@@ -5,10 +5,6 @@
 #
 
 from django.db import migrations
-import importlib
-
-
-v3models = importlib.import_module("pkpdapp.migrations.0027_version_3_models")
 
 
 class Migration(migrations.Migration):
@@ -16,6 +12,4 @@ class Migration(migrations.Migration):
         ("pkpdapp", "0065_alter_derivedvariable_type"),
     ]
 
-    operations = [
-        migrations.RunPython(v3models.load_pkpd_models),
-    ]
+    operations = []
