@@ -1080,6 +1080,114 @@ export const pkModels = [
     is_library_model: true,
     model_type: "PKEX",
     tags: []
+  },
+  {
+    id: 65,
+    read_only: false,
+    datetime: null,
+    name: "1-compartmental irreversible TMDD model (1 binding site)",
+    description: "1-compartmental irreversible TMDD model (1 binding site)",
+    mmt: "[[model]]\nname: 1-compartmental irreversible TMDD model (1 binding site)\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1_f = 0\nPKCompartment.AT1_f = PKCompartment.CT1_0*PKCompartment.V1\nPKCompartment.ADT1 = 0\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n	\nV1 = 1 in [L]\n  desc: Volume of the central compartment	\n	\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the target in the central compartment\n\nkon = 1 in [1/h*L/pmol]\n  desc: association rate constant (2nd order)\n	\nkdegT1 = 1 in [1/h]\n  desc: Target degradation rate constant\n	\nkdegC1 = 1 in [1/h]\n  desc: Complex degradation rate constant\n	\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n	\nC1_f = A1_f/V1 in [pmol/L]\n  desc: Concentration of FREE drug in the central compartment\n  \nC1_b = ADT1/V1 in [pmol/L]\n  desc: Concentration of BOUND drug in the central compartment\n	\nC1_t = (A1_f + ADT1)/V1 in [pmol/L]\n  desc: Concentration of TOTAL drug in the central compartment\n	\nCT1_f = AT1_f/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n	\nCT1_b = ADT1/V1 in [pmol/L]	\n  desc: Concentration of BOUND target in the central compartment\n	\nCT1_t = (AT1_f + ADT1)/V1 in [pmol/L]	\n  desc: Concentration of TOTAL target in the central compartment\n	\nRO_Model = CT1_b/CT1_t*100 in [dimensionless]\n  desc: Receptor (Target) occupancy\n	\nPerInh = (1-CT1_f/CT1_t)*100 in [dimensionless]\n  desc: Percent inhibition relative to TOTAL target	\n	\nPerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]	\n  desc: Percent inhibition relative to the initial steady-state concentration of target\n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate  \n  \ndot(A1_f) = RateAbs*F - CL*C1_f - kon*C1_f*CT1_f*V1 - CLimm*C1_f in [pmol]\n  desc: Amount of FREE drug in the central compartment \n  \ndot(AT1_f) = kdegT1*V1*(CT1_0 - CT1_f) - kon*C1_f*CT1_f*V1 in [pmol]\n  desc: Amount of FREE target in the central compartment\n\ndot(ADT1) = kon*C1_f*CT1_f*V1 - (kdegC1+CLimm/V1)*ADT1 in [pmol]\n  desc: Amount of BOUND drug/ target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      1,
+      5,
+      10,
+      15
+    ]
+  },
+  {
+    id: 66,
+    read_only: false,
+    datetime: null,
+    name: "2-compartmental irreversible TMDD model (1 binding site)",
+    description: "2-compartmental irreversible TMDD model (1 binding site)",
+    mmt: "[[model]]\nname: 2-compartmental irreversible TMDD model (1 binding site)\nauthor: Michael Gertz\n\n\n# Initial values:\nPKCompartment.A1_f = 0\nPKCompartment.A2_f = 0\nPKCompartment.AT1_f = PKCompartment.CT1_0*PKCompartment.V1\nPKCompartment.ADT1 = 0\n\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n	\nV1 = 1 in [L]\n  desc: Volume of the central compartment	\n  \nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n	\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n	desc: Baseline concentration of the target in the central compartment\n\nkon = 1 in [1/h*L/pmol]\n	desc: association rate constant (2nd order)\n	\nkdegT1 = 1 in [1/h]\n	desc: Target degradation rate constant\n	\nkdegC1 = 1 in [1/h]\n	desc: Complex degradation rate constant\n	\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada , \n	0 , \n	CLada) in [L/h]\n	\n\nC1_f = A1_f/V1 in [pmol/L]\n  desc: Concentration of FREE drug in the central compartment\n  \nC1_b = ADT1/V1 in [pmol/L]\n  desc: Concentration of BOUND drug in the central compartment\n	\nC1_t = (A1_f + ADT1)/V1 in [pmol/L]\n  desc: Concentration of TOTAL drug in the central compartment\n	\nCT1_f = AT1_f/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n  \nC2_f = A2_f/V2 in [pmol/L]\n  desc: Concentration of FREE drug in the peripheral compartment  \n	\nCT1_b = ADT1/V1 in [pmol/L]	\n  desc: Concentration of BOUND target in the central compartment\n	\nCT1_t = (AT1_f + ADT1)/V1 in [pmol/L]	\n  desc: Concentration of TOTAL target in the central compartment\n	\nRO_Model = CT1_b/CT1_t*100 in [dimensionless]\n  desc: Receptor (Target) occupancy\n	\nPerInh = (1-CT1_f/CT1_t)*100 in [dimensionless]\n  desc: Percent inhibition relative to TOTAL target	\n	\nPerInh_Baseline = (1-CT1_f/CT1_0)*100 in [dimensionless]	\n  desc: Percent inhibition relative to the initial steady-state concentration of target\n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate  \n  \n	\ndot(A1_f) = RateAbs*F - CL*C1_f - Q1*(C1_f - C2_f) - kon*C1_f*CT1_f*V1 - CLimm*C1_f in [pmol]\n  desc: Amount of FREE drug in the central compartment \n  \ndot(A2_f) = Q1*(C1_f - C2_f) - CLimm*C2_f*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1_f) = kdegT1*V1*(CT1_0 - CT1_f) - kon*C1_f*CT1_f*V1 in [pmol]\n  desc: Amount of FREE target in the central compartment\n\ndot(ADT1) = kon*C1_f*CT1_f*V1 - (kdegC1+CLimm/V1)*ADT1 in [pmol]\n  desc: Amount of BOUND drug/ target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      2,
+      5,
+      10,
+      15
+    ]
+  },
+  {
+    id: 67,
+    read_only: false,
+    datetime: null,
+    name: "1-Compartmental Decoupled PK/PD Linear Turnover Model",
+    description: "1-Compartmental Decoupled PK/PD Linear Turnover Model",
+    mmt: "[[model]]\nname: 1-Compartmental Decoupled PK/PD Linear Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      1,
+      5
+    ]
+  },
+  {
+    id: 68,
+    read_only: false,
+    datetime: null,
+    name: "1-Compartmental Decoupled PK/PD Saturable Turnover Model",
+    description: "1-Compartmental Decoupled PK/PD Saturable Turnover Model",
+    mmt: "[[model]]\nname: 1-Compartmental Decoupled PK/PD Saturable Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      1,
+      5,
+      7
+    ]
+  },
+  {
+    id: 69,
+    read_only: false,
+    datetime: null,
+    name: "Decoupled PK/PD Linear Turnover Model",
+    description: "Decoupled PK/PD Linear Turnover Model",
+    mmt: "[[model]]\nname: Decoupled PK/PD Linear Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      2,
+      5
+    ]
+  },
+  {
+    id: 70,
+    read_only: false,
+    datetime: null,
+    name: "Decoupled PK/PD Saturable Turnover Model",
+    description: "Decoupled PK/PD Saturable Turnover Model",
+    mmt: "[[model]]\nname: Decoupled PK/PD Saturable Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      2,
+      5,
+      7
+    ]
+  },
+  {
+    id: 71,
+    read_only: false,
+    datetime: null,
+    name: "Ocular PK model (front of the eye, FOTE)",
+    description: "Ocular PK model (front of the eye, FOTE)",
+    mmt: "[[model]]\nname: Ocular PK model (front of the eye, FOTE)\nauthor: Michael Gertz\n\n# tags: no tags\n\n# Initial values:\nPKCompartment.Vtf = if(PKCompartment.Vdr + PKCompartment.Vtf_0 < PKCompartment.Vcap, PKCompartment.Vdr + PKCompartment.Vtf_0, PKCompartment.Vcap)\nPKCompartment.Atf = 0\nPKCompartment.Aco = 0\nPKCompartment.Aah = 0\nPKCompartment.Aa = 0\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PKCompartment]\nVcap = 0.00003 in [L]\n	desc: FOTE volume capacity (any volumes exceeding this value are lost immediately (epiphora))\n\nVdr = 0.00003 in [L]\n	desc: Drop volume of topical formulation\n\nVtf_0 = 0.00001 in [L]\n	desc: Tear film volume\n	\nkturn = 6 in [1/h]\n	desc: Tear film turn over rate constant	\n	\nkrefl = 18 in [1/h]\n	desc: Reflex tear film turn over rate constant (as long as Vtf > Vtf_0)		\n	\nVco = 0.00010 in [L]\n	desc: Cornea volume 	\n	\nVah = 0.00020 in [L]\n	desc: Aqueous humour volume 	\n\nQah = 0.00015 in [L/h]\n	desc: Aqueous humour flow  \n	\nCLper = 0.02 in [L/h]\n	desc: Apparent permeability clearance the tear film to cornea and cornea to aqueous humour \n	\nka = 1 in [1/h]\n	desc: First order absorption rate constant (from nasal cavity/ GI tract)\n\n\nRateAbs = Qah*Cah + ka*Aa in [pmol/h]\n	desc: Absorption rate\n\n	\nCtf = Atf/Vtf in [pmol/L]\n	desc: Concentration of drug in the tear film\n	\nCco = Aco/Vco in [pmol/L]\n	desc: Concentration of drug in the cornea	\n\nCah = Aah/Vah in [pmol/L]\n	desc: Concentration of drug in the aqueous humour\n	\nVex = if(Vtf-Vtf_0 > 0, Vtf-Vtf_0, 0)\n	desc: Excess volume by topic administration\n\ndot(Vtf) = kturn*(Vtf_0-Vtf) -krefl*Vex\n    desc: Dynamic volume of the tear film\n\ndot(Atf) = -CLper*Ctf -kturn*Atf -krefl*Vex*Ctf in [pmol]\n    desc: Amount of drug in the tear film\n	\ndot(Aco) = CLper*Ctf - CLper*Cco in [pmol]\n    desc: Amount of drug in the cornea	\n	\ndot(Aah) = CLper*Cco - Qah*Cah in [pmol]\n    desc: Amount of drug in the aqueous humour	\n	\ndot(Aa) = krefl*Vex*Ctf + kturn*Atf - ka*Aa in [pmol]\n    desc: Amount of drug in the extravacular absorption site	",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PKEX",
+    tags: []
   }
 ] as unknown as PharmacokineticRead[];
 
@@ -2604,6 +2712,99 @@ export const pdModels = [
     tags: [
       12
     ]
+  },
+  {
+    id: 44,
+    components: [
+      {
+        name: "PDCompartment",
+        states: [],
+        variables: [],
+        outputs: [],
+        equations: [
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A1_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mi>PDCompartment.Aa_sub</mi><mo>*</mo><mi>PDCompartment.ka_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Fa_sub</mi></mrow><mo>*</mo><mi>PDCompartment.FGt_sub</mi></mrow><mo>*</mo><mi>PDCompartment.FHt_sub</mi></mrow><mo>-</mo><mrow><mfenced><mrow><mrow><mi>PDCompartment.CLh_sub</mi><mo>*</mo><mi>PDCompartment.BP_sub</mi></mrow><mo>+</mo><mi>PDCompartment.CLpxhep_sub</mi></mrow></mfenced><mo>*</mo><mi>PDCompartment.C1_sub</mi></mrow></mrow><mo>-</mo><mrow><mi>PDCompartment.Q1_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C2_sub</mi></mrow></mfenced></mrow></mrow><mo>-</mo><mrow><mi>PDCompartment.Q2_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C3_sub</mi></mrow></mfenced></mrow></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A2_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.Q1_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C2_sub</mi></mrow></mfenced></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A3_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.Q2_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C3_sub</mi></mrow></mfenced></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Aa_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Aa_sub</mi></mrow><mo>*</mo><mi>PDCompartment.ka_sub</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.kdegE</mi><mo>*</mo><mn>1.0</mn></mrow><mo>*</mo><mi>PDCompartment.IND</mi></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinact</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDI</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C1_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A1_sub</mi><mi>PDCompartment.V1_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C2_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A2_sub</mi><mi>PDCompartment.V2_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C3_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A3_sub</mi><mi>PDCompartment.V3_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.CLh_sub</mi><mo>=</mo><mfrac><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mi>PDCompartment.fm_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_sub</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>*</mo><mi>PDCompartment.Qh</mi></mrow><mfenced><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mi>PDCompartment.fm_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_sub</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>+</mo><mi>PDCompartment.Qh</mi></mrow></mfenced></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FGt_sub</mi><mo>=</mo><mfrac><mrow><mi>PDCompartment.Qent</mi><mo>*</mo><mi>PDCompartment.CLperg_sub</mi></mrow><mfenced><mrow><mfrac><mrow><mrow><mfrac><mrow><mi>PDCompartment.CLintg_sub</mi><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>*</mo><mi>PDCompartment.CLperg_sub</mi></mrow><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.Qent</mi><mo>*</mo><mfenced><mrow><mfrac><mrow><mi>PDCompartment.CLintg_sub</mi><mo>*</mo><mi>PDCompartment.Enzyme</mi></mrow><mi>PDCompartment.INH</mi></mfrac><mo>+</mo><mi>PDCompartment.CLperg_sub</mi></mrow></mfenced></mrow></mrow></mfenced></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FHt_sub</mi><mo>=</mo><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.CLh_sub</mi><mi>PDCompartment.Qh</mi></mfrac></mrow></mrow></math>"
+        ]
+      },
+      {
+        name: "environment",
+        states: [],
+        variables: [],
+        outputs: [],
+        equations: []
+      }
+    ],
+    variables: [],
+    mmt: "[[model]]\nname: Time-dependent, competitive inhibition, and induction (Model 1) (DDI)\nauthor: Michael Gertz\n\n# tag: PBPK\n\n# Initial values:\nPDCompartment.Aa_sub = 0\nPDCompartment.A1_sub = 0\nPDCompartment.A2_sub = 0\nPDCompartment.A3_sub = 0\nPDCompartment.Enzyme = 1\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PDCompartment]\n\n# --- DDI Parameters ---\nKi = 100000 in [pmol/L]\n	desc: Inhibition constant\n\nKI_TDI = 100000 in [pmol/L]\n	desc: Time-dependent inhibition constant\n	\nkinact = 0.05 in [1/h]\n	desc: inactivation rate constant\n\nEmax = 1 in [dimensionless]\n	desc: Maximum fold induction (1 = baseline/no induction, 4 = 4-fold induction)\n\nEC50 = 100000 in [pmol/L]\n	desc: Concentration yielding half-maximal induction	\n	\nhll = 1 in [dimensionless]\n	desc: Hill coefficient for the steepness of the induction response	\n	\n\n# --- Victim Drug Parameters ---\nfm_sub = 0.94 in [dimensionless]\n	desc: metabolic fraction of the inhibited pathway (limited between 0 and 1)\n	\nka_sub = 2.5 in [1/h]\n	desc: absorption rate constant of the substrate drug \n	\nCLpIV_sub = 28 in [L/h]\n	desc: total plasma clearance of the substrate drug following IV dosing\n	\nCLpxhep_sub = 0 in [L/h]\n	desc: extrahepatic clearance (e.g., renal clearance)\n	\nV1_sub = 20 in [L]\n  desc: Volume of the central compartment of the substrate drug\n	\nV2_sub = 40 in [L]\n  desc: Volume of the first peripheral compartment of the substrate drug\n\nV3_sub = 10 in [L]\n  desc: Volume of the second peripheral of the substrate drug\n\nQ1_sub = 10 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment\n	\nQ2_sub = 30 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		\n	\nFG_sub = 0.50 in [dimensionless]\n  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)\n  \nFa_sub = 1 in [dimensionless]\n  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) \n\nfup_sub = 0.022 in [dimensionless]\n  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)\n\nBP_sub = 0.55 in [dimensionless]\n  desc: blood-to-plasma ratio of substrate drug\n  \nPeff_sub = 1 in [um/s] \n  desc: effective intestinal permeability of substrate drug\n\nCLperg_sub = ((Peff_sub * 3600/1000000) * 0.66) * 1000 in [L/h]\n  desc: intestinal permeability clearance \n\n\n# --- Physiological Parameters ---\nQh = 90 in [L/h]\n  desc: hepatic blood flow of a typical individual	\n  \nQent = 18 in [L/h]\n  desc: enterocytic blood flow of a typical individual	 \n  \nkdegE = 0.01 in [1/h]\n  desc: enzyme turnover rate constant \n	\n\n# --- Systemic Perpetrator Driver & Modulators ---\nC_Drug = 0 in [pmol/L]\n	desc: Drug concentration causing the DDI effect \n	\nINH = 1 + C_Drug/Ki in [dimensionless]\n	desc: Extent of systemic competitive inhibition	\n	\nIND = 1 + (Emax - 1) * (C_Drug^hll) / (EC50^hll + C_Drug^hll) in [dimensionless]\n	desc: Extent of systemic induction (multiplier on enzyme synthesis)	\n	\n	\n# --- Hepatic Back-calculation ---\nCLinth_sub = (CLpIV_sub-CLpxhep_sub)/BP_sub/(fup_sub/BP_sub*(1-(CLpIV_sub-CLpxhep_sub)/(Qh*BP_sub))) in [L/h]\n	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)\n\nCLh_sub = (CLinth_sub*fm_sub*Enzyme/INH + CLinth_sub*(1-fm_sub))*fup_sub/BP_sub*Qh/((CLinth_sub*fm_sub*Enzyme/INH + CLinth_sub*(1-fm_sub))*fup_sub/BP_sub + Qh) in [L/h]\n	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)\n\nFHt_sub = 1-(CLh_sub/Qh) in [dimensionless]\n	desc: hepatic availability of the substrate drug (contributor to bioavailability)\n	\n\n# --- Intestinal Back-calculation ---\nCLintg_sub = BP_sub*CLperg_sub*Qent*(1-FG_sub)/(FG_sub*(BP_sub*Qent+CLperg_sub*fup_sub)) in [L/h]\n	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	\n\nFGt_sub = Qent*CLperg_sub/(CLintg_sub*Enzyme/INH*CLperg_sub*fup_sub/BP_sub + Qent*(CLintg_sub*Enzyme/INH + CLperg_sub)) in [dimensionless]\n	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)\n	\n	\n# --- Victim ODEs ---\nC1_sub = A1_sub/V1_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the central compartment\n\nC2_sub = A2_sub/V2_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the first peripheral compartment\n\nC3_sub = A3_sub/V3_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the second peripheral compartment\n	\n	\ndot(Aa_sub) = -Aa_sub*ka_sub in [pmol]\n    desc: Amount of drug in absorption compartment\n\ndot(A1_sub) = Aa_sub*ka_sub * Fa_sub * FGt_sub * FHt_sub - (CLh_sub*BP_sub + CLpxhep_sub)*C1_sub - Q1_sub*(C1_sub - C2_sub) - Q2_sub*(C1_sub - C3_sub) in [pmol]\n  desc: Amount of VICTIM drug in the central compartment \n\ndot(A2_sub) = Q1_sub*(C1_sub - C2_sub) in [pmol]\n  desc: Amount of VICTIM drug in the first peripheral compartment \n	\ndot(A3_sub) = Q2_sub*(C1_sub - C3_sub) in [pmol]\n  desc: Amount of VICTIM drug in the second peripheral compartment \n  \ndot(Enzyme) = kdegE*1*IND - Enzyme*(kdegE + kinact * C_Drug/(C_Drug+KI_TDI)) in [dimensionless]  \n  desc: Relative enzyme expression",
+    read_only: false,
+    datetime: null,
+    name: "Time-dependent, competitive inhibition, and induction (Model 1) (DDI)",
+    description: "Time-dependent, competitive inhibition, and induction (Model 1) (DDI)",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PD",
+    project: null,
+    tags: [
+      12,
+      14,
+      17
+    ]
+  },
+  {
+    id: 45,
+    components: [
+      {
+        name: "PDCompartment",
+        states: [],
+        variables: [],
+        outputs: [],
+        equations: [
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A1_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mrow><mrow><mrow><mrow><mi>PDCompartment.Aa_sub</mi><mo>*</mo><mi>PDCompartment.ka_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Fa_sub</mi></mrow><mo>*</mo><mi>PDCompartment.FGt_sub</mi></mrow><mo>*</mo><mi>PDCompartment.FHt_sub</mi></mrow><mo>-</mo><mrow><mfenced><mrow><mrow><mi>PDCompartment.CLh_sub</mi><mo>*</mo><mi>PDCompartment.BP_sub</mi></mrow><mo>+</mo><mi>PDCompartment.CLpxhep_sub</mi></mrow></mfenced><mo>*</mo><mi>PDCompartment.C1_sub</mi></mrow></mrow><mo>-</mo><mrow><mi>PDCompartment.Q1_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C2_sub</mi></mrow></mfenced></mrow></mrow><mo>-</mo><mrow><mi>PDCompartment.Q2_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C3_sub</mi></mrow></mfenced></mrow></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A2_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.Q1_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C2_sub</mi></mrow></mfenced></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.A3_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mi>PDCompartment.Q2_sub</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.C1_sub</mi><mo>-</mo><mi>PDCompartment.C3_sub</mi></mrow></mfenced></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Aa_sub</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mo>-</mo><mi>PDCompartment.Aa_sub</mi></mrow><mo>*</mo><mi>PDCompartment.ka_sub</mi></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme_gut</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.kdegE_gut</mi><mo>*</mo><mn>1.0</mn></mrow><mo>*</mo><mi>PDCompartment.IND_gut</mi></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme_gut</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE_gut</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinactg</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDIg</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mfrac><mi>dPDCompartment.Enzyme_hep</mi><mi>dt</mi></mfrac><mo>=</mo><mrow><mrow><mrow><mi>PDCompartment.kdegE_hep</mi><mo>*</mo><mn>1.0</mn></mrow><mo>*</mo><mi>PDCompartment.IND_hep</mi></mrow><mo>-</mo><mrow><mi>PDCompartment.Enzyme_hep</mi><mo>*</mo><mfenced><mrow><mi>PDCompartment.kdegE_hep</mi><mo>+</mo><mfrac><mrow><mi>PDCompartment.kinacth</mi><mo>*</mo><mi>PDCompartment.C_Drug</mi></mrow><mfenced><mrow><mi>PDCompartment.C_Drug</mi><mo>+</mo><mi>PDCompartment.KI_TDIh</mi></mrow></mfenced></mfrac></mrow></mfenced></mrow></mrow></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C1_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A1_sub</mi><mi>PDCompartment.V1_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C2_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A2_sub</mi><mi>PDCompartment.V2_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.C3_sub</mi><mo>=</mo><mfrac><mi>PDCompartment.A3_sub</mi><mi>PDCompartment.V3_sub</mi></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.CLh_sub</mi><mo>=</mo><mfrac><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mi>PDCompartment.fm_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme_hep</mi></mrow><mi>PDCompartment.INH_hep</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_sub</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>*</mo><mi>PDCompartment.Qh</mi></mrow><mfenced><mrow><mfrac><mrow><mfenced><mrow><mfrac><mrow><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mi>PDCompartment.fm_sub</mi></mrow><mo>*</mo><mi>PDCompartment.Enzyme_hep</mi></mrow><mi>PDCompartment.INH_hep</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.CLinth_sub</mi><mo>*</mo><mfenced><mrow><mn>1.0</mn><mo>-</mo><mi>PDCompartment.fm_sub</mi></mrow></mfenced></mrow></mrow></mfenced><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>+</mo><mi>PDCompartment.Qh</mi></mrow></mfenced></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FGt_sub</mi><mo>=</mo><mfrac><mrow><mi>PDCompartment.Qent</mi><mo>*</mo><mi>PDCompartment.CLperg_sub</mi></mrow><mfenced><mrow><mfrac><mrow><mrow><mfrac><mrow><mi>PDCompartment.CLintg_sub</mi><mo>*</mo><mi>PDCompartment.Enzyme_gut</mi></mrow><mi>PDCompartment.INH_gut</mi></mfrac><mo>*</mo><mi>PDCompartment.CLperg_sub</mi></mrow><mo>*</mo><mi>PDCompartment.fup_sub</mi></mrow><mi>PDCompartment.BP_sub</mi></mfrac><mo>+</mo><mrow><mi>PDCompartment.Qent</mi><mo>*</mo><mfenced><mrow><mfrac><mrow><mi>PDCompartment.CLintg_sub</mi><mo>*</mo><mi>PDCompartment.Enzyme_gut</mi></mrow><mi>PDCompartment.INH_gut</mi></mfrac><mo>+</mo><mi>PDCompartment.CLperg_sub</mi></mrow></mfenced></mrow></mrow></mfenced></mfrac></mrow></math>",
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>PDCompartment.FHt_sub</mi><mo>=</mo><mrow><mn>1.0</mn><mo>-</mo><mfrac><mi>PDCompartment.CLh_sub</mi><mi>PDCompartment.Qh</mi></mfrac></mrow></mrow></math>"
+        ]
+      },
+      {
+        name: "environment",
+        states: [],
+        variables: [],
+        outputs: [],
+        equations: []
+      }
+    ],
+    variables: [],
+    mmt: "[[model]]\nname: Time-dependent, competitive inhibition, and induction (Model 2) (DDI)\nauthor: Michael Gertz\n\n# tag: PBPK\n\n# Initial values:\nPDCompartment.Aa_sub = 0\nPDCompartment.A1_sub = 0\nPDCompartment.A2_sub = 0\nPDCompartment.A3_sub = 0\nPDCompartment.Enzyme_hep = 1\nPDCompartment.Enzyme_gut = 1\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PDCompartment]\n\n# --- Hepatic DDI Parameters ---\nKih = 100000 in [pmol/L]\n	desc: Hepatic competitive inhibition constant\n\nKI_TDIh = 100000 in [pmol/L]\n	desc: Hepatic time-dependent inhibition constant\n	\nkinacth = 0.05 in [1/h]\n	desc: Hepatic inactivation rate constant\n\nEmaxh = 1 in [dimensionless]\n	desc: Maximum fold hepatic induction (1 = baseline)\n\nEC50h = 100000 in [pmol/L]\n	desc: Concentration yielding half-maximal hepatic induction	\n	\nhllh = 1 in [dimensionless]\n	desc: Hill coefficient for hepatic induction	\n\n# --- Intestinal DDI Parameters ---\nKig = 100000 in [pmol/L]\n	desc: Intestinal competitive inhibition constant\n\nKI_TDIg = 100000 in [pmol/L]\n	desc: Intestinal time-dependent inhibition constant\n	\nkinactg = 0.05 in [1/h]\n	desc: Intestinal inactivation rate constant\n\nEmaxg = 1 in [dimensionless]\n	desc: Maximum fold intestinal induction (1 = baseline)\n\nEC50g = 100000 in [pmol/L]\n	desc: Concentration yielding half-maximal intestinal induction	\n	\nhllg = 1 in [dimensionless]\n	desc: Hill coefficient for intestinal induction	\n	\n\n# --- Victim Drug Parameters ---	\nfm_sub = 0.94 in [dimensionless]\n	desc: metabolic fraction of the inhibited pathway in the liver (limited between 0 and 1)\n	\nka_sub = 2.5 in [1/h]\n	desc: absorption rate constant of the substrate drug \n	\nCLpIV_sub = 28 in [L/h]\n	desc: total plasma clearance of the substrate drug following IV dosing\n	\nCLpxhep_sub = 0 in [L/h]\n	desc: extrahepatic clearance (e.g., renal clearance)\n	\nV1_sub = 20 in [L]\n  desc: Volume of the central compartment of the substrate drug\n	\nV2_sub = 40 in [L]\n  desc: Volume of the first peripheral compartment of the substrate drug\n\nV3_sub = 10 in [L]\n  desc: Volume of the second peripheral of the substrate drug\n\nQ1_sub = 10 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment\n	\nQ2_sub = 30 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		\n	\nFG_sub = 0.50 in [dimensionless]\n  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)\n  \nFa_sub = 1 in [dimensionless]\n  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) \n\nfup_sub = 0.022 in [dimensionless]\n  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)\n\nBP_sub = 0.55 in [dimensionless]\n  desc: blood-to-plasma ratio of substrate drug\n  \nPeff_sub = 1 in [um/s] \n  desc: effective intestinal permeability of substrate drug\n\nCLperg_sub = ((Peff_sub * 3600/1000000) * 0.66) * 1000 in [L/h]\n  desc: intestinal permeability clearance \n\n# --- Physiological Parameters ---\nQh = 90 in [L/h]\n  desc: hepatic blood flow of a typical individual	\n  \nQent = 18 in [L/h]\n  desc: enterocytic blood flow of a typical individual	 \n  \nkdegE_hep = 0.01 in [1/h]\n  desc: hepatic enzyme turnover rate constant \n\nkdegE_gut = 0.03 in [1/h]\n  desc: intestinal enzyme turnover rate constant (faster turnover due to enterocyte shedding)\n	\n\n# --- Systemic Perpetrator Driver & Modulators ---\nC_Drug = 0 in [pmol/L]\n	desc: Single input drug concentration driving both hepatic and intestinal DDI \n	\nINH_hep = 1 + C_Drug/Kih in [dimensionless]\n	desc: Extent of hepatic competitive inhibition	\n	\nIND_hep = 1 + (Emaxh - 1) * (C_Drug^hllh) / (EC50h^hllh + C_Drug^hllh) in [dimensionless]\n	desc: Extent of hepatic induction 	\n	\nINH_gut = 1 + C_Drug/Kig in [dimensionless]\n	desc: Extent of intestinal competitive inhibition	\n	\nIND_gut = 1 + (Emaxg - 1) * (C_Drug^hllg) / (EC50g^hllg + C_Drug^hllg) in [dimensionless]\n	desc: Extent of intestinal induction 	\n	\n	\n# --- Hepatic Back-calculation ---\nCLinth_sub = (CLpIV_sub-CLpxhep_sub)/BP_sub/(fup_sub/BP_sub*(1-(CLpIV_sub-CLpxhep_sub)/(Qh*BP_sub))) in [L/h]\n	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)\n	\nCLh_sub = (CLinth_sub*fm_sub*Enzyme_hep/INH_hep+CLinth_sub*(1-fm_sub))*fup_sub/BP_sub*Qh/((CLinth_sub*fm_sub*Enzyme_hep/INH_hep+CLinth_sub*(1-fm_sub))*fup_sub/BP_sub+Qh) in [L/h]\n	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)\n\nFHt_sub = 1-(CLh_sub/Qh) in [dimensionless]\n	desc: hepatic availability of the substrate drug (contributor to bioavailability)\n	\n\n# --- Intestinal Back-calculation ---\nCLintg_sub = BP_sub*CLperg_sub*Qent*(1-FG_sub)/(FG_sub*(BP_sub*Qent+CLperg_sub*fup_sub)) in [L/h]\n	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	\n	\nFGt_sub = Qent*CLperg_sub/(CLintg_sub*Enzyme_gut/INH_gut*CLperg_sub*fup_sub/BP_sub + Qent*(CLintg_sub*Enzyme_gut/INH_gut+CLperg_sub)) in [dimensionless]\n	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)\n	\n	\n# --- Victim ODEs ---\nC1_sub = A1_sub/V1_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the central compartment\n\nC2_sub = A2_sub/V2_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the first peripheral compartment\n\nC3_sub = A3_sub/V3_sub in [pmol/L]\n  desc: Concentration of VICTIM drug in the second peripheral compartment\n	\n	\ndot(Aa_sub) = -Aa_sub*ka_sub in [pmol]\n    desc: Amount of drug in absorption compartment\n\ndot(A1_sub) = Aa_sub*ka_sub * Fa_sub * FGt_sub * FHt_sub - (CLh_sub*BP_sub + CLpxhep_sub)*C1_sub - Q1_sub*(C1_sub - C2_sub) - Q2_sub*(C1_sub - C3_sub) in [pmol]\n  desc: Amount of VICTIM drug in the central compartment \n\ndot(A2_sub) = Q1_sub*(C1_sub - C2_sub) in [pmol]\n  desc: Amount of VICTIM drug in the first peripheral compartment \n	\ndot(A3_sub) = Q2_sub*(C1_sub - C3_sub) in [pmol]\n  desc: Amount of VICTIM drug in the second peripheral compartment \n  \ndot(Enzyme_hep) = kdegE_hep*1*IND_hep - Enzyme_hep*(kdegE_hep + kinacth * C_Drug/(C_Drug+KI_TDIh)) in [dimensionless]  \n  desc: Relative hepatic enzyme expression\n\ndot(Enzyme_gut) = kdegE_gut*1*IND_gut - Enzyme_gut*(kdegE_gut + kinactg * C_Drug/(C_Drug+KI_TDIg)) in [dimensionless]  \n  desc: Relative intestinal enzyme expression",
+    read_only: false,
+    datetime: null,
+    name: "Time-dependent, competitive inhibition, and induction (Model 2) (DDI)",
+    description: "Time-dependent, competitive inhibition, and induction (Model 2) (DDI)",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PD",
+    project: null,
+    tags: [
+      12,
+      14,
+      17
+    ]
   }
 ] as unknown as PharmacodynamicRead[];
 
@@ -2667,6 +2868,10 @@ export const tags = [
   {
     id: 16,
     name: "favorites"
+  },
+  {
+    id: 17,
+    name: "PBPK"
   }
 ] as unknown as TagRead[];
 
