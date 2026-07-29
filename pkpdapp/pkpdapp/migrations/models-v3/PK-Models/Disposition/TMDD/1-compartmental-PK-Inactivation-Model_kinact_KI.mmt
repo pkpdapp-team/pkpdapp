@@ -1,0 +1,62 @@
+[[model]]
+name: 1-Compartmental Decoupled PK/PD Saturable Turnover Model
+author: Michael Gertz
+
+# Initial values:
+PKCompartment.A1 = 0
+PKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1
+
+[environment]
+t = 0 in [h] bind time
+
+[PKCompartment]
+
+F = 1 in [dimensionless]
+  desc: Fraction absorbed / bioavailability 
+
+V1 = 1 in [L]
+  desc: Volume of the central compartment 
+
+CL = 1 in [L/h]
+  desc: Linear clearance from central compartment
+
+CT1_0 = 1 in [pmol/L]
+  desc: Baseline concentration of the free/active target in the central compartment
+
+KI = 1 in [pmol/L]
+  desc: Concentration yielding half-maximal inactivation
+
+kinact = 1 in [1/h]
+  desc: Maximum inactivation rate constant
+
+kdegT1 = 1 in [1/h]
+  desc: Free target degradation rate constant
+
+CLada = 0 in [L/h]
+  desc: ADA-mediated clearance 
+
+tada = 240 in [h]
+  desc: Time at which ADA-mediated clearance first occurs
+
+CLimm = if(environment.t < tada, 0, CLada) in [L/h]
+
+C1 = A1/V1 in [pmol/L]
+  desc: Concentration of drug in the central compartment
+    
+CT1 = AT1/V1 in [pmol/L]
+  desc: Concentration of FREE target in the central compartment
+    
+PerInh = (1-CT1/CT1_0)*100 in [dimensionless]
+  desc: Percent target depletion relative to baseline   
+
+RateAbs = 0 in [pmol/h] 
+  desc: Absorption rate   
+
+Inact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]
+  desc: Saturable rate of target inactivation (PD only)
+
+dot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]
+  desc: Amount of drug in the central compartment (NO TARGET SINK)
+  
+dot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]
+  desc: Amount of ACTIVE target in the central compartment

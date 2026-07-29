@@ -8,7 +8,6 @@ import SelectField from "../../../components/SelectField";
 import {
   PharmacodynamicListApiResponse,
   ProjectRead,
-  useTagListQuery,
 } from "../../../app/backendApi";
 
 type PDModelSelectProps = {
@@ -20,25 +19,26 @@ type PDModelSelectProps = {
 };
 
 const pd_model_order = [
-  "direct_effects_emax",
-  "direct_effects_imax",
-  "indirect_effects_stimulation_elimination",
-  "indirect_effects_inhibition_elimination",
-  "indirect_effects_stimulation_production",
-  "indirect_effects_inhibition_production",
-  "indirect_effects_precursor_stimulation_production",
-  "indirect_effects_precursor_inhibition_production",
-  "tumour_growth_linear",
-  "tumour_growth_exponential",
-  "tumour_growth_gompertz",
-  "tumour_growth_simeoni",
-  "tumour_growth_simeoni_logistic",
-  "tumour_growth_inhibition_delay_cell_distribution_conc_prop_kill",
-  "tumour_growth_inhibition_delay_cell_distribution_emax_kill",
-  "tumour_growth_inhibition_delay_cell_distribution_exp_conc_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_conc_prop_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_emax_kill",
-  "tumour_growth_inhibition_delay_signal_distribution_exp_conc_kill",
+  "Direct effect model (inhibitory)",
+  "Direct effect model (stimulatory)",
+  "Competitive inhibition (DDI)",
+  "Time-dependent inhibition (DDI)",
+  "Time-dependent induction (DDI)",
+  "Time-dependent and competitive inhibition (DDI)",
+  "Time-dependent, competitive inhibition, and induction (Model 1) (DDI)",
+  "Time-dependent, competitive inhibition, and induction (Model 2) (DDI)",
+  "Indirect effect model (inhibition of elimination)",
+  "Indirect effect model (inhibition of production)",
+  "Indirect effect model with precursor (inhibition of precursor elimination)",
+  "Indirect effect model with precursor (stimulation of precursor elimination)",
+  "Indirect effect model (stimulation of elimination)",
+  "Indirect effect model (stimulation of production)",
+  "Protein degradation model",
+  "Tumor growth model (exponential)",
+  "Tumor growth model (Gompertz)",
+  "Tumor growth model (linear)",
+  "Tumor growth model (Simeoni-logistic)",
+  "Tumor growth model (Simeoni)",
 ];
 
 export const PDModelSelect: FC<PDModelSelectProps> = ({
@@ -48,22 +48,18 @@ export const PDModelSelect: FC<PDModelSelectProps> = ({
   pdModels,
   project,
 }) => {
-  const { data: tagsData } = useTagListQuery();
-  const ddiTag = tagsData?.find((tag) => tag.name === "DDI");
   const pdTags = project?.pd_tags || [];
-  const pdModelsFiltered = pdModels
-    .filter((m) => !m.tags?.includes(ddiTag?.id || -1))
-    .filter((m) => {
-      const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
-      if (m.tags) {
-        for (const tag of pdTags) {
-          if (!m.tags.includes(tag)) {
-            return false;
-          }
+  const pdModelsFiltered = pdModels.filter((m) => {
+    const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
+    if (m.tags) {
+      for (const tag of pdTags) {
+        if (!m.tags.includes(tag)) {
+          return false;
         }
       }
-      return is_pd_model;
-    });
+    }
+    return is_pd_model;
+  });
   const pd_model_options: { value: number | string; label: string }[] =
     pdModelsFiltered.map((m) => {
       return { value: m.id, label: m.name };

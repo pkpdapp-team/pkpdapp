@@ -47,6 +47,30 @@ def _get_pacing_label(variable):
     return f"pace_{variable.qname().replace('.', '_')}"
 
 
+def _ocular_drop_scaling(drug_amount):
+    """
+    Hardcoded dose scaling for the Ocular FOTE PK model.
+
+    When a topical drop is administered, only the fraction Vtf/(Vdr+Vtf_0) of
+    the tear film (and hence the dose) is retained; the excess is lost
+    immediately to epiphora. Returns the myokit scaling expression, or None for
+    any other model. Detected structurally (robust to CombinedModel renaming the
+    component to "Extravascular"): the dosed state is named "Atf" and its parent
+    component also defines Vtf, Vdr and Vtf_0.
+    """
+    compartment = drug_amount.parent()
+    needed = ("Vtf", "Vdr", "Vtf_0")
+    if drug_amount.name() == "Atf" and all(
+        compartment.has_variable(name) for name in needed
+    ):
+        vtf, vdr, vtf_0 = (compartment.get(name) for name in needed)
+        return myokit.Divide(
+            myokit.Name(vtf),
+            myokit.Plus(myokit.Name(vdr), myokit.Name(vtf_0)),
+        )
+    return None
+
+
 def _add_dose_rate(drug_amount, time_unit):
     """
     Adds a dose rate variable to the state variable, which is bound to the
@@ -61,8 +85,13 @@ def _add_dose_rate(drug_amount, time_unit):
     if drug_amount_unit is not None and time_unit is not None:
         dose_rate.set_unit(drug_amount.unit() / time_unit)
 
+    dose_term = myokit.Name(dose_rate)
+    scaling = _ocular_drop_scaling(drug_amount)
+    if scaling is not None:
+        dose_term = myokit.Multiply(dose_term, scaling)
+
     rhs = drug_amount.rhs()
-    drug_amount.set_rhs(myokit.Plus(rhs, myokit.Name(dose_rate)))
+    drug_amount.set_rhs(myokit.Plus(rhs, dose_term))
 
 
 def _get_time_unit(model):
