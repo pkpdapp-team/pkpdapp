@@ -154,7 +154,8 @@ const VariableRow: FC<Props> = ({
 
   const noMapToPD = isPD || effectVariable === undefined || !isConcentration;
   const noDerivedVariables = !isConcentration || isPD;
-  const noDosing = !isAmount || isComplexAmount;
+  const isTransitCompartment = variable.qname.startsWith("Extravascular.Atr");
+  const noDosing = !isAmount || isComplexAmount || isTransitCompartment;
 
   if (noMapToPD && noDerivedVariables && noDosing) {
     return null;
