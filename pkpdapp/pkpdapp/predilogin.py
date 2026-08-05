@@ -64,9 +64,10 @@ def get_user_details(username: str) -> dict:
     logger.info(f"Fetching user details for: {username}")
     endpoint = BASE_URL + "/v2.0/users/details"
     headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
-    body = {"id": username}
     try:
-        response = requests.post(endpoint, headers=headers, json=body, verify=False)
+        response = requests.post(
+            endpoint, headers=headers, params={"id": username}, verify=False
+        )
         if response.status_code != 200:
             logger.warning(
                 f"Failed to fetch user details for {username}: {response.status_code}"
@@ -81,6 +82,32 @@ def get_user_details(username: str) -> dict:
     except (requests.RequestException, ValueError) as e:
         logger.warning(f"Error fetching user details for {username}: {e}")
         return {}
+
+
+def search_users(q: str) -> List[UserSearchResult]:
+    logger.info(f"Searching users with query: {q}")
+    endpoint = BASE_URL + "/v2.0/users/search"
+    headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
+    try:
+        response = requests.get(
+            endpoint, headers=headers, params={"q": q}, verify=False
+        )
+        if response.status_code != 200:
+            logger.warning(f"Failed to search users for '{q}': {response.status_code}")
+            return []
+        results = response.json()
+        return [
+            UserSearchResult(
+                email=user.get("email", ""),
+                first_name=user.get("firstName", ""),
+                last_name=user.get("lastName", ""),
+                username=user.get("userId", ""),
+            )
+            for user in results
+        ]
+    except (requests.RequestException, ValueError) as e:
+        logger.warning(f"Error searching users for '{q}': {e}")
+        return []
 
 
 class PrediBackend(BaseBackend):
@@ -151,30 +178,3 @@ class PrediBackend(BaseBackend):
     def get_group_permissions(self, user_obj, obj=None):
         logger.debug(f"Getting group permissions for: {user_obj.username}")
         return user_obj.get_group_permissions()
-
-    def search_users(self, q: str) -> List[UserSearchResult]:
-        logger.info(f"Searching users with query: {q}")
-        endpoint = BASE_URL + "/v2.0/users/search"
-        headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
-        try:
-            response = requests.get(
-                endpoint, headers=headers, params={"q": q}, verify=False
-            )
-            if response.status_code != 200:
-                logger.warning(
-                    f"Failed to search users for '{q}': {response.status_code}"
-                )
-                return []
-            results = response.json()
-            return [
-                UserSearchResult(
-                    email=user.get("email", ""),
-                    first_name=user.get("firstName", ""),
-                    last_name=user.get("lastName", ""),
-                    username=user.get("userId", ""),
-                )
-                for user in results
-            ]
-        except (requests.RequestException, ValueError) as e:
-            logger.warning(f"Error searching users for '{q}': {e}")
-            return []
