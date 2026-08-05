@@ -14,3 +14,9 @@ class Profile(models.Model):
     :model:`auth.User`.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    department = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="the user's department",
+    )

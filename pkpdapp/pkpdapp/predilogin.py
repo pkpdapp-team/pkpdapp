@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from pkpdapp.models import Profile
+
 from dataclasses import dataclass
 from typing import List
 
@@ -78,6 +80,7 @@ def get_user_details(username: str) -> dict:
             "email": data.get("email", ""),
             "first_name": data.get("firstName", ""),
             "last_name": data.get("lastName", ""),
+            "department": data.get("department", ""),
         }
     except (requests.RequestException, ValueError) as e:
         logger.warning(f"Error fetching user details for {username}: {e}")
@@ -148,6 +151,12 @@ class PrediBackend(BaseBackend):
             user.is_superuser = is_superuser
             user.is_active = is_superuser or is_user
             user.save()
+
+            if details.get("department"):
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.department = details["department"]
+                profile.save()
+
             if not user.is_active:
                 user = None
         return user
