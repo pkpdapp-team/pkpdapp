@@ -4488,10 +4488,14 @@ export type User = {
   email?: string;
 };
 export type Profile = {
+  /** the user's department */
+  department?: string;
   user: number;
 };
 export type ProfileRead = {
   id: number;
+  /** the user's department */
+  department?: string;
   user: number;
 };
 export type UserRead = {

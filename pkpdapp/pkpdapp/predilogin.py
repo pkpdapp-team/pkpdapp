@@ -9,10 +9,24 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from pkpdapp.models import Profile
+
+from dataclasses import dataclass
+from typing import List
+
 import requests
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class UserSearchResult:
+    email: str
+    first_name: str
+    last_name: str
+    username: str
+
 
 UserModel = get_user_model()
 
@@ -49,6 +63,57 @@ def check_groupmembership(userid: str, group: str) -> bool:
     return any(member["userId"] == userid for member in members) if members else False
 
 
+def get_user_details(username: str) -> dict:
+    logger.info(f"Fetching user details for: {username}")
+    endpoint = BASE_URL + "/v2.0/users/details"
+    headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
+    try:
+        response = requests.post(
+            endpoint, headers=headers, params={"id": username}, verify=False
+        )
+        if response.status_code != 200:
+            logger.warning(
+                f"Failed to fetch user details for {username}: {response.status_code}"
+            )
+            return {}
+        data = response.json()
+        return {
+            "email": data.get("email", ""),
+            "first_name": data.get("firstName", ""),
+            "last_name": data.get("lastName", ""),
+            "department": data.get("department", ""),
+        }
+    except (requests.RequestException, ValueError) as e:
+        logger.warning(f"Error fetching user details for {username}: {e}")
+        return {}
+
+
+def search_users(q: str) -> List[UserSearchResult]:
+    logger.info(f"Searching users with query: {q}")
+    endpoint = BASE_URL + "/v2.0/users/search"
+    headers = {"Content-Type": "application/json", "X-Gravitee-Api-Key": API_KEY}
+    try:
+        response = requests.get(
+            endpoint, headers=headers, params={"q": q}, verify=False
+        )
+        if response.status_code != 200:
+            logger.warning(f"Failed to search users for '{q}': {response.status_code}")
+            return []
+        results = response.json()
+        return [
+            UserSearchResult(
+                email=user.get("email", ""),
+                first_name=user.get("firstName", ""),
+                last_name=user.get("lastName", ""),
+                username=user.get("userId", ""),
+            )
+            for user in results
+        ]
+    except (requests.RequestException, ValueError) as e:
+        logger.warning(f"Error searching users for '{q}': {e}")
+        return []
+
+
 class PrediBackend(BaseBackend):
     """
     Authenticates against settings.AUTH_USER_MODEL.
@@ -74,11 +139,25 @@ class PrediBackend(BaseBackend):
                 logger.info(f"User not found, creating new user: {username}")
                 user = User(username=username)
 
+            details = get_user_details(username)
+            if details.get("email"):
+                user.email = details["email"]
+            if details.get("first_name"):
+                user.first_name = details["first_name"]
+            if details.get("last_name"):
+                user.last_name = details["last_name"]
+
             user.set_password(password)
             user.is_staff = is_superuser
             user.is_superuser = is_superuser
             user.is_active = is_superuser or is_user
             user.save()
+
+            if details.get("department"):
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.department = details["department"]
+                profile.save()
+
             if not user.is_active:
                 user = None
         return user

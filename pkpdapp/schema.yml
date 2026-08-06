@@ -6366,6 +6366,10 @@ components:
         id:
           type: integer
           readOnly: true
+        department:
+          type: string
+          description: the user's department
+          maxLength: 100
         user:
           type: integer
       required:

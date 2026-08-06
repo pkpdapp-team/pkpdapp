@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,9 @@ import {
   Box,
   Button,
   Typography,
+  Autocomplete,
+  TextField,
+  createFilterOptions,
 } from "@mui/material";
 import {
   ProjectAccess,
@@ -24,7 +27,6 @@ import { FormData } from "./Project";
 import Delete from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../login/loginSlice";
-import DropdownButton from "../../components/DropdownButton";
 
 interface Props {
   open: boolean;
@@ -37,6 +39,25 @@ interface Props {
   onClose: () => void;
 }
 
+interface UserOption {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+}
+
+const MIN_SEARCH_LENGTH = 3;
+
+const fullName = (firstName?: string, lastName?: string) =>
+  `${firstName || ""} ${lastName || ""}`.trim();
+
+const optionLabel = (option: UserOption) => {
+  const name = fullName(option.firstName, option.lastName);
+  return name ? `${option.username} (${name})` : option.username;
+};
+
+const defaultFilter = createFilterOptions<UserOption>();
+
 const UserAccess: FC<Props> = ({
   open,
   userAccess,
@@ -46,6 +67,7 @@ const UserAccess: FC<Props> = ({
   onClose,
 }) => {
   const { data: users } = useUserListQuery();
+  const [inputValue, setInputValue] = useState("");
 
   // create map from user id to user object
   const userMap = new Map();
@@ -65,13 +87,16 @@ const UserAccess: FC<Props> = ({
   const myUserId = currentUser?.id || 0;
   const sharedUsers = userAccess.map(({ user }) => user);
 
-  // create list of user options for select
-  const userOptions =
+  // create list of user options for the autocomplete
+  const userOptions: UserOption[] =
     users
       ?.filter((user) => user.id !== myUserId && !sharedUsers.includes(user.id))
-      .map((user) => {
-        return { value: user.id, label: user.username };
-      }) || [];
+      .map((user) => ({
+        id: user.id,
+        username: user.username,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+      })) || [];
 
   return (
     <Dialog maxWidth="lg" open={open} onClose={onClose}>
@@ -85,16 +110,24 @@ const UserAccess: FC<Props> = ({
             <TableHead>
               <TableRow>
                 <TableCell>Username</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Department</TableCell>
                 <TableCell>Remove Access</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {userAccess.map((user, i) => {
                 const isMe = user.user === myUserId;
-                const userName = userMap.get(user.user)?.username;
+                const userData = userMap.get(user.user);
+                const userName = userData?.username;
+                const name =
+                  fullName(userData?.first_name, userData?.last_name) || "—";
+                const department = userData?.profile?.department || "—";
                 return (
                   <TableRow key={user.user}>
                     <TableCell>{userName}</TableCell>
+                    <TableCell>{name}</TableCell>
+                    <TableCell>{department}</TableCell>
                     <TableCell>
                       {!isMe && (
                         <IconButton onClick={deleteAccess(user, i)}>
@@ -107,15 +140,38 @@ const UserAccess: FC<Props> = ({
               })}
             </TableBody>
           </Table>
-          <DropdownButton
-            useIcon={false}
-            data_cy="add-y-axis"
-            options={userOptions}
-            onOptionSelected={addUser}
+          <Autocomplete
             sx={{ marginTop: "1rem" }}
-          >
-            Add user
-          </DropdownButton>
+            options={userOptions}
+            value={null}
+            inputValue={inputValue}
+            onInputChange={(_event, newInputValue) =>
+              setInputValue(newInputValue)
+            }
+            blurOnSelect
+            clearOnBlur
+            getOptionLabel={optionLabel}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            filterOptions={(options, state) =>
+              state.inputValue.length < MIN_SEARCH_LENGTH
+                ? []
+                : defaultFilter(options, state)
+            }
+            noOptionsText={
+              inputValue.length < MIN_SEARCH_LENGTH
+                ? `Type at least ${MIN_SEARCH_LENGTH} characters to search`
+                : "No users found"
+            }
+            onChange={(_event, newValue) => {
+              if (newValue) {
+                addUser(newValue.id);
+                setInputValue("");
+              }
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label="Add user" data-cy="add-user" />
+            )}
+          />
 
           <Box
             sx={{
