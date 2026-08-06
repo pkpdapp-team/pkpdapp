@@ -27,6 +27,7 @@ class UserSearchResult:
     last_name: str
     username: str
 
+
 UserModel = get_user_model()
 
 API_KEY = settings.AUTH_PREDILOGIN_API_KEY

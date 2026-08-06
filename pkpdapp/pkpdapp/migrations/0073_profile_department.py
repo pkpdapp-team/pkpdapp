@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='profile',
             name='department',
-            field=models.CharField(blank=True, default='', help_text="the user's department", max_length=100),
+            field=models.CharField(
+                blank=True,
+                default='',
+                help_text="the user's department",
+                max_length=100,
+            ),
         ),
     ]

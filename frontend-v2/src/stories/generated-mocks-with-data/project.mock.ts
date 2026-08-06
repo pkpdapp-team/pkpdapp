@@ -71,6 +71,7 @@ export const users = [
     email: "test@pkpdapp.com",
     profile: {
       id: 1,
+      department: "",
       user: 1
     },
     project_set: [
