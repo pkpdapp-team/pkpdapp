@@ -87,7 +87,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/browser": "^4.1.8",
+    "@vitest/browser": "^4.1.10",
     "@vitest/browser-playwright": "^4.1.8",
     "@vitest/coverage-v8": "^4.1.8",
     "env-cmd": "^10.1.0",
@@ -109,7 +109,7 @@
     "vite-bundle-visualizer": "^1.2.1",
     "vite-plugin-radar": "^0.10.1",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "web-vitals": "^4.2.4"
   },
   "packageManager": "yarn@4.2.2",
