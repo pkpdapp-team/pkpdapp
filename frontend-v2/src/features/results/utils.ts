@@ -198,7 +198,7 @@ export function formattedNumber(
 }
 
 interface TableRowProps {
-  header: string | JSX.Element;
+  header: string | React.JSX.Element;
   interval?: TimeIntervalRead;
   intervals: TimeIntervalRead[];
   variables: VariableListApiResponse | undefined;

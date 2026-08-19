@@ -16,7 +16,7 @@ import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 import { useUnits } from "./useUnits";
 
 export type Parameter = {
-  name: string | JSX.Element;
+  name: string | React.JSX.Element;
   value: (
     interval: TimeIntervalRead,
     simulation: CentralSimulateResponse,

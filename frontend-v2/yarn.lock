@@ -4456,17 +4456,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/plotly.js@npm:*":
-  version: 2.29.5
-  resolution: "@types/plotly.js@npm:2.29.5"
-  checksum: 10c0/a0673916fc63fabe8a054f63b331ef391617e04c611d08dda4746f964c2a97c1d02787a54894b58f51ae499a15e52aaafc14dbc148fb8bd4badcf2d34514f23f
-  languageName: node
-  linkType: hard
-
-"@types/prop-types@npm:*":
-  version: 15.7.12
-  resolution: "@types/prop-types@npm:15.7.12"
-  checksum: 10c0/1babcc7db6a1177779f8fde0ccc78d64d459906e6ef69a4ed4dd6339c920c2e05b074ee5a92120fe4e9d9f1a01c952f843ebd550bee2332fc2ef81d1706878f8
+"@types/plotly.js@npm:^3.0.13":
+  version: 3.0.13
+  resolution: "@types/plotly.js@npm:3.0.13"
+  checksum: 10c0/10ffe58c172366221b67a85c531218481b6fd40152836b88da1db2e58b90fd4f19bdfe781f89be8b3b656b5c01d459502336d6a7ad3b5b7069f5b7f56a67aa67
   languageName: node
   linkType: hard
 
@@ -4486,32 +4479,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-plotly.js@npm:^2.6.4":
-  version: 2.6.4
-  resolution: "@types/react-plotly.js@npm:2.6.4"
-  dependencies:
-    "@types/plotly.js": "npm:*"
-    "@types/react": "npm:*"
-  checksum: 10c0/e1483e77b2162a7284b186665131a053560a84293c85ade16cd65039383c3894550397cf2b599ce1c870521622f81b176ddbdbe7a10da937b3b88e4aa4b90d4a
-  languageName: node
-  linkType: hard
-
 "@types/react-transition-group@npm:^4.4.12":
   version: 4.4.12
   resolution: "@types/react-transition-group@npm:4.4.12"
   peerDependencies:
     "@types/react": "*"
   checksum: 10c0/0441b8b47c69312c89ec0760ba477ba1a0808a10ceef8dc1c64b1013ed78517332c30f18681b0ec0b53542731f1ed015169fed1d127cc91222638ed955478ec7
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:*":
-  version: 18.3.3
-  resolution: "@types/react@npm:18.3.3"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: 10c0/fe455f805c5da13b89964c3d68060cebd43e73ec15001a68b34634604a78140e6fc202f3f61679b9d809dde6d7a7c2cb3ed51e0fd1462557911db09879b55114
   languageName: node
   linkType: hard
 
@@ -7265,9 +7238,9 @@ __metadata:
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.20.1"
     "@types/papaparse": "npm:^5.5.2"
+    "@types/plotly.js": "npm:^3.0.13"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
-    "@types/react-plotly.js": "npm:^2.6.4"
     "@vitejs/plugin-react": "npm:^6.0.5"
     "@vitest/browser": "npm:^4.1.11"
     "@vitest/browser-playwright": "npm:^4.1.11"
