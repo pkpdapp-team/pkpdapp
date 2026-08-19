@@ -21,7 +21,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import DoseRow from "./DoseRow";
 import useDirty from "../../hooks/useDirty";
 
@@ -145,10 +145,12 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                       selected under Model/ Map Variables"
             />{" "}
             <Stack
-              sx={{ paddingLeft: "1rem", alignItems: "center" }}
               direction="row"
-              width="max-content"
-            >
+              sx={{
+                width: "max-content",
+                paddingLeft: "1rem",
+                alignItems: "center"
+              }}>
               <Button
                 size="small"
                 onClick={handleAddRow}

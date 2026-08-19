@@ -114,9 +114,10 @@ const ConversationList: FC<ConversationListProps> = ({
       <Stack sx={{ px: 2, py: 1.5 }}>
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
           <Typography sx={{ fontSize: "1.1rem", fontWeight: 600 }}>
             Conversations
           </Typography>
@@ -151,7 +152,13 @@ const ConversationList: FC<ConversationListProps> = ({
             ))}
           </Stack>
         ) : conversations.length === 0 ? (
-          <Stack alignItems="center" spacing={1} sx={{ mt: 6, px: 2 }}>
+          <Stack
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mt: 6,
+              px: 2
+            }}>
             <Typography sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
               No conversations yet
             </Typography>
@@ -247,14 +254,16 @@ const ConversationList: FC<ConversationListProps> = ({
                           )}
                         </Box>
                       }
-                      primaryTypographyProps={{
-                        sx: { fontSize: "0.875rem", fontWeight: 400 },
-                        noWrap: true,
-                      }}
-                      secondaryTypographyProps={{
-                        component: "span",
-                      }}
-                    />
+                      slotProps={{
+                        primary: {
+                          sx: { fontSize: "0.875rem", fontWeight: 400 },
+                          noWrap: true,
+                        },
+
+                        secondary: {
+                          component: "span",
+                        }
+                      }} />
                   </ListItemButton>
                 </ListItem>
               );

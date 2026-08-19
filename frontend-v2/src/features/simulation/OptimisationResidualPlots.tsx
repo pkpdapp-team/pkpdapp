@@ -420,8 +420,10 @@ const ResidualPlotGroup: FC<{
             >
               <Typography
                 variant="caption"
-                color="text.secondary"
                 align="center"
+                sx={{
+                  color: "text.secondary"
+                }}
               >
                 Observed vs Predicted plot unavailable — no observation data was
                 returned for this fit.
@@ -454,8 +456,10 @@ const ResidualPlotGroup: FC<{
             >
               <Typography
                 variant="caption"
-                color="text.secondary"
                 align="center"
+                sx={{
+                  color: "text.secondary"
+                }}
               >
                 QQ plot hidden — requires at least {QQ_MIN_POINTS} residuals
                 (have {totalPoints}).
@@ -577,7 +581,9 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
           p: 2,
         }}
       >
-        <Typography variant="caption" color="text.secondary" align="center">
+        <Typography variant="caption" align="center" sx={{
+          color: "text.secondary"
+        }}>
           No residual data available to plot.
         </Typography>
       </Box>

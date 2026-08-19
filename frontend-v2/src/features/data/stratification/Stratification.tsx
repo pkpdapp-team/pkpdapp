@@ -180,7 +180,9 @@ const Stratification: FC<IStratification> = ({
         tooltip="Stratify your observations into groups based on the covariates you have
         provided."
       />
-      <Stack marginTop={2} spacing={2}>
+      <Stack spacing={2} sx={{
+        marginTop: 2
+      }}>
         {!!catCovariates.length && (
           <TableContainer
             sx={{

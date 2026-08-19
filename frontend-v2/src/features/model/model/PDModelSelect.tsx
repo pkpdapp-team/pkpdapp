@@ -74,15 +74,14 @@ export const PDModelSelect: FC<PDModelSelectProps> = ({
   pd_model_options.unshift({ value: "", label: "None" });
   return (
     <Stack
+      direction="row"
+      spacing={1}
       sx={{
+        alignItems: "center",
         marginTop: 2,
         display: "flex",
-        "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-      }}
-      direction="row"
-      alignItems="center"
-      spacing={1}
-    >
+        "& .MuiFormControlLabel-label": { fontSize: ".9rem" }
+      }}>
       <SelectField
         size="small"
         label="PD Model"

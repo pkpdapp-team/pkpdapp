@@ -95,7 +95,9 @@ const SigmaRow = ({
   useLogSpace,
   onUseLogSpaceChange,
 }: SigmaRowProps) => (
-  <Stack direction="row" spacing={1} alignItems="center">
+  <Stack direction="row" spacing={1} sx={{
+    alignItems: "center"
+  }}>
     <TextField
       label={label}
       type="number"
@@ -338,7 +340,9 @@ const OptimisationSettings = ({
         : "";
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" slotProps={{
+      paper: { sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }
+    }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Optimisation Settings</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ marginTop: ".5rem" }}>
@@ -356,7 +360,9 @@ const OptimisationSettings = ({
                 <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
                   {label}
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <TextField
                     label="Start"
                     type="number"
@@ -438,7 +444,9 @@ const OptimisationSettings = ({
             );
           })}
           <Divider />
-          <Stack direction="row" alignItems="center">
+          <Stack direction="row" sx={{
+            alignItems: "center"
+          }}>
             <Typography variant="subtitle2" sx={{ marginBottom: ".5rem" }}>
               Noise model and standard deviation (per observation)
             </Typography>
@@ -469,7 +477,9 @@ const OptimisationSettings = ({
             </HelpButton>
           </Stack>
           {sigmaVariables.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Select at least one observation to configure its noise.
             </Typography>
           )}
@@ -579,7 +589,9 @@ const OptimisationSettings = ({
                   />
                 ))}
                 {groups.length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     No subject groups
                   </Typography>
                 )}
@@ -610,7 +622,9 @@ const OptimisationSettings = ({
                   );
                 })}
                 {biomarkerTypes.length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     No observations
                   </Typography>
                 )}
@@ -646,7 +660,7 @@ const OptimisationSettings = ({
               onBlur={() =>
                 setMaxIterations(String(sanitizeMaxIterations(maxIterations)))
               }
-              inputProps={{ min: 1, step: 1 }}
+              slotProps={{ htmlInput: { min: 1, step: 1 } }}
               fullWidth
             />
           </Stack>

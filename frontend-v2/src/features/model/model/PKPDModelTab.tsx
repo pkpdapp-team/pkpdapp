@@ -147,7 +147,9 @@ const PKPDModelTab: FC<Props> = ({
     "placeholder.jpg";
 
   return (
-    <Stack direction="column" spacing={2} marginTop={5}>
+    <Stack direction="column" spacing={2} sx={{
+      marginTop: 5
+    }}>
       <Grid container spacing={2}>
         <Grid
           size={{
@@ -206,7 +208,9 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <PKTagSelect control={projectControl} project={project} />
           </Stack>
           <PKModelSelect
@@ -256,7 +260,9 @@ const PKPDModelTab: FC<Props> = ({
                 </Tooltip>
               )}
               {version_greater_than_2 && (
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Tooltip title={effectCompartmentTooltip} placement="top">
                     <div style={{ fontSize: "12px !important" }}>
                       <SelectField
@@ -369,7 +375,9 @@ const PKPDModelTab: FC<Props> = ({
             project={project}
           />
         </Grid>
-        <Box width="100%" />
+        <Box sx={{
+          width: "100%"
+        }} />
         {pdIsTumourGrowth && (
           <Grid
             size={{

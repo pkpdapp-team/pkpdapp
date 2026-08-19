@@ -112,9 +112,12 @@ const ChatInput: FC<ChatInputProps> = ({
       {disabled && (
         <Typography
           variant="caption"
-          color="text.secondary"
-          sx={{ mt: 0.5, textAlign: "center", display: "block" }}
-        >
+          sx={{
+            color: "text.secondary",
+            mt: 0.5,
+            textAlign: "center",
+            display: "block"
+          }}>
           Select a project to start chatting
         </Typography>
       )}

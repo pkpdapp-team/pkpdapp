@@ -1,5 +1,5 @@
 import { Tabs, Tab, Box, Button } from "@mui/material";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { SyntheticEvent, FC, useState } from "react";
 import ResultsTab from "./ResultsTab";
 import { TableHeader } from "../../components/TableHeader";

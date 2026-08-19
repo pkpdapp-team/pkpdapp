@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
-import HelpOutline from "@mui/icons-material/HelpOutline";
+import HelpOutline from "@mui/icons-material/HelpOutlineOutlined";
 import Papa from "papaparse";
 import { FC, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";

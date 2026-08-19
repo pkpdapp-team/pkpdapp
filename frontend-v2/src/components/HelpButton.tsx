@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState, useEffect, useRef, useCallback } from "react";
-import HelpOutline from "@mui/icons-material/HelpOutline";
+import HelpOutline from "@mui/icons-material/HelpOutlineOutlined";
 import { IconButton, Tooltip } from "@mui/material";
 import { tooltipWrapper } from "../shared/tooltipWrapper";
 import { useSelector } from "react-redux";

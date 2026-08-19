@@ -71,7 +71,7 @@ const StdDeviationField: FC<{
       label="Std deviation"
       disabled={disabled}
       value={display}
-      inputProps={{ min: 0, step: "any" }}
+      slotProps={{ htmlInput: { min: 0, step: "any" } }}
       onChange={(event) => setBuffer(event.target.value)}
       onBlur={() => {
         if (buffer !== null) {
@@ -496,13 +496,15 @@ const ParameterRow: FC<Props> = ({
         )}
       </TableCell>
       <TableCell size="small" sx={{ width: "19rem" }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <MuiCheckbox
             size="small"
             checked={!!distribution}
             onChange={(event) => handlePopulationToggle(event.target.checked)}
             disabled={defaultProps.disabled}
-            inputProps={{ "aria-label": "Population" }}
+            slotProps={{ input: { "aria-label": "Population" } }}
           />
           {distribution && (
             <>

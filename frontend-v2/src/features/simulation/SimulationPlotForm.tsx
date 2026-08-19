@@ -281,7 +281,9 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
           Parameter distribution (histogram)
         </Typography>
-        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+        <Stack direction={"row"} spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <TextField
             label="X Axis Label"
             name={`plots.${index}.x_label`}
@@ -306,7 +308,9 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
         X Axis
       </Typography>
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
+      <Stack direction={"row"} spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <UnitField
           label="X Axis Unit"
           name={`plots.${index}.x_unit`}
@@ -345,9 +349,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       <Stack
         direction={"row"}
         spacing={2}
-        alignItems={"center"}
-        sx={{ paddingTop: "1.5rem" }}
-      >
+        sx={{
+          alignItems: "center",
+          paddingTop: "1.5rem"
+        }}>
         <UnitField
           label="Y Axis Unit"
           name={`plots.${index}.y_unit`}
@@ -411,7 +416,9 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         ))}
       </List>
       <Divider sx={{ margin: 2 }} />
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
+      <Stack direction={"row"} spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
           Reference lines (if Efficacy-Safety Data have been defined in Drug and
           Target)
@@ -437,7 +444,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   control={control}
                   textFieldProps={{
                     type: "number",
-                    inputProps: { step: 0.1 },
+                    slotProps: { htmlInput: { step: 0.1 } },
                     disabled: !yAxisIsConcentration || isSharedWithMe,
                   }}
                 />
@@ -470,9 +477,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       <Stack
         direction={"row"}
         spacing={2}
-        alignItems={"center"}
-        sx={{ paddingTop: "1rem" }}
-      >
+        sx={{
+          alignItems: "center",
+          paddingTop: "1rem"
+        }}>
         <UnitField
           label="Unit"
           name={`plots.${index}.y_unit2`}

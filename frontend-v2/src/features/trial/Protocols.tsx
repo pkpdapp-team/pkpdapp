@@ -39,7 +39,7 @@ import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { TableHeader } from "../../components/TableHeader";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { selectIsProjectShared } from "../login/loginSlice";
 

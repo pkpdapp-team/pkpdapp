@@ -264,7 +264,6 @@ const ChatPanel: FC = () => {
       open={isOpen}
       onClose={() => dispatch(closeChat())}
       variant="persistent"
-      PaperProps={{ ref: drawerPaperRef }}
       sx={{
         "& .MuiDrawer-paper": {
           width: drawerWidth,
@@ -273,6 +272,9 @@ const ChatPanel: FC = () => {
           height: "calc(100% - 64px)",
           overflow: "visible",
         },
+      }}
+      slotProps={{
+        paper: { ref: drawerPaperRef }
       }}
     >
       {/* Drag handle */}
@@ -318,10 +320,13 @@ const ChatPanel: FC = () => {
         >
           <Stack
             direction="row"
-            alignItems="center"
             spacing={1}
-            sx={{ minWidth: 0, flex: 1, mr: 1 }}
-          >
+            sx={{
+              alignItems: "center",
+              minWidth: 0,
+              flex: 1,
+              mr: 1
+            }}>
             <SmartToyOutlinedIcon sx={{ fontSize: 22, opacity: 0.9 }} />
             <Stack spacing={0} sx={{ minWidth: 0 }}>
               <Typography
@@ -344,7 +349,9 @@ const ChatPanel: FC = () => {
               )}
             </Stack>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Stack direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
             <Button
               size="small"
               variant="outlined"
@@ -417,18 +424,22 @@ const ChatPanel: FC = () => {
             >
               {messages.length === 0 && (
                 <Stack
-                  alignItems="center"
                   spacing={1.5}
-                  sx={{ mt: 6, color: "text.secondary" }}
-                >
+                  sx={{
+                    alignItems: "center",
+                    mt: 6,
+                    color: "text.secondary"
+                  }}>
                   {!selectedProject ? (
                     <>
                       <FolderOutlinedIcon sx={{ fontSize: 36, opacity: 0.4 }} />
                       <Typography
                         variant="body2"
-                        color="text.secondary"
-                        sx={{ textAlign: "center", px: 2 }}
-                      >
+                        sx={{
+                          color: "text.secondary",
+                          textAlign: "center",
+                          px: 2
+                        }}>
                         Select a project to start chatting
                       </Typography>
                     </>
@@ -439,9 +450,11 @@ const ChatPanel: FC = () => {
                       />
                       <Typography
                         variant="body2"
-                        color="text.secondary"
-                        sx={{ textAlign: "center", px: 2 }}
-                      >
+                        sx={{
+                          color: "text.secondary",
+                          textAlign: "center",
+                          px: 2
+                        }}>
                         Ask me about pharmacokinetic and pharmacodynamic
                         modelling.
                       </Typography>

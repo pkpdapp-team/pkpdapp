@@ -52,7 +52,12 @@ const Login: FC<LoginProps> = ({
               consult the <a href={VITE_APP_HELP_URL}>help page</a>
             </Typography>
           )}
-          <Box display="flex" justifyContent="center" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center"
+            }}>
             <Typography
               variant="h3"
               component="div"
