@@ -2,7 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { http, HttpResponse, isCommonAssetRequest } from "msw";
-import { configure } from "@testing-library/react";
+import { configure } from "storybook/test";
 import { store } from "../src/app/store";
 import { api } from "../src/app/api";
 
@@ -36,9 +36,7 @@ initialize(
   // fall through to the vite proxy and fail with ECONNREFUSED, adding latency
   // and noise. An empty list is a safe default for the (list) endpoints that
   // reach here.
-  [
-    http.get("/api/*", () => HttpResponse.json([], { status: 200 })),
-  ],
+  [http.get("/api/*", () => HttpResponse.json([], { status: 200 }))],
 );
 
 const preview: Preview = {
