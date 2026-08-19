@@ -96,7 +96,9 @@ const OptimisationView = ({
       : null;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" PaperProps={{ sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" slotProps={{
+      paper: { sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }
+    }}>
       <DialogTitle sx={{ fontWeight: "bold" }}>Last Optimisation Result</DialogTitle>
       <DialogContent dividers>
         {!optimiseResult ? (
@@ -105,8 +107,12 @@ const OptimisationView = ({
           <Stack spacing={3} sx={{ marginTop: ".5rem" }}>
             {/* Summary */}
             <Stack spacing={0.5}>
-              <Stack direction="row" alignItems="center">
-                <Typography variant="subtitle1" fontWeight="bold">Summary</Typography>
+              <Stack direction="row" sx={{
+                alignItems: "center"
+              }}>
+                <Typography variant="subtitle1" sx={{
+                  fontWeight: "bold"
+                }}>Summary</Typography>
                 <HelpButton title="Summary">
                   <p>
                     <strong>Reason:</strong> Why the optimiser stopped — either
@@ -155,8 +161,12 @@ const OptimisationView = ({
 
             {/* Optimisation inputs */}
             <Stack spacing={1}>
-              <Stack direction="row" alignItems="center">
-                <Typography variant="subtitle1" fontWeight="bold">Optimisation Inputs</Typography>
+              <Stack direction="row" sx={{
+                alignItems: "center"
+              }}>
+                <Typography variant="subtitle1" sx={{
+                  fontWeight: "bold"
+                }}>Optimisation Inputs</Typography>
                 <HelpButton title="Optimisation Inputs">
                   <p>
                     Shows the parameters that were optimised, their starting values,
@@ -305,8 +315,12 @@ const OptimisationView = ({
             {optimiseResult.covariance && (
               <>
                 <Stack spacing={1}>
-                  <Stack direction="row" alignItems="center">
-                    <Typography variant="subtitle1" fontWeight="bold">
+                  <Stack direction="row" sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="subtitle1" sx={{
+                      fontWeight: "bold"
+                    }}>
                       Parameter Uncertainty
                     </Typography>
                     <HelpButton title="Parameter Uncertainty" maxWidth="500px">
@@ -362,7 +376,9 @@ const OptimisationView = ({
                       <Typography
                         component="span"
                         color={conditionNumberColour(optimiseResult.condition_number)}
-                        fontWeight="bold"
+                        sx={{
+                          fontWeight: "bold"
+                        }}
                       >
                         {optimiseResult.condition_number.toExponential(3)}
                       </Typography>
@@ -373,7 +389,9 @@ const OptimisationView = ({
                           : " (ill-conditioned)"}
                     </Typography>
                   )}
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     Diagonal: %RSE (green &lt;20%, amber 20–50%, red &gt;50%).
                     Off-diagonal: correlation (green &lt;0.5, amber 0.5–0.9, red &gt;0.9).
                   </Typography>
@@ -393,8 +411,12 @@ const OptimisationView = ({
               <>
                 <Divider />
                 <Stack spacing={1}>
-                  <Stack direction="row" alignItems="center">
-                    <Typography variant="subtitle1" fontWeight="bold">
+                  <Stack direction="row" sx={{
+                    alignItems: "center"
+                  }}>
+                    <Typography variant="subtitle1" sx={{
+                      fontWeight: "bold"
+                    }}>
                       Residual Diagnostics
                     </Typography>
                     <HelpButton title="Residual Diagnostics">

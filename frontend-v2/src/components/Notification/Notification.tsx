@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { NotificationTypes, notificationTypes } from "./notificationTypes";
 import CloseIcon from "@mui/icons-material/Close";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import "./Notification.css";

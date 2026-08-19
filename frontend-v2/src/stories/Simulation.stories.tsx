@@ -63,12 +63,9 @@ const meta: Meta<typeof Simulations> = {
             );
           },
         ),
-        efficacyExperiments: http.get(
-          "/api/efficacy_experiment/",
-          async () => {
-            return HttpResponse.json([], { status: 200 });
-          },
-        ),
+        efficacyExperiments: http.get("/api/efficacy_experiment/", async () => {
+          return HttpResponse.json([], { status: 200 });
+        }),
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
@@ -104,7 +101,9 @@ const meta: Meta<typeof Simulations> = {
             aria-label="simulations sidebar"
             id="simulations-portal"
           />
-          <Box width="100%">
+          <Box sx={{
+            width: "100%"
+          }}>
             <Story />
           </Box>
         </Box>
@@ -131,7 +130,7 @@ export const Parameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
     const parametersButton = await canvas.findByRole("button", {
-      name: "Parameters 0",
+      name: "Parameters",
       expanded: false,
     });
     expect(parametersButton).toBeInTheDocument();
@@ -298,7 +297,7 @@ export const WithGroups: Story = {
     expect(simulationsHeading).toBeInTheDocument();
 
     const groupsButton = await screen.findByRole("button", {
-      name: "Groups 3",
+      name: "Groups",
       expanded: false,
     });
     expect(groupsButton).toBeInTheDocument();

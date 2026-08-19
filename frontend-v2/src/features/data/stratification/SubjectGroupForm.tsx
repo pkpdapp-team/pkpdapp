@@ -44,13 +44,12 @@ const SubjectGroupForm: FC<ISubjectGroupForm> = ({
     <Box
       component="form"
       onSubmit={onSubmitGroupIDForm}
-      padding="1rem"
       sx={{
+        padding: "1rem",
         width: "fit-content",
         display: "flex",
-        alignItems: "center",
-      }}
-    >
+        alignItems: "center"
+      }}>
       <Typography variant="caption" sx={{ marginRight: "1rem" }}>
         {selected?.ids.size} rows selected.
       </Typography>

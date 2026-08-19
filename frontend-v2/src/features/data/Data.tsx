@@ -21,7 +21,7 @@ import { DataGrid, GridRowModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import HelpOutline from "@mui/icons-material/HelpOutline";
+import HelpOutline from "@mui/icons-material/HelpOutlineOutlined";
 import LoadDataStepper from "./LoadDataStepper";
 import ExampleFormatsDialog from "./ExampleFormatsDialog";
 import useDataset from "../../hooks/useDataset";
@@ -360,7 +360,9 @@ const Data: FC = () => {
             }),
           }}
         >
-          <Box padding={1}>
+          <Box sx={{
+            padding: 1
+          }}>
             <Typography
               id="protocols-heading"
               variant="h6"
@@ -377,7 +379,9 @@ const Data: FC = () => {
               />
             </Box>
           </Box>
-          <Box padding={1}>
+          <Box sx={{
+            padding: 1
+          }}>
             <Typography
               id="observations-heading"
               variant="h6"
@@ -399,7 +403,9 @@ const Data: FC = () => {
       ) : (
         <Box role="tabpanel" id={`group-tabpanel`}>
           {dosingRows.length !== 0 && (
-            <Box padding={1}>
+            <Box sx={{
+              padding: 1
+            }}>
               <Typography variant="h6" component="h2" gutterBottom>
                 Protocols
               </Typography>
@@ -416,7 +422,9 @@ const Data: FC = () => {
             </Box>
           )}
           {observations.length !== 0 && (
-            <Box padding={1}>
+            <Box sx={{
+              padding: 1
+            }}>
               <Typography variant="h6" component="h2" gutterBottom>
                 Observations
               </Typography>

@@ -65,7 +65,9 @@ const ExampleFormatsDialog: FC<ExampleFormatsDialogProps> = ({
       maxWidth="lg"
       fullWidth
       sx={{ zIndex: 10000 }}
-      PaperProps={{ sx: { height: "90vh", maxHeight: "calc(100% - 32px)" } }}
+      slotProps={{
+        paper: { sx: { height: "90vh", maxHeight: "calc(100% - 32px)" } }
+      }}
     >
       <DialogTitle>Example file formats</DialogTitle>
       <DialogContent dividers>

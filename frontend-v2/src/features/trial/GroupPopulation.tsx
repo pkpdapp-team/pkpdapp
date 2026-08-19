@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import {
   CovariateRead,
   CovariatePopulationRead,
@@ -62,7 +62,7 @@ const NumberField: FC<{
     disabled={disabled}
     sx={{ width: "9rem" }}
     defaultValue={defaultValue ?? ""}
-    inputProps={{ min, step: integer ? 1 : "any" }}
+    slotProps={{ htmlInput: { min, step: integer ? 1 : "any" } }}
     onBlur={(event) => {
       const raw = event.target.value;
       if (raw !== "") {
@@ -210,7 +210,7 @@ const ContinuousCovariateFields: FC<{
         sx={{ width: "9rem" }}
         disabled={disabled}
         value={mean}
-        inputProps={{ min: 0, step: "any" }}
+        slotProps={{ htmlInput: { min: 0, step: "any" } }}
         onChange={(event) => setMean(event.target.value)}
         onBlur={() => commit(mean, std)}
       />
@@ -221,7 +221,7 @@ const ContinuousCovariateFields: FC<{
         sx={{ width: "9rem" }}
         disabled={disabled}
         value={std}
-        inputProps={{ min: 0, step: "any" }}
+        slotProps={{ htmlInput: { min: 0, step: "any" } }}
         onChange={(event) => setStd(event.target.value)}
         onBlur={() => commit(mean, std)}
       />
@@ -448,7 +448,13 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
           </ul>
         </HelpButton>
       </Typography>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ marginTop: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          marginTop: 1
+        }}>
         <TextField
           size="small"
           label="Name"
@@ -495,7 +501,9 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
               key={covariate.id}
               direction="row"
               spacing={1}
-              alignItems="center"
+              sx={{
+                alignItems: "center"
+              }}
             >
               <Typography sx={{ width: "10rem" }}>{covariate.name}</Typography>
               {covariate.type === "CAT" ? (
@@ -526,7 +534,7 @@ const GroupPopulation: FC<Props> = ({ group, project, disabled }) => {
                     sx={{ width: "9rem" }}
                     disabled={disabled}
                     defaultValue={covariate.reference_value ?? ""}
-                    inputProps={{ min: 0, step: "any" }}
+                    slotProps={{ htmlInput: { min: 0, step: "any" } }}
                     onBlur={async (event) => {
                       const value = parseFloat(event.target.value);
                       if (event.target.value !== "" && value > 0) {

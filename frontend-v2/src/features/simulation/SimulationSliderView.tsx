@@ -202,7 +202,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
         borderRadius: "5px",
       }}
     >
-      <Stack direction="row" spacing={0} alignItems="center">
+      <Stack direction="row" spacing={0} sx={{
+        alignItems: "center"
+      }}>
         <Tooltip title={variable.description} placement="bottom" describeChild>
           <Typography
             id="discrete-slider"
@@ -264,7 +266,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           </IconButton>
         </Tooltip>
       </Box>
-      <Box alignItems="center">
+      <Box sx={{
+        alignItems: "center"
+      }}>
         <Slider
           value={typeof draftValue === "number" ? draftValue : 0}
           min={minValue}
@@ -277,7 +281,9 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
           aria-labelledby="discrete-slider"
         />
       </Box>
-      <Box alignItems="center">
+      <Box sx={{
+        alignItems: "center"
+      }}>
         <Input
           sx={{ width: "100%" }}
           value={formatNumber(draftValue)}

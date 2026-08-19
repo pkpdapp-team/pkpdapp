@@ -393,11 +393,12 @@ export const SimulationsSidePanel = ({
                         <>
                           <Stack
                             direction={"column"}
-                            alignItems={"center"}
                             spacing={2}
-                            justifyContent="flex-start"
-                            paddingTop="1rem"
-                          >
+                            sx={{
+                              alignItems: "center",
+                              justifyContent: "flex-start",
+                              paddingTop: "1rem"
+                            }}>
                             <FloatField
                               sx={{ width: "11rem" }}
                               label="Simulation Duration"
@@ -594,9 +595,10 @@ export const SimulationsSidePanel = ({
                       <Stack
                         direction="row"
                         spacing={0.5}
-                        alignItems="center"
-                        sx={{ marginTop: ".5rem" }}
-                      >
+                        sx={{
+                          alignItems: "center",
+                          marginTop: ".5rem"
+                        }}>
                         <Tooltip title={fitDisabledReason} placement="top">
                           <span>
                             <Button

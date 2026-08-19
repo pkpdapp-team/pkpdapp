@@ -108,7 +108,8 @@ const expectedSliders = simulations[0].sliders.map((slider) => {
   const start = variable?.default_value ?? 1;
   const min = variable?.lower_bound ?? start / SLIDER_RANGE;
   const max =
-    variable?.upper_bound ?? (start === 0 ? SLIDER_RANGE : start * SLIDER_RANGE);
+    variable?.upper_bound ??
+    (start === 0 ? SLIDER_RANGE : start * SLIDER_RANGE);
   // Log space is the default only when the lower bound is non-negative AND the
   // variable has no fixed upper bound set in the database (mirrors the rule in
   // getDefaultOptimiseInputs). A fixed upper bound defaults to linear space.
@@ -145,7 +146,9 @@ const meta: Meta<typeof Simulations> = {
             aria-label="simulations sidebar"
             id="simulations-portal"
           />
-          <Box width="100%">
+          <Box sx={{
+            width: "100%"
+          }}>
             <Story />
           </Box>
         </Box>
@@ -165,7 +168,7 @@ export const OpenSettings: Story = {
     // The sliders and optimisation controls live inside the collapsible
     // "Parameters" section, which is collapsed by default. Expand it first.
     const parametersButton = await screen.findByRole("button", {
-      name: new RegExp(`^Parameters ${expectedSliders.length}`),
+      name: new RegExp("^Parameters"),
     });
     await userEvent.click(parametersButton);
 
@@ -216,7 +219,9 @@ export const OpenSettings: Story = {
     const logScaleChecks = screen.getAllByRole("checkbox", {
       name: "Log scale",
     });
-    expect(logScaleChecks.length).toBeGreaterThanOrEqual(expectedSliders.length);
+    expect(logScaleChecks.length).toBeGreaterThanOrEqual(
+      expectedSliders.length,
+    );
     expectedSliders.forEach(({ logScale }, index) => {
       expect(logScaleChecks[index]).toHaveProperty("checked", logScale);
     });
@@ -251,7 +256,7 @@ export const OptimiseSingleParameter: Story = {
 
     // Expand the (empty) Parameters section and add a single parameter (V1).
     const parametersButton = await screen.findByRole("button", {
-      name: "Parameters 0",
+      name: "Parameters",
     });
     await userEvent.click(parametersButton);
 
@@ -325,7 +330,7 @@ export const OptimisePerObservationNoiseModel: Story = {
     await screen.findByRole("heading", { name: "Simulations" });
 
     const parametersButton = await screen.findByRole("button", {
-      name: new RegExp(`^Parameters ${expectedSliders.length}`),
+      name: new RegExp("^Parameters"),
     });
     await userEvent.click(parametersButton);
 
@@ -350,9 +355,7 @@ export const OptimisePerObservationNoiseModel: Story = {
     });
     await userEvent.click(combinedOption);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Optimise" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Optimise" }));
 
     await waitFor(() => {
       const [optimiseParams] = optimiseSpy.mock.lastCall || [];
