@@ -1,19 +1,12 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import url from "@rollup/plugin-url";
 import svgr from "@svgr/rollup";
 import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
-import viteTsconfigPaths from "vite-tsconfig-paths";
 import { VitePluginRadar } from "vite-plugin-radar";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
-
-const dirname =
-  typeof __dirname !== "undefined"
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
 
 const proxy = {
   "/backend": {
@@ -47,13 +40,10 @@ export default ({ mode }) => {
     },
   };
   return defineConfig({
-    plugins: [
-      react(),
-      viteTsconfigPaths(),
-      url(),
-      svgr(),
-      VitePluginRadar(radarOptions),
-    ],
+    plugins: [react(), url(), svgr(), VitePluginRadar(radarOptions)],
+    resolve: {
+      tsconfigPaths: true,
+    },
     build: {
       outDir: "build",
       rollupOptions: {
@@ -93,7 +83,9 @@ export default ({ mode }) => {
           plugins: [
             // The plugin will run tests for the stories defined in your Storybook config
             // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-            storybookTest({ configDir: path.join(dirname, ".storybook") }),
+            storybookTest({
+              configDir: path.join(import.meta.dirname, ".storybook"),
+            }),
           ],
           test: {
             name: "storybook",
@@ -122,6 +114,13 @@ export default ({ mode }) => {
         include: ["src/**/*.{ts,tsx}"],
         exclude: ["src/stories"],
       },
+    },
+    legacy: {
+      /*
+        Enable legacy support for CJS exports in redux-persist.
+        Longer term, we need to remove old CJS packages.
+        */
+      inconsistentCjsInterop: true,
     },
   });
 };
