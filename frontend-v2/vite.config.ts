@@ -95,7 +95,6 @@ export default ({ mode }) => {
               provider: playwright(),
               instances: [{ browser: "chromium" }],
             },
-            setupFiles: [".storybook/vitest.setup.ts"],
             retry: 2,
             testTimeout: 30000, // Increase timeout for CI environments
             // Cap concurrent browser workers. These story tests render heavy MUI
