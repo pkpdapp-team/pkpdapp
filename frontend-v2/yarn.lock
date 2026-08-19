@@ -12,16 +12,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/gateway@npm:3.0.175":
-  version: 3.0.175
-  resolution: "@ai-sdk/gateway@npm:3.0.175"
+"@ai-sdk/gateway@npm:3.0.176":
+  version: 3.0.176
+  resolution: "@ai-sdk/gateway@npm:3.0.176"
   dependencies:
     "@ai-sdk/provider": "npm:3.0.15"
     "@ai-sdk/provider-utils": "npm:4.0.46"
     "@vercel/oidc": "npm:3.2.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/bbe830d01d9320c994ab40c1be5529e220b03b78cd978e25309b8bf2cc948fd244fbeda16a6b4c3dedcf45bbc85c8f2dd1ca96c5227535960fd9a09d56b01730
+  checksum: 10c0/c0990f8046f38e6733b0c5952ff3ff2aaaa664e3ebc580d53696ff86e2769fc69e68a052ad20d538fe0d0c89b5d32f15fa536eea7cfff1b481a785acb6314633
   languageName: node
   linkType: hard
 
@@ -48,17 +48,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/react@npm:^3.0.260":
-  version: 3.0.260
-  resolution: "@ai-sdk/react@npm:3.0.260"
+"@ai-sdk/react@npm:^3.0.261":
+  version: 3.0.261
+  resolution: "@ai-sdk/react@npm:3.0.261"
   dependencies:
     "@ai-sdk/provider-utils": "npm:4.0.46"
-    ai: "npm:6.0.257"
+    ai: "npm:6.0.258"
     swr: "npm:^2.2.5"
     throttleit: "npm:2.1.0"
   peerDependencies:
     react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
-  checksum: 10c0/0c0c92b3704808f78a2f4627cc11bfd1dc6d069e63b3b7684fcd1a0d960d67a56ac0932ab470b464861dedf5873fb1829ffb584132a1c87393e68ca661da62c3
+  checksum: 10c0/65109f010456184fc4c80bfb2cfa1f7178ff3c8c9171db727d217713c53dcc5ec55ca8446baf7767941acf8494b9882a5d1b3f13da67786cdbd259c48fcd6d2b
   languageName: node
   linkType: hard
 
@@ -5448,17 +5448,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ai@npm:6.0.257, ai@npm:^6.0.257":
-  version: 6.0.257
-  resolution: "ai@npm:6.0.257"
+"ai@npm:6.0.258, ai@npm:^6.0.258":
+  version: 6.0.258
+  resolution: "ai@npm:6.0.258"
   dependencies:
-    "@ai-sdk/gateway": "npm:3.0.175"
+    "@ai-sdk/gateway": "npm:3.0.176"
     "@ai-sdk/provider": "npm:3.0.15"
     "@ai-sdk/provider-utils": "npm:4.0.46"
     "@opentelemetry/api": "npm:^1.9.0"
   peerDependencies:
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/e1b625cd167a36ff21566dcdc2648cdc3466d3ed7d628e4cc3976049c183120ecb6bcab52f0bb2f47a66fd2d333445eed4ce27a4d86d629a19008fa0cedb5f16
+  checksum: 10c0/426eda1fd6109678327c5dd49f865d80dec3d05443e50767d328e77f04bfa752f47fcb3a450c3ab2a5d056f517b8850dae9ced58292ed745f3dafede7e78ddf8
   languageName: node
   linkType: hard
 
@@ -7681,7 +7681,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "frontend-v2@workspace:."
   dependencies:
-    "@ai-sdk/react": "npm:^3.0.260"
+    "@ai-sdk/react": "npm:^3.0.261"
     "@babel/core": "npm:^7.29.7"
     "@babel/plugin-proposal-private-property-in-object": "npm:^7.21.11"
     "@babel/plugin-syntax-flow": "npm:^7.29.7"
@@ -7716,7 +7716,7 @@ __metadata:
     "@vitest/browser": "npm:^4.1.11"
     "@vitest/browser-playwright": "npm:^4.1.11"
     "@vitest/coverage-v8": "npm:^4.1.11"
-    ai: "npm:^6.0.257"
+    ai: "npm:^6.0.258"
     env-cmd: "npm:^10.1.0"
     eslint: "npm:^9.39.5"
     eslint-config-prettier: "npm:^10.1.8"
