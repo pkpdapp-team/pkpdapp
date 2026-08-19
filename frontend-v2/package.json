@@ -22,7 +22,7 @@
     "react-hook-form": "^7.85.0",
     "react-markdown": "^10.1.0",
     "react-player": "^2.16.1",
-    "react-plotly.js": "^2.6.0",
+    "react-plotly.js": "^4.1.0",
     "react-redux": "^9.3.0",
     "react-toastify": "^11.1.0",
     "redux-persist": "^6.0.0",
