@@ -7614,7 +7614,7 @@ __metadata:
     react-hook-form: "npm:^7.85.0"
     react-markdown: "npm:^10.1.0"
     react-player: "npm:^2.16.1"
-    react-plotly.js: "npm:^2.6.0"
+    react-plotly.js: "npm:^4.1.0"
     react-redux: "npm:^9.3.0"
     react-toastify: "npm:^11.1.0"
     redux-persist: "npm:^6.0.0"
@@ -11003,15 +11003,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-plotly.js@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "react-plotly.js@npm:2.6.0"
-  dependencies:
-    prop-types: "npm:^15.8.1"
+"react-plotly.js@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "react-plotly.js@npm:4.1.0"
   peerDependencies:
-    plotly.js: ">1.34.0"
-    react: ">0.13.0"
-  checksum: 10c0/9b5ba8e33782daa9624d79295975d08d4c7581bac41d67d497eec0a306e4d030465a1e8282fab145bc02705fe96262f6fb0d214133657c480982fc268763644a
+    plotly.js: ">=3.0.0"
+    react: ^18.0.0 || ^19.0.0
+  checksum: 10c0/93d13f474f1b0ec3781db4cddb36ca99b8354f444fb3c2eaffb16d4b7b02302ec6c5fe30bafba9b56565e90af5480bfd22f6664c33fdd455ddde9cc235ed5ac5
   languageName: node
   linkType: hard
 
