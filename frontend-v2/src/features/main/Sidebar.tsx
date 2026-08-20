@@ -104,7 +104,8 @@ export default function Sidebar() {
     mdl: CombinedModelRead | null,
     prtcls: ProtocolListApiResponse | undefined,
   ) => {
-    const isTumourModel = pd_model?.is_library_model && pd_model?.model_type === "TG";
+    const isTumourModel =
+      pd_model?.is_library_model && pd_model?.model_type === "TG";
     const noKillModel = !mdl?.pd_model2;
     return (
       (mdl && mdl.pk_model === null) ||
@@ -121,8 +122,8 @@ export default function Sidebar() {
   );
   const noSecondaryParameters = model
     ? model.derived_variables.reduce((acc, dv) => {
-      return acc && dv.type !== "AUC";
-    }, true)
+        return acc && dv.type !== "AUC";
+      }, true)
     : false;
   const noIntervals = intervals.length === 0;
 
@@ -602,15 +603,29 @@ export default function Sidebar() {
       </Box>
       <Box
         component="nav"
+        hidden={selectedPage !== PageName.SIMULATIONS}
         sx={{
           width: {
-            sm: selectedPage === PageName.SIMULATIONS ? drawerExpandedWidth : 0,
+            sm: drawerExpandedWidth,
           },
           flexShrink: { sm: 0 },
           height: "100vh",
         }}
         aria-label="simulations sidebar"
         id="simulations-portal"
+      />
+      <Box
+        component="nav"
+        hidden={selectedPage !== PageName.RESULTS}
+        sx={{
+          width: {
+            sm: drawerExpandedWidth,
+          },
+          flexShrink: { sm: 0 },
+          height: "100vh",
+        }}
+        aria-label="results sidebar"
+        id="results-portal"
       />
       <Box
         component="main"
