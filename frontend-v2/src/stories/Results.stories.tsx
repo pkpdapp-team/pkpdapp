@@ -145,10 +145,6 @@ type Story = StoryObj<typeof Results>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const resultsHeading = await canvas.findByRole("heading", {
-      name: "Results",
-    });
-    expect(resultsHeading).toBeInTheDocument();
 
     const table1Tab = await canvas.findByRole("tab", {
       name: "Table 1",

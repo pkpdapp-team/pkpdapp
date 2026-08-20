@@ -2,12 +2,12 @@ import { Tabs, Tab, Box, Button } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { SyntheticEvent, FC, useState } from "react";
 import ResultsTab from "./ResultsTab";
-import { TableHeader } from "../../components/TableHeader";
 import IconNonButton from "../../components/IconNonButton";
 import { useResults } from "./useResults";
 import { ResultsTableRead } from "../../app/backendApi";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import ResultsSidePanel from "./ResultsSidePanel";
 
 /**
  * Display results for the combined model. Results can be displayed by:
@@ -94,7 +94,7 @@ const Results: FC = () => {
 
   return (
     <>
-      <TableHeader label="Results" key="results-header" />
+      <ResultsSidePanel />
       <Box
         sx={{
           display: "flex",
@@ -124,7 +124,9 @@ const Results: FC = () => {
                       name="remove"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleTabRemove(table)(e as unknown as React.MouseEvent<HTMLButtonElement>);
+                        handleTabRemove(table)(
+                          e as unknown as React.MouseEvent<HTMLButtonElement>,
+                        );
                       }}
                     >
                       <RemoveCircleOutlineIcon fontSize="small" />
