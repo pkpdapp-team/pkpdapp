@@ -1,4 +1,4 @@
-import { Tabs, Tab, Box, Button } from "@mui/material";
+import { Tabs, Tab, Box } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { SyntheticEvent, FC, useState } from "react";
 import ResultsTab from "./ResultsTab";
@@ -94,7 +94,7 @@ const Results: FC = () => {
 
   return (
     <>
-      <ResultsSidePanel />
+      <ResultsSidePanel onAddTable={handleTabAdd} />
       <Box
         sx={{
           display: "flex",
@@ -138,22 +138,6 @@ const Results: FC = () => {
             );
           })}
         </Tabs>
-        <Box
-          sx={{ display: "flex", width: "fit-content", alignItems: "center" }}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              marginRight: "1rem",
-              width: "fit-content",
-              textWrap: "nowrap",
-              height: "2rem",
-            }}
-            onClick={handleTabAdd}
-          >
-            Add Table
-          </Button>
-        </Box>
       </Box>
 
       {results.map((table, index) => {

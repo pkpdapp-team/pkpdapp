@@ -1,13 +1,17 @@
 import { createPortal } from "react-dom";
 import { FC } from "react";
 import { useSelector } from "react-redux";
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import ResultsSecondaryParameters from "./ResultsSecondaryParameters";
 import { RootState } from "../../app/store";
 import { PageName } from "../main/mainSlice";
 
-const ResultsSidePanel: FC = () => {
+type ResultsSidePanelProps = {
+  onAddTable: () => void | Promise<void>;
+};
+
+const ResultsSidePanel: FC<ResultsSidePanelProps> = ({ onAddTable }) => {
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
@@ -19,19 +23,49 @@ const ResultsSidePanel: FC = () => {
     <Box
       className={simulationAnimationClasses}
       sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
         height: "100%",
         maxHeight: "100%",
-        overflowY: "auto",
-        padding: "1rem",
-        paddingTop: "5rem",
+        paddingBottom: "1rem",
         backgroundColor: "#FBFBFA",
         borderRight: "1px solid #DBD6D1",
       }}
     >
-      <Typography variant="h4" sx={{ mb: 2, textAlign: "center" }}>
-        Results
-      </Typography>
-      <ResultsSecondaryParameters />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-start",
+          padding: "1rem 0 1rem 1rem",
+        }}
+      >
+        <Box
+          sx={{
+            paddingTop: "5rem",
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "column",
+            width: "100%",
+          }}
+        >
+          <Typography variant="h4">Results</Typography>
+          <Button
+            variant="contained"
+            onClick={onAddTable}
+            sx={{
+              width: "12rem",
+              marginTop: ".5rem",
+              marginBottom: "1rem",
+              alignSelf: "center",
+              textTransform: "uppercase",
+            }}
+          >
+            Add new table
+          </Button>
+          <ResultsSecondaryParameters />
+        </Box>
+      </Box>
     </Box>,
     portalRoot,
   );

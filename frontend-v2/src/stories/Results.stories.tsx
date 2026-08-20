@@ -6,7 +6,12 @@ import {
   within,
 } from "storybook/test";
 import { useDispatch } from "react-redux";
-import { setProject as setReduxProject } from "../features/main/mainSlice";
+import {
+  PageName,
+  setPage,
+  setProject as setReduxProject,
+} from "../features/main/mainSlice";
+import { Box } from "@mui/material";
 
 import Results from "../features/results/Results";
 import { project, projectHandlers } from "./project.mock";
@@ -123,13 +128,24 @@ const meta: Meta<typeof Results> = {
     (Story) => {
       const dispatch = useDispatch();
       dispatch(setReduxProject(project.id));
+      dispatch(setPage(PageName.RESULTS));
       const simulationContext = {
         simulations: simulationDataWithGroups,
         setSimulations: () => {},
       };
       return (
         <SimulationContext.Provider value={simulationContext}>
-          <Story />
+          <Box sx={{ display: "flex" }}>
+            <Box
+              component="nav"
+              sx={{ width: { sm: 240 }, flexShrink: 0, height: "100vh" }}
+              aria-label="results sidebar"
+              id="results-portal"
+            />
+            <Box sx={{ width: "100%" }}>
+              <Story />
+            </Box>
+          </Box>
         </SimulationContext.Provider>
       );
     },
@@ -174,7 +190,7 @@ export const AddNewTable: Story = {
     expect(table1Tab).toBeInTheDocument();
 
     const addButton = await canvas.findByRole("button", {
-      name: /Add Table/i,
+      name: /Add New Table/i,
     });
     expect(addButton).toBeInTheDocument();
 
