@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC } from "react";
 import {
   MenuItem,
   Select,
@@ -104,12 +104,10 @@ function useCompound() {
 function VariableRow({
   variable_id,
   variableName,
-  unit,
   timeUnit,
 }: {
   variable_id: number;
   variableName: string;
-  unit?: UnitReadWithCompatible;
   timeUnit?: UnitReadWithCompatible;
 }) {
   const units = useUnits();
@@ -117,9 +115,7 @@ function VariableRow({
   const compound = useCompound();
   const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
-  const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
-    unit?.symbol,
-  );
+  const unit = units.find((u) => u.id === variable_read?.secondary_unit);
   if (!variable_read || !compound || units.length === 0) {
     return "Loading...";
   }
@@ -138,7 +134,6 @@ function VariableRow({
       newThresholdUnit,
     );
     if (newThresholdUnit && !variable.secondary_unit) {
-      setUnitSymbol(newThresholdUnit.symbol);
       updateVariable({
         id: variable.id,
         variable: {
@@ -158,35 +153,30 @@ function VariableRow({
     }
   }
 
-  const selectedUnit = units.find((u) => u.symbol === unitSymbol);
+  const selectedUnit = units.find((u) => u.symbol === unit?.symbol);
   const compatibleUnits = selectedUnit?.compatible_units || [];
 
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    if (!isNaN(newValue)) {
-      updateVariable({
-        id: variable.id,
-        variable: {
-          ...variable,
-          lower_threshold: newValue,
-        },
-      });
-    }
+    updateVariable({
+      id: variable.id,
+      variable: {
+        ...variable,
+        lower_threshold: isNaN(newValue) ? 0 : newValue,
+      },
+    });
   }
   function onChangeUpperThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    if (!isNaN(newValue)) {
-      updateVariable({
-        id: variable.id,
-        variable: {
-          ...variable,
-          upper_threshold: newValue,
-        },
-      });
-    }
+    updateVariable({
+      id: variable.id,
+      variable: {
+        ...variable,
+        upper_threshold: isNaN(newValue) ? null : newValue,
+      },
+    });
   }
   function onChangeUnit(event: SelectChangeEvent) {
-    setUnitSymbol(event.target.value as string);
     const unit = unitList.find((unit) => unit.symbol === event.target.value);
     const aucUnit = getCompositeAucUnit(timeUnit, variable, unitList, unit);
     if (unit) {
@@ -220,7 +210,7 @@ function VariableRow({
         <TextField
           sx={{ minWidth: "5rem" }}
           type="number"
-          defaultValue={variable.lower_threshold || 0}
+          value={variable.lower_threshold ?? 0}
           onChange={onChangeLowerThreshold}
           size="small"
           slotProps={{
@@ -232,7 +222,7 @@ function VariableRow({
         <TextField
           sx={{ minWidth: "5rem" }}
           type="number"
-          defaultValue={variable.upper_threshold || Infinity}
+          value={variable.upper_threshold ?? ""}
           onChange={onChangeUpperThreshold}
           size="small"
           slotProps={{
@@ -243,7 +233,7 @@ function VariableRow({
       <TableCell>
         <Select
           sx={{ minWidth: "8rem" }}
-          value={unitSymbol}
+          value={unit?.symbol}
           onChange={onChangeUnit}
           size="small"
           inputProps={{ "aria-label": `Unit: ${variable.name}` }}
@@ -298,9 +288,6 @@ const ThresholdsTable: FC<TableProps> = (props) => {
                 key={variable.id}
                 variable_id={variable.id}
                 variableName={variable.name}
-                unit={units?.find(
-                  (unit) => unit.id === variable.secondary_unit,
-                )}
                 timeUnit={timeUnit}
               />
             ))}
