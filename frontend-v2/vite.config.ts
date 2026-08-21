@@ -114,12 +114,5 @@ export default ({ mode }) => {
         exclude: ["src/stories"],
       },
     },
-    legacy: {
-      /*
-        Enable legacy support for CJS exports in redux-persist.
-        Longer term, we need to remove old CJS packages.
-        */
-      inconsistentCjsInterop: true,
-    },
   });
 };
