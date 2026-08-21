@@ -17,9 +17,11 @@ import { useUnits } from "./useUnits";
 
 const ResultsTimeIntervals: FC = () => {
   const [intervals, setIntervals] = useModelTimeIntervals();
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<Record<string, string | number>>({});
   const intervalsRef = useRef(intervals);
-  const updateTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const updateTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
   intervalsRef.current = intervals;
   const units = useUnits();
   const timeUnits =
@@ -39,9 +41,9 @@ const ResultsTimeIntervals: FC = () => {
   const commitInterval = (
     index: number,
     field: "start_time" | "end_time",
-    value: string,
+    value: string | number,
   ) => {
-    const parsedValue = value === "" ? 0 : parseFloat(value);
+    const parsedValue = Number.isFinite(value) ? value : null;
     if (!Number.isFinite(parsedValue)) return;
     setIntervals(
       intervals.map((interval, i) =>
@@ -50,8 +52,11 @@ const ResultsTimeIntervals: FC = () => {
     );
   };
 
-  const updateDraft = (index: number, field: "start_time" | "end_time", value: string) =>
-    setDrafts((current) => ({ ...current, [`${index}.${field}`]: value }));
+  const updateDraft = (
+    index: number,
+    field: "start_time" | "end_time",
+    value: number | string,
+  ) => setDrafts((current) => ({ ...current, [`${index}.${field}`]: value }));
 
   const scheduleUpdate = (
     index: number,
@@ -72,8 +77,11 @@ const ResultsTimeIntervals: FC = () => {
     }, 350);
   };
 
-  const valueFor = (index: number, field: "start_time" | "end_time", value: number) =>
-    drafts[`${index}.${field}`] ?? String(value);
+  const valueFor = (
+    index: number,
+    field: "start_time" | "end_time",
+    value: number,
+  ) => drafts[`${index}.${field}`] ?? value;
 
   const removeInterval = (index: number) =>
     setIntervals(intervals.filter((_, i) => i !== index));
@@ -96,69 +104,87 @@ const ResultsTimeIntervals: FC = () => {
       >
         Add New Interval
       </Button>
-      {intervals.map((interval, index) => (
-        <Box
-          component="fieldset"
-          key={interval.id ?? index}
-          sx={{ border: 0, borderBottom: "1px solid #dbd6d1", p: 0, pb: 1 }}
-        >
-          <Typography
-            component="legend"
-            sx={{
-              fontSize: "1rem",
-              fontWeight: 500,
-              lineHeight: 1.5,
-              px: 0.5,
-              mb: 0.5,
-            }}
+      {intervals.map((interval, index) => {
+        const start = valueFor(index, "start_time", interval.start_time);
+        const end = valueFor(index, "end_time", interval.end_time);
+        return (
+          <Box
+            component="fieldset"
+            key={interval.id ?? index}
+            sx={{ border: 0, borderBottom: "1px solid #dbd6d1", p: 0, pb: 1 }}
           >
-            Interval {index + 1}
-          </Typography>
-          <Stack spacing={0.5}>
-            <TextField
-              size="small"
-              type="number"
-              label="Start time"
-              value={valueFor(index, "start_time", interval.start_time)}
-              onChange={(event) =>
-                scheduleUpdate(index, "start_time", event.target.value)
-              }
-              onBlur={() => commitInterval(index, "start_time", drafts[`${index}.start_time`] ?? String(interval.start_time))}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="End time"
-              value={valueFor(index, "end_time", interval.end_time)}
-              onChange={(event) =>
-                scheduleUpdate(index, "end_time", event.target.value)
-              }
-              onBlur={() => commitInterval(index, "end_time", drafts[`${index}.end_time`] ?? String(interval.end_time))}
-            />
-            {index === 0 && (
-              <FormControl size="small">
-                <Select
-                  value={String(currentUnit)}
-                  onChange={(event) => updateUnit(event.target.value)}
-                  aria-label="Time unit"
-                >
-                  {timeUnits.map((unit) => (
-                    <MenuItem key={unit.id} value={unit.id}>
-                      {unit.symbol}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-            <IconButton
-              aria-label="Delete time interval"
-              onClick={() => removeInterval(index)}
+            <Typography
+              component="legend"
+              sx={{
+                fontSize: "1rem",
+                fontWeight: 500,
+                lineHeight: 1.5,
+                px: 0.5,
+                mb: 0.5,
+              }}
             >
-              <Delete />
-            </IconButton>
-          </Stack>
-        </Box>
-      ))}
+              Interval {index + 1}
+            </Typography>
+            <Stack spacing={0.5}>
+              <TextField
+                size="small"
+                type="number"
+                label="Start time"
+                value={start}
+                error={start > end && end !== ""}
+                onChange={(event) =>
+                  scheduleUpdate(index, "start_time", event.target.value)
+                }
+                onBlur={() =>
+                  commitInterval(
+                    index,
+                    "start_time",
+                    drafts[`${index}.start_time`] ?? interval.start_time,
+                  )
+                }
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="End time"
+                value={end}
+                error={end !== "" && end < start}
+                onChange={(event) =>
+                  scheduleUpdate(index, "end_time", event.target.value)
+                }
+                onBlur={() =>
+                  commitInterval(
+                    index,
+                    "end_time",
+                    drafts[`${index}.end_time`] ?? interval.end_time,
+                  )
+                }
+              />
+              {index === 0 && (
+                <FormControl size="small">
+                  <Select
+                    value={String(currentUnit)}
+                    onChange={(event) => updateUnit(event.target.value)}
+                    aria-label="Time unit"
+                  >
+                    {timeUnits.map((unit) => (
+                      <MenuItem key={unit.id} value={unit.id}>
+                        {unit.symbol}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              <IconButton
+                aria-label="Delete time interval"
+                onClick={() => removeInterval(index)}
+              >
+                <Delete />
+              </IconButton>
+            </Stack>
+          </Box>
+        );
+      })}
     </Stack>
   );
 };
