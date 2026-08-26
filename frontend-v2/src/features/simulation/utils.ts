@@ -125,6 +125,23 @@ type GetDefaultOptimiseInputsProps = {
   subjectBiomarkers?: SubjectBiomarker[][];
   units?: UnitReadWithCompatible[];
   model?: CombinedModelRead;
+  // Optional per-variable "optimise in log space" overrides, keyed by model
+  // variable id (parameters keyed by input variable id, sigmas by output
+  // variable id). An absent entry falls back to the computed default. Shared
+  // with the OptimisationSettings dialog so the sidebar Fit honours the same
+  // persisted selections.
+  paramUseLogSpace?: Record<number, boolean>;
+  sigmaUseLogSpace?: Record<number, boolean>;
+  sigmaMultUseLogSpace?: Record<number, boolean>;
+  // Optional per-output-variable sigma start / bounds and noise-model overrides,
+  // keyed by output variable id. An absent entry falls back to the data-derived
+  // default. Shared with the OptimisationSettings dialog so the sidebar Fit
+  // honours the same persisted selections.
+  sigmaStartByVar?: Record<number, number>;
+  sigmaBoundsByVar?: Record<number, [number, number]>;
+  sigmaMultStartByVar?: Record<number, number>;
+  sigmaBoundsMultByVar?: Record<number, [number, number]>;
+  noiseModelByVar?: Record<number, NoiseModel>;
 };
 
 export function getDefaultOptimiseInputs({
@@ -141,6 +158,14 @@ export function getDefaultOptimiseInputs({
   subjectBiomarkers,
   units,
   model,
+  paramUseLogSpace = {},
+  sigmaUseLogSpace = {},
+  sigmaMultUseLogSpace = {},
+  sigmaStartByVar = {},
+  sigmaBoundsByVar = {},
+  sigmaMultStartByVar = {},
+  sigmaBoundsMultByVar = {},
+  noiseModelByVar = {},
 }: GetDefaultOptimiseInputsProps): Optimise {
   const inputs = orderedSliders.map((slider) => slider.variable);
   const starting = inputs.map((variableId) => {
@@ -172,33 +197,47 @@ export function getDefaultOptimiseInputs({
     model,
   );
   const sigma_start = sigmaVariables.map(
-    (varId) => (maxObservationByVariable[varId] ?? 1) / 10,
+    (varId) => sigmaStartByVar[varId] ?? (maxObservationByVariable[varId] ?? 1) / 10,
   );
-  const sigma_bounds = sigmaVariables.map((varId) => [
-    0,
-    maxObservationByVariable[varId] ?? 1,
-  ]);
-  const sigma_use_log_space = sigmaVariables.map(() => true);
+  const sigma_bounds = sigmaVariables.map(
+    (varId) =>
+      sigmaBoundsByVar[varId] ?? [0, maxObservationByVariable[varId] ?? 1],
+  );
+  const sigma_use_log_space = sigmaVariables.map(
+    (varId) => sigmaUseLogSpace[varId] ?? true,
+  );
+  // Per-output-variable noise model, falling back to the uniform noiseModel. The
+  // combined model is emitted whenever any output resolves to "combined",
+  // mirroring the OptimisationSettings dialog payload.
+  const noise_models = sigmaVariables.map(
+    (varId) => noiseModelByVar[varId] ?? noiseModel,
+  );
+  const anyCombined = noise_models.some((model) => model === "combined");
 
   return {
     inputs,
     starting,
     bounds: [lowerBounds, upperBounds],
-    // One flag per model parameter (parallel to inputs); defaults to log space
-    // where the lower bound is non-negative (log space is undefined otherwise),
+    // One flag per model parameter (parallel to inputs). Uses the persisted
+    // per-variable override when present, otherwise defaults to log space where
+    // the lower bound is non-negative (log space is undefined otherwise),
     // EXCEPT for parameters with a fixed upper bound set in the database, which
-    // default to linear space.
+    // default to linear space. Log space is only valid for a non-negative lower
+    // bound, so it is force-disabled there regardless of the override.
     use_log_space: inputs.map((variableId, index) => {
       const variable = variables.find((item) => item.id === variableId);
       const hasFixedUpperBound =
         variable?.upper_bound !== undefined && variable?.upper_bound !== null;
-      return lowerBounds[index] >= 0 && !hasFixedUpperBound;
+      const useLogSpace =
+        paramUseLogSpace[variableId] ??
+        (lowerBounds[index] >= 0 && !hasFixedUpperBound);
+      return useLogSpace && lowerBounds[index] >= 0;
     }),
     biomarker_types,
     subject_groups: subjectGroups,
-    // The sidebar "Fit" is a one-click uniform fit: apply the same noise model
-    // to every fitted output variable (one entry per sigma variable).
-    noise_models: sigmaVariables.map(() => noiseModel),
+    // One noise model per fitted output variable, using the persisted
+    // per-variable override where present and the uniform noiseModel otherwise.
+    noise_models,
     method,
     max_iterations: sanitizeMaxIterations(maxIterations),
     sigma_start,
@@ -206,11 +245,18 @@ export function getDefaultOptimiseInputs({
     sigma_use_log_space,
     // The combined noise model fits a second (proportional, dimensionless) sigma
     // per output variable, mirroring the OptimisationSettings dialog payload.
-    ...(noiseModel === "combined"
+    // Emitted whenever any output resolves to the combined model.
+    ...(anyCombined
       ? {
-          sigma_mult_start: sigmaVariables.map(() => 0.1),
-          sigma_bounds_mult: sigmaVariables.map(() => [0, 1]),
-          sigma_mult_use_log_space: sigmaVariables.map(() => true),
+          sigma_mult_start: sigmaVariables.map(
+            (varId) => sigmaMultStartByVar[varId] ?? 0.1,
+          ),
+          sigma_bounds_mult: sigmaVariables.map(
+            (varId) => sigmaBoundsMultByVar[varId] ?? [0, 1],
+          ),
+          sigma_mult_use_log_space: sigmaVariables.map(
+            (varId) => sigmaMultUseLogSpace[varId] ?? true,
+          ),
         }
       : {}),
   };

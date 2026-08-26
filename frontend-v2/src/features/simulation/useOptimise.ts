@@ -47,6 +47,40 @@ export default function useOptimise(model: CombinedModelRead | undefined) {
   const [maxIterations, setMaxIterations] = useState<string>(
     DEFAULT_MAX_ITERATIONS,
   );
+  // Per-variable "optimise in log space" selections from the OptimisationSettings
+  // dialog. Sparse override maps keyed by model variable id: an absent entry
+  // falls back to the dialog's computed default, a present entry is the user's
+  // explicit choice. Kept here (rather than in the dialog) so the selections
+  // survive the dialog closing/reopening, like method / maxIterations above.
+  const [paramUseLogSpace, setParamUseLogSpace] = useState<
+    Record<number, boolean>
+  >({});
+  const [sigmaUseLogSpace, setSigmaUseLogSpace] = useState<
+    Record<number, boolean>
+  >({});
+  const [sigmaMultUseLogSpace, setSigmaMultUseLogSpace] = useState<
+    Record<number, boolean>
+  >({});
+  // Per-output-variable sigma start / bounds and noise model from the
+  // OptimisationSettings dialog. Sparse override maps keyed by model output
+  // variable id: an absent entry falls back to the data-derived default, a
+  // present entry is the user's explicit choice. Kept here so they survive the
+  // dialog closing/reopening and are honoured by the sidebar Fit button.
+  const [sigmaStartByVar, setSigmaStartByVar] = useState<
+    Record<number, number>
+  >({});
+  const [sigmaBoundsByVar, setSigmaBoundsByVar] = useState<
+    Record<number, [number, number]>
+  >({});
+  const [sigmaMultStartByVar, setSigmaMultStartByVar] = useState<
+    Record<number, number>
+  >({});
+  const [sigmaBoundsMultByVar, setSigmaBoundsMultByVar] = useState<
+    Record<number, [number, number]>
+  >({});
+  const [noiseModelByVar, setNoiseModelByVar] = useState<
+    Record<number, NoiseModel>
+  >({});
 
   const optimiseModel = useCallback(
     async (optimiseInputs: Optimise) => {
@@ -83,5 +117,21 @@ export default function useOptimise(model: CombinedModelRead | undefined) {
     setNoiseModel,
     maxIterations,
     setMaxIterations,
+    paramUseLogSpace,
+    setParamUseLogSpace,
+    sigmaUseLogSpace,
+    setSigmaUseLogSpace,
+    sigmaMultUseLogSpace,
+    setSigmaMultUseLogSpace,
+    sigmaStartByVar,
+    setSigmaStartByVar,
+    sigmaBoundsByVar,
+    setSigmaBoundsByVar,
+    sigmaMultStartByVar,
+    setSigmaMultStartByVar,
+    sigmaBoundsMultByVar,
+    setSigmaBoundsMultByVar,
+    noiseModelByVar,
+    setNoiseModelByVar,
   };
 }

@@ -248,6 +248,22 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     noiseModel,
     maxIterations,
     setMaxIterations,
+    paramUseLogSpace,
+    setParamUseLogSpace,
+    sigmaUseLogSpace,
+    setSigmaUseLogSpace,
+    sigmaMultUseLogSpace,
+    setSigmaMultUseLogSpace,
+    sigmaStartByVar,
+    setSigmaStartByVar,
+    sigmaBoundsByVar,
+    setSigmaBoundsByVar,
+    sigmaMultStartByVar,
+    setSigmaMultStartByVar,
+    sigmaBoundsMultByVar,
+    setSigmaBoundsMultByVar,
+    noiseModelByVar,
+    setNoiseModelByVar,
   } = useOptimise(model);
   const { biomarkerTypes, subjectBiomarkers } = useDataset(project.id);
 
@@ -596,6 +612,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         subjectBiomarkers,
         units,
         model,
+        paramUseLogSpace,
+        sigmaUseLogSpace,
+        sigmaMultUseLogSpace,
+        sigmaStartByVar,
+        sigmaBoundsByVar,
+        sigmaMultStartByVar,
+        sigmaBoundsMultByVar,
+        noiseModelByVar,
       }),
     );
   }, [
@@ -613,6 +637,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     subjectBiomarkers,
     units,
     model,
+    paramUseLogSpace,
+    sigmaUseLogSpace,
+    sigmaMultUseLogSpace,
+    sigmaStartByVar,
+    sigmaBoundsByVar,
+    sigmaMultStartByVar,
+    sigmaBoundsMultByVar,
+    noiseModelByVar,
   ]);
 
   const [dimensions, setDimensions] = useState({
@@ -704,6 +736,22 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         setOptimiseMethod={setMethod}
         maxIterations={maxIterations}
         setMaxIterations={setMaxIterations}
+        paramUseLogSpace={paramUseLogSpace}
+        setParamUseLogSpace={setParamUseLogSpace}
+        sigmaUseLogSpace={sigmaUseLogSpace}
+        setSigmaUseLogSpace={setSigmaUseLogSpace}
+        sigmaMultUseLogSpace={sigmaMultUseLogSpace}
+        setSigmaMultUseLogSpace={setSigmaMultUseLogSpace}
+        sigmaStartByVar={sigmaStartByVar}
+        setSigmaStartByVar={setSigmaStartByVar}
+        sigmaBoundsByVar={sigmaBoundsByVar}
+        setSigmaBoundsByVar={setSigmaBoundsByVar}
+        sigmaMultStartByVar={sigmaMultStartByVar}
+        setSigmaMultStartByVar={setSigmaMultStartByVar}
+        sigmaBoundsMultByVar={sigmaBoundsMultByVar}
+        setSigmaBoundsMultByVar={setSigmaBoundsMultByVar}
+        noiseModelByVar={noiseModelByVar}
+        setNoiseModelByVar={setNoiseModelByVar}
         optimiseResult={optimiseResult}
         exportSimulation={exportSimulation}
         showReference={showReference}
