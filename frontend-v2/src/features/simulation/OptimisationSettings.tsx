@@ -43,8 +43,6 @@ const OPTIMISE_METHOD_OPTIONS = [
   { value: "pso", label: "PSO" },
   { value: "cmaes", label: "CMA-ES" },
   { value: "nelder-mead", label: "Nelder-Mead" },
-  { value: "gradient_descent", label: "Gradient Descent" },
-  { value: "adam", label: "Adam" },
 ] as const;
 
 type OptimisationSettingsProps = {
