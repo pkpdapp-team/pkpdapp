@@ -47,6 +47,7 @@ import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import OptimisationSettings from "./OptimisationSettings";
 import OptimisationView from "./OptimisationView";
+import { NoiseModel } from "./useOptimise";
 import { getPlottedBiomarkerTypes } from "./utils";
 import "../../App.css";
 
@@ -91,6 +92,27 @@ type SimulationsSidePanelType = {
   setOptimiseMethod: (method: string) => void;
   maxIterations: string;
   setMaxIterations: (maxIterations: string) => void;
+  // Per-variable log-space overrides, persisted in useOptimise so they survive
+  // the OptimisationSettings dialog closing/reopening.
+  paramUseLogSpace: Record<number, boolean>;
+  setParamUseLogSpace: (value: Record<number, boolean>) => void;
+  sigmaUseLogSpace: Record<number, boolean>;
+  setSigmaUseLogSpace: (value: Record<number, boolean>) => void;
+  sigmaMultUseLogSpace: Record<number, boolean>;
+  setSigmaMultUseLogSpace: (value: Record<number, boolean>) => void;
+  // Per-output-variable sigma start / bounds and noise-model overrides,
+  // persisted in useOptimise so they survive the dialog closing/reopening and
+  // are honoured by the sidebar Fit button.
+  sigmaStartByVar: Record<number, number>;
+  setSigmaStartByVar: (value: Record<number, number>) => void;
+  sigmaBoundsByVar: Record<number, [number, number]>;
+  setSigmaBoundsByVar: (value: Record<number, [number, number]>) => void;
+  sigmaMultStartByVar: Record<number, number>;
+  setSigmaMultStartByVar: (value: Record<number, number>) => void;
+  sigmaBoundsMultByVar: Record<number, [number, number]>;
+  setSigmaBoundsMultByVar: (value: Record<number, [number, number]>) => void;
+  noiseModelByVar: Record<number, NoiseModel>;
+  setNoiseModelByVar: (value: Record<number, NoiseModel>) => void;
   optimiseResult: OptimiseResponse | null;
   exportSimulation: () => void;
   showReference: boolean;
@@ -218,6 +240,22 @@ export const SimulationsSidePanel = ({
   setOptimiseMethod,
   maxIterations,
   setMaxIterations,
+  paramUseLogSpace,
+  setParamUseLogSpace,
+  sigmaUseLogSpace,
+  setSigmaUseLogSpace,
+  sigmaMultUseLogSpace,
+  setSigmaMultUseLogSpace,
+  sigmaStartByVar,
+  setSigmaStartByVar,
+  sigmaBoundsByVar,
+  setSigmaBoundsByVar,
+  sigmaMultStartByVar,
+  setSigmaMultStartByVar,
+  sigmaBoundsMultByVar,
+  setSigmaBoundsMultByVar,
+  noiseModelByVar,
+  setNoiseModelByVar,
   optimiseResult,
   exportSimulation,
   showReference,
@@ -727,6 +765,22 @@ export const SimulationsSidePanel = ({
             setMethod={setOptimiseMethod}
             maxIterations={maxIterations}
             setMaxIterations={setMaxIterations}
+            paramUseLogSpace={paramUseLogSpace}
+            setParamUseLogSpace={setParamUseLogSpace}
+            sigmaUseLogSpace={sigmaUseLogSpace}
+            setSigmaUseLogSpace={setSigmaUseLogSpace}
+            sigmaMultUseLogSpace={sigmaMultUseLogSpace}
+            setSigmaMultUseLogSpace={setSigmaMultUseLogSpace}
+            sigmaStartByVar={sigmaStartByVar}
+            setSigmaStartByVar={setSigmaStartByVar}
+            sigmaBoundsByVar={sigmaBoundsByVar}
+            setSigmaBoundsByVar={setSigmaBoundsByVar}
+            sigmaMultStartByVar={sigmaMultStartByVar}
+            setSigmaMultStartByVar={setSigmaMultStartByVar}
+            sigmaBoundsMultByVar={sigmaBoundsMultByVar}
+            setSigmaBoundsMultByVar={setSigmaBoundsMultByVar}
+            noiseModelByVar={noiseModelByVar}
+            setNoiseModelByVar={setNoiseModelByVar}
             plots={plots}
             biomarkerTypes={biomarkerTypes}
             groups={groups ?? []}

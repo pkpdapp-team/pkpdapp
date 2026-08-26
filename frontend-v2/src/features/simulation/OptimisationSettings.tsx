@@ -69,6 +69,27 @@ type OptimisationSettingsProps = {
   setMethod: (method: string) => void;
   maxIterations: string;
   setMaxIterations: (maxIterations: string) => void;
+  // Per-variable "optimise in log space" overrides, keyed by model variable id.
+  // Sparse maps: an absent entry falls back to the computed default.
+  paramUseLogSpace: Record<number, boolean>;
+  setParamUseLogSpace: (value: Record<number, boolean>) => void;
+  sigmaUseLogSpace: Record<number, boolean>;
+  setSigmaUseLogSpace: (value: Record<number, boolean>) => void;
+  sigmaMultUseLogSpace: Record<number, boolean>;
+  setSigmaMultUseLogSpace: (value: Record<number, boolean>) => void;
+  // Per-output-variable sigma start / bounds and noise-model overrides, keyed by
+  // model output variable id. Sparse maps: an absent entry falls back to the
+  // data-derived default, a present entry is the user's explicit choice.
+  sigmaStartByVar: Record<number, number>;
+  setSigmaStartByVar: (value: Record<number, number>) => void;
+  sigmaBoundsByVar: Record<number, [number, number]>;
+  setSigmaBoundsByVar: (value: Record<number, [number, number]>) => void;
+  sigmaMultStartByVar: Record<number, number>;
+  setSigmaMultStartByVar: (value: Record<number, number>) => void;
+  sigmaBoundsMultByVar: Record<number, [number, number]>;
+  setSigmaBoundsMultByVar: (value: Record<number, [number, number]>) => void;
+  noiseModelByVar: Record<number, NoiseModel>;
+  setNoiseModelByVar: (value: Record<number, NoiseModel>) => void;
 };
 
 type SigmaRowProps = {
@@ -154,39 +175,33 @@ const OptimisationSettings = ({
   setMethod,
   maxIterations,
   setMaxIterations,
+  paramUseLogSpace,
+  setParamUseLogSpace,
+  sigmaUseLogSpace,
+  setSigmaUseLogSpace,
+  sigmaMultUseLogSpace,
+  setSigmaMultUseLogSpace,
+  sigmaStartByVar,
+  setSigmaStartByVar,
+  sigmaBoundsByVar,
+  setSigmaBoundsByVar,
+  sigmaMultStartByVar,
+  setSigmaMultStartByVar,
+  sigmaBoundsMultByVar,
+  setSigmaBoundsMultByVar,
+  noiseModelByVar,
+  setNoiseModelByVar,
 }: OptimisationSettingsProps) => {
   const [customStarting, setCustomStarting] = useState<number[]>([]);
   const [customLowerBounds, setCustomLowerBounds] = useState<number[]>([]);
   const [customUpperBounds, setCustomUpperBounds] = useState<number[]>([]);
-  // Per-parameter "optimise in log space" flags, parallel to customStarting.
-  const [customUseLogSpace, setCustomUseLogSpace] = useState<boolean[]>([]);
   const [selectedSubjectGroupIds, setSelectedSubjectGroupIds] = useState<number[]>([]);
   const [selectedBiomarkerTypeIds, setSelectedBiomarkerTypeIds] = useState<number[]>([]);
-  // Per-output-variable noise sigma (linear), keyed by model output variable id,
-  // with a per-sigma "fit in log space" flag. The "*Mult" maps hold the second
-  // (proportional) sigma used by the combined noise model. Entries fall back to
-  // the data-derived defaults (see below) when a variable has no explicit value.
-  const [sigmaStartByVar, setSigmaStartByVar] = useState<Record<number, number>>({});
-  const [sigmaBoundsByVar, setSigmaBoundsByVar] = useState<
-    Record<number, [number, number]>
-  >({});
-  const [sigmaUseLogSpaceByVar, setSigmaUseLogSpaceByVar] = useState<
-    Record<number, boolean>
-  >({});
-  const [sigmaMultStartByVar, setSigmaMultStartByVar] = useState<
-    Record<number, number>
-  >({});
-  const [sigmaBoundsMultByVar, setSigmaBoundsMultByVar] = useState<
-    Record<number, [number, number]>
-  >({});
-  const [sigmaMultUseLogSpaceByVar, setSigmaMultUseLogSpaceByVar] = useState<
-    Record<number, boolean>
-  >({});
-  // Per-output-variable noise model. Each observation defaults to
-  // DEFAULT_NOISE_MODEL and can be overridden independently.
-  const [noiseModelByVar, setNoiseModelByVar] = useState<
-    Record<number, NoiseModel>
-  >({});
+  // Per-output-variable sigma start / bounds and noise model now come from props
+  // (persisted in useOptimise) so they survive the dialog closing/reopening and
+  // are shared with the sidebar Fit. Entries fall back to the data-derived
+  // defaults (see below) / DEFAULT_NOISE_MODEL when a variable has no explicit
+  // value.
   const noiseModelFor = (varId: number): NoiseModel =>
     noiseModelByVar[varId] ?? DEFAULT_NOISE_MODEL;
   const isCombinedFor = (varId: number) => noiseModelFor(varId) === "combined";
@@ -218,6 +233,17 @@ const OptimisationSettings = ({
     maxObservationByVariable[varId] ?? 1;
   const sigmaStartDefault = (varId: number) => sigmaUpperDefault(varId) / 10;
 
+  // Default "optimise in log space" for a parameter, mirroring
+  // getDefaultOptimiseInputs: log space where the lower bound is non-negative
+  // (log space is undefined otherwise) and there is no fixed database upper
+  // bound. Used as the fallback when the user has no explicit override.
+  const paramLogSpaceDefault = (variableId: number, lowerBound: number) => {
+    const variable = variables.find((item) => item.id === variableId);
+    const hasFixedUpperBound =
+      variable?.upper_bound !== undefined && variable?.upper_bound !== null;
+    return lowerBound >= 0 && !hasFixedUpperBound;
+  };
+
   useEffect(() => {
     if (!open) {
       return;
@@ -236,25 +262,12 @@ const OptimisationSettings = ({
     setCustomStarting(defaultOptimiseInputs.starting);
     setCustomLowerBounds(defaultOptimiseInputs.bounds[0]);
     setCustomUpperBounds(defaultOptimiseInputs.bounds[1]);
-    setCustomUseLogSpace(
-      defaultOptimiseInputs.use_log_space ?? orderedSliders.map(() => false),
-    );
-    // method / maxIterations are persisted in useOptimise and intentionally not
-    // reset here so they survive dialog open/close.
+    // method / maxIterations and all the per-variable overrides (log space,
+    // sigma start/bounds, noise model) are persisted in useOptimise and
+    // intentionally not reset here so they survive dialog open/close and are
+    // shared with the sidebar Fit.
     setSelectedSubjectGroupIds(visibleSubjectGroupIds);
     setSelectedBiomarkerTypeIds(defaultOptimiseInputs.biomarker_types ?? []);
-
-    // Clear per-variable sigma overrides so the render/payload fall back to the
-    // data-derived defaults (start X/10, bounds [0, X], log space on).
-    setSigmaStartByVar({});
-    setSigmaBoundsByVar({});
-    setSigmaUseLogSpaceByVar({});
-    setSigmaMultStartByVar({});
-    setSigmaBoundsMultByVar({});
-    setSigmaMultUseLogSpaceByVar({});
-    // Clear per-observation noise-model overrides so each falls back to
-    // DEFAULT_NOISE_MODEL.
-    setNoiseModelByVar({});
   }, [open, orderedSliders, variables, getSliderBounds, getSliderValue, plots, biomarkerTypes, visibleSubjectGroupIds]);
 
   const handleToggleGroup = (id: number) => {
@@ -282,8 +295,12 @@ const OptimisationSettings = ({
       // Log space is only valid for a non-negative lower bound; guard here so an
       // invalid combination can never reach the backend (which would 400).
       use_log_space: orderedSliders.map(
-        (_, index) =>
-          (customUseLogSpace[index] ?? false) && customLowerBounds[index] >= 0,
+        (slider, index) =>
+          (paramUseLogSpace[slider.variable] ??
+            paramLogSpaceDefault(
+              slider.variable,
+              customLowerBounds[index] ?? 0,
+            )) && (customLowerBounds[index] ?? 0) >= 0,
       ),
       max_iterations: sanitizeMaxIterations(maxIterations),
       // One noise model per output variable, in the same canonical (ascending
@@ -301,7 +318,7 @@ const OptimisationSettings = ({
         (varId) => sigmaBoundsByVar[varId] ?? [0, sigmaUpperDefault(varId)],
       ),
       sigma_use_log_space: sigmaVariables.map(
-        (varId) => sigmaUseLogSpaceByVar[varId] ?? true,
+        (varId) => sigmaUseLogSpace[varId] ?? true,
       ),
       // The second (proportional, dimensionless) sigma is sent whenever any
       // observation uses the combined model. The arrays are full-length (one per
@@ -316,7 +333,7 @@ const OptimisationSettings = ({
               (varId) => sigmaBoundsMultByVar[varId] ?? [0, 1],
             ),
             sigma_mult_use_log_space: sigmaVariables.map(
-              (varId) => sigmaMultUseLogSpaceByVar[varId] ?? true,
+              (varId) => sigmaMultUseLogSpace[varId] ?? true,
             ),
           }
         : {}),
@@ -420,16 +437,18 @@ const OptimisationSettings = ({
                         <Checkbox
                           size="small"
                           checked={
-                            (customUseLogSpace[index] ?? false) &&
-                            !logSpaceDisabled
+                            (paramUseLogSpace[slider.variable] ??
+                              paramLogSpaceDefault(
+                                slider.variable,
+                                customLowerBounds[index] ?? 0,
+                              )) && !logSpaceDisabled
                           }
                           disabled={logSpaceDisabled}
                           onChange={(event) => {
                             const checked = event.target.checked;
-                            setCustomUseLogSpace((currentValues) => {
-                              const nextValues = [...currentValues];
-                              nextValues[index] = checked;
-                              return nextValues;
+                            setParamUseLogSpace({
+                              ...paramUseLogSpace,
+                              [slider.variable]: checked,
                             });
                           }}
                         />
@@ -504,10 +523,10 @@ const OptimisationSettings = ({
                     label="Noise model"
                     value={noiseModelFor(varId)}
                     onChange={(event) =>
-                      setNoiseModelByVar((current) => ({
-                        ...current,
+                      setNoiseModelByVar({
+                        ...noiseModelByVar,
                         [varId]: event.target.value as NoiseModel,
-                      }))
+                      })
                     }
                   >
                     <MenuItem value="additive">Additive</MenuItem>
@@ -519,20 +538,20 @@ const OptimisationSettings = ({
                   label={varIsCombined ? "Sigma (additive)" : "Sigma"}
                   sigma={sigmaStartByVar[varId] ?? sigmaStartDefault(varId)}
                   onSigmaChange={(value) =>
-                    setSigmaStartByVar((current) => ({ ...current, [varId]: value }))
+                    setSigmaStartByVar({ ...sigmaStartByVar, [varId]: value })
                   }
                   bounds={
                     sigmaBoundsByVar[varId] ?? [0, sigmaUpperDefault(varId)]
                   }
                   onBoundsChange={(value) =>
-                    setSigmaBoundsByVar((current) => ({ ...current, [varId]: value }))
+                    setSigmaBoundsByVar({ ...sigmaBoundsByVar, [varId]: value })
                   }
-                  useLogSpace={sigmaUseLogSpaceByVar[varId] ?? true}
+                  useLogSpace={sigmaUseLogSpace[varId] ?? true}
                   onUseLogSpaceChange={(value) =>
-                    setSigmaUseLogSpaceByVar((current) => ({
-                      ...current,
+                    setSigmaUseLogSpace({
+                      ...sigmaUseLogSpace,
                       [varId]: value,
-                    }))
+                    })
                   }
                 />
                 {varIsCombined && (
@@ -541,24 +560,24 @@ const OptimisationSettings = ({
                       label="Sigma (proportional)"
                       sigma={sigmaMultStartByVar[varId] ?? 0.1}
                       onSigmaChange={(value) =>
-                        setSigmaMultStartByVar((current) => ({
-                          ...current,
+                        setSigmaMultStartByVar({
+                          ...sigmaMultStartByVar,
                           [varId]: value,
-                        }))
+                        })
                       }
                       bounds={sigmaBoundsMultByVar[varId] ?? [0, 1]}
                       onBoundsChange={(value) =>
-                        setSigmaBoundsMultByVar((current) => ({
-                          ...current,
+                        setSigmaBoundsMultByVar({
+                          ...sigmaBoundsMultByVar,
                           [varId]: value,
-                        }))
+                        })
                       }
-                      useLogSpace={sigmaMultUseLogSpaceByVar[varId] ?? true}
+                      useLogSpace={sigmaMultUseLogSpace[varId] ?? true}
                       onUseLogSpaceChange={(value) =>
-                        setSigmaMultUseLogSpaceByVar((current) => ({
-                          ...current,
+                        setSigmaMultUseLogSpace({
+                          ...sigmaMultUseLogSpace,
                           [varId]: value,
-                        }))
+                        })
                       }
                     />
                   </Box>
