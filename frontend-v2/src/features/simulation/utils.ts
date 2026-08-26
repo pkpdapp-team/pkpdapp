@@ -1200,7 +1200,7 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
   const groupBiomarkers = biomarkerData?.filter((d) =>
     group.subjects.includes(d.subjectId),
   );
-  const colourIndex = index + colourOffset + 1;
+  const colourIndex = index + colourOffset;
 
   return {
     name: group.name,
