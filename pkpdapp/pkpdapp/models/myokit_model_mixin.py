@@ -32,7 +32,6 @@ CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id"])
 
 
 class MyokitModelMixin(UncertaintySimulationMixin):
-
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
 
@@ -268,8 +267,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         # order is non-deterministic, and its Equation.__str__ form — used as a
         # previous sort key — varies between versions, reordering the output)
         equations = sorted(
-            cls._serialise_equation(e)
-            for e in c.equations(bound=False, const=False)
+            cls._serialise_equation(e) for e in c.equations(bound=False, const=False)
         )
         return {
             "name": c.name(),
@@ -356,9 +354,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
             if cov_name in seen:
                 continue
             seen.add(cov_name)
-            input_var = self.variables.filter(
-                qname=f"Covariates.{cov_name}"
-            ).first()
+            input_var = self.variables.filter(qname=f"Covariates.{cov_name}").first()
             if input_var is None:
                 continue
             covariate = dv.get_covariate()
@@ -462,6 +458,41 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         "adam": "Adam",
         "irprop": "IRPropMinus",
     }
+
+    _GRADIENT_OPTIMISE_METHODS = frozenset({"gradient_descent", "adam", "irprop"})
+
+    @classmethod
+    def _build_parameter_transformation(
+        cls, log_mask, linear_lower, linear_upper, method
+    ):
+        """Build the pints parameter transformation for ``optimise``.
+
+        One sub-transformation per parameter (log then linear sigma block), in
+        the same order as ``log_mask`` / ``linear_lower`` / ``linear_upper``:
+
+        - Log-scale parameters always use a log transformation (a genuine
+          log-uniform search).
+        - Linear-scale parameters depend on the optimiser. Gradient methods
+          explore an *unbounded* space (pints does not hard-enforce boundaries
+          for them), so they use the rectangular-boundaries (logit)
+          transformation, which maps ``[lower, upper]`` onto all reals and keeps
+          them from being trapped at a hard bound. Gradient-free methods use an
+          affine unit-cube transformation.
+
+        """
+        is_gradient_method = method in cls._GRADIENT_OPTIMISE_METHODS
+
+        def linear_transformation(lo, hi):
+            if is_gradient_method:
+                return pints.RectangularBoundariesTransformation([lo], [hi])
+            return pints.UnitCubeTransformation([lo], [hi])
+
+        return pints.ComposedTransformation(
+            *[
+                pints.LogTransformation(1) if log else linear_transformation(lo, hi)
+                for log, lo, hi in zip(log_mask, linear_lower, linear_upper)
+            ]
+        )
 
     def optimise(
         self,
@@ -686,10 +717,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         names = (
             [f"parameter {input_id}" for input_id in inputs]
             + [f"sigma {vid}" for vid in output_variable_ids]
-            + [
-                f"sigma_mult {output_variable_ids[k]}"
-                for k in combined_output_indices
-            ]
+            + [f"sigma_mult {output_variable_ids[k]}" for k in combined_output_indices]
         )
         for i, name in enumerate(names):
             if linear_lower[i] >= linear_upper[i]:
@@ -710,17 +738,10 @@ class MyokitModelMixin(UncertaintySimulationMixin):
                     )
 
         # The error measure works in model space; pints applies each parameter's
-        # transformation (and its Jacobian for the gradient). Log-space parameters
-        # use a log transformation; the rest use a rectangular-boundaries
-        # transformation that maps the bounded interval to an unbounded search
-        # space, so gradient optimisers are not trapped by hard bounds.
-        transformation = pints.ComposedTransformation(
-            *[
-                pints.LogTransformation(1)
-                if log
-                else pints.RectangularBoundariesTransformation([lo], [hi])
-                for log, lo, hi in zip(log_mask, linear_lower, linear_upper)
-            ]
+        # transformation (and its Jacobian for the gradient). See
+        # ``_build_parameter_transformation`` for the per-parameter choice.
+        transformation = self._build_parameter_transformation(
+            log_mask, linear_lower, linear_upper, method
         )
 
         # Boundaries (model space) so gradient-free methods (CMA-ES / PSO /
