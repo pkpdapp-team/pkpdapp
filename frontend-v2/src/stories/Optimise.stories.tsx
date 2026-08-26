@@ -366,3 +366,163 @@ export const OptimisePerObservationNoiseModel: Story = {
     });
   },
 };
+
+// The optimisation settings (owned by useOptimise) persist for the lifetime of
+// the Simulations page. Changes made in the dialog survive closing and reopening
+// it. Here we change a per-observation noise model, a sigma bound and a
+// parameter "Log scale" toggle, close via Cancel (which does NOT discard), then
+// reopen and assert every change was retained.
+export const PersistSettingsAcrossReopen: Story = {
+  play: async ({ userEvent }) => {
+    await screen.findByRole("heading", { name: "Simulations" });
+
+    const parametersButton = await screen.findByRole("button", {
+      name: new RegExp("^Parameters"),
+    });
+    await userEvent.click(parametersButton);
+
+    const openDialog = async () => {
+      const settingsButton = await screen.findByRole("button", {
+        name: "Open optimisation settings",
+      });
+      await waitFor(() => expect(settingsButton).toBeEnabled(), {
+        timeout: 10000,
+      });
+      await userEvent.click(settingsButton);
+      await screen.findByRole("heading", { name: "Optimisation Settings" });
+    };
+
+    await openDialog();
+
+    // 1. Set the first observation's noise model to Additive (default is
+    //    Multiplicative).
+    const noiseSelects = await screen.findAllByRole("combobox", {
+      name: "Noise model",
+    });
+    await userEvent.click(noiseSelects[0]);
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Additive" }),
+    );
+
+    // 2. Edit the first observation's sigma "Max bound". The sigma rows render
+    //    after the slider rows, so the first sigma Max bound is at index
+    //    expectedSliders.length in the "Max bound" spinbutton list.
+    const maxFields = screen.getAllByRole("spinbutton", { name: "Max bound" });
+    const sigmaMaxField = maxFields[expectedSliders.length];
+    await userEvent.clear(sigmaMaxField);
+    await userEvent.type(sigmaMaxField, "42");
+    expect(sigmaMaxField).toHaveValue(42);
+
+    // 3. Flip the first enabled parameter "Log scale" checkbox. (Rows whose
+    //    lower bound is negative are disabled and can't be toggled.)
+    const logChecks = screen.getAllByRole("checkbox", { name: "Log scale" });
+    const enabledLogIdx = logChecks.findIndex(
+      (checkbox) => !(checkbox as HTMLInputElement).disabled,
+    );
+    expect(enabledLogIdx).toBeGreaterThanOrEqual(0);
+    const logBefore = (logChecks[enabledLogIdx] as HTMLInputElement).checked;
+    await userEvent.click(logChecks[enabledLogIdx]);
+    expect((logChecks[enabledLogIdx] as HTMLInputElement).checked).toBe(
+      !logBefore,
+    );
+
+    // Close without hitting Optimise, then reopen.
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Optimisation Settings" }),
+      ).not.toBeInTheDocument(),
+    );
+    await openDialog();
+
+    // Every change should have been retained across the reopen.
+    const noiseSelectsAfter = await screen.findAllByRole("combobox", {
+      name: "Noise model",
+    });
+    expect(noiseSelectsAfter[0]).toHaveTextContent("Additive");
+
+    const maxFieldsAfter = screen.getAllByRole("spinbutton", {
+      name: "Max bound",
+    });
+    expect(maxFieldsAfter[expectedSliders.length]).toHaveValue(42);
+
+    const logChecksAfter = screen.getAllByRole("checkbox", {
+      name: "Log scale",
+    });
+    expect((logChecksAfter[enabledLogIdx] as HTMLInputElement).checked).toBe(
+      !logBefore,
+    );
+  },
+};
+
+// Overrides made in the dialog are owned by useOptimise, so the sidebar "Fit"
+// button honours them too — even when the dialog is dismissed via Cancel rather
+// than its own Optimise button. Set a per-observation noise model and sigma
+// bound in the dialog, close it, then Fit and assert the payload reflects them.
+export const FitHonoursDialogOverrides: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        ...baseHandlers,
+        simulationListHandler(simulations[0]),
+        optimiseHandler,
+      ],
+    },
+  },
+  play: async ({ userEvent }) => {
+    optimiseSpy.mockClear();
+
+    await screen.findByRole("heading", { name: "Simulations" });
+
+    const parametersButton = await screen.findByRole("button", {
+      name: new RegExp("^Parameters"),
+    });
+    await userEvent.click(parametersButton);
+
+    const settingsButton = await screen.findByRole("button", {
+      name: "Open optimisation settings",
+    });
+    await waitFor(() => expect(settingsButton).toBeEnabled(), {
+      timeout: 10000,
+    });
+    await userEvent.click(settingsButton);
+    await screen.findByRole("heading", { name: "Optimisation Settings" });
+
+    // Set the first observation's noise model to Additive and its sigma Max
+    // bound to 42.
+    const noiseSelects = await screen.findAllByRole("combobox", {
+      name: "Noise model",
+    });
+    await userEvent.click(noiseSelects[0]);
+    await userEvent.click(
+      await screen.findByRole("option", { name: "Additive" }),
+    );
+
+    const maxFields = screen.getAllByRole("spinbutton", { name: "Max bound" });
+    const sigmaMaxField = maxFields[expectedSliders.length];
+    await userEvent.clear(sigmaMaxField);
+    await userEvent.type(sigmaMaxField, "42");
+    expect(sigmaMaxField).toHaveValue(42);
+
+    // Dismiss the dialog via Cancel (not Optimise), then run the sidebar Fit.
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Optimisation Settings" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    const fitButton = await screen.findByRole("button", { name: "Fit" });
+    await waitFor(() => expect(fitButton).toBeEnabled());
+    await userEvent.click(fitButton);
+
+    // The Fit payload's first sigma variable (ascending id order, matching the
+    // dialog's first observation row) should carry both overrides.
+    await waitFor(() => {
+      const [optimiseParams] = optimiseSpy.mock.lastCall || [];
+      expect(optimiseParams).toBeTruthy();
+      expect(optimiseParams.noise_models[0]).toBe("additive");
+      expect(optimiseParams.sigma_bounds[0][1]).toBe(42);
+    });
+  },
+};
