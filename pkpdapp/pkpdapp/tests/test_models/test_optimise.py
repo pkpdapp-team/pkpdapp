@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 import numpy as np
+import pints
 from django.test import TestCase
 from pkpdapp.models.optimise_context import (
     ObservationInfo,
@@ -18,6 +19,7 @@ from pkpdapp.models.optimise_context import (
 from pkpdapp.models import (
     Biomarker,
     BiomarkerType,
+    CombinedModel,
     Subject,
     SubjectGroup,
     Unit,
@@ -1237,6 +1239,83 @@ class TestOptimise(TestCase):
         self.assertLess(result.loss, starting_loss)
         self.assertAlmostEqual(result.optimal[0], setup["true"][0], delta=0.04)
         self.assertAlmostEqual(result.optimal[1], setup["true"][1], delta=0.18)
+
+    def test_linear_transformation_is_method_aware(self):
+        """A linear-scale parameter is transformed differently per optimiser.
+
+        Regression test for the fix that made linear-scale fits converge: the
+        gradient-free methods (the ones exposed in the UI) use an affine
+        unit-cube transformation -- a genuine linear search -- while the gradient
+        methods keep the rectangular-boundaries (logit) transformation they need
+        to explore an unbounded space. Log-scale parameters always use the log
+        transformation regardless of method.
+        """
+        # One log-scale and one linear-scale parameter.
+        log_mask = np.array([True, False])
+        lower = np.array([0.1, 0.2])
+        upper = np.array([1.0, 5.0])
+
+        gradient_free = ["cmaes", "pso", "nelder-mead"]
+        gradient_based = ["gradient_descent", "adam", "irprop"]
+
+        for method in gradient_free:
+            transformation = CombinedModel._build_parameter_transformation(
+                log_mask, lower, upper, method
+            )
+            subs = transformation._transformations
+            self.assertIsInstance(subs[0], pints.LogTransformation, msg=method)
+            self.assertIsInstance(
+                subs[1], pints.UnitCubeTransformation, msg=method
+            )
+
+        for method in gradient_based:
+            transformation = CombinedModel._build_parameter_transformation(
+                log_mask, lower, upper, method
+            )
+            subs = transformation._transformations
+            self.assertIsInstance(subs[0], pints.LogTransformation, msg=method)
+            self.assertIsInstance(
+                subs[1],
+                pints.RectangularBoundariesTransformation,
+                msg=method,
+            )
+
+    def test_optimise_linear_scale_wide_bounds_converges(self):
+        """A linear-scale fit with wide bounds (start far from the truth) still
+        converges. Before the fix, linear-scale parameters were optimised through
+        a rectangular-boundaries (logit) transformation whose landscape warping
+        left wide-bounds fits stuck far from the optimum; the affine unit-cube
+        transformation now used for gradient-free methods recovers the truth.
+
+        Uses CMA-ES, whose fit is essentially seed-independent here, to keep the
+        assertion robust.
+        """
+        setup = self._exponential_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        true_values = setup["true"]
+        group_ids = [group.id for group in setup["groups"]]
+        biomarker_type_ids = [setup["biomarker_type"].id]
+
+        # Wide, order-of-magnitude bounds with a starting point far from the
+        # truth (k true 0.22 vs start 1.0; scale true 1.7 vs start 10.0).
+        starting = [1.0, 10.0]
+        bounds = ([1e-3, 1e-3], [10.0, 100.0])
+
+        result = model.optimise(
+            parameters=make_parameters(
+                input_ids, starting, bounds, use_log_space=[False, False]
+            ),
+            observations=make_observations(biomarker_type_ids),
+            subject_groups=group_ids,
+            max_iterations=200,
+            method="cmaes",
+        )
+
+        self.assertTrue(np.isfinite(result.loss))
+        self.assertEqual(len(result.optimal), 2)
+        self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.05)
+        self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.35)
 
     def test_optimise_gradient_descent(self):
         """Gradient descent uses forward sensitivities and should reduce the loss."""
