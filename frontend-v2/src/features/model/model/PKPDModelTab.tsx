@@ -49,9 +49,18 @@ const helpImages: {
 } = {
   pk: {
     "1-compartmental model": "One compartmenal PK model.jpg",
+    "2-compartmental model": "Two compartmenal PK model.jpg",
     "3-compartmental model": "Three compartmenal PK model (mammillary).jpg",
     "3-compartment catenary model":
       "Three compartmenal PK model (catenary).jpg",
+    "1-compartmental Michaelis-Menten TMDD model (linear and saturable CL)":
+      "One compartmental Michaelis-Menten TMDD model (lin + sat).jpg",
+    "1-compartmental Michaelis-Menten TMDD model (saturable CL only)":
+      "One compartmental Michaelis-Menten TMDD model (sat).jpg",
+    "2-compartmental Michaelis-Menten TMDD model (linear and saturable CL)":
+      "Two compartmental Michaelis-Menten TMDD model (lin + sat).jpg",
+    "2-compartmental Michaelis-Menten TMDD model (saturable CL only)":
+      "Two compartmental Michaelis-Menten TMDD model (sat).jpg",
   },
   pk2: {
     "First order absorption model": "First order absorption model.jpg",
