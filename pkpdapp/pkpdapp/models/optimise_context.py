@@ -728,6 +728,7 @@ class OptimiseContext(SimulateContext):
 
             obs_residuals_per_output = {i: [] for i in range(len(group.outputs))}
             obs_observations_per_output = {i: [] for i in range(len(group.outputs))}
+            obs_times_per_output = {i: [] for i in range(len(group.outputs))}
 
             for record in group.records:
                 t_idx = record.time_index
@@ -776,20 +777,23 @@ class OptimiseContext(SimulateContext):
                 obs_observations_per_output[o_idx].append(
                     float(observed / output_contexts[o_idx].conversion_factor)
                 )
+                obs_times_per_output[o_idx].append(
+                    float(record.time / time_conversion_factor)
+                )
                 jacobian_rows.append(jac_row)
                 residual_values.append(float(residual))
                 weights.append(weight)
 
-            resid_dict = {"group_id": group.group_id}
-            obs_dict = {"group_id": group.group_id}
-            all_obs_times = sorted(
-                set(record.time / time_conversion_factor for record in group.records)
-            )
-            resid_dict[time_context.id] = all_obs_times
-            obs_dict[time_context.id] = all_obs_times
+            # Per-output time arrays (not a shared group axis): a group may hold
+            # several subjects, so two data points can share a time, and outputs
+            # can be sampled at different times.
+            resid_dict = {"group_id": group.group_id, "times": {}}
+            obs_dict = {"group_id": group.group_id, "times": {}}
             for i, output in enumerate(group.outputs):
                 resid_dict[output.id] = obs_residuals_per_output[i]
                 obs_dict[output.id] = obs_observations_per_output[i]
+                resid_dict["times"][output.id] = obs_times_per_output[i]
+                obs_dict["times"][output.id] = obs_times_per_output[i]
             residuals_list.append(resid_dict)
             observations_list.append(obs_dict)
 

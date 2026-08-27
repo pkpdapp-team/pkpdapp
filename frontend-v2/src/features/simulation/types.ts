@@ -12,4 +12,10 @@ export type CentralSimulateResponse = {
   outputs: {
     [id: string]: number[];
   };
+  // Optimise `residuals` / `observations` only: per-output observed-time arrays,
+  // aligned index-for-index with each output's values in `outputs`. Absent on
+  // `predictions` and simulate responses, which use the shared `time` grid.
+  times?: {
+    [id: string]: number[];
+  };
 };

@@ -1025,17 +1025,23 @@ class TestOptimise(TestCase):
         output_id = first_group.outputs[0].id
         self.assertIn(time_id, diagnostics["predictions"][0])
         self.assertIn(output_id, diagnostics["predictions"][0])
-        self.assertIn(time_id, diagnostics["residuals"][0])
+        # Residuals / observations carry per-output time arrays under "times".
         self.assertIn(output_id, diagnostics["residuals"][0])
+        self.assertIn("times", diagnostics["residuals"][0])
+        self.assertIn(output_id, diagnostics["residuals"][0]["times"])
         self.assertIsNotNone(diagnostics["observations"])
-        self.assertIn(time_id, diagnostics["observations"][0])
         self.assertIn(output_id, diagnostics["observations"][0])
-        # Observations mirror residuals: one entry per group, aligned per output.
+        self.assertIn("times", diagnostics["observations"][0])
+        self.assertIn(output_id, diagnostics["observations"][0]["times"])
         self.assertEqual(
             len(diagnostics["observations"]), len(diagnostics["residuals"])
         )
         self.assertEqual(
             len(diagnostics["observations"][0][output_id]),
+            len(diagnostics["residuals"][0][output_id]),
+        )
+        self.assertEqual(
+            len(diagnostics["residuals"][0]["times"][output_id]),
             len(diagnostics["residuals"][0][output_id]),
         )
 
@@ -1068,6 +1074,74 @@ class TestOptimise(TestCase):
                 "aic": None,
                 "bic": None,
             },
+        )
+
+    def test_diagnostics_handles_multiple_subjects_sharing_a_time(self):
+        """Two subjects in one group observed at the same time each contribute a
+        separate data point; diagnostics report per-output time arrays aligned
+        one-per-record rather than a single deduplicated time axis."""
+        setup = create_exponential_data(
+            name_prefix="optimise_context_dup_times",
+            group_name_prefix="DupTimes",
+        )
+        group = setup["groups"][0]
+        shared_time = float(SELECTED_TIMES[0])
+
+        # Add a second subject to the group with an observation at a time the
+        # first subject already has, so the group holds two points at one time.
+        second_subject = Subject.objects.create(
+            id_in_dataset=101,
+            dataset=setup["dataset"],
+            group=group,
+        )
+        Biomarker.objects.create(
+            time=shared_time,
+            subject=second_subject,
+            biomarker_type=setup["biomarker_type"],
+            value=42.0,
+        )
+
+        context = self._build_optimise_context(
+            setup,
+            [0.27, 1.45],
+            ([0.16, 1.2], [0.3, 2.1]),
+        )
+
+        opt_group = next(
+            g for g in context.optimisation_groups if g.group_id == group.id
+        )
+        output_index = 0
+        n_records = sum(
+            1 for r in opt_group.records if r.output_index == output_index
+        )
+        # t_eval is deduplicated, but records are per data point: the extra
+        # subject adds one record without adding a distinct time.
+        self.assertEqual(n_records, len(SELECTED_TIMES) + 1)
+        self.assertEqual(len(opt_group.t_eval), len(SELECTED_TIMES))
+
+        diagnostics = context.optimise_diagnostics(np.asarray(setup["true"]))
+        output_id = opt_group.outputs[output_index].id
+        resid_entry = next(
+            e for e in diagnostics["residuals"] if e["group_id"] == group.id
+        )
+        obs_entry = next(
+            e for e in diagnostics["observations"] if e["group_id"] == group.id
+        )
+
+        # Per-output residual, observation and time arrays are all one-per-record
+        # and mutually aligned (the shared time is not collapsed away).
+        self.assertEqual(len(resid_entry[output_id]), n_records)
+        self.assertEqual(len(obs_entry[output_id]), n_records)
+        self.assertEqual(len(resid_entry["times"][output_id]), n_records)
+        self.assertEqual(len(obs_entry["times"][output_id]), n_records)
+        # The shared time appears twice in the per-output time array.
+        self.assertEqual(
+            sum(
+                1
+                for t in resid_entry["times"][output_id]
+                if abs(t - shared_time) < 1e-9
+            ),
+            2,
         )
 
     def test_optimise_diagnostics_information_criteria(self):

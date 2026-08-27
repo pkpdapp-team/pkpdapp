@@ -1351,14 +1351,16 @@ export function optimisePredictionsToSimulateResponses(
     const time = timeVariable
       ? ((pred[String(timeVariable.id)] as number[] | undefined) ?? [])
       : [];
+    const times = pred["times"] as { [key: string]: number[] } | undefined;
     const outputs: { [key: string]: number[] } = {};
     for (const [key, values] of Object.entries(pred)) {
       if (key === "group_id") continue;
+      if (key === "times") continue;
       if (key === String(timeVariable?.id)) continue;
       if (Array.isArray(values)) {
         outputs[key] = values as number[];
       }
     }
-    return { time, group: groupId ?? null, outputs };
+    return { time, group: groupId ?? null, outputs, times };
   });
 }
