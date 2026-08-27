@@ -253,11 +253,9 @@ const ParameterRow: FC<Props> = ({
     } else if (nonlinearityValue === "NPW") {
       nonlinearityDocImage = "Dose_decrease_wo.JPG";
     } else if (nonlinearityValue === "TEM") {
-      // TODO: replace with a dedicated Time Emax help image when available
-      nonlinearityDocImage = "Time_induction.JPG";
+      nonlinearityDocImage = "Time Emax.jpg";
     } else if (nonlinearityValue === "TIM") {
-      // TODO: replace with a dedicated Time Imax help image when available
-      nonlinearityDocImage = "Time_inhibition.JPG";
+      nonlinearityDocImage = "Time Imax.jpg";
     } else if (nonlinearityValue === "TDI") {
       nonlinearityDocImage = "Time_inhibition.JPG";
     } else if (nonlinearityValue === "IND") {
