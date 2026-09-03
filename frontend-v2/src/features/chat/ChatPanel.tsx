@@ -35,7 +35,7 @@ import {
 } from "./chatSlice";
 import { useConversations } from "./useConversations";
 import ConversationList from "./ConversationList";
-import transport from "./chatTransport";
+import transport, { type ChatTransportBody } from "./chatTransport";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
@@ -74,6 +74,14 @@ const ChatPanel: FC = () => {
   const selectedProject = useSelector(
     (state: RootState) => state.main.selectedProject,
   );
+  const selectedProjectRef = useRef(selectedProject);
+  selectedProjectRef.current = selectedProject;
+  const selectedPage = useSelector(
+    (state: RootState) => state.main.selectedPage,
+  );
+  const selectedSubPage = useSelector(
+    (state: RootState) => state.main.selectedSubPage,
+  );
   const [input, setInput] = useState("");
   const [showConversationList, setShowConversationList] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -81,10 +89,11 @@ const ChatPanel: FC = () => {
   const drawerPaperRef = useRef<HTMLDivElement>(null);
   const stickToBottomRef = useRef(true);
 
-  const { data: project } = useProjectRetrieveQuery(
+  const projectQuery = useProjectRetrieveQuery(
     { id: selectedProject! },
     { skip: !selectedProject },
   );
+  const project = projectQuery.currentData;
 
   const { create: createConversation } = useConversations(selectedProject);
 
@@ -95,9 +104,34 @@ const ChatPanel: FC = () => {
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  // Sync stored history only when switching conversations.
+  const syncedConversationRef = useRef<number | null>(null);
   useEffect(() => {
-    setMessages(storedMessages ? buildUIMessages(storedMessages) : []);
-  }, [storedMessages, activeConversationId]);
+    if (syncedConversationRef.current === activeConversationId) return;
+    if (activeConversationId && storedMessages === undefined) return;
+
+    syncedConversationRef.current = activeConversationId;
+    setMessages(
+      activeConversationId && storedMessages
+        ? buildUIMessages(storedMessages)
+        : [],
+    );
+  }, [storedMessages, activeConversationId, setMessages]);
+
+  const previousProjectRef = useRef(selectedProject);
+  const isMessageProjectCurrent =
+    previousProjectRef.current === selectedProject;
+  const visibleMessages = isMessageProjectCurrent ? messages : [];
+  useEffect(() => {
+    if (previousProjectRef.current === selectedProject) return;
+
+    previousProjectRef.current = selectedProject;
+    stop();
+    setMessages([]);
+    setInput("");
+    setShowConversationList(false);
+    dispatch(setActiveConversation(null));
+  }, [selectedProject, stop, setMessages, dispatch]);
 
   // Invalidate conversation list cache after streaming completes
   // so last_message_preview updates immediately
@@ -115,11 +149,13 @@ const ChatPanel: FC = () => {
 
   const handleNewConversation = async () => {
     if (!selectedProject) return;
+    const projectId = selectedProject;
     try {
       const result = await createConversation({
-        conversation: { project: selectedProject, title: "" },
+        conversation: { project: projectId, title: "" },
       }).unwrap();
-      dispatch(setActiveConversation(result.id));
+      if (selectedProjectRef.current !== projectId) return;
+      dispatch(setActiveConversation({ conversationId: result.id, projectId }));
       setShowConversationList(false);
     } catch (err) {
       console.error("Failed to create conversation:", err);
@@ -127,13 +163,22 @@ const ChatPanel: FC = () => {
   };
 
   const handleSelectConversation = (id: number) => {
-    dispatch(setActiveConversation(id));
+    if (!selectedProject) return;
+    dispatch(
+      id
+        ? setActiveConversation({
+            conversationId: id,
+            projectId: selectedProject,
+          })
+        : setActiveConversation(null),
+    );
     setShowConversationList(false);
   };
 
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading || !selectedProject) return;
+    const projectId = selectedProject;
 
     setInput("");
 
@@ -141,17 +186,30 @@ const ChatPanel: FC = () => {
     if (!convId) {
       try {
         const result = await createConversation({
-          conversation: { project: selectedProject, title: "" },
+          conversation: { project: projectId, title: "" },
         }).unwrap();
+        if (selectedProjectRef.current !== projectId) return;
         convId = result.id;
-        dispatch(setActiveConversation(convId));
+        // Keep the live transcript authoritative for new conversations.
+        syncedConversationRef.current = convId;
+        dispatch(setActiveConversation({ conversationId: convId, projectId }));
       } catch (err) {
         console.error("Failed to create conversation:", err);
         return;
       }
     }
 
-    sendMessage({ text: trimmed }, { body: { conversationId: convId } });
+    if (selectedProjectRef.current !== projectId) return;
+
+    sendMessage(
+      { text: trimmed },
+      {
+        body: {
+          conversationId: convId,
+          context: { page: selectedPage, subPage: selectedSubPage },
+        } satisfies ChatTransportBody,
+      },
+    );
   };
 
   const handleDragStart = useCallback(
@@ -274,7 +332,7 @@ const ChatPanel: FC = () => {
         },
       }}
       slotProps={{
-        paper: { ref: drawerPaperRef }
+        paper: { ref: drawerPaperRef },
       }}
     >
       {/* Drag handle */}
@@ -325,8 +383,9 @@ const ChatPanel: FC = () => {
               alignItems: "center",
               minWidth: 0,
               flex: 1,
-              mr: 1
-            }}>
+              mr: 1,
+            }}
+          >
             <SmartToyOutlinedIcon sx={{ fontSize: 22, opacity: 0.9 }} />
             <Stack spacing={0} sx={{ minWidth: 0 }}>
               <Typography
@@ -349,9 +408,13 @@ const ChatPanel: FC = () => {
               )}
             </Stack>
           </Stack>
-          <Stack direction="row" spacing={0.5} sx={{
-            alignItems: "center"
-          }}>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+            }}
+          >
             <Button
               size="small"
               variant="outlined"
@@ -422,14 +485,15 @@ const ChatPanel: FC = () => {
                 py: 2,
               }}
             >
-              {messages.length === 0 && (
+              {visibleMessages.length === 0 && (
                 <Stack
                   spacing={1.5}
                   sx={{
                     alignItems: "center",
                     mt: 6,
-                    color: "text.secondary"
-                  }}>
+                    color: "text.secondary",
+                  }}
+                >
                   {!selectedProject ? (
                     <>
                       <FolderOutlinedIcon sx={{ fontSize: 36, opacity: 0.4 }} />
@@ -438,8 +502,9 @@ const ChatPanel: FC = () => {
                         sx={{
                           color: "text.secondary",
                           textAlign: "center",
-                          px: 2
-                        }}>
+                          px: 2,
+                        }}
+                      >
                         Select a project to start chatting
                       </Typography>
                     </>
@@ -453,8 +518,9 @@ const ChatPanel: FC = () => {
                         sx={{
                           color: "text.secondary",
                           textAlign: "center",
-                          px: 2
-                        }}>
+                          px: 2,
+                        }}
+                      >
                         Ask me about pharmacokinetic and pharmacodynamic
                         modelling.
                       </Typography>
@@ -462,12 +528,12 @@ const ChatPanel: FC = () => {
                   )}
                 </Stack>
               )}
-              {messages.map((msg, idx) => {
+              {visibleMessages.map((msg, idx) => {
                 const isUser = msg.role === "user";
                 const isLastAssistant =
                   !isUser &&
                   status === "streaming" &&
-                  idx === messages.length - 1;
+                  idx === visibleMessages.length - 1;
                 return (
                   <MessageBubble
                     key={msg.id}
@@ -477,18 +543,19 @@ const ChatPanel: FC = () => {
                   />
                 );
               })}
-              {(status === "submitted" ||
-                (status === "streaming" &&
-                  !messages
-                    .filter((m) => m.role === "assistant")
-                    .at(-1)
-                    ?.parts?.some(
-                      (p) => p.type === "text" && p.text.length > 0,
-                    ))) && (
-                <Box sx={{ mb: 2 }}>
-                  <TypingIndicator />
-                </Box>
-              )}
+              {isMessageProjectCurrent &&
+                (status === "submitted" ||
+                  (status === "streaming" &&
+                    !visibleMessages
+                      .filter((m) => m.role === "assistant")
+                      .at(-1)
+                      ?.parts?.some(
+                        (p) => p.type === "text" && p.text.length > 0,
+                      ))) && (
+                  <Box sx={{ mb: 2 }}>
+                    <TypingIndicator />
+                  </Box>
+                )}
               <div ref={messagesEndRef} />
             </Box>
 
@@ -509,6 +576,11 @@ const ChatPanel: FC = () => {
               onStop={() => stop()}
               isLoading={isLoading}
               disabled={!selectedProject}
+              disabledReason={
+                !selectedProject
+                  ? "Select a project to start chatting"
+                  : undefined
+              }
             />
           </>
         )}
