@@ -159,12 +159,12 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn("data: [DONE]\n\n", chunks)
         self.assertEqual(self.conversation.messages.filter(role="assistant").count(), 0)
 
-    @override_settings(PORTKEY_API_KEY="")
+    @override_settings(PORTKEY_API_KEY="", CHATBOT_MODEL="some-model")
     def test_check_chatbot_config_raises_without_api_key(self):
         with self.assertRaises(chatbot.ChatbotConfigError):
             chatbot.check_chatbot_config()
 
-    @override_settings(PORTKEY_API_KEY="some-key")
+    @override_settings(PORTKEY_API_KEY="some-key", CHATBOT_MODEL="some-model")
     def test_check_chatbot_config_passes_with_api_key(self):
         # Should not raise.
         chatbot.check_chatbot_config()
