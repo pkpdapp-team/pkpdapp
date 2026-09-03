@@ -8,7 +8,6 @@ from pkpdapp.models import Compound, Project, Conversation  # noqa: F401
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from django.test import override_settings
-from django.core.cache import cache
 from rest_framework import status
 
 
@@ -28,7 +27,12 @@ class ChatbotViewTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_missing_conversation_id(self):
-        data = {"content": "Hello", "context": {"page": "the_page", "sub_page": "the_sub_page"}}
+        data = {"content": "Hello", 
+                "context": {
+                    "page": "the_page", 
+                    "sub_page": "the_sub_page"
+                    }
+                }
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -63,7 +67,3 @@ class ChatbotViewTestCase(APITestCase):
             }
             response = self.client.post("/api/chatbot/", data=data, format="json")
             self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-
-
-
-
