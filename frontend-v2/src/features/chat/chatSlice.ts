@@ -9,12 +9,19 @@ interface ChatState {
   isOpen: boolean;
   drawerWidth: number;
   activeConversationId: number | null;
+  activeConversationProjectId: number | null;
+}
+
+interface ActiveConversation {
+  conversationId: number;
+  projectId: number;
 }
 
 const initialState: ChatState = {
   isOpen: false,
   drawerWidth: DEFAULT_CHAT_WIDTH,
   activeConversationId: null,
+  activeConversationProjectId: null,
 };
 
 const chatSlice = createSlice({
@@ -36,8 +43,12 @@ const chatSlice = createSlice({
         Math.max(MIN_CHAT_WIDTH, action.payload),
       );
     },
-    setActiveConversation: (state, action: PayloadAction<number | null>) => {
-      state.activeConversationId = action.payload;
+    setActiveConversation: (
+      state,
+      action: PayloadAction<ActiveConversation | null>,
+    ) => {
+      state.activeConversationId = action.payload?.conversationId ?? null;
+      state.activeConversationProjectId = action.payload?.projectId ?? null;
     },
   },
 });
@@ -53,6 +64,8 @@ export const {
 export const selectChatOpen = (state: RootState) => state.chat.isOpen;
 export const selectChatWidth = (state: RootState) => state.chat.drawerWidth;
 export const selectActiveConversationId = (state: RootState) =>
-  state.chat.activeConversationId;
+  state.chat.activeConversationProjectId === state.main.selectedProject
+    ? state.chat.activeConversationId
+    : null;
 
 export default chatSlice.reducer;

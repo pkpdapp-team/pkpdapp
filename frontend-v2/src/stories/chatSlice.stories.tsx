@@ -25,6 +25,7 @@ const initialState = {
   isOpen: false,
   drawerWidth: DEFAULT_CHAT_WIDTH,
   activeConversationId: null,
+  activeConversationProjectId: null,
 };
 
 export const ClampsDrawerWidth: Story = {

@@ -17,7 +17,11 @@ function useChatPanelState(
 ) {
   const dispatch = useDispatch();
   dispatch(setProject(projectId));
-  dispatch(setActiveConversation(conversationId));
+  dispatch(
+    conversationId !== null && projectId !== null
+      ? setActiveConversation({ conversationId, projectId })
+      : setActiveConversation(null),
+  );
   dispatch(openChat());
 }
 
