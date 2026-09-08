@@ -1095,7 +1095,8 @@ export const pkModels = [
       1,
       5,
       10,
-      15
+      15,
+      18
     ]
   },
   {
@@ -1112,69 +1113,74 @@ export const pkModels = [
       2,
       5,
       10,
-      15
+      15,
+      18
     ]
   },
   {
     id: 67,
     read_only: false,
     datetime: null,
-    name: "1-Compartmental Decoupled PK/PD Linear Turnover Model",
-    description: "1-Compartmental Decoupled PK/PD Linear Turnover Model",
-    mmt: "[[model]]\nname: 1-Compartmental Decoupled PK/PD Linear Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment",
+    name: "1-compartmental PK model with protein inactivation (linear)",
+    description: "1-compartmental PK model with protein inactivation (linear)",
+    mmt: "[[model]]\nname: 1-compartmental PK model with protein inactivation (linear)\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment\n",
     time_max: 30.0,
     is_library_model: true,
     model_type: "PK",
     tags: [
       1,
-      5
+      5,
+      18
     ]
   },
   {
     id: 68,
     read_only: false,
     datetime: null,
-    name: "1-Compartmental Decoupled PK/PD Saturable Turnover Model",
-    description: "1-Compartmental Decoupled PK/PD Saturable Turnover Model",
-    mmt: "[[model]]\nname: 1-Compartmental Decoupled PK/PD Saturable Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment",
+    name: "1-compartmental PK model with protein inactivation (KI, kinact)",
+    description: "1-compartmental PK model with protein inactivation (KI, kinact)",
+    mmt: "[[model]]\nname: 1-compartmental PK model with protein inactivation (KI, kinact)\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment\n",
     time_max: 30.0,
     is_library_model: true,
     model_type: "PK",
     tags: [
       1,
       5,
-      7
+      7,
+      18
     ]
   },
   {
     id: 69,
     read_only: false,
     datetime: null,
-    name: "Decoupled PK/PD Linear Turnover Model",
-    description: "Decoupled PK/PD Linear Turnover Model",
-    mmt: "[[model]]\nname: Decoupled PK/PD Linear Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment",
-    time_max: 30.0,
-    is_library_model: true,
-    model_type: "PK",
-    tags: [
-      2,
-      5
-    ]
-  },
-  {
-    id: 70,
-    read_only: false,
-    datetime: null,
-    name: "Decoupled PK/PD Saturable Turnover Model",
-    description: "Decoupled PK/PD Saturable Turnover Model",
-    mmt: "[[model]]\nname: Decoupled PK/PD Saturable Turnover Model\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment",
+    name: "2-compartmental PK model with protein inactivation (linear)",
+    description: "2-compartmental PK model with protein inactivation (linear)",
+    mmt: "[[model]]\nname: 2-compartmental PK model with protein inactivation (linear)\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nk_ratio = 1 in [L/h/pmol]\n  desc: Ratio of kinact/KI functioning as a pseudo-second-order rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = k_ratio * C1 * CT1 * V1 in [pmol/h]\n  desc: Linear rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of FREE target in the central compartment\n",
     time_max: 30.0,
     is_library_model: true,
     model_type: "PK",
     tags: [
       2,
       5,
-      7
+      18
+    ]
+  },
+  {
+    id: 70,
+    read_only: false,
+    datetime: null,
+    name: "2-compartmental PK model with protein inactivation (KI, kinact)",
+    description: "2-compartmental PK model with protein inactivation (KI, kinact)",
+    mmt: "[[model]]\nname: 2-compartmental PK model with protein inactivation (KI, kinact)\nauthor: Michael Gertz\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.AT1 = PKCompartment.CT1_0*PKCompartment.V1\n\n[environment]\nt = 0 in [h] bind time\n\n[PKCompartment]\n\nF = 1 in [dimensionless]\n  desc: Fraction absorbed / bioavailability \n\nV1 = 1 in [L]\n  desc: Volume of the central compartment \n\nV2 = 1 in [L]\n  desc: Volume of the peripheral compartment  \n\nCL = 1 in [L/h]\n  desc: Linear clearance from central compartment\n\nQ1 = 1 in [L/h]\n  desc: Intercompartmental clearance between central and peripheral compartment \n\nCT1_0 = 1 in [pmol/L]\n  desc: Baseline concentration of the free/active target in the central compartment\n\nKI = 1 in [pmol/L]\n  desc: Concentration yielding half-maximal inactivation\n\nkinact = 1 in [1/h]\n  desc: Maximum inactivation rate constant\n\nkdegT1 = 1 in [1/h]\n  desc: Free target degradation rate constant\n\nCLada = 0 in [L/h]\n  desc: ADA-mediated clearance \n\ntada = 240 in [h]\n  desc: Time at which ADA-mediated clearance first occurs\n\nCLimm = if(environment.t < tada, 0, CLada) in [L/h]\n\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of drug in the central compartment\n  \nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of drug in the peripheral compartment  \n    \nCT1 = AT1/V1 in [pmol/L]\n  desc: Concentration of FREE target in the central compartment\n    \nPerInh = (1-CT1/CT1_0)*100 in [dimensionless]\n  desc: Percent target depletion relative to baseline   \n\nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate   \n\nInact_Rate = (kinact * C1 / (KI + C1)) * CT1 * V1 in [pmol/h]\n  desc: Saturable rate of target inactivation (PD only)\n\ndot(A1) = RateAbs*F - CL*C1 - Q1*(C1 - C2) - CLimm*C1 in [pmol]\n  desc: Amount of drug in the central compartment (NO TARGET SINK)\n  \ndot(A2) = Q1*(C1 - C2) - CLimm*C2*V2/V1 in [pmol]\n  desc: Amount of drug in the peripheral compartment  \n  \ndot(AT1) = kdegT1*V1*(CT1_0 - CT1) - Inact_Rate in [pmol]\n  desc: Amount of ACTIVE target in the central compartment\n",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      2,
+      5,
+      7,
+      18
     ]
   },
   {
@@ -1188,6 +1194,39 @@ export const pkModels = [
     is_library_model: true,
     model_type: "PKEX",
     tags: []
+  },
+  {
+    id: 72,
+    read_only: false,
+    datetime: null,
+    name: "3-compartmental minimal PBPK Model",
+    description: "3-compartmental minimal PBPK Model",
+    mmt: "[[model]]\nname: 3-compartmental minimal PBPK Model\nauthor: Michael Gertz\n\n# tag: PBPK\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.A3 = 0\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PKCompartment]\n\n# --- Victim Drug Parameters ---\nCLpIV = 28 in [L/h]\n	desc: total plasma clearance of the substrate drug following IV dosing\n	\nCLpxhep = 0 in [L/h]\n	desc: extrahepatic clearance (e.g., renal clearance)\n	\nV1 = 20 in [L]\n  desc: Volume of the central compartment of the substrate drug\n	\nV2 = 40 in [L]\n  desc: Volume of the first peripheral compartment of the substrate drug\n\nV3 = 10 in [L]\n  desc: Volume of the second peripheral of the substrate drug\n\nQ1 = 10 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment\n	\nQ2 = 30 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		\n	\nFG = 0.50 in [dimensionless]\n  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)\n  \nFa = 1 in [dimensionless]\n  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) \n\nfup = 0.022 in [dimensionless]\n  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)\n\nBP = 0.55 in [dimensionless]\n  desc: blood-to-plasma ratio of substrate drug\n  \nPeff = 1 in [um/s] \n  desc: effective intestinal permeability of substrate drug\n\n\n# --- Physiological Parameters ---\nQh = 90 in [L/h]\n  desc: hepatic blood flow of a typical individual	\n  \nQent = 18 in [L/h]\n  desc: enterocytic blood flow of a typical individual\n  \nSA_gut = 0.66 in [m*m]\n	desc: surface area of the small intestinal (not considering foldings and villi)\n	\n	\n# --- Secondary parameters and back-calculation ---\nCLinth = (CLpIV-CLpxhep)/BP/(fup/BP*(1-(CLpIV-CLpxhep)/(Qh*BP))) in [L/h]\n	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)\n\nCLh = CLinth*fup/BP*Qh/(CLinth*fup/BP + Qh) in [L/h]\n	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)\n\nFHt = 1-(CLh/Qh) in [dimensionless]\n	desc: hepatic availability of the substrate drug (contributor to bioavailability)\n	\nCLperg = ((Peff * 3600/1000000) * SA_gut) * 1000 in [L/h]\n  desc: intestinal permeability clearance	\n	\n\n# --- Intestinal Back-calculation ---\nCLintg = BP*CLperg*Qent*(1-FG)/(FG*(BP*Qent+CLperg*fup)) in [L/h]\n	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	\n\nFGt = Qent*CLperg/(CLintg*CLperg*fup/BP + Qent*(CLintg + CLperg)) in [dimensionless]\n	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)\n	\n	\n# --- Victim ODEs ---\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of VICTIM drug in the central compartment\n\nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of VICTIM drug in the first peripheral compartment\n\nC3 = A3/V3 in [pmol/L]\n  desc: Concentration of VICTIM drug in the second peripheral compartment\n  \nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate  \n\n\ndot(A1) = RateAbs * Fa * FGt * FHt - (CLh*BP + CLpxhep)*C1 - Q1*(C1 - C2) - Q2*(C1 - C3) in [pmol]\n  desc: Amount of VICTIM drug in the central compartment \n\ndot(A2) = Q1*(C1 - C2) in [pmol]\n  desc: Amount of VICTIM drug in the first peripheral compartment \n	\ndot(A3) = Q2*(C1 - C3) in [pmol]\n  desc: Amount of VICTIM drug in the second peripheral compartment\n",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      3,
+      4,
+      14,
+      17
+    ]
+  },
+  {
+    id: 73,
+    read_only: false,
+    datetime: null,
+    name: "3-compartmental minimal PBPK Model (incl. auto-induction and or -inhibition)",
+    description: "3-compartmental minimal PBPK Model (incl. auto-induction and or -inhibition)",
+    mmt: "[[model]]\nname: 3-compartmental minimal PBPK Model (incl. auto-induction and or -inhibition)\nauthor: Michael Gertz\n\n# tag: PBPK\n\n# Initial values:\nPKCompartment.A1 = 0\nPKCompartment.A2 = 0\nPKCompartment.A3 = 0\nPKCompartment.Enzyme = 1\n\n[environment]\nt = 0 in [h] bind time\n\n\n[PKCompartment]\n\n# --- Auto-Induction and -Inhibition Parameters ---\nKI_TDI = 100000 in [pmol/L]\n	desc: Time-dependent inhibition constant\n	\nkinact = 0.05 in [1/h]\n	desc: inactivation rate constant\n\nEmax = 1 in [dimensionless]\n	desc: Maximum fold induction (1 = baseline/no induction, 4 = 4-fold induction)\n\nEC50 = 100000 in [pmol/L]\n	desc: Concentration yielding half-maximal induction	\n	\nhll = 1 in [dimensionless]\n	desc: Hill coefficient for the steepness of the induction response	\n	\n\n# --- Victim Drug Parameters ---\nfm = 0.94 in [dimensionless]\n	desc: metabolic fraction of the inhibited pathway (limited between 0 and 1)\n	\nCLpIV = 28 in [L/h]\n	desc: total plasma clearance of the substrate drug following IV dosing\n	\nCLpxhep = 0 in [L/h]\n	desc: extrahepatic clearance (e.g., renal clearance)\n	\nV1 = 20 in [L]\n  desc: Volume of the central compartment of the substrate drug\n	\nV2 = 40 in [L]\n  desc: Volume of the first peripheral compartment of the substrate drug\n\nV3 = 10 in [L]\n  desc: Volume of the second peripheral of the substrate drug\n\nQ1 = 10 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment\n	\nQ2 = 30 in [L/h]\n  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		\n	\nFG = 0.50 in [dimensionless]\n  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)\n  \nFa = 1 in [dimensionless]\n  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) \n\nfup = 0.022 in [dimensionless]\n  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)\n\nBP = 0.55 in [dimensionless]\n  desc: blood-to-plasma ratio of substrate drug\n  \nPeff = 1 in [um/s] \n  desc: effective intestinal permeability of substrate drug\n\n\n# --- Physiological Parameters ---\nQh = 90 in [L/h]\n  desc: hepatic blood flow of a typical individual	\n  \nQent = 18 in [L/h]\n  desc: enterocytic blood flow of a typical individual\n  \nSA_gut = 0.66 in [m*m]\n	desc: surface area of the small intestinal (not considering foldings and villi)\n  \nkdegE = 0.01 in [1/h]\n  desc: enzyme turnover rate constant \n	\n\n# --- Systemic Perpetrator Driver & Modulators ---\nC1f = C1*fup in [pmol/L]\n	desc: Drug concentration causing the DDI effect\n	\nIND = 1 + (Emax - 1) * (C1f^hll) / (EC50^hll + C1f^hll) in [dimensionless]\n	desc: Extent of systemic induction (multiplier on enzyme synthesis)	\n	\n	\n# --- Secondary parameters and back-calculation ---\nCLinth = (CLpIV-CLpxhep)/BP/(fup/BP*(1-(CLpIV-CLpxhep)/(Qh*BP))) in [L/h]\n	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)\n\nCLh = (CLinth*fm*Enzyme + CLinth*(1-fm))*fup/BP*Qh/((CLinth*fm*Enzyme + CLinth*(1-fm))*fup/BP + Qh) in [L/h]\n	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)\n\nFHt = 1-(CLh/Qh) in [dimensionless]\n	desc: hepatic availability of the substrate drug (contributor to bioavailability)\n	\nCLperg = ((Peff * 3600/1000000) * SA_gut) * 1000 in [L/h]\n  desc: intestinal permeability clearance	\n	\n\n# --- Intestinal Back-calculation ---\nCLintg = BP*CLperg*Qent*(1-FG)/(FG*(BP*Qent+CLperg*fup)) in [L/h]\n	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	\n\nFGt = Qent*CLperg/(CLintg*Enzyme*CLperg*fup/BP + Qent*(CLintg*Enzyme + CLperg)) in [dimensionless]\n	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)\n	\n	\n# --- Victim ODEs ---\nC1 = A1/V1 in [pmol/L]\n  desc: Concentration of VICTIM drug in the central compartment\n\nC2 = A2/V2 in [pmol/L]\n  desc: Concentration of VICTIM drug in the first peripheral compartment\n\nC3 = A3/V3 in [pmol/L]\n  desc: Concentration of VICTIM drug in the second peripheral compartment\n  \nRateAbs = 0 in [pmol/h] \n  desc: Absorption rate  \n\n\ndot(A1) = RateAbs * Fa * FGt * FHt - (CLh*BP + CLpxhep)*C1 - Q1*(C1 - C2) - Q2*(C1 - C3) in [pmol]\n  desc: Amount of VICTIM drug in the central compartment \n\ndot(A2) = Q1*(C1 - C2) in [pmol]\n  desc: Amount of VICTIM drug in the first peripheral compartment \n	\ndot(A3) = Q2*(C1 - C3) in [pmol]\n  desc: Amount of VICTIM drug in the second peripheral compartment \n  \ndot(Enzyme) = kdegE*1*IND - Enzyme*(kdegE + kinact * C1f/(C1f+KI_TDI)) in [dimensionless]  \n  desc: Relative enzyme expression\n",
+    time_max: 30.0,
+    is_library_model: true,
+    model_type: "PK",
+    tags: [
+      3,
+      4,
+      17
+    ]
   }
 ] as unknown as PharmacokineticRead[];
 
@@ -2872,6 +2911,10 @@ export const tags = [
   {
     id: 17,
     name: "PBPK"
+  },
+  {
+    id: 18,
+    name: "irreversible"
   }
 ] as unknown as TagRead[];
 
