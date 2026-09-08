@@ -348,15 +348,15 @@ const OptimisationView = ({
                       <p><strong>Diagonal (%RSE):</strong> Percent relative standard error
                         = 100 × √(Cov[i,i]) / |optimal[i]|. Colour coding:</p>
                       <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
-                        <li><span style={{ color: "#2e7d32" }}>Green</span>: &lt;20% (well determined)</li>
-                        <li><span style={{ color: "#ed6c02" }}>Amber</span>: 20–50% (moderate uncertainty)</li>
+                        <li><span style={{ color: "#2e7d32" }}>Green</span>: &lt;25% (well determined)</li>
+                        <li><span style={{ color: "#ed6c02" }}>Amber</span>: 25–50% (moderate uncertainty)</li>
                         <li><span style={{ color: "#d32f2f" }}>Red</span>: &gt;50% (poorly determined)</li>
                       </ul>
                       <p><strong>Off-diagonal (correlation):</strong> Pearson correlation
                         between parameters. Colour coding:</p>
                       <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
-                        <li><span style={{ color: "#2e7d32" }}>Green</span>: |r| &lt; 0.5</li>
-                        <li><span style={{ color: "#ed6c02" }}>Amber</span>: 0.5 ≤ |r| &lt; 0.9</li>
+                        <li><span style={{ color: "#2e7d32" }}>Green</span>: |r| &lt; 0.7</li>
+                        <li><span style={{ color: "#ed6c02" }}>Amber</span>: 0.7 ≤ |r| &lt; 0.9</li>
                         <li><span style={{ color: "#d32f2f" }}>Red</span>: |r| ≥ 0.9 (highly correlated)</li>
                       </ul>
                       <p><strong>Condition number:</strong> Computed from the SVD of the
@@ -375,8 +375,8 @@ const OptimisationView = ({
                       Condition number:{" "}
                       <Typography
                         component="span"
-                        color={conditionNumberColour(optimiseResult.condition_number)}
                         sx={{
+                          color: conditionNumberColour(optimiseResult.condition_number),
                           fontWeight: "bold"
                         }}
                       >
@@ -392,8 +392,8 @@ const OptimisationView = ({
                   <Typography variant="body2" sx={{
                     color: "text.secondary"
                   }}>
-                    Diagonal: %RSE (green &lt;20%, amber 20–50%, red &gt;50%).
-                    Off-diagonal: correlation (green &lt;0.5, amber 0.5–0.9, red &gt;0.9).
+                    Diagonal: %RSE (green &lt;25%, amber 25–50%, red &gt;50%).
+                    Off-diagonal: correlation (green &lt;0.7, amber 0.7–0.9, red &gt;0.9).
                   </Typography>
                   <Box sx={{ display: "flex", justifyContent: "center" }}>
                     <OptimisationCovarianceTable

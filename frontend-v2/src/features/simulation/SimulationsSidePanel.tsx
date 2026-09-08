@@ -721,7 +721,6 @@ export const SimulationsSidePanel = ({
                             <li><strong>PSO*</strong> – Particle Swarm Optimisation (gradient-free)</li>
                             <li><strong>CMA-ES</strong> – Covariance Matrix Adaptation (gradient-free)</li>
                             <li><strong>Nelder-Mead</strong> – Simplex method (gradient-free)</li>
-                            <li><strong>iRprop−</strong> – resilient backpropagation (gradient-based)</li>
                           </ul>
                           <p><strong>Diagnostics (click the eye icon):</strong></p>
                           <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
