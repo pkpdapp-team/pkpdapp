@@ -35,6 +35,7 @@ def update_pd_models(apps, schema_editor):
             "DDI",
             "favorites",
             "PBPK",
+            "irreversible",
         ]
         for i, col in enumerate(first_row):
             assert col == first_row_expect[i]
@@ -61,7 +62,6 @@ def update_pd_models(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("pkpdapp", "0033_alter_project_tags"),
     ]

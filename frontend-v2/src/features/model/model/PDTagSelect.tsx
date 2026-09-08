@@ -18,7 +18,7 @@ type PDTagSelectProps = {
   project: ProjectRead;
 };
 
-const pdTagList = ["direct", "indirect", "TGI", "DDI"];
+const pdTagList = ["direct", "indirect", "TGI"];
 const modelTypesLabel = "Filter by Model Type";
 
 export const PDTagSelect: FC<PDTagSelectProps> = ({ control, project }) => {

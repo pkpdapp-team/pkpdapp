@@ -21,6 +21,7 @@ const pk_model2_order = [
   "Ocular PK model",
   "Ocular PKPD VEGF (dimeric target) model",
   "Ocular PKPD bispecific (two different targets) model",
+  "Ocular PK model (front of the eye, FOTE)"
 ];
 
 export const PKModel2Select: FC<PKModel2SelectProps> = ({

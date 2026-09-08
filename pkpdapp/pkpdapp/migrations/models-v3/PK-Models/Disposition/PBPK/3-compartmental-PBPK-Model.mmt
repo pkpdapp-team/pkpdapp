@@ -1,0 +1,110 @@
+[[model]]
+name: 3-compartmental minimal PBPK Model
+author: Michael Gertz
+
+# tag: PBPK
+
+# Initial values:
+PKCompartment.A1 = 0
+PKCompartment.A2 = 0
+PKCompartment.A3 = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+
+# --- Victim Drug Parameters ---
+CLpIV = 28 in [L/h]
+	desc: total plasma clearance of the substrate drug following IV dosing
+	
+CLpxhep = 0 in [L/h]
+	desc: extrahepatic clearance (e.g., renal clearance)
+	
+V1 = 20 in [L]
+  desc: Volume of the central compartment of the substrate drug
+	
+V2 = 40 in [L]
+  desc: Volume of the first peripheral compartment of the substrate drug
+
+V3 = 10 in [L]
+  desc: Volume of the second peripheral of the substrate drug
+
+Q1 = 10 in [L/h]
+  desc: Intercompartmental clearance of the substrate drug between central and first peripheral compartment
+	
+Q2 = 30 in [L/h]
+  desc: Intercompartmental clearance of the substrate drug between central and second peripheral compartment		
+	
+FG = 0.50 in [dimensionless]
+  desc: intestinal availability of the substrate drug (limited between 0 and 1, contributor to bioavailability)
+  
+Fa = 1 in [dimensionless]
+  desc: fraction absorbed of the substrate drug (limited between 0 and 1, contributor to bioavailability) 
+
+fup = 0.022 in [dimensionless]
+  desc: fraction unbound in plasma of substrate drug (limited between 0 and 1)
+
+BP = 0.55 in [dimensionless]
+  desc: blood-to-plasma ratio of substrate drug
+  
+Peff = 1 in [um/s] 
+  desc: effective intestinal permeability of substrate drug
+
+
+# --- Physiological Parameters ---
+Qh = 90 in [L/h]
+  desc: hepatic blood flow of a typical individual	
+  
+Qent = 18 in [L/h]
+  desc: enterocytic blood flow of a typical individual
+  
+SA_gut = 0.66 in [m*m]
+	desc: surface area of the small intestinal (not considering foldings and villi)
+	
+	
+# --- Secondary parameters and back-calculation ---
+CLinth = (CLpIV-CLpxhep)/BP/(fup/BP*(1-(CLpIV-CLpxhep)/(Qh*BP))) in [L/h]
+	desc: hepatic intrinsic clearance (back-calculated using well-stirred liver model)
+
+CLh = CLinth*fup/BP*Qh/(CLinth*fup/BP + Qh) in [L/h]
+	desc: total hepatic blood clearance (accounting for inhibition and fm value of the affected metabolic pathway)
+
+FHt = 1-(CLh/Qh) in [dimensionless]
+	desc: hepatic availability of the substrate drug (contributor to bioavailability)
+	
+CLperg = ((Peff * 3600/1000000) * SA_gut) * 1000 in [L/h]
+  desc: intestinal permeability clearance	
+	
+
+# --- Intestinal Back-calculation ---
+CLintg = BP*CLperg*Qent*(1-FG)/(FG*(BP*Qent+CLperg*fup)) in [L/h]
+	desc: intestinal intrinsic clearance (back-calculated modified QGut model)	
+
+FGt = Qent*CLperg/(CLintg*CLperg*fup/BP + Qent*(CLintg + CLperg)) in [dimensionless]
+	desc: intestinal availability of the substrate drug (assumes 100% of gut intrinsic clearance is mediated by the affected enzyme)
+	
+	
+# --- Victim ODEs ---
+C1 = A1/V1 in [pmol/L]
+  desc: Concentration of VICTIM drug in the central compartment
+
+C2 = A2/V2 in [pmol/L]
+  desc: Concentration of VICTIM drug in the first peripheral compartment
+
+C3 = A3/V3 in [pmol/L]
+  desc: Concentration of VICTIM drug in the second peripheral compartment
+  
+RateAbs = 0 in [pmol/h] 
+  desc: Absorption rate  
+
+
+dot(A1) = RateAbs * Fa * FGt * FHt - (CLh*BP + CLpxhep)*C1 - Q1*(C1 - C2) - Q2*(C1 - C3) in [pmol]
+  desc: Amount of VICTIM drug in the central compartment 
+
+dot(A2) = Q1*(C1 - C2) in [pmol]
+  desc: Amount of VICTIM drug in the first peripheral compartment 
+	
+dot(A3) = Q2*(C1 - C3) in [pmol]
+  desc: Amount of VICTIM drug in the second peripheral compartment
