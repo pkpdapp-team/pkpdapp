@@ -4792,7 +4792,7 @@ components:
           nullable: true
         method:
           type: string
-          default: pso
+          default: cmaes
         sigma_start:
           type: array
           items:
