@@ -496,16 +496,16 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   // Build matched (predicted, residual) pairs, grouped by observation type
   // (varId) and then by subject group.
   // residuals[i] has the same group as predictions[i].
-  // residuals[i].time lists the observed time-points; predictions[i].time is the
-  // full grid — we look up predicted values at each residual time-point.
+  // residuals[i].times[varId] lists the observed time-points for that output,
+  // aligned index-for-index with residuals[i].outputs[varId]; predictions[i].time
+  // is the full grid — we look up predicted values at each residual time-point.
   const typeMap = new Map<number, Map<string, ResidualPoint[]>>();
 
   residuals.forEach((resGroup, gi) => {
     const predGroup = predictions[gi];
     if (!predGroup) return;
-    // observations[gi] mirrors residuals[gi] exactly (same group, same union
-    // time array, same per-output ordering), so observed values align with the
-    // residual values by index.
+    // observations[gi] mirrors residuals[gi] exactly, so observed values align
+    // with the residual values by index.
     const obsGroup = observations?.[gi];
 
     // Build a time→index lookup for the prediction time grid.
@@ -522,14 +522,13 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
       const residualValues = resGroup.outputs[varIdStr];
       const predValues = predGroup.outputs[varIdStr];
       const obsValues = obsGroup?.outputs[varIdStr];
-      if (!residualValues || !predValues) return;
+      const resTimes = resGroup.times?.[varIdStr];
+      if (!residualValues || !predValues || !resTimes) return;
 
-      // residuals response has same length as number of observed time-points for
-      // that output variable. The time array in the residuals response is the
-      // union of all observed times (sorted). We match by index within the
-      // variable's residual array — which aligns with the residual time array.
+      // Duplicate times (multiple subjects) resolve to the same shared group
+      // prediction.
       const points: ResidualPoint[] = [];
-      resGroup.time.forEach((t, tidx) => {
+      resTimes.forEach((t, tidx) => {
         const r = residualValues[tidx];
         if (r === undefined || r === null || isNaN(r)) return;
         const predIdx = predTimeIndex.get(t);
