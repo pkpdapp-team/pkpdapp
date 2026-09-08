@@ -20,13 +20,13 @@ interface OptimisationCovarianceTableProps {
 function cellColour(value: number, isDiagonal: boolean): string {
   const abs = Math.abs(value);
   if (isDiagonal) {
-    // %RSE thresholds: green < 20, amber 20–50, red > 50
-    if (abs < 20) return "#c8e6c9"; // green-100
+    // %RSE thresholds: green < 25, amber 25–50, red > 50
+    if (abs < 25) return "#c8e6c9"; // green-100
     if (abs < 50) return "#fff9c4"; // yellow-100
     return "#ffcdd2"; // red-100
   } else {
-    // |correlation| thresholds: green < 0.5, amber 0.5–0.9, red > 0.9
-    if (abs < 0.5) return "#c8e6c9";
+    // |correlation| thresholds: green < 0.7, amber 0.7–0.9, red > 0.9
+    if (abs < 0.7) return "#c8e6c9";
     if (abs < 0.9) return "#fff9c4";
     return "#ffcdd2";
   }
