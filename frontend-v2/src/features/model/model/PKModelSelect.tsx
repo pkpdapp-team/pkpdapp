@@ -48,6 +48,9 @@ const pk_model_order = [
   "2-compartmental full TMDD model (2 binding sites) - constant target",
   "2-compartmental full TMDD model (2 binding sites) - soluble target",
 
+  "1-compartmental irreversible TMDD model (1 binding site)",
+  "2-compartmental irreversible TMDD model (1 binding site)",
+
   "1-compartmental bispecific TMDD model",
   "1-compartmental bispecific TMDD model - soluble targets",
   "2-compartmental bispecific TMDD model",
@@ -66,6 +69,14 @@ const pk_model_order = [
   "1-compartmental Michaelis-Menten TMDD model (saturable CL only)",
   "2-compartmental Michaelis-Menten TMDD model (linear and saturable CL)",
   "2-compartmental Michaelis-Menten TMDD model (saturable CL only)",
+
+  "1-compartmental PK model with protein inactivation (linear)",
+  "1-compartmental PK model with protein inactivation (KI, kinact)",
+  "2-compartmental PK model with protein inactivation (linear)",
+  "2-compartmental PK model with protein inactivation (KI, kinact)",
+
+  "3-compartmental minimal PBPK Model",
+  "3-compartmental minimal PBPK Model (incl. auto-induction and or -inhibition)",
 ];
 
 export const PKModelSelect: FC<PKModelSelectProps> = ({

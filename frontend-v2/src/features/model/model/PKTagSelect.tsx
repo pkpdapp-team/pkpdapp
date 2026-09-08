@@ -24,11 +24,13 @@ const pkTagList = [
   "3-compartment",
   "PK",
   "TMDD",
+  "PBPK",
   "QSS",
   "MM",
   "bispecific",
   "constant target concentration",
   "soluble target",
+  "irreversible",
   "favorites",
 ];
 const modelTypesLabel = "Filter by Model Type";
@@ -43,6 +45,7 @@ export const PKTagSelect: FC<PKTagSelectProps> = ({ control, project }) => {
     ?.filter((tag) => {
       return pkTagList.includes(tag.name);
     })
+    .sort((a, b) => pkTagList.indexOf(a.name) - pkTagList.indexOf(b.name))
     .map((tag) => {
       return { value: tag.id, label: tag.name };
     });

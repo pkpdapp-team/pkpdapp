@@ -8,6 +8,7 @@ import SelectField from "../../../components/SelectField";
 import {
   PharmacodynamicListApiResponse,
   ProjectRead,
+  useTagListQuery,
 } from "../../../app/backendApi";
 
 type PDModelSelectProps = {
@@ -48,9 +49,15 @@ export const PDModelSelect: FC<PDModelSelectProps> = ({
   pdModels,
   project,
 }) => {
+  const { data: tagsData } = useTagListQuery();
+  const ddiTagId = tagsData?.find((tag) => tag.name === "DDI")?.id;
   const pdTags = project?.pd_tags || [];
   const pdModelsFiltered = pdModels.filter((m) => {
     const is_pd_model = m.model_type === "PD" || m.model_type === "TG";
+    // DDI PD models are kept in the library but hidden from selection
+    if (ddiTagId !== undefined && m.tags?.includes(ddiTagId)) {
+      return false;
+    }
     if (m.tags) {
       for (const tag of pdTags) {
         if (!m.tags.includes(tag)) {

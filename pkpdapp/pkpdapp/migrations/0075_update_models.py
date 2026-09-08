@@ -13,7 +13,9 @@ v3models = importlib.import_module("pkpdapp.migrations.0027_version_3_models")
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("pkpdapp", "0071_add_pbpk_tag"),
+        ("pkpdapp", "0074_add_irreversible_tag"),
     ]
 
-    operations = []
+    operations = [
+        migrations.RunPython(v3models.load_pkpd_models),
+    ]

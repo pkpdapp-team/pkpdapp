@@ -64,6 +64,7 @@ const helpImages: {
   },
   pk2: {
     "First order absorption model": "First order absorption model.jpg",
+    "First order absorption model (two absorption sites)": "First order absorption model (two sites).jpg",
     "Ocular PK model": "Ocular PK model.jpg",
     "Transit compartments absorption model":
       "Transit compartments absorption model.jpg",
