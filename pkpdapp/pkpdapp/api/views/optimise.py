@@ -42,7 +42,7 @@ class OptimiseSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
-    method = serializers.CharField(required=False, default="pso")
+    method = serializers.CharField(required=False, default="cmaes")
     # sigma_start and sigma_bounds carry one *linear* sigma entry per fitted
     # output variable, in the canonical order the backend derives from
     # biomarker_types (ascending variable id). The corresponding variable ids are
@@ -320,7 +320,7 @@ class OptimiseBaseView(views.APIView):
                     observations=observations,
                     subject_groups=data.get("subject_groups"),
                     max_iterations=data.get("max_iterations"),
-                    method=data.get("method", "pso"),
+                    method=data.get("method", "cmaes"),
                 )
             except (
                 myokit.MyokitError,
@@ -350,7 +350,7 @@ class OptimiseBaseView(views.APIView):
                     "subject_groups": data.get("subject_groups"),
                     "max_iterations": data.get("max_iterations"),
                     "noise_models": noise_models,
-                    "method": data.get("method", "pso"),
+                    "method": data.get("method", "cmaes"),
                 }
             )
             return Response(serialized_result.data)

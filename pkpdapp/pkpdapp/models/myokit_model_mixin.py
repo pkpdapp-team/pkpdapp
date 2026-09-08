@@ -500,7 +500,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         observations,
         subject_groups=None,
         max_iterations=None,
-        method="pso",
+        method="cmaes",
     ) -> OptimiseResult:
         """
         Fits the model against the data indicated
@@ -563,7 +563,7 @@ class MyokitModelMixin(UncertaintySimulationMixin):
         max_iterations: int (optional)
             maximum number of iterations of the opimisation algorithm (default 100)
         method: str (optional)
-            optimisation method, one of "cmaes", "pso" (default), "nelder-mead",
+            optimisation method, one of "cmaes" (default), "pso", "nelder-mead",
             "gradient_descent", "adam", "irprop"
 
         Returns
