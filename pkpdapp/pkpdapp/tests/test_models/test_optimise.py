@@ -29,6 +29,7 @@ from pkpdapp.tests.optimise_fixtures import (
     DOSE_SPECS,
     SELECTED_TIMES,
     TRUE_K,
+    create_dose_emax_data,
     create_exponential_data,
     exponential_response,
 )
@@ -154,8 +155,7 @@ class TestOptimise(TestCase):
         )
         model_values = np.asarray(values, dtype=float) * conversion_factors
         return {
-            input_id: float(value)
-            for input_id, value in zip(input_ids, model_values)
+            input_id: float(value) for input_id, value in zip(input_ids, model_values)
         }
 
     def _starting_values_by_id(self, context, setup, starting=None):
@@ -336,6 +336,58 @@ class TestOptimise(TestCase):
         self.assertAlmostEqual(result.optimal[0], true_values[0], delta=0.04)
         self.assertAlmostEqual(result.optimal[1], true_values[1], delta=0.18)
 
+    def test_optimise_with_dose_emax_nonlinearity(self):
+        """Regression: optimising a library PK model with a Dose Emax
+        nonlinearity must not fail with a non-finite starting loss.
+        """
+        setup = create_dose_emax_data()
+        model = setup["model"]
+        input_ids = [variable.id for variable in setup["inputs"]]
+        starting = setup["starting"]
+        bounds = setup["bounds"]
+        biomarker_type_ids = [setup["biomarker_type"].id]
+        group_ids = [group.id for group in setup["groups"]]
+
+        # Sanity check: the nonlinearity really did add C_Drug to the model, so
+        # this test exercises the extra-input path rather than a bare model.
+        self.assertTrue(
+            model.get_myokit_model().has_variable("PKNonlinearities.C_Drug")
+        )
+
+        context = OptimiseContext(
+            model=model,
+            optimise_inputs=input_ids,
+            starting=starting,
+            bounds=bounds,
+            observations=make_observations(biomarker_type_ids),
+            subject_groups=group_ids,
+            use_diffsol=True,
+        )
+
+        # The C_Drug nonlinear input must be carried onto every optimisation
+        # group so the solve is fed the same inputs the DiffSL ODE was compiled
+        # with. This is the precise assertion that pins the regression.
+        for group in context.optimisation_groups:
+            self.assertIn("PKNonlinearities.C_Drug", group.nonlinear_inputs)
+
+        starting_values_by_id = self._to_model_space_values_by_id(
+            context, input_ids, starting
+        )
+        starting_loss = context.optimise_loss(
+            context.optimisation_groups, starting_values_by_id
+        )
+        self.assertTrue(np.isfinite(starting_loss))
+
+        # End-to-end: model.optimise must not raise the non-finite-loss
+        # RuntimeError the user hit.
+        result = model.optimise(
+            parameters=make_parameters(input_ids, starting, bounds),
+            observations=make_observations(biomarker_type_ids),
+            subject_groups=group_ids,
+            max_iterations=5,
+        )
+        self.assertTrue(np.isfinite(result.loss))
+
     def test_excluded_biomarkers_are_dropped_from_fitting(self):
         """Biomarkers with exclude=True are not loaded into the fit, so the
         optimisation groups carry one fewer record per excluded point."""
@@ -350,9 +402,7 @@ class TestOptimise(TestCase):
 
         # Exclude a single datapoint belonging to a fitted subject group.
         group_subject_ids = [
-            subject.id
-            for group in setup["groups"]
-            for subject in group.subjects.all()
+            subject.id for group in setup["groups"] for subject in group.subjects.all()
         ]
         excluded = biomarker_type.biomarkers.filter(
             subject_id__in=group_subject_ids
@@ -505,9 +555,7 @@ class TestOptimise(TestCase):
             variable=outside_variable,
         )
         with self.assertRaisesMessage(ValueError, "outside this model"):
-            OptimiseContext(
-                **base_kwargs, observations=make_observations([outside.id])
-            )
+            OptimiseContext(**base_kwargs, observations=make_observations([outside.id]))
 
         missing_group_kwargs = {
             **base_kwargs,
@@ -592,10 +640,13 @@ class TestOptimise(TestCase):
             if group.group_id == setup["groups"][0].id
         )
         self.assertIsNone(ungrouped.group_name)
-        self.assertEqual([output.qname for output in grouped.outputs], [
-            "Central.response",
-            "Central.amount",
-        ])
+        self.assertEqual(
+            [output.qname for output in grouped.outputs],
+            [
+                "Central.response",
+                "Central.amount",
+            ],
+        )
         self.assertEqual(grouped.t_eval, tuple(float(t) for t in SELECTED_TIMES))
         amount_records = [
             record for record in grouped.records if record.output_index == 1
@@ -742,9 +793,7 @@ class TestOptimise(TestCase):
         self.assertEqual(len(context.combined_output_indices), 1)
         combined_k = context.combined_output_indices[0]
 
-        values_by_id = self._to_model_space_values_by_id(
-            context, input_ids, starting
-        )
+        values_by_id = self._to_model_space_values_by_id(context, input_ids, starting)
         sigma = np.full(n_outputs, np.exp(-0.5))
         # sigma_m only matters for the combined output; other entries are inert.
         sigma_mult = np.ones(n_outputs)
@@ -774,9 +823,7 @@ class TestOptimise(TestCase):
             sm = sigma.copy()
             sm[k] -= eps
             fd = (loss_at(sp, sigma_mult) - loss_at(sm, sigma_mult)) / (2.0 * eps)
-            np.testing.assert_allclose(
-                fd, sigma_gradient[k], rtol=1e-2, atol=1e-3
-            )
+            np.testing.assert_allclose(fd, sigma_gradient[k], rtol=1e-2, atol=1e-3)
 
         # The single sigma_m gradient (last packed entry) for the combined output.
         mp = sigma_mult.copy()
@@ -784,9 +831,7 @@ class TestOptimise(TestCase):
         mm = sigma_mult.copy()
         mm[combined_k] -= eps
         fd = (loss_at(sigma, mp) - loss_at(sigma, mm)) / (2.0 * eps)
-        np.testing.assert_allclose(
-            fd, sigma_gradient[n_outputs], rtol=1e-2, atol=1e-3
-        )
+        np.testing.assert_allclose(fd, sigma_gradient[n_outputs], rtol=1e-2, atol=1e-3)
 
     def test_optimise_mixed_noise_models_result(self):
         """End-to-end mixed fit: sigma_mult is reported per output, None for the
@@ -862,25 +907,29 @@ class TestOptimise(TestCase):
 
         # combined requires sigma_mult.
         with self.assertRaisesMessage(ValueError, "requires sigma_mult"):
-            build([
-                ObservationInfo(
-                    biomarker_type=bt_id,
-                    noise_model="combined",
-                    sigma=_make_sigma(),
-                    sigma_mult=None,
-                )
-            ])
+            build(
+                [
+                    ObservationInfo(
+                        biomarker_type=bt_id,
+                        noise_model="combined",
+                        sigma=_make_sigma(),
+                        sigma_mult=None,
+                    )
+                ]
+            )
 
         # sigma_mult is only valid for the combined model.
         with self.assertRaisesMessage(ValueError, "only valid for the 'combined'"):
-            build([
-                ObservationInfo(
-                    biomarker_type=bt_id,
-                    noise_model="additive",
-                    sigma=_make_sigma(),
-                    sigma_mult=_make_sigma(),
-                )
-            ])
+            build(
+                [
+                    ObservationInfo(
+                        biomarker_type=bt_id,
+                        noise_model="additive",
+                        sigma=_make_sigma(),
+                        sigma_mult=_make_sigma(),
+                    )
+                ]
+            )
 
     def test_prediction_loss_and_gradient_failure_branches(self):
         setup = create_exponential_data(
@@ -976,9 +1025,7 @@ class TestOptimise(TestCase):
                 finite_y,
                 sens=self._fake_sens(context, group),
             ),
-            records=tuple(
-                replace(record, value=0.0) for record in group.records
-            ),
+            records=tuple(replace(record, value=0.0) for record in group.records),
         )
         self.assertEqual(
             mult_context.optimise_loss(
@@ -1111,9 +1158,7 @@ class TestOptimise(TestCase):
             g for g in context.optimisation_groups if g.group_id == group.id
         )
         output_index = 0
-        n_records = sum(
-            1 for r in opt_group.records if r.output_index == output_index
-        )
+        n_records = sum(1 for r in opt_group.records if r.output_index == output_index)
         # t_eval is deduplicated, but records are per data point: the extra
         # subject adds one record without adding a distinct time.
         self.assertEqual(n_records, len(SELECTED_TIMES) + 1)
@@ -1267,9 +1312,7 @@ class TestOptimise(TestCase):
             return context.optimise_diagnostics(optimal)
 
         # Multiplicative drops the two near-zero observations.
-        self.assertEqual(
-            diagnostics_for("multiplicative")["filtered_observations"], 2
-        )
+        self.assertEqual(diagnostics_for("multiplicative")["filtered_observations"], 2)
 
         # Additive and combined models take no logarithm of the observation, so
         # near-zero values are valid and nothing is filtered.
@@ -1338,9 +1381,7 @@ class TestOptimise(TestCase):
             )
             subs = transformation._transformations
             self.assertIsInstance(subs[0], pints.LogTransformation, msg=method)
-            self.assertIsInstance(
-                subs[1], pints.UnitCubeTransformation, msg=method
-            )
+            self.assertIsInstance(subs[1], pints.UnitCubeTransformation, msg=method)
 
         for method in gradient_based:
             transformation = CombinedModel._build_parameter_transformation(
@@ -1489,9 +1530,7 @@ class TestOptimise(TestCase):
         context = self._build_optimise_context(
             setup, starting, bounds, noise_model="combined"
         )
-        values_by_id = self._to_model_space_values_by_id(
-            context, input_ids, starting
-        )
+        values_by_id = self._to_model_space_values_by_id(context, input_ids, starting)
         keys = list(values_by_id)
         base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
         n_outputs = len(context.sigma_output_variable_ids)
@@ -1522,9 +1561,9 @@ class TestOptimise(TestCase):
             vp[i] += eps
             vm = base_vals.copy()
             vm[i] -= eps
-            fd = (
-                loss_at(vp, sigma, sigma_mult) - loss_at(vm, sigma, sigma_mult)
-            ) / (2.0 * eps)
+            fd = (loss_at(vp, sigma, sigma_mult) - loss_at(vm, sigma, sigma_mult)) / (
+                2.0 * eps
+            )
             np.testing.assert_allclose(fd, ode_gradient[i], rtol=1e-2, atol=1e-3)
 
         # The sigma gradients depend on the prediction y_hat (through the
@@ -1539,8 +1578,7 @@ class TestOptimise(TestCase):
             sm = sigma.copy()
             sm[i] -= eps
             fd = (
-                loss_at(base_vals, sp, sigma_mult)
-                - loss_at(base_vals, sm, sigma_mult)
+                loss_at(base_vals, sp, sigma_mult) - loss_at(base_vals, sm, sigma_mult)
             ) / (2.0 * eps)
             np.testing.assert_allclose(fd, sigma_gradient[i], rtol=1e-2, atol=1e-3)
 
@@ -1550,9 +1588,9 @@ class TestOptimise(TestCase):
             mp[i] += eps
             mm = sigma_mult.copy()
             mm[i] -= eps
-            fd = (
-                loss_at(base_vals, sigma, mp) - loss_at(base_vals, sigma, mm)
-            ) / (2.0 * eps)
+            fd = (loss_at(base_vals, sigma, mp) - loss_at(base_vals, sigma, mm)) / (
+                2.0 * eps
+            )
             np.testing.assert_allclose(
                 fd, sigma_gradient[n_outputs + i], rtol=1e-2, atol=1e-3
             )
@@ -1576,9 +1614,7 @@ class TestOptimise(TestCase):
         )
         fake_group = replace(
             group,
-            diffsol_ode=FakeDiffsolOde(
-                finite_y, sens=self._fake_sens(context, group)
-            ),
+            diffsol_ode=FakeDiffsolOde(finite_y, sens=self._fake_sens(context, group)),
         )
         groups = (fake_group,)
         sigma = np.full(n_outputs, np.exp(-0.3))
@@ -1754,9 +1790,7 @@ class TestOptimise(TestCase):
         # At 150 replicates (fixed seed) the margins are comfortable: the
         # correlation matches to ~0.02 (tol 0.1) and the relative SEs to ~1%
         # (tol 20%).
-        np.testing.assert_allclose(
-            emp_corr[0, 1], corr_diag[0, 1], atol=0.1
-        )
+        np.testing.assert_allclose(emp_corr[0, 1], corr_diag[0, 1], atol=0.1)
         np.testing.assert_allclose(rel_se_emp, rel_se_diag, rtol=0.2)
 
     def test_optimise_combined_noise_returns_two_sigmas(self):
@@ -1856,9 +1890,7 @@ class TestOptimise(TestCase):
         starting = [0.27, 1.45]
         bounds = ([0.16, 1.2], [0.3, 2.1])
         context = self._build_optimise_context(setup, starting, bounds)
-        values_by_id = self._to_model_space_values_by_id(
-            context, input_ids, starting
-        )
+        values_by_id = self._to_model_space_values_by_id(context, input_ids, starting)
         keys = list(values_by_id)
         base_vals = np.array([values_by_id[k] for k in keys], dtype=float)
 
@@ -1985,6 +2017,4 @@ class TestOptimise(TestCase):
         self.assertTrue(np.isfinite(linear_result.loss))
         self.assertGreater(linear_result.sigma[0], 0.0)
         # Both parameterisations should recover essentially the same noise sd.
-        self.assertAlmostEqual(
-            linear_result.sigma[0], log_result.sigma[0], delta=0.02
-        )
+        self.assertAlmostEqual(linear_result.sigma[0], log_result.sigma[0], delta=0.02)

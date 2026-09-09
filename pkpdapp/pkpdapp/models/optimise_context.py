@@ -408,9 +408,9 @@ class OptimiseContext(SimulateContext):
         by tests and as a convenience default).
         """
         n_outputs = len(self.sigma_output_qnames)
-        return np.broadcast_to(
-            np.asarray(sigma, dtype=float), (n_outputs,)
-        ).astype(float, copy=True)
+        return np.broadcast_to(np.asarray(sigma, dtype=float), (n_outputs,)).astype(
+            float, copy=True
+        )
 
     def _sigma_mult_array(self, sigma_mult) -> np.ndarray:
         """
@@ -754,9 +754,7 @@ class OptimiseContext(SimulateContext):
                     # standardised residual is dimensionless (residual and the
                     # noise sd are both in model units), so no conversion factor
                     # is applied.
-                    s2 = self._combined_variance(
-                        sigma2[k], sigma_mult2[k], prediction
-                    )
+                    s2 = self._combined_variance(sigma2[k], sigma_mult2[k], prediction)
                     residual_for_output = residual / np.sqrt(s2)
                     jac_row = y_prime[t_idx, o_idx, :]
                     weight = 1.0 / s2
@@ -1137,6 +1135,7 @@ class OptimiseContext(SimulateContext):
             group_id=group_id,
             group_name=group_name,
             dosing_protocols=dosing_protocols,
+            nonlinear_inputs=nonlinear_inputs,
             outputs=tuple(
                 self._output_context(self._get_variable_by_qname(qname))
                 for qname in output_qnames
