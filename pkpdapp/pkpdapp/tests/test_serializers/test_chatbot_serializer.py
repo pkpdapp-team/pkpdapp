@@ -48,4 +48,3 @@ class ChatbotContextSerializerTestCase(SimpleTestCase):
 
     def test_rejects_too_long_sub_page(self):
         self.assertIn("sub_page", self.errors({"sub_page": "x" * 201}))
-        
