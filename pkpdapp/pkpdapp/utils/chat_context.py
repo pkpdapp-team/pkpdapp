@@ -5,7 +5,11 @@
 #
 from django.db.models import Prefetch
 
-from pkpdapp.models import CovariatePopulation, Dose
+from pkpdapp.models import (
+    Covariate,
+    CovariatePopulation,
+    Dose,
+)
 
 
 def build_chat_context(project):
@@ -14,7 +18,8 @@ def build_chat_context(project):
         "project": {
             "name": project.name,
             "description": project.description,
-            "species": project.species,
+            # Display label, not the stored code, which defaults to "O".
+            "species": project.get_species_display(),
         }
     }
 
@@ -22,7 +27,6 @@ def build_chat_context(project):
     if model is not None:
         context["model"] = {
             "name": model.name,
-            "species": model.species,
             "has_saturation": model.has_saturation,
             "has_extravascular": model.has_extravascular,
             "has_effect": model.has_effect,
@@ -31,21 +35,43 @@ def build_chat_context(project):
             "pk_model_name": (
                 model.pk_model.name if model.pk_model is not None else None
             ),
+            "pk_model_extravascular": (
+                model.pk_model2.name if model.pk_model2 is not None else None
+            ),
+            "pk_effect_model": (
+                model.pk_effect_model.name
+                if model.pk_effect_model is not None
+                else None
+            ),
+            "number_of_effect_compartments": (
+                model.number_of_effect_compartments
+            ),
+            "has_anti_drug_antibodies": model.has_anti_drug_antibodies,
+            "has_bioavailability": model.has_bioavailability,
             "pd_model_name": (
                 model.pd_model.name if model.pd_model is not None else None
             ),
-            "mmt": model.get_mmt(),
+            "pd_model2": (
+                model.pd_model2.name if model.pd_model2 is not None else None
+            ),
+            # No mmt: too large, and its literals are library placeholders
+            # that contradict the parameter values. Fetched on demand via
+            # get_current_model_definition. No time_max: the assistant
+            # cannot simulate.
         }
         context["variables"] = [
             {
                 "name": variable.name,
-                "value": variable.default_value,
+                # get_default_value() un-logs; default_value is the log.
+                "value": variable.get_default_value(),
                 "unit": (
                     variable.unit.symbol
                     if variable.unit is not None
                     else variable.unit_symbol
                 ),
                 "constant": variable.constant,
+                "description": variable.description,
+                "is_log": variable.is_log,
             }
             for variable in model.variables.filter(constant=True)
             .select_related("unit")
@@ -57,7 +83,7 @@ def build_chat_context(project):
             Prefetch(
                 "covariate_populations",
                 queryset=CovariatePopulation.objects.select_related(
-                    "covariate"
+                    "covariate", "covariate__unit"
                 ).order_by("pk"),
                 to_attr="chat_covariate_populations",
             )
@@ -69,7 +95,9 @@ def build_chat_context(project):
         .prefetch_related(
             Prefetch(
                 "doses",
-                queryset=Dose.objects.order_by("pk"),
+                queryset=Dose.objects.filter(
+                    protocol__dataset__isnull=True
+                ).order_by("pk"),
                 to_attr="chat_doses",
             )
         )
@@ -87,23 +115,7 @@ def build_chat_context(project):
     if groups or protocols:
         context["trial_design"] = {
             "groups": [
-                {
-                    "name": group.name,
-                    "subjects": group.study_size,
-                    "age_range": [group.age_min, group.age_max],
-                    "region": group.population_region,
-                    "covariates": [
-                        {
-                            "name": population.covariate.name,
-                            "median": population.median,
-                        }
-                        for population in group.chat_covariate_populations
-                    ],
-                    "protocols": [
-                        _describe_protocol(protocol)
-                        for protocol in protocols_by_group[group.pk]
-                    ],
-                }
+                _describe_group(group, protocols_by_group[group.pk])
                 for group in groups
             ],
             "ungrouped_protocols": [
@@ -112,6 +124,55 @@ def build_chat_context(project):
         }
 
     return context
+
+
+def _describe_group(group, protocols):
+    described = {
+        "name": group.name,
+        "covariates": [
+            _describe_covariate_population(population)
+            for population in group.chat_covariate_populations
+        ],
+        "protocols": [_describe_protocol(protocol) for protocol in protocols],
+    }
+    if group.dataset_id is None:
+        described["subjects"] = group.study_size
+        described["age_range"] = [group.age_min, group.age_max]
+        described["region"] = group.get_population_region_display()
+        # Only route into the prompt for the built-in weight/age/sex
+        # covariates, which have no CovariatePopulation row.
+        described["male_fraction"] = group.m2f_ratio
+    else:
+        # Dataset imports never set study_size/age/region, so those hold
+        # model defaults (200/20/60/EU) rather than anything the user chose.
+        described["from_dataset"] = True
+        described["subjects"] = group.subjects.count()
+    return described
+
+
+def _describe_covariate_population(population):
+    # Every row carries both median/variance and category_probabilities, so
+    # branch on the type rather than reporting the meaningless one.
+    covariate = population.covariate
+    described = {"name": covariate.name}
+
+    if covariate.type == Covariate.Type.CATEGORICAL:
+        probabilities = population.category_probabilities or []
+        names = covariate.category_names or []
+        described["categories"] = [
+            {
+                "name": (
+                    names[index] if index < len(names) else f"category {index}"
+                ),
+                "probability": probability,
+            }
+            for index, probability in enumerate(probabilities)
+        ]
+    else:
+        described["median"] = population.median
+        if covariate.unit is not None:
+            described["unit"] = covariate.unit.symbol
+    return described
 
 
 def _get_model(project):
@@ -130,27 +191,36 @@ def _get_model(project):
 
 
 def _describe_protocol(protocol):
-    return {
+    described = {
         "name": protocol.name,
         "route": protocol.get_dose_type_display(),
         "per_body_weight": protocol.amount_per_body_weight,
-        "doses": [
-            {
-                "amount": dose.amount,
-                "unit": (
-                    protocol.amount_unit.symbol
-                    if protocol.amount_unit is not None
-                    else ""
-                ),
-                "start_time": dose.start_time,
-                "time_unit": (
-                    protocol.time_unit.symbol
-                    if protocol.time_unit is not None
-                    else ""
-                ),
-                "repeats": dose.repeats,
-                "repeat_interval": dose.repeat_interval,
-            }
-            for dose in protocol.chat_doses
-        ],
     }
+    if protocol.dataset_id is not None:
+        # A dataset import creates one dose per subject per visit, so this
+        # list is unbounded and is really dataset contents.
+        described["from_dataset"] = True
+        return described
+
+    described["doses"] = [
+        {
+            "amount": dose.amount,
+            "unit": (
+                protocol.amount_unit.symbol
+                if protocol.amount_unit is not None
+                else ""
+            ),
+            "start_time": dose.start_time,
+            "time_unit": (
+                protocol.time_unit.symbol
+                if protocol.time_unit is not None
+                else ""
+            ),
+            # Distinguishes a bolus from an infusion; in time_unit.
+            "duration": dose.duration,
+            "repeats": dose.repeats,
+            "repeat_interval": dose.repeat_interval,
+        }
+        for dose in protocol.chat_doses
+    ]
+    return described

@@ -46,13 +46,15 @@ user has a project and model selected)
 - See the user's trial design: subject groups, covariates, and dosing \
 protocols (also in [CURRENT USER CONTEXT], when the project has any \
 configured)
-- See the user's current model definition in Myokit .mmt format
 - See a catalog of all available library models \
 (provided in [LIBRARY MODELS] below)
 - Look up any library model's .mmt definition to understand its \
 equations, compartments, and parameters — use this tool frequently \
 when discussing or comparing models, rather than relying on your \
 own knowledge
+- Look up the user's own combined model definition, as currently \
+assembled from its PK/PD components, when the individual library \
+definitions are not enough to answer
 - Answer questions about PKPD concepts, model structure, equations, \
 compartments, and parameters
 - Help the user choose a model, interpret parameters, or understand \
@@ -193,6 +195,31 @@ def _build_model_catalog():
     return model_catalog
 
 
+def _describe_covariate(cov):
+    """Render one covariate distribution as a short phrase."""
+    name = cov.get("name", "?")
+
+    categories = cov.get("categories")
+    if isinstance(categories, (list, tuple)) and categories:
+        parts = []
+        for category in categories:
+            if not isinstance(category, Mapping):
+                continue
+            parts.append(
+                f"{category.get('name', '?')} "
+                f"{category.get('probability', '?')}"
+            )
+        if parts:
+            return f"{name}: {', '.join(parts)}"
+        return None
+
+    median = cov.get("median")
+    if median is None:
+        return None
+    unit = cov.get("unit") or ""
+    return f"{name}: median={median} {unit}".rstrip()
+
+
 def _describe_dose(dose):
     """Render one dose entry from the context dict as a short phrase."""
     if not isinstance(dose, Mapping):
@@ -202,12 +229,17 @@ def _describe_dose(dose):
     unit = dose.get("unit") or ""
     parts = [f"{amount} {unit}".strip()]
 
+    duration = dose.get("duration")
+    if duration:
+        parts.append(f"over {duration} {dose.get('time_unit') or ''}".rstrip())
+
     start = dose.get("start_time")
     if start:
         parts.append(f"at t={start}")
 
+    # repeats defaults to 1, meaning "given once".
     repeats = dose.get("repeats")
-    if repeats:
+    if isinstance(repeats, int) and repeats > 1:
         interval = dose.get("repeat_interval")
         interval_unit = dose.get("time_unit") or ""
         parts.append(
@@ -225,6 +257,9 @@ def _describe_protocol(protocol):
     name = protocol.get("name", "?")
     route = protocol.get("route", "?")
     suffix = " per kg" if protocol.get("per_body_weight") else ""
+    if protocol.get("from_dataset"):
+        return f"{name} ({route}{suffix}): doses from uploaded data"
+
     doses = protocol.get("doses") or []
     if not isinstance(doses, (list, tuple)):
         doses = []
@@ -266,6 +301,7 @@ def _format_user_context(context):
         for flag in [
             "has_saturation", "has_extravascular", "has_effect",
             "has_lag", "has_hill_coefficient",
+            "has_anti_drug_antibodies", "has_bioavailability",
         ]:
             if model.get(flag):
                 flags.append(flag.replace("has_", ""))
@@ -275,13 +311,21 @@ def _format_user_context(context):
         pk_name = model.get("pk_model_name")
         pd_name = model.get("pd_model_name")
         lines.append(f"  PK model: {pk_name or 'not specified'}")
-        lines.append(f"  PD model: {pd_name or 'not specified'}")
+        extravascular = model.get("pk_model_extravascular")
+        if extravascular:
+            lines.append(f"  PK extravascular model: {extravascular}")
+        # pk_effect_model has a DB default, so gate on the compartment count.
+        effect_compartments = model.get("number_of_effect_compartments")
+        if effect_compartments:
+            effect_model = model.get("pk_effect_model")
+            if effect_model:
+                lines.append(f"  PK effect-compartment model: {effect_model}")
+            lines.append(f"  Effect compartments: {effect_compartments}")
 
-        mmt = model.get("mmt")
-        if isinstance(mmt, str) and mmt:
-            lines.append("")
-            lines.append("Model definition (Myokit .mmt format):")
-            lines.append(f"```\n{mmt.strip()}\n```")
+        lines.append(f"  PD model: {pd_name or 'not specified'}")
+        pd_model2 = model.get("pd_model2")
+        if pd_model2:
+            lines.append(f"  Second PD model: {pd_model2}")
 
     variables = context.get("variables")
     if isinstance(variables, (list, tuple)) and variables:
@@ -292,10 +336,15 @@ def _format_user_context(context):
             if not v.get("constant", True):
                 continue
             unit = v.get("unit") or ""
-            lines.append(
+            line = (
                 f"  {v.get('name', '?')} = {v.get('value', '?')} {unit}"
                 .rstrip()
             )
+            # is_log is not rendered: the value is already un-logged.
+            description = v.get("description")
+            if description:
+                line += f" — {description}"
+            lines.append(line)
 
     trial_design = context.get("trial_design")
     if isinstance(trial_design, Mapping):
@@ -326,6 +375,8 @@ def _format_user_context(context):
                 header = f"  Group '{group.get('name', '?')}'"
                 if group.get("subjects") is not None:
                     header += f" (N={group['subjects']})"
+                if group.get("from_dataset"):
+                    header += " [observed cohort from uploaded data]"
                 if group.get("region"):
                     header += f", region={group['region']}"
                 age_range = group.get("age_range")
@@ -334,6 +385,9 @@ def _format_user_context(context):
                     and len(age_range) >= 2
                 ):
                     header += f", age {age_range[0]}-{age_range[1]}"
+                male_fraction = group.get("male_fraction")
+                if male_fraction is not None:
+                    header += f", male fraction {male_fraction}"
                 lines.append(header)
 
                 covariates = group.get("covariates") or []
@@ -342,11 +396,9 @@ def _format_user_context(context):
                 for cov in covariates:
                     if not isinstance(cov, Mapping):
                         continue
-                    if cov.get("median") is not None:
-                        lines.append(
-                            f"    Covariate {cov.get('name', '?')}: "
-                            f"median={cov['median']}"
-                        )
+                    described = _describe_covariate(cov)
+                    if described:
+                        lines.append(f"    Covariate {described}")
 
                 protocols = group.get("protocols") or []
                 if not isinstance(protocols, (list, tuple)):
@@ -406,14 +458,69 @@ _STATIC_TOOLS = [
             "required": ["model_name"],
         },
     },
+    {
+        "type": "function",
+        "name": "get_current_model_definition",
+        "description": (
+            "Look up the .mmt definition of the user's own combined model "
+            "as it is currently assembled — PK, absorption, effect "
+            "compartments, PD and derived variables cross-linked into one "
+            "model. Use this when the user asks about how their specific "
+            "model is put together and the individual library definitions "
+            "are not enough. IMPORTANT: the numeric literals in the result "
+            "are library placeholders, NOT the user's values — the "
+            "authoritative parameter values and units are the ones in "
+            "[CURRENT USER CONTEXT]. Do not dump the raw .mmt text to the "
+            "user. Summarise or reference the relevant parts."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 # Limit repeated tool calls.
 MAX_TOOL_ROUNDS = 4
 
 
-def _execute_tool(name, arguments):
+def _get_current_model_definition(conversation):
+    """Return the assembled .mmt for the conversation's project model."""
+    # Local import keeps the chat_context <-> chatbot pair one-directional.
+    from pkpdapp.utils.chat_context import _get_model
+
+    if conversation is None:
+        return "No project is associated with this conversation."
+    try:
+        project = conversation.get_project()
+        if project is None:
+            return "No project is associated with this conversation."
+        model = _get_model(project)
+        if model is None:
+            return (
+                "No model has been configured for this project yet. The user "
+                "needs to choose a PK and/or PD model in the Model tab first."
+            )
+        return (
+            f"Current combined model: {model.name}\n"
+            "NOTE: the numeric literals below are library placeholders. The "
+            "user's actual parameter values and units are the ones given in "
+            "[CURRENT USER CONTEXT].\n\n"
+            f"```\n{model.get_mmt()}\n```"
+        )
+    except Exception:
+        logger.exception(
+            "[chatbot] tool get_current_model_definition error"
+        )
+        return "Error looking up the current model definition."
+
+
+def _execute_tool(name, arguments, conversation=None):
     """Execute a tool call and return the result string."""
+    if name == "get_current_model_definition":
+        return _get_current_model_definition(conversation)
+
     if name == "get_library_model_definition":
         model_name = arguments.get("model_name", "")
         try:
@@ -665,7 +772,9 @@ def stream_chat_response(
                 except (ValueError, TypeError):
                     args = {}
                 _log_io(req_id, f"TOOL CALL {tc['name']}", tc["arguments"])
-                result = _execute_tool(tc["name"], args)
+                result = _execute_tool(
+                    tc["name"], args, conversation=conversation
+                )
                 _log_io(req_id, f"TOOL RESULT {tc['name']}", result)
                 input_items.append({
                     "type": "function_call_output",
