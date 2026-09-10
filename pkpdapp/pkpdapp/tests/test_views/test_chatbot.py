@@ -27,11 +27,11 @@ class ChatbotViewTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_missing_conversation_id(self):
-        data = {"content": "Hello", 
+        data = {"content": "Hello",
                 "context": {
-                    "page": "the_page", 
+                    "page": "the_page",
                     "sub_page": "the_sub_page"
-                    }
+                }
                 }
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
