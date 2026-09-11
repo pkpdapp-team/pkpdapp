@@ -34,3 +34,10 @@ def mean_std_to_median_logvar(mean: float, std: float) -> tuple[float, float]:
     variance = float(np.log1p(cv2))
     median = float(mean / np.sqrt(1.0 + cv2))
     return median, variance
+
+
+def median_logvar_to_mean_std(median: float, variance: float) -> tuple[float, float]:
+    """Inverse of mean_std_to_median_logvar."""
+    mean = float(median * np.exp(variance / 2.0))
+    std = float(mean * np.sqrt(np.expm1(variance)))
+    return mean, std

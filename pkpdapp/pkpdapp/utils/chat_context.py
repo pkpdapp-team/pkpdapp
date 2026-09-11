@@ -10,6 +10,12 @@ from pkpdapp.models import (
     CovariatePopulation,
     Dose,
 )
+from pkpdapp.utils.lognormal import median_logvar_to_mean_std
+
+
+def _round(value):
+    """6 significant figures, matching the UI."""
+    return float(f"{value:.6g}")
 
 
 def build_chat_context(project):
@@ -169,7 +175,12 @@ def _describe_covariate_population(population):
             for index, probability in enumerate(probabilities)
         ]
     else:
-        described["median"] = population.median
+        # The DB stores a log-normal median; the UI shows mean/std.
+        mean, std = median_logvar_to_mean_std(
+            population.median, population.variance
+        )
+        described["mean"] = _round(mean)
+        described["std"] = _round(std)
         if covariate.unit is not None:
             described["unit"] = covariate.unit.symbol
     return described
