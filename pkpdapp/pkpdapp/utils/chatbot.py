@@ -301,11 +301,12 @@ def _format_user_context(context):
     if isinstance(model, Mapping) and model:
         lines.append(f"Model: {model.get('name', '?')}")
         # Report the off features too, so the assistant can advise on what
-        # the user has not turned on.
+        # the user has not turned on. has_saturation and has_effect are only
+        # editable on v2 projects and has_extravascular is never set at all,
+        # so reporting them as "off" would contradict the lines below.
         on = []
         off = []
         for flag in [
-            "has_saturation", "has_extravascular", "has_effect",
             "has_lag", "has_hill_coefficient",
             "has_anti_drug_antibodies", "has_bioavailability",
         ]:
@@ -347,10 +348,13 @@ def _format_user_context(context):
             if not v.get("constant", True):
                 continue
             unit = v.get("unit") or ""
-            line = (
-                f"  {v.get('name', '?')} = {v.get('value', '?')} {unit}"
-                .rstrip()
-            )
+            # The name is what the UI shows; the qname disambiguates names
+            # repeated across compartments.
+            name = v.get("name", "?")
+            qname = v.get("qname")
+            if qname and qname != name:
+                name = f"{name} [{qname}]"
+            line = f"  {name} = {v.get('value', '?')} {unit}".rstrip()
             # is_log is not rendered: the value is already un-logged.
             description = v.get("description")
             if description:
