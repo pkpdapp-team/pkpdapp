@@ -164,7 +164,14 @@ class BuildChatContextTestCase(TestCase):
                         "age_range": [18, 65],
                         "region": "Europe",
                         "male_fraction": 0.4,
-                        "covariates": [{"name": "albumin", "median": 42.0}],
+                        # Stored as a log-normal median; the UI shows mean/SD.
+                        "covariates": [
+                            {
+                                "name": "albumin",
+                                "mean": 43.9332,
+                                "std": 13.4821,
+                            }
+                        ],
                         "protocols": [
                             {
                                 "name": "IV bolus arm",

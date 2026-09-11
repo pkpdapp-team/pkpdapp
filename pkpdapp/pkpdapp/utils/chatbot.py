@@ -213,11 +213,11 @@ def _describe_covariate(cov):
             return f"{name}: {', '.join(parts)}"
         return None
 
-    median = cov.get("median")
-    if median is None:
+    mean = cov.get("mean")
+    if mean is None:
         return None
     unit = cov.get("unit") or ""
-    return f"{name}: median={median} {unit}".rstrip()
+    return f"{name}: mean={mean} {unit}, SD={cov.get('std')} {unit}".rstrip()
 
 
 def _describe_dose(dose):
