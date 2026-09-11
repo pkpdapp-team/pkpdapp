@@ -14,11 +14,19 @@ from pkpdapp.models import (
     CombinedModel,
     Compound,
     Conversation,
+    Covariate,
+    CovariatePopulation,
+    Dataset,
+    Dose,
     Message,
     Project,
+    Protocol,
+    SubjectGroup,
+    Unit,
 )
 from pkpdapp.utils import chatbot
 from pkpdapp.utils.chat_context import build_chat_context
+from pkpdapp.utils.lognormal import mean_std_to_median_logvar
 
 
 def event(type, **kwargs):
@@ -197,9 +205,47 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn("Dosing", block)
 
     def test_system_prompt_includes_project_context(self):
+        # The only test running the real producer into the real formatter, so
+        # it is what catches the two drifting apart.
+        group = SubjectGroup.objects.create(
+            name="Cohort A", project=self.project, m2f_ratio=0.4
+        )
+        covariate = Covariate.objects.create(
+            project=self.project,
+            name="albumin",
+            type=Covariate.Type.CONTINUOUS,
+            unit=Unit.objects.get(symbol="g/L"),
+        )
+        # The UI takes mean/std and stores the log-normal form, so build the
+        # fixture the same way and assert the original values come back.
+        median, variance = mean_std_to_median_logvar(42.0, 8.0)
+        CovariatePopulation.objects.create(
+            subject_group=group,
+            covariate=covariate,
+            median=median,
+            variance=variance,
+        )
+        dataset = Dataset.objects.create(name="observed", project=self.project)
+        observed = SubjectGroup.objects.create(
+            name="Data-Group 1", project=self.project, dataset=dataset
+        )
+        protocol = Protocol.objects.create(
+            name="observed arm",
+            project=self.project,
+            group=observed,
+            dataset=dataset,
+            amount_unit=Unit.objects.get(symbol="mg"),
+            time_unit=Unit.objects.get(symbol="h"),
+        )
+        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
+
         block = self.context_block(build_chat_context(self.project))
 
         self.assertIn("demo project", block)
+        self.assertIn("male fraction 0.4", block)
+        self.assertIn("albumin: mean=42.0 g/L, SD=8.0 g/L", block)
+        self.assertIn("observed cohort from uploaded data", block)
+        self.assertIn("doses from uploaded data", block)
 
     def test_system_prompt_includes_model_context(self):
         block = self.context_block({"model": {"name": "one compartment"}})
