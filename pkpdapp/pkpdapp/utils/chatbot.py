@@ -297,23 +297,30 @@ def _format_user_context(context):
     model = context.get("model")
     if isinstance(model, Mapping) and model:
         lines.append(f"Model: {model.get('name', '?')}")
-        flags = []
+        # Report the off features too, so the assistant can advise on what
+        # the user has not turned on.
+        on = []
+        off = []
         for flag in [
             "has_saturation", "has_extravascular", "has_effect",
             "has_lag", "has_hill_coefficient",
             "has_anti_drug_antibodies", "has_bioavailability",
         ]:
+            name = flag.replace("has_", "")
             if model.get(flag):
-                flags.append(flag.replace("has_", ""))
-        if flags:
-            lines.append(f"  Features: {', '.join(flags)}")
+                on.append(name)
+            else:
+                off.append(name)
+        if on:
+            lines.append(f"  Features on: {', '.join(on)}")
+        if off:
+            lines.append(f"  Features off: {', '.join(off)}")
 
         pk_name = model.get("pk_model_name")
         pd_name = model.get("pd_model_name")
         lines.append(f"  PK model: {pk_name or 'not specified'}")
         extravascular = model.get("pk_model_extravascular")
-        if extravascular:
-            lines.append(f"  PK extravascular model: {extravascular}")
+        lines.append(f"  PK extravascular model: {extravascular or 'none'}")
         # pk_effect_model has a DB default, so gate on the compartment count.
         effect_compartments = model.get("number_of_effect_compartments")
         if effect_compartments:
@@ -321,11 +328,12 @@ def _format_user_context(context):
             if effect_model:
                 lines.append(f"  PK effect-compartment model: {effect_model}")
             lines.append(f"  Effect compartments: {effect_compartments}")
+        else:
+            lines.append("  Effect compartments: none")
 
         lines.append(f"  PD model: {pd_name or 'not specified'}")
         pd_model2 = model.get("pd_model2")
-        if pd_model2:
-            lines.append(f"  Second PD model: {pd_model2}")
+        lines.append(f"  Second PD model: {pd_model2 or 'none'}")
 
     variables = context.get("variables")
     if isinstance(variables, (list, tuple)) and variables:
