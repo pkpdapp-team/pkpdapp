@@ -226,12 +226,16 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn("Effect compartments: 2", block)
         self.assertIn("Second PD model: indirect response", block)
 
-    def test_system_prompt_omits_effect_model_without_compartments(self):
+    def test_system_prompt_reports_what_is_not_configured(self):
+        # Unset parts are reported as "none" rather than omitted, so the
+        # assistant can advise on what the user has not turned on.
         # pk_effect_model is non-nullable with a DB default, so it is always
-        # populated. It must only be reported when a compartment is in use.
+        # populated and must only be named when a compartment is in use.
         block = self.context_block({
             "model": {
                 "name": "combined",
+                "has_saturation": True,
+                "has_extravascular": False,
                 "pk_model_extravascular": None,
                 "pk_effect_model": "Effect compartment model (ke0 & Kp)",
                 "number_of_effect_compartments": 0,
@@ -239,10 +243,12 @@ class ChatbotUtilsTestCase(TestCase):
             },
         })
 
-        self.assertNotIn("extravascular model", block)
+        self.assertIn("Features on: saturation", block)
+        self.assertIn("extravascular", block.split("Features off:")[1])
+        self.assertIn("PK extravascular model: none", block)
+        self.assertIn("Effect compartments: none", block)
+        self.assertIn("Second PD model: none", block)
         self.assertNotIn("effect-compartment model", block)
-        self.assertNotIn("Effect compartments", block)
-        self.assertNotIn("Second PD model", block)
 
     def test_system_prompt_includes_parameter_context(self):
         block = self.context_block({
