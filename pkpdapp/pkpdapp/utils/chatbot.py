@@ -46,15 +46,17 @@ user has a project and model selected)
 - See the user's trial design: subject groups, covariates, and dosing \
 protocols (also in [CURRENT USER CONTEXT], when the project has any \
 configured)
+- Look up the user's own combined model definition, as currently \
+assembled from its PK/PD components. This gives the complete \
+combined picture of the user's current model configuration. \
 - See a catalog of all available library models \
 (provided in [LIBRARY MODELS] below)
 - Look up any library model's .mmt definition to understand its \
 equations, compartments, and parameters — use this tool frequently \
 when discussing or comparing models, rather than relying on your \
-own knowledge
-- Look up the user's own combined model definition, as currently \
-assembled from its PK/PD components, when the individual library \
-definitions are not enough to answer
+own knowledge. Can also be used to look into the different individually \
+defined library models that make up the user's combined model.
+
 - Answer questions about PKPD concepts, model structure, equations, \
 compartments, and parameters
 - Help the user choose a model, interpret parameters, or understand \
@@ -63,8 +65,9 @@ their current configuration
 What you CANNOT do:
 - You cannot perform actions in the app (upload data, run simulations, \
 change settings, create projects)
+# Cannot see results yet, but quick fit results might be added
 - You cannot see simulation results, fitted parameters, or dataset \
-contents — only the current model configuration and trial design
+contents, other than what is shown under [CURRENT USER CONTEXT].
 - Do not suggest you can do these things
 
 When referencing model internals:
@@ -566,7 +569,7 @@ def _text_delta(text_id, delta):
     return _sse({"type": "text-delta", "id": text_id, "delta": delta})
 
 
-_IO_LOG_MAX = 3000
+_IO_LOG_MAX = 50000
 
 
 def _log_io(req_id, label, content):
