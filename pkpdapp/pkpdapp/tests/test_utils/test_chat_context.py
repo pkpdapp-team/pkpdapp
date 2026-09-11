@@ -90,6 +90,39 @@ class BuildChatContextTestCase(TestCase):
         self.assertTrue(variable["is_log"])
         self.assertEqual(variable["unit"], "L/h")
 
+    def test_omits_covariate_machinery_from_the_parameter_list(self):
+        # Mirrors getConstVariables: the sampled inputs and their medians are
+        # set at simulate time, only the coefficients are user-editable.
+        model = CombinedModel.objects.create(
+            name="combined", project=self.project
+        )
+        # update() rather than save(): CombinedModel.save() needs a pk_model.
+        CombinedModel.objects.filter(pk=model.pk).update(
+            number_of_effect_compartments=2
+        )
+        for name, qname in [
+            ("AGE", "Covariates.AGE"),
+            ("mu_AGE", "Covariates.mu_AGE"),
+            ("V3_a_AGE", "Covariates.V3_a_AGE"),
+            ("CL", "PKCompartment.CL"),
+            ("Kp", "EffectCompartment1.Kp"),
+            ("Kp", "EffectCompartment2.Kp"),
+        ]:
+            Variable.objects.create(
+                name=name,
+                qname=qname,
+                dosed_pk_model=model,
+                constant=True,
+            )
+
+        context = build_chat_context(self.project)
+
+        # Repeated effect compartments are numbered as the UI numbers them.
+        self.assertEqual(
+            [v["name"] for v in context["variables"]],
+            ["V3_a_AGE", "CL", "Kp_Ce1", "Kp_Ce2"],
+        )
+
     def test_context_omits_the_assembled_model_definition(self):
         # Fetched via get_current_model_definition instead, which also keeps
         # the myokit build off the chat request path.

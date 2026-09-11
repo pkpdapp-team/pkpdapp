@@ -33,9 +33,8 @@ def build_chat_context(project):
     if model is not None:
         context["model"] = {
             "name": model.name,
-            "has_saturation": model.has_saturation,
-            "has_extravascular": model.has_extravascular,
-            "has_effect": model.has_effect,
+            # No has_saturation/has_effect (v2-only) or has_extravascular
+            # (never set): they are always False on a v3 project.
             "has_lag": model.has_lag,
             "has_hill_coefficient": model.has_hill_coefficient,
             "pk_model_name": (
@@ -67,7 +66,10 @@ def build_chat_context(project):
         }
         context["variables"] = [
             {
-                "name": variable.name,
+                "name": _parameter_name(
+                    variable, model.number_of_effect_compartments
+                ),
+                "qname": variable.qname,
                 # get_default_value() un-logs; default_value is the log.
                 "value": variable.get_default_value(),
                 "unit": (
@@ -82,6 +84,7 @@ def build_chat_context(project):
             for variable in model.variables.filter(constant=True)
             .select_related("unit")
             .order_by("pk")
+            if _is_user_parameter(variable)
         ]
 
     groups = list(
@@ -130,6 +133,26 @@ def build_chat_context(project):
         }
 
     return context
+
+
+def _parameter_name(variable, effect_compartments):
+    """The name shown in the UI, which numbers repeated effect compartments."""
+    # Mirrors parameterDisplayName in the frontend.
+    prefix = "EffectCompartment"
+    if effect_compartments > 1 and variable.qname.startswith("Effect"):
+        compartment = variable.qname.split(".")[0]
+        return f"{variable.name}_Ce{compartment[len(prefix):]}"
+    return variable.name
+
+
+def _is_user_parameter(variable):
+    """Covariate inputs and medians are machinery; coefficients are editable."""
+    # Mirrors getConstVariables in the frontend: AGE/SEX/WT/COV_<id> and
+    # mu_<cov> are set at simulate time, <param>_a_<cov> and _d_<cov>_<k>
+    # are the coefficients the user edits.
+    if not variable.qname.startswith("Covariates."):
+        return True
+    return "_a_" in variable.name or "_d_" in variable.name
 
 
 def _describe_group(group, protocols):

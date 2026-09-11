@@ -280,8 +280,8 @@ class ChatbotUtilsTestCase(TestCase):
         block = self.context_block({
             "model": {
                 "name": "combined",
-                "has_saturation": True,
-                "has_extravascular": False,
+                "has_lag": True,
+                "has_bioavailability": False,
                 "pk_model_extravascular": None,
                 "pk_effect_model": "Effect compartment model (ke0 & Kp)",
                 "number_of_effect_compartments": 0,
@@ -289,12 +289,15 @@ class ChatbotUtilsTestCase(TestCase):
             },
         })
 
-        self.assertIn("Features on: saturation", block)
-        self.assertIn("extravascular", block.split("Features off:")[1])
+        self.assertIn("Features on: lag", block)
+        self.assertIn("bioavailability", block.split("Features off:")[1])
         self.assertIn("PK extravascular model: none", block)
         self.assertIn("Effect compartments: none", block)
         self.assertIn("Second PD model: none", block)
         self.assertNotIn("effect-compartment model", block)
+        # v2-only and never-set flags must not be reported at all: saying
+        # "extravascular off" would contradict the PK extravascular line.
+        self.assertNotIn("saturation", block)
 
     def test_system_prompt_includes_parameter_context(self):
         block = self.context_block({
