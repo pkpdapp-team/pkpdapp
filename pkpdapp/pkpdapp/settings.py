@@ -80,7 +80,8 @@ LOGGING = {
         },
         "pkpdapp.utils.chatbot": {
             "handlers": ["console", "chatbot_file"],
-            "level": "INFO",
+            # DEBUG logs the full prompt and tool I/O for each request.
+            "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
     },
