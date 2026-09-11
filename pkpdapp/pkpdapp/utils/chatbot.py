@@ -495,16 +495,13 @@ MAX_TOOL_ROUNDS = 4
 
 def _get_current_model_definition(conversation):
     """Return the assembled .mmt for the conversation's project model."""
-    # Local import keeps the chat_context <-> chatbot pair one-directional.
-    from pkpdapp.utils.chat_context import _get_model
-
     if conversation is None:
         return "No project is associated with this conversation."
     try:
         project = conversation.get_project()
         if project is None:
             return "No project is associated with this conversation."
-        model = _get_model(project)
+        model = project.pk_models.order_by("pk").first()
         if model is None:
             return (
                 "No model has been configured for this project yet. The user "
