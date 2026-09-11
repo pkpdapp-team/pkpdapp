@@ -60,7 +60,11 @@ def check_groupmembership(userid: str, group: str) -> bool:
     if "groups" not in json_response or not json_response["groups"]:
         return False
     members = json_response["groups"][0]["members"]
-    return any(member["userId"] == userid for member in members) if members else False
+    return (
+        any(member["userId"].lower() == userid.lower() for member in members)
+        if members
+        else False
+    )
 
 
 def get_user_details(username: str) -> dict:
