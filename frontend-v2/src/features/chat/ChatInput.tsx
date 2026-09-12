@@ -16,6 +16,7 @@ interface ChatInputProps {
   onStop: () => void;
   isLoading: boolean;
   disabled?: boolean;
+  disabledReason?: string;
 }
 
 const ChatInput: FC<ChatInputProps> = ({
@@ -25,6 +26,7 @@ const ChatInput: FC<ChatInputProps> = ({
   onStop,
   isLoading,
   disabled,
+  disabledReason,
 }) => {
   const handleKeyDown = (
     e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -118,7 +120,7 @@ const ChatInput: FC<ChatInputProps> = ({
             textAlign: "center",
             display: "block"
           }}>
-          Select a project to start chatting
+          {disabledReason ?? "Select a project to start chatting"}
         </Typography>
       )}
     </Box>

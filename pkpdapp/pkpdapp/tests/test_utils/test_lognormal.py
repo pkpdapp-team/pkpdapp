@@ -7,7 +7,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+from pkpdapp.utils.lognormal import mean_std_to_median_logvar, median_logvar_to_mean_std
 
 
 class TestLognormal(TestCase):
@@ -33,3 +33,19 @@ class TestLognormal(TestCase):
         median, variance = mean_std_to_median_logvar(12.0, 0.0)
         self.assertEqual(variance, 0.0)
         self.assertEqual(median, 12.0)
+
+    def test_inverse_function_matches(self):
+        mean, std = 7.0, 1.5
+        median, variance = mean_std_to_median_logvar(mean, std)
+        # Convert back from (median, log-variance) to (mean, std)
+        recovered_mean, recovered_std = median_logvar_to_mean_std(median, variance)
+        self.assertAlmostEqual(recovered_mean, mean, delta=1e-6)
+        self.assertAlmostEqual(recovered_std, std, delta=1e-6)
+
+        mean_2, std_2 = 4, 40
+        median_2, variance_2 = mean_std_to_median_logvar(mean_2, std_2)
+        recovered_mean_2, recovered_std_2 = median_logvar_to_mean_std(
+            median_2, variance_2
+        )
+        self.assertAlmostEqual(recovered_mean_2, mean_2, delta=1e-6)
+        self.assertAlmostEqual(recovered_std_2, std_2, delta=1e-6)

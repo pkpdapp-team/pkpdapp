@@ -3,6 +3,7 @@ import { expect } from "storybook/test";
 import type { UIMessage } from "ai";
 
 import { buildChatRequest } from "../features/chat/chatTransport";
+import { PageName, SubPageName } from "../features/main/mainSlice";
 
 // These tests have no UI; they exercise the pure request-building logic the
 // chat transport uses to translate AI SDK messages into the payload the Django
@@ -38,6 +39,31 @@ export const BuildsRequestFromLatestMessage: Story = {
     expect(req.body.content).toBe("second");
     expect(req.body.conversation_id).toBe(42);
     expect(req.headers["X-CSRFToken"]).toBe("tok");
+  },
+};
+
+export const MapsBrowserContextToApiContext: Story = {
+  play: async () => {
+    const req = buildChatRequest({
+      messages: [userMessage("Explain these parameters")],
+      body: {
+        conversationId: 42,
+        context: {
+          page: PageName.MODEL,
+          subPage: SubPageName.PARAMETERS,
+        },
+      },
+      csrf: "tok",
+    });
+
+    expect(req.body).toEqual({
+      conversation_id: 42,
+      content: "Explain these parameters",
+      context: {
+        page: "Model",
+        sub_page: "Parameters",
+      },
+    });
   },
 };
 

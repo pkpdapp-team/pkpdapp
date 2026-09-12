@@ -2,12 +2,17 @@ import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
 import { store } from "../../app/store";
 import { selectCsrf } from "../login/loginSlice";
+import type { PageName, SubPageName } from "../main/mainSlice";
 
-/**
- * Build the request the Django chatbot endpoint expects from the AI SDK's
- * outgoing message list: the latest message's text, rename
- * "conversationId" to "conversation_id", inject the CSRF header
- */
+export interface ChatTransportBody {
+  conversationId?: number;
+  context?: {
+    page: PageName;
+    subPage: SubPageName | null;
+  };
+}
+
+/** Build the Django request for the latest chat message. */
 export function buildChatRequest({
   messages,
   headers,
@@ -16,28 +21,35 @@ export function buildChatRequest({
 }: {
   messages: UIMessage[];
   headers?: Record<string, string>;
-  body?: unknown;
+  body?: ChatTransportBody;
   csrf: string;
-}): {
-  body: { conversation_id: unknown; content: string };
-  headers: Record<string, string>;
-} {
+}) {
+  const browserContext = body?.context;
   const lastMessage = messages.at(-1);
   const content =
     lastMessage?.parts
       ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
       .join("") ?? "";
+  const requestHeaders: Record<string, string> = {
+    ...headers,
+    "X-CSRFToken": csrf,
+  };
 
   return {
     body: {
-      conversation_id: (body as Record<string, unknown>)?.conversationId,
+      conversation_id: body?.conversationId,
       content,
+      ...(browserContext
+        ? {
+            context: {
+              page: browserContext.page,
+              sub_page: browserContext.subPage,
+            },
+          }
+        : {}),
     },
-    headers: {
-      ...headers,
-      "X-CSRFToken": csrf,
-    },
+    headers: requestHeaders,
   };
 }
 

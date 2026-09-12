@@ -1,7 +1,10 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 
+import { store } from "../app/store";
 import chatReducer, {
+  selectActiveConversationId,
+  setActiveConversation,
   setChatWidth,
   MIN_CHAT_WIDTH,
   MAX_CHAT_WIDTH,
@@ -25,6 +28,7 @@ const initialState = {
   isOpen: false,
   drawerWidth: DEFAULT_CHAT_WIDTH,
   activeConversationId: null,
+  activeConversationProjectId: null,
 };
 
 export const ClampsDrawerWidth: Story = {
@@ -44,5 +48,37 @@ export const ClampsDrawerWidth: Story = {
     expect(
       chatReducer(initialState, setChatWidth(inRange)).drawerWidth,
     ).toBe(inRange);
+  },
+};
+
+export const ScopesActiveConversationToProject: Story = {
+  play: async () => {
+    const activeState = chatReducer(
+      initialState,
+      setActiveConversation({ conversationId: 3, projectId: 57 }),
+    );
+
+    expect(activeState.activeConversationId).toBe(3);
+    expect(activeState.activeConversationProjectId).toBe(57);
+
+    const rootState = store.getState();
+    expect(
+      selectActiveConversationId({
+        ...rootState,
+        chat: activeState,
+        main: { ...rootState.main, selectedProject: 57 },
+      }),
+    ).toBe(3);
+    expect(
+      selectActiveConversationId({
+        ...rootState,
+        chat: activeState,
+        main: { ...rootState.main, selectedProject: 58 },
+      }),
+    ).toBeNull();
+
+    const clearedState = chatReducer(activeState, setActiveConversation(null));
+    expect(clearedState.activeConversationId).toBeNull();
+    expect(clearedState.activeConversationProjectId).toBeNull();
   },
 };
