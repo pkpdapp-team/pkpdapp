@@ -19,6 +19,7 @@ from pkpdapp.models import (
     Dataset,
     Dose,
     Message,
+    PharmacodynamicModel,
     Project,
     Protocol,
     SubjectGroup,
@@ -367,6 +368,52 @@ class ChatbotUtilsTestCase(TestCase):
             conversation=Conversation.objects.create(user=self.user),
         )
         self.assertIn("No project", projectless)
+
+    def test_stream_runs_a_tool_call_and_feeds_the_result_back(self):
+        library_model = PharmacodynamicModel.objects.filter(
+            is_library_model=True
+        ).first()
+
+        fake_client = mock.Mock()
+        fake_client.responses.create.side_effect = [
+            [
+                event(
+                    "response.output_item.added",
+                    output_index=0,
+                    item=SimpleNamespace(
+                        type="function_call",
+                        call_id="call-1",
+                        name="get_library_model_definition",
+                    ),
+                ),
+                event(
+                    "response.function_call_arguments.delta",
+                    output_index=0,
+                    delta='{"model_name":',
+                ),
+                event(
+                    "response.function_call_arguments.done",
+                    output_index=0,
+                    arguments=f'{{"model_name": "{library_model.name}"}}',
+                ),
+                completed_event(),
+            ],
+            [
+                event("response.output_text.delta", delta="Answer"),
+                completed_event(),
+            ],
+        ]
+
+        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+            chunks = list(chatbot.stream_chat_response(self.conversation, "question"))
+
+        # The second round is where the tool result reaches the model.
+        second_input = fake_client.responses.create.call_args_list[1].kwargs["input"]
+        tool_output = second_input[-1]
+        self.assertEqual(tool_output["type"], "function_call_output")
+        self.assertEqual(tool_output["call_id"], "call-1")
+        self.assertIn(library_model.name, tool_output["output"])
+        self.assertIn('"delta": "Answer"', "".join(chunks))
 
     def test_system_prompt_includes_trial_design_context(self):
         block = self.context_block({
