@@ -3,6 +3,8 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+from unittest.mock import ANY, patch
+
 import pkpdapp.tests  # noqa: F401
 from pkpdapp.models import Compound, Project, Conversation  # noqa: F401
 from django.contrib.auth.models import User
@@ -36,7 +38,7 @@ class ChatbotViewTestCase(APITestCase):
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("conversation_id", response.data["error"])
+        self.assertIn("conversation_id", response.data["details"])
 
     def test_missing_content(self):
         data = {
@@ -46,7 +48,7 @@ class ChatbotViewTestCase(APITestCase):
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("content", response.data["error"])
+        self.assertIn("content", response.data["details"])
 
     def test_valid_request(self):
         data = {
@@ -57,6 +59,35 @@ class ChatbotViewTestCase(APITestCase):
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_invalid_context(self):
+        data = {
+            "conversation_id": self.conversation.id,
+            "content": "Hello",
+            "context": 42,
+        }
+
+        response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("context", response.data["details"])
+
+    def test_stream_receives_trimmed_message(self):
+        data = {
+            "conversation_id": self.conversation.id,
+            "content": "  Hello  ",
+        }
+
+        with patch(
+            "pkpdapp.api.views.chatbot.stream_chat_response",
+            return_value=iter(()),  # empty stream for StreamingHttpResponse
+        ) as stream_response:
+            response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stream_response.assert_called_once_with(
+            self.conversation, "Hello", context=ANY
+        )
 
     def test_api_key_not_set(self):
         with override_settings(PORTKEY_API_KEY=None):

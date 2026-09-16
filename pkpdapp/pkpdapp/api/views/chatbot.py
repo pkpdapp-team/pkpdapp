@@ -13,7 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
 from pkpdapp.models import Conversation, ProjectAccess
-from pkpdapp.api.serializers import ChatbotContextSerializer
+from pkpdapp.api.serializers import ChatbotRequestSerializer
 from pkpdapp.utils.chat_context import build_chat_context
 from pkpdapp.utils.chatbot import (
     stream_chat_response,
@@ -35,42 +35,20 @@ class ChatbotView(APIView):
     throttle_classes = [ChatbotRateThrottle]
 
     def post(self, request):
-        conversation_id = request.data.get("conversation_id")
-        content = request.data.get("content")
-        context = request.data.get("context")
-        client_context = {}
+        serializer = ChatbotRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    "error": "Invalid chat request.",
+                    "details": serializer.errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if not conversation_id or not content:
-            return Response(
-                {"error": "'conversation_id' and 'content' are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not isinstance(content, str) or not content.strip():
-            return Response(
-                {"error": "'content' must be a non-empty string."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if len(content) > 10000:
-            return Response(
-                {"error": "Message content too long (max 10000 chars)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if context is not None:
-            if not isinstance(context, dict):
-                return Response(
-                    {"error": "'context' must be an object."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            context_serializer = ChatbotContextSerializer(data=context)
-            if not context_serializer.is_valid():
-                return Response(
-                    {
-                        "error": "'context' has an invalid shape.",
-                        "details": context_serializer.errors,
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            client_context = context_serializer.validated_data
+        data = serializer.validated_data
+        conversation_id = data["conversation_id"]
+        content = data["content"]
+        client_context = data.get("context") or {}
 
         try:
             conversation = Conversation.objects.get(
@@ -121,7 +99,7 @@ class ChatbotView(APIView):
         merged_context = {**client_context, **server_context}
 
         generator = stream_chat_response(
-            conversation, content.strip(), context=merged_context or None
+            conversation, content, context=merged_context or None
         )
         response = StreamingHttpResponse(
             generator,

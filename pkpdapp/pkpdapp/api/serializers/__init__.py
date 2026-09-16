@@ -42,4 +42,4 @@ from .simulation import (
 )
 from .tag import TagSerializer
 from .conversation import ConversationSerializer, MessageSerializer
-from .chatbot import ChatbotContextSerializer
+from .chatbot import ChatbotContextSerializer, ChatbotRequestSerializer

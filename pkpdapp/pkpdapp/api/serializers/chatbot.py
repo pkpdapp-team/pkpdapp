@@ -24,6 +24,9 @@ class ChatbotContextSerializer(serializers.Serializer):
     )
 
     def to_internal_value(self, data):
+        if not isinstance(data, dict):
+            return super().to_internal_value(data)
+
         unknown_fields = set(data) - set(self.fields)
         if unknown_fields:
             raise serializers.ValidationError(
@@ -33,3 +36,11 @@ class ChatbotContextSerializer(serializers.Serializer):
                 }
             )
         return super().to_internal_value(data)
+
+
+class ChatbotRequestSerializer(serializers.Serializer):
+    """Validate a chat request."""
+
+    conversation_id = serializers.IntegerField()
+    content = StrictCharField(max_length=10000)
+    context = ChatbotContextSerializer(required=False, allow_null=True)
