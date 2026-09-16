@@ -1,5 +1,6 @@
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import HelpOutline from "@mui/icons-material/HelpOutlineOutlined";
+import HelpCenterOutlined from "@mui/icons-material/HelpCenterOutlined";
 import Papa from "papaparse";
 import { FC, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -28,6 +29,14 @@ export type Row = {
 };
 export type Data = Row[];
 export type Field = string;
+
+// Per-deployment external help resource for uploading data. When the URL is
+// unset the help link is not rendered (see the drop area below). The tooltip
+// text is customisable via VITE_APP_DATA_UPLOAD_HELP_TEXT, defaulting below.
+const { VITE_APP_DATA_UPLOAD_HELP_URL, VITE_APP_DATA_UPLOAD_HELP_TEXT } =
+  import.meta.env;
+const dataUploadHelpText =
+  VITE_APP_DATA_UPLOAD_HELP_TEXT || "Data upload help";
 
 const MAP_HEADER_HELP = (
   <>
@@ -369,6 +378,17 @@ const LoadData: FC<ILoadDataProps> = ({ state, notificationsInfo }) => {
                 >
                   <HelpOutline titleAccess="Example file formats" />
                 </IconButton>
+                {VITE_APP_DATA_UPLOAD_HELP_URL && (
+                  <IconButton
+                    component="a"
+                    href={VITE_APP_DATA_UPLOAD_HELP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <HelpCenterOutlined titleAccess={dataUploadHelpText} />
+                  </IconButton>
+                )}
               </Box>
             </Typography>
           </Box>
