@@ -6,6 +6,8 @@
 import logging
 
 from django.http import StreamingHttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
@@ -28,6 +30,15 @@ class ChatbotRateThrottle(UserRateThrottle):
     scope = "chatbot"
 
 
+@extend_schema(
+    request=ChatbotRequestSerializer,
+    responses={
+        (200, "text/event-stream"): OpenApiTypes.STR,
+        (400, "application/json"): OpenApiTypes.OBJECT,
+        (404, "application/json"): OpenApiTypes.OBJECT,
+        (503, "application/json"): OpenApiTypes.OBJECT,
+    },
+)
 class ChatbotView(APIView):
     # Authentication (SessionAuthentication) and IsAuthenticated come from
     # the project-wide DRF defaults; only the per-endpoint rate limit is
