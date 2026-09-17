@@ -59,6 +59,9 @@ const ParametersTab: FC<Props> = ({
   const constVariables = useConstVariables();
   const noReset = useNoReset();
 
+  const populationEnabled =
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS === "true";
+
   const myResetToSpeciesDefaults = () => {
     setParamsToDefault({ id: model.id, combinedModel: model });
   };
@@ -134,19 +137,21 @@ const ParametersTab: FC<Props> = ({
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
               </TableCell>
-              <TableCell sx={{ width: "19rem" }}>
-                <div style={{ ...defaultHeaderSx }}>
-                  Population{" "}
-                  <HelpButton title="Population">
-                    Tick to make this a population parameter and run a population
-                    (Monte-Carlo) simulation. The parameter value is the typical
-                    value; the standard deviation sets the spread of the random
-                    effect. The distribution defaults from the bounds (logit for a
-                    parameter bounded to 0–1, otherwise log-normal) and can be
-                    changed.
-                  </HelpButton>{" "}
-                </div>
-              </TableCell>
+              {populationEnabled && (
+                <TableCell sx={{ width: "19rem" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Population{" "}
+                    <HelpButton title="Population">
+                      Tick to make this a population parameter and run a
+                      population (Monte-Carlo) simulation. The parameter value is
+                      the typical value; the standard deviation sets the spread of
+                      the random effect. The distribution defaults from the bounds
+                      (logit for a parameter bounded to 0–1, otherwise log-normal)
+                      and can be changed.
+                    </HelpButton>{" "}
+                  </div>
+                </TableCell>
+              )}
               <TableCell sx={{ width: "20rem" }}>
                 <div style={{ ...defaultHeaderSx }}>
                   Nonlinearity{" "}
@@ -176,7 +181,9 @@ const ParametersTab: FC<Props> = ({
           <TableBody>
             {constVariables.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10}>No variables found</TableCell>
+                <TableCell colSpan={populationEnabled ? 10 : 9}>
+                  No variables found
+                </TableCell>
               </TableRow>
             )}
             {constVariables.map((variable) => (
@@ -194,7 +201,13 @@ const ParametersTab: FC<Props> = ({
         </Table>
       </TableContainer>
 
-      <CorrelationMatrix model={model} project={project} variables={variables} />
+      {populationEnabled && (
+        <CorrelationMatrix
+          model={model}
+          project={project}
+          variables={variables}
+        />
+      )}
     </Stack>
   );
 };

@@ -93,12 +93,13 @@ The frontend is configured with a number of `VITE_` variables that are baked int
 
 - `VITE_APP_ROCHE`: set to true to enable Roche branding
 - `VITE_APP_HELP_URL`: url of help page shown on login
-- `VITE_APP_DATA_UPLOAD_HELP_URL`: url of an external help resource for uploading data; when set, a help link is shown next to the data upload button. Leave unset to hide the link.
-- `VITE_APP_DATA_UPLOAD_HELP_TEXT`: tooltip text for the data upload help link (defaults to "Data upload help" when unset). Only has an effect when `VITE_APP_DATA_UPLOAD_HELP_URL` is set.
+- `VITE_APP_GEM_URLS`: JSON array of external "Gem" link URLs shown in the Gems dropdown menu (e.g. `["https://example.com/a", "https://example.com/b"]`). Must be a non-empty array of the same length as `VITE_APP_GEM_TEXTS`; each URL is paired with the text at the same index. Leave unset (or provide a mismatched/invalid value) to hide the Gems button.
+- `VITE_APP_GEM_TEXTS`: JSON array of display labels for the Gem links (e.g. `["Gem A", "Gem B"]`), paired by index with `VITE_APP_GEM_URLS`. Must be the same length as `VITE_APP_GEM_URLS`.
 - `VITE_APP_GA_ID`: Google Analytics ID to enable analytics.
 - `VITE_ENABLE_SIGNUP`: set to true to enable user sign up (should match the backend `ENABLE_SIGNUP`)
 - `VITE_APP_ACK_TXT`: Acknowledgment text for login and signup pages
 - `VITE_ENABLE_CHATBOT`: set to `true` to show the chatbot button (requires backend chatbot config above)
+- `VITE_ENABLE_POPULATION_PARAMETERS`: set to `true` to enable population parameters.
 
 ## SSL Certificate
 

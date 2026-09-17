@@ -395,6 +395,9 @@ const ParameterRow: FC<Props> = ({
     "A parameter cannot have both a nonlinearity and a covariate. " +
     "Set the nonlinearity to None to choose covariates.";
 
+  const populationEnabled =
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS === "true";
+
   const distribution = watch("distribution");
   const distributionOptions: { value: PdfEnum; label: string }[] = [
     { value: "normal", label: "Normal" },
@@ -493,41 +496,43 @@ const ParameterRow: FC<Props> = ({
           />
         )}
       </TableCell>
-      <TableCell size="small" sx={{ width: "19rem" }}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <MuiCheckbox
-            size="small"
-            checked={!!distribution}
-            onChange={(event) => handlePopulationToggle(event.target.checked)}
-            disabled={defaultProps.disabled}
-            slotProps={{ input: { "aria-label": "Population" } }}
-          />
-          {distribution && (
-            <>
-              <Select
-                size="small"
-                sx={{ minWidth: "8.7rem" }}
-                value={distribution.pdf ?? "lognormal"}
-                onChange={handleDistributionChange}
-                {...defaultProps}
-              >
-                {distributionOptions.map((option) => (
-                  <MenuItem value={option.value} key={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              <StdDeviationField
-                control={control}
-                setValue={setValue}
-                disabled={defaultProps.disabled}
-              />
-            </>
-          )}
-        </Stack>
-      </TableCell>
+      {populationEnabled && (
+        <TableCell size="small" sx={{ width: "19rem" }}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
+            <MuiCheckbox
+              size="small"
+              checked={!!distribution}
+              onChange={(event) => handlePopulationToggle(event.target.checked)}
+              disabled={defaultProps.disabled}
+              slotProps={{ input: { "aria-label": "Population" } }}
+            />
+            {distribution && (
+              <>
+                <Select
+                  size="small"
+                  sx={{ minWidth: "8.7rem" }}
+                  value={distribution.pdf ?? "lognormal"}
+                  onChange={handleDistributionChange}
+                  {...defaultProps}
+                >
+                  {distributionOptions.map((option) => (
+                    <MenuItem value={option.value} key={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <StdDeviationField
+                  control={control}
+                  setValue={setValue}
+                  disabled={defaultProps.disabled}
+                />
+              </>
+            )}
+          </Stack>
+        </TableCell>
+      )}
       <TableCell size="small" sx={{ width: "20rem" }}>
         {isPK && !isNonlin && (
           <Stack direction="row" spacing={2}>
