@@ -26,5 +26,5 @@ class ConversationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
-    def get_last_message_preview(self, obj):
+    def get_last_message_preview(self, obj: Conversation) -> str:
         return obj.last_message_preview()
