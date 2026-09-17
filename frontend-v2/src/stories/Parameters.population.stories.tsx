@@ -112,6 +112,16 @@ const meta: Meta<typeof ParameterRow> = {
     },
   },
   render: () => <Harness />,
+  // The Population column is gated behind VITE_ENABLE_POPULATION_PARAMETERS.
+  // Enable it for these stories (restoring the previous value afterwards) so the
+  // distribution controls render and the interactions below can run.
+  beforeEach: () => {
+    const prev = import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS;
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS = "true";
+    return () => {
+      import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS = prev;
+    };
+  },
 };
 
 export default meta;
