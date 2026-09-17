@@ -330,22 +330,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/ChatbotErrorResponse'
           description: ''
         '404':
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/ChatbotErrorResponse'
           description: ''
         '503':
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/ChatbotErrorResponse'
           description: ''
   /api/combined_model/:
     get:
@@ -4024,6 +4021,13 @@ components:
           type: string
           nullable: true
           maxLength: 200
+    ChatbotErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
     ChatbotRequest:
       type: object
       description: Validate a chat request.

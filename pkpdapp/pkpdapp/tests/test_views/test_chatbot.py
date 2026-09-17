@@ -38,7 +38,7 @@ class ChatbotViewTestCase(APITestCase):
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("conversation_id", response.data["details"])
+        self.assertIn("conversation_id", response.data["error"])
 
     def test_missing_content(self):
         data = {
@@ -48,7 +48,7 @@ class ChatbotViewTestCase(APITestCase):
 
         response = self.client.post("/api/chatbot/", data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("content", response.data["details"])
+        self.assertIn("content", response.data["error"])
 
     def test_valid_request(self):
         data = {
@@ -70,7 +70,9 @@ class ChatbotViewTestCase(APITestCase):
         response = self.client.post("/api/chatbot/", data=data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("context", response.data["details"])
+        self.assertEqual(set(response.data), {"error"})
+        self.assertIsInstance(response.data["error"], str)
+        self.assertIn("context", response.data["error"])
 
     def test_stream_receives_trimmed_message(self):
         data = {

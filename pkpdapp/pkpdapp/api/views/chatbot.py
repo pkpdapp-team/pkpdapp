@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
-from rest_framework import status
+from rest_framework import serializers, status
 
 from pkpdapp.models import Conversation, ProjectAccess
 from pkpdapp.api.serializers import ChatbotRequestSerializer
@@ -30,13 +30,17 @@ class ChatbotRateThrottle(UserRateThrottle):
     scope = "chatbot"
 
 
+class ChatbotErrorResponseSerializer(serializers.Serializer):
+    error = serializers.CharField()
+
+
 @extend_schema(
     request=ChatbotRequestSerializer,
     responses={
         (200, "text/event-stream"): OpenApiTypes.STR,
-        (400, "application/json"): OpenApiTypes.OBJECT,
-        (404, "application/json"): OpenApiTypes.OBJECT,
-        (503, "application/json"): OpenApiTypes.OBJECT,
+        400: ChatbotErrorResponseSerializer,
+        404: ChatbotErrorResponseSerializer,
+        503: ChatbotErrorResponseSerializer,
     },
 )
 class ChatbotView(APIView):
@@ -48,11 +52,11 @@ class ChatbotView(APIView):
     def post(self, request):
         serializer = ChatbotRequestSerializer(data=request.data)
         if not serializer.is_valid():
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": str(serializer.errors)}
+            )
             return Response(
-                {
-                    "error": "Invalid chat request.",
-                    "details": serializer.errors,
-                },
+                error_response.data,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -68,8 +72,11 @@ class ChatbotView(APIView):
                 is_active=True,
             )
         except Conversation.DoesNotExist:
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": "Conversation not found."}
+            )
             return Response(
-                {"error": "Conversation not found."},
+                error_response.data,
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -91,8 +98,9 @@ class ChatbotView(APIView):
         try:
             check_chatbot_config()
         except ChatbotConfigError as e:
+            error_response = ChatbotErrorResponseSerializer({"error": str(e)})
             return Response(
-                {"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+                error_response.data, status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
         server_context = {}

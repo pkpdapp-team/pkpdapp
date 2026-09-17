@@ -2331,6 +2331,9 @@ export type PatchedBiomarkerTypeRead = {
   /** mapped variable */
   variable?: number | null;
 };
+export type ChatbotErrorResponse = {
+  error: string;
+};
 export type ChatbotContext = {
   page?: string | null;
   sub_page?: string | null;
