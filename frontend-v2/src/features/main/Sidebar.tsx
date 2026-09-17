@@ -50,6 +50,7 @@ import { useProjectDescription } from "../../shared/contexts/ProjectDescriptionC
 import "../../App.css";
 import { useModelTimeIntervals } from "../../hooks/useModelTimeIntervals";
 import ChatButton from "../chat/ChatButton";
+import GemsButton from "./GemsButton";
 import { selectChatOpen, selectChatWidth } from "../chat/chatSlice";
 
 const drawerExpandedWidth = 240;
@@ -521,6 +522,7 @@ export default function Sidebar() {
             </Box>
           )}
           <div style={{ display: "flex", alignItems: "center" }}>
+            <GemsButton />
             {isChatbotEnabled && <ChatButton />}
             <Typography
               variant="subtitle1"
