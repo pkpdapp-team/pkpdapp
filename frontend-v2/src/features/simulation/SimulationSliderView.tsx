@@ -34,6 +34,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
+import formatUnitSymbol from "../../shared/formatUnitSymbol";
 
 interface SimulationSliderProps {
   index: number;
@@ -189,6 +190,7 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
   }
 
   const variable_name = parameterDisplayName(variable, model);
+  const unitSymbol = formatUnitSymbol(unit?.symbol, variable.unit_per_body_weight);
 
   return (
     <div
@@ -211,8 +213,8 @@ const SimulationSliderView: FC<SimulationSliderProps> = ({
             gutterBottom
             sx={{ flexGrow: 1, fontWeight: "bold" }}
           >
-            {unit?.symbol
-              ? `${variable_name} [${unit?.symbol}]`
+            {unitSymbol
+              ? `${variable_name} [${unitSymbol}]`
               : variable_name}
           </Typography>
         </Tooltip>
