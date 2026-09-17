@@ -205,8 +205,8 @@ const ChatPanel: FC = () => {
       { text: trimmed },
       {
         body: {
-          conversationId: convId,
-          context: { page: selectedPage, subPage: selectedSubPage },
+          conversation_id: convId,
+          context: { page: selectedPage, sub_page: selectedSubPage },
         } satisfies ChatTransportBody,
       },
     );

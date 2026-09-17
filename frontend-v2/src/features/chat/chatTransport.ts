@@ -1,16 +1,10 @@
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
+import type { ChatbotRequest } from "../../app/backendApi";
 import { store } from "../../app/store";
 import { selectCsrf } from "../login/loginSlice";
-import type { PageName, SubPageName } from "../main/mainSlice";
 
-export interface ChatTransportBody {
-  conversationId?: number;
-  context?: {
-    page: PageName;
-    subPage: SubPageName | null;
-  };
-}
+export type ChatTransportBody = Omit<ChatbotRequest, "content">;
 
 /** Build the Django request for the latest chat message. */
 export function buildChatRequest({
@@ -24,31 +18,30 @@ export function buildChatRequest({
   body?: ChatTransportBody;
   csrf: string;
 }) {
-  const browserContext = body?.context;
+  const conversationId = body?.conversation_id;
+  if (conversationId === undefined) {
+    throw new Error("A conversation ID is required");
+  }
+
   const lastMessage = messages.at(-1);
   const content =
     lastMessage?.parts
-      ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-      .map((p) => p.text)
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
       .join("") ?? "";
   const requestHeaders: Record<string, string> = {
     ...headers,
     "X-CSRFToken": csrf,
   };
 
+  const requestBody: ChatbotRequest = {
+    conversation_id: conversationId,
+    content,
+    context: body?.context,
+  };
+
   return {
-    body: {
-      conversation_id: body?.conversationId,
-      content,
-      ...(browserContext
-        ? {
-            context: {
-              page: browserContext.page,
-              sub_page: browserContext.subPage,
-            },
-          }
-        : {}),
-    },
+    body: requestBody,
     headers: requestHeaders,
   };
 }
@@ -60,7 +53,7 @@ const transport = new DefaultChatTransport({
     buildChatRequest({
       messages,
       headers: headers as Record<string, string> | undefined,
-      body,
+      body: body as ChatTransportBody | undefined,
       csrf: selectCsrf(store.getState()) ?? "",
     }),
 });

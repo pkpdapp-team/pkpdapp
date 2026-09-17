@@ -26,13 +26,11 @@ function userMessage(...texts: string[]): UIMessage {
   };
 }
 
-// Only the newest message is sent, conversationId is renamed to snake_case,
-// and the CSRF header is injected.
 export const BuildsRequestFromLatestMessage: Story = {
   play: async () => {
     const req = buildChatRequest({
       messages: [userMessage("first"), userMessage("second")],
-      body: { conversationId: 42 },
+      body: { conversation_id: 42 },
       csrf: "tok",
     });
 
@@ -42,15 +40,15 @@ export const BuildsRequestFromLatestMessage: Story = {
   },
 };
 
-export const MapsBrowserContextToApiContext: Story = {
+export const IncludesContext: Story = {
   play: async () => {
     const req = buildChatRequest({
       messages: [userMessage("Explain these parameters")],
       body: {
-        conversationId: 42,
+        conversation_id: 42,
         context: {
           page: PageName.MODEL,
-          subPage: SubPageName.PARAMETERS,
+          sub_page: SubPageName.PARAMETERS,
         },
       },
       csrf: "tok",
@@ -72,7 +70,7 @@ export const JoinsMultipleTextParts: Story = {
   play: async () => {
     const req = buildChatRequest({
       messages: [userMessage("Hello ", "world")],
-      body: {},
+      body: { conversation_id: 42 },
       csrf: "",
     });
 
@@ -80,15 +78,11 @@ export const JoinsMultipleTextParts: Story = {
   },
 };
 
-// No messages / no body: content is empty and conversation_id is undefined,
-// but the CSRF header is still set.
-export const HandlesEmptyInput: Story = {
+export const RequiresConversationId: Story = {
   play: async () => {
-    const req = buildChatRequest({ messages: [], body: undefined, csrf: "x" });
-
-    expect(req.body.content).toBe("");
-    expect(req.body.conversation_id).toBeUndefined();
-    expect(req.headers["X-CSRFToken"]).toBe("x");
+    expect(() =>
+      buildChatRequest({ messages: [], body: undefined, csrf: "x" }),
+    ).toThrow("A conversation ID is required");
   },
 };
 
@@ -98,7 +92,7 @@ export const MergesExistingHeaders: Story = {
     const req = buildChatRequest({
       messages: [userMessage("hi")],
       headers: { "Content-Type": "application/json" },
-      body: { conversationId: 7 },
+      body: { conversation_id: 7 },
       csrf: "abc",
     });
 
