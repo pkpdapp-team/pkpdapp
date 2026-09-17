@@ -644,8 +644,17 @@ export const SimulationsSidePanel = ({
                               onClick={handleOptimise}
                               disabled={fitDisabled}
                               data-cy="optimise-parameters"
+                              sx={{ minWidth: "4rem" }}
                             >
-                              Fit
+                              {loadingOptimise ? (
+                                <CircularProgress
+                                  size={20}
+                                  color="inherit"
+                                  aria-label="Optimising"
+                                />
+                              ) : (
+                                "Fit"
+                              )}
                             </Button>
                           </span>
                         </Tooltip>
@@ -731,9 +740,6 @@ export const SimulationsSidePanel = ({
                             <li>Condition number (κ = s_max / s_min from SVD of correlation matrix) indicates parameter identifiability</li>
                           </ul>
                         </HelpButton>
-                        {loadingOptimise && (
-                          <CircularProgress size={20} aria-label="Optimising" />
-                        )}
                       </Stack>
                     </Collapse>
                   </Box>
