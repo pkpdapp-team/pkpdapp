@@ -3,25 +3,46 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import logging
+
 from django.http import StreamingHttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
-from rest_framework import status
+from rest_framework import serializers, status
 
 from pkpdapp.models import Conversation, ProjectAccess
+from pkpdapp.api.serializers import ChatbotRequestSerializer
+from pkpdapp.utils.chat_context import build_chat_context
 from pkpdapp.utils.chatbot import (
     stream_chat_response,
     check_chatbot_config,
     ChatbotConfigError,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class ChatbotRateThrottle(UserRateThrottle):
     scope = "chatbot"
 
 
+class ChatbotErrorResponseSerializer(serializers.Serializer):
+    error = serializers.CharField()
+
+
+@extend_schema(
+    request=ChatbotRequestSerializer,
+    responses={
+        (200, "text/event-stream"): OpenApiTypes.STR,
+        400: ChatbotErrorResponseSerializer,
+        404: ChatbotErrorResponseSerializer,
+        503: ChatbotErrorResponseSerializer,
+    },
+)
 class ChatbotView(APIView):
     # Authentication (SessionAuthentication) and IsAuthenticated come from
     # the project-wide DRF defaults; only the per-endpoint rate limit is
@@ -29,24 +50,20 @@ class ChatbotView(APIView):
     throttle_classes = [ChatbotRateThrottle]
 
     def post(self, request):
-        conversation_id = request.data.get("conversation_id")
-        content = request.data.get("content")
+        serializer = ChatbotRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": str(serializer.errors)}
+            )
+            return Response(
+                error_response.data,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if not conversation_id or not content:
-            return Response(
-                {"error": "'conversation_id' and 'content' are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not isinstance(content, str) or not content.strip():
-            return Response(
-                {"error": "'content' must be a non-empty string."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if len(content) > 10000:
-            return Response(
-                {"error": "Message content too long (max 10000 chars)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        data = serializer.validated_data
+        conversation_id = data["conversation_id"]
+        content = data["content"]
+        client_context = data.get("context") or {}
 
         try:
             conversation = Conversation.objects.get(
@@ -55,8 +72,11 @@ class ChatbotView(APIView):
                 is_active=True,
             )
         except Conversation.DoesNotExist:
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": "Conversation not found."}
+            )
             return Response(
-                {"error": "Conversation not found."},
+                error_response.data,
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -78,11 +98,28 @@ class ChatbotView(APIView):
         try:
             check_chatbot_config()
         except ChatbotConfigError as e:
+            error_response = ChatbotErrorResponseSerializer({"error": str(e)})
             return Response(
-                {"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+                error_response.data, status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        generator = stream_chat_response(conversation, content.strip())
+        server_context = {}
+        if project is not None:
+            try:
+                server_context = build_chat_context(project)
+            except Exception:
+                logger.exception(
+                    "[chatbot] failed to build context for project=%s",
+                    project.pk,
+                )
+
+        # Server-owned context takes precedence.
+        assert client_context.keys().isdisjoint(server_context.keys())
+        merged_context = {**client_context, **server_context}
+
+        generator = stream_chat_response(
+            conversation, content, context=merged_context or None
+        )
         response = StreamingHttpResponse(
             generator,
             content_type="text/event-stream; charset=utf-8",

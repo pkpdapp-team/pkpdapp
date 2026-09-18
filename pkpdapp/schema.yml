@@ -305,11 +305,45 @@ paths:
       operationId: chatbot_create
       tags:
       - chatbot
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatbotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatbotRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatbotRequest'
+        required: true
       security:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            text/event-stream:
+              schema:
+                type: string
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatbotErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatbotErrorResponse'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatbotErrorResponse'
+          description: ''
   /api/combined_model/:
     get:
       operationId: combined_model_list
@@ -3975,6 +4009,41 @@ components:
         * `WT` - Weight
         * `AGE` - Age
         * `SEX` - Sex
+    ChatbotContext:
+      type: object
+      description: Validate browser-owned context attached to a chat turn.
+      properties:
+        page:
+          type: string
+          nullable: true
+          maxLength: 200
+        sub_page:
+          type: string
+          nullable: true
+          maxLength: 200
+    ChatbotErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    ChatbotRequest:
+      type: object
+      description: Validate a chat request.
+      properties:
+        conversation_id:
+          type: integer
+        content:
+          type: string
+          maxLength: 10000
+        context:
+          allOf:
+          - $ref: '#/components/schemas/ChatbotContext'
+          nullable: true
+      required:
+      - content
+      - conversation_id
     ColumnsEnum:
       enum:
       - parameters

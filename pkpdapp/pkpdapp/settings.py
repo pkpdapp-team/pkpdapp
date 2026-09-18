@@ -80,7 +80,8 @@ LOGGING = {
         },
         "pkpdapp.utils.chatbot": {
             "handlers": ["console", "chatbot_file"],
-            "level": "INFO",
+            # DEBUG logs the full prompt and tool I/O for each request.
+            "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
     },
@@ -318,7 +319,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Chatbot / LLM (Portkey) configuration
-CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "gpt-5-nano-2025-08-07")
+CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "")
 CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL")
 PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
 
