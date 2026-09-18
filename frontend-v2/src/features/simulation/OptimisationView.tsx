@@ -21,6 +21,7 @@ import { optimisePredictionsToSimulateResponses } from "./utils";
 import OptimisationResidualPlots from "./OptimisationResidualPlots";
 import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
 import HelpButton from "../../components/HelpButton";
+import formatUnitSymbol from "../../shared/formatUnitSymbol";
 
 type OptimisationViewProps = {
   open: boolean;
@@ -203,8 +204,12 @@ const OptimisationView = ({
                   {optimiseResult.inputs.map((varId, i) => {
                     const variable = variables.find((v) => v.id === varId);
                     const unit = units.find((u) => u.id === variable?.unit);
+                    const unitSymbol = formatUnitSymbol(
+                      unit?.symbol,
+                      variable?.unit_per_body_weight,
+                    );
                     const label = variable
-                      ? `${variable.name}${unit?.symbol ? ` (${unit.symbol})` : ""}`
+                      ? `${variable.name}${unitSymbol ? ` (${unitSymbol})` : ""}`
                       : String(varId);
                     return (
                       <TableRow key={varId}>
