@@ -7,7 +7,7 @@ import {
   PageName,
   setPage,
 } from "../features/main/mainSlice";
-import { project, projectHandlers } from "./project.mock";
+import { project, projectHandlers, variables } from "./project.mock";
 import { simulationData, simulationWithGroupsData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
@@ -168,6 +168,71 @@ export const Parameters: Story = {
       const [simulationParams] = simulationSpy.mock.lastCall || [];
       expect(simulationParams.variables["PKCompartment.V1"]).toBe(100);
     });
+  },
+};
+
+// V1 (id 2184) served as a per-body-weight variable with a plain "mL" unit
+// (id 33). The slider label should append "/kg", i.e. show "V1 [mL/kg]", even
+// though the raw unit symbol is just "mL".
+const perBodyWeightVariables = variables.map((v) =>
+  v.id === 2184 ? { ...v, unit: 33, unit_per_body_weight: true } : v,
+);
+
+export const ParametersPerBodyWeight: Story = {
+  parameters: {
+    msw: {
+      handlers: {
+        project: [
+          http.get("/api/variable/:id", async ({ params }) => {
+            const variableId = parseInt(params.id as string, 10);
+            const variable = perBodyWeightVariables.find(
+              (v) => v.id === variableId,
+            );
+            if (!variable) {
+              return HttpResponse.json(
+                { detail: "Variable not found" },
+                { status: 404 },
+              );
+            }
+            return HttpResponse.json(variable, { status: 200 });
+          }),
+          http.get("/api/variable", async ({ request }) => {
+            const url = new URL(request.url);
+            const projectId = url.searchParams.get("project_id");
+            const pkModel = url.searchParams.get("dosed_pk_model_id");
+            if (pkModel || projectId) {
+              return HttpResponse.json(perBodyWeightVariables, { status: 200 });
+            }
+            return HttpResponse.json([], { status: 200 });
+          }),
+          ...projectHandlers,
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const parametersButton = await canvas.findByRole("button", {
+      name: "Parameters",
+      expanded: false,
+    });
+    await userEvent.click(parametersButton);
+
+    const addParameterButton = await canvas.findByRole("button", {
+      name: /Add parameter/i,
+    });
+    await userEvent.click(addParameterButton);
+
+    const parameterOption = await screen.findByRole("button", {
+      name: /^V1/,
+    });
+    await userEvent.click(parameterOption);
+
+    // per_body_weight appends "/kg" to the plain "mL" unit symbol.
+    const simulationSlider = await screen.findByRole("slider", {
+      name: "V1 [mL/kg]",
+    });
+    expect(simulationSlider).toBeInTheDocument();
   },
 };
 
