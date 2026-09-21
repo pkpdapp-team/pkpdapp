@@ -1,10 +1,20 @@
 import type { Meta, StoryObj, Decorator } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { http, HttpResponse } from "msw";
 
+import { api } from "../app/api";
+import { store } from "../app/store";
 import ChatPanel from "../features/chat/ChatPanel";
 import { openChat, setActiveConversation } from "../features/chat/chatSlice";
-import { setProject } from "../features/main/mainSlice";
+import {
+  PageName,
+  setPage,
+  setProject,
+  setSubPage,
+  SubPageName,
+} from "../features/main/mainSlice";
 import {
   conversationHandlers,
   conversations,
@@ -14,10 +24,18 @@ import {
 function useChatPanelState(
   projectId: number | null,
   conversationId: number | null,
+  page: PageName = PageName.PROJECTS,
+  subPage: SubPageName | null = null,
 ) {
   const dispatch = useDispatch();
+  dispatch(setPage(page));
+  dispatch(setSubPage(subPage));
   dispatch(setProject(projectId));
-  dispatch(setActiveConversation(conversationId));
+  dispatch(
+    conversationId !== null && projectId !== null
+      ? setActiveConversation({ conversationId, projectId })
+      : setActiveConversation(null),
+  );
   dispatch(openChat());
 }
 
@@ -34,6 +52,27 @@ const activeConversationState: Decorator = (Story) => {
 const projectOnlyState: Decorator = (Story) => {
   useChatPanelState(57, null);
   return <Story />;
+};
+
+const modelParametersState: Decorator = (Story) => {
+  useChatPanelState(57, null, PageName.MODEL, SubPageName.PARAMETERS);
+  return <Story />;
+};
+
+const projectSwitchState: Decorator = (Story) => {
+  const dispatch = useDispatch();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    dispatch(setPage(PageName.MODEL));
+    dispatch(setSubPage(SubPageName.PARAMETERS));
+    dispatch(setProject(57));
+    dispatch(setActiveConversation(null));
+    dispatch(openChat());
+    setIsReady(true);
+  }, [dispatch]);
+
+  return isReady ? <Story /> : <></>;
 };
 
 const meta = {
@@ -129,6 +168,153 @@ export const SendMessage: Story = {
 
     // handleSend clears the input synchronously before awaiting.
     await expect(canvas.getByRole("textbox")).toHaveValue("");
+  },
+};
+
+const createConversationRequest = fn();
+const chatbotRequest = fn();
+
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+let conversationCreationGate = deferred();
+
+export const SendsCurrentPageContext: Story = {
+  decorators: [modelParametersState],
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: conversationHandlers,
+        messages: messageHandlers,
+        createConversation: http.post(
+          "/api/conversations/",
+          async ({ request }) => {
+            const body = await request.json();
+            createConversationRequest(body);
+            return HttpResponse.json(
+              {
+                id: 3,
+                project: 57,
+                title: "",
+                created_at: "2025-06-03T09:00:00Z",
+                updated_at: "2025-06-03T09:00:00Z",
+                last_message_preview: "",
+              },
+              { status: 201 },
+            );
+          },
+        ),
+        chatbot: http.post("/api/chatbot/", async ({ request }) => {
+          chatbotRequest(await request.json());
+          return new HttpResponse(
+            [
+              'data: {"type":"start","messageId":"context-test"}',
+              'data: {"type":"start-step"}',
+              'data: {"type":"finish-step"}',
+              'data: {"type":"finish"}',
+              "data: [DONE]",
+              "",
+            ].join("\n\n"),
+            {
+              headers: {
+                "Content-Type": "text/event-stream",
+                "x-vercel-ai-ui-message-stream": "v1",
+              },
+            },
+          );
+        }),
+      },
+    },
+  },
+  beforeEach: () => {
+    createConversationRequest.mockClear();
+    chatbotRequest.mockClear();
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(
+      canvas.getByRole("textbox"),
+      "Explain these parameters",
+    );
+
+    const sendButton = canvas.getByRole("button", { name: /send message/i });
+    await waitFor(() => expect(sendButton).toBeEnabled());
+
+    expect(chatbotRequest).not.toHaveBeenCalled();
+    await userEvent.click(sendButton);
+    await waitFor(() => expect(chatbotRequest).toHaveBeenCalledTimes(1));
+    expect(createConversationRequest).toHaveBeenCalledWith({
+      project: 57,
+      title: "",
+    });
+    expect(chatbotRequest).toHaveBeenCalledWith({
+      conversation_id: 3,
+      content: "Explain these parameters",
+      context: {
+        page: "Model",
+        sub_page: "Parameters",
+      },
+    });
+  },
+};
+
+export const IgnoresConversationCreatedForPreviousProject: Story = {
+  decorators: [projectSwitchState],
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: conversationHandlers,
+        createConversation: http.post("/api/conversations/", async () => {
+          createConversationRequest();
+          await conversationCreationGate.promise;
+          return HttpResponse.json(
+            {
+              id: 3,
+              project: 57,
+              title: "",
+              created_at: "2025-06-03T09:00:00Z",
+              updated_at: "2025-06-03T09:00:00Z",
+              last_message_preview: "",
+            },
+            { status: 201 },
+          );
+        }),
+        chatbot: http.post("/api/chatbot/", () => {
+          chatbotRequest();
+          return new HttpResponse(null, { status: 204 });
+        }),
+      },
+    },
+  },
+  beforeEach: () => {
+    createConversationRequest.mockClear();
+    chatbotRequest.mockClear();
+    conversationCreationGate = deferred();
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole("textbox"), "Question for project A");
+    await userEvent.click(
+      canvas.getByRole("button", { name: /send message/i }),
+    );
+
+    await waitFor(() =>
+      expect(createConversationRequest).toHaveBeenCalledTimes(1),
+    );
+    const runningMutations = store.dispatch(
+      api.util.getRunningMutationsThunk(),
+    );
+    store.dispatch(setProject(58));
+    conversationCreationGate.resolve();
+
+    await Promise.all(runningMutations);
+    expect(store.getState().chat.activeConversationId).toBeNull();
+    expect(chatbotRequest).not.toHaveBeenCalled();
   },
 };
 

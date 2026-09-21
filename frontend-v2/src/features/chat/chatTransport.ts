@@ -1,13 +1,12 @@
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
+import type { ChatbotRequest } from "../../app/backendApi";
 import { store } from "../../app/store";
 import { selectCsrf } from "../login/loginSlice";
 
-/**
- * Build the request the Django chatbot endpoint expects from the AI SDK's
- * outgoing message list: the latest message's text, rename
- * "conversationId" to "conversation_id", inject the CSRF header
- */
+export type ChatTransportBody = Omit<ChatbotRequest, "content">;
+
+/** Build the Django request for the latest chat message. */
 export function buildChatRequest({
   messages,
   headers,
@@ -16,28 +15,34 @@ export function buildChatRequest({
 }: {
   messages: UIMessage[];
   headers?: Record<string, string>;
-  body?: unknown;
+  body?: ChatTransportBody;
   csrf: string;
-}): {
-  body: { conversation_id: unknown; content: string };
-  headers: Record<string, string>;
-} {
+}) {
+  const conversationId = body?.conversation_id;
+  if (conversationId === undefined) {
+    throw new Error("A conversation ID is required");
+  }
+
   const lastMessage = messages.at(-1);
   const content =
     lastMessage?.parts
-      ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-      .map((p) => p.text)
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
       .join("") ?? "";
+  const requestHeaders: Record<string, string> = {
+    ...headers,
+    "X-CSRFToken": csrf,
+  };
+
+  const requestBody: ChatbotRequest = {
+    conversation_id: conversationId,
+    content,
+    context: body?.context,
+  };
 
   return {
-    body: {
-      conversation_id: (body as Record<string, unknown>)?.conversationId,
-      content,
-    },
-    headers: {
-      ...headers,
-      "X-CSRFToken": csrf,
-    },
+    body: requestBody,
+    headers: requestHeaders,
   };
 }
 
@@ -48,7 +53,7 @@ const transport = new DefaultChatTransport({
     buildChatRequest({
       messages,
       headers: headers as Record<string, string> | undefined,
-      body,
+      body: body as ChatTransportBody | undefined,
       csrf: selectCsrf(store.getState()) ?? "",
     }),
 });

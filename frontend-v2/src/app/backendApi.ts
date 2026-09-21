@@ -112,7 +112,11 @@ const injectedRtkApi = api.injectEndpoints({
       ChatbotCreateApiResponse,
       ChatbotCreateApiArg
     >({
-      query: () => ({ url: `/api/chatbot/`, method: "POST" }),
+      query: (queryArg) => ({
+        url: `/api/chatbot/`,
+        method: "POST",
+        body: queryArg.chatbotRequest,
+      }),
     }),
     combinedModelList: build.query<
       CombinedModelListApiResponse,
@@ -1408,8 +1412,10 @@ export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
 };
-export type ChatbotCreateApiResponse = unknown;
-export type ChatbotCreateApiArg = void;
+export type ChatbotCreateApiResponse = /** status 200  */ string;
+export type ChatbotCreateApiArg = {
+  chatbotRequest: ChatbotRequest;
+};
 export type CombinedModelListApiResponse =
   /** status 200  */ CombinedModelRead[];
 export type CombinedModelListApiArg = {
@@ -2324,6 +2330,18 @@ export type PatchedBiomarkerTypeRead = {
   display_time_unit?: number;
   /** mapped variable */
   variable?: number | null;
+};
+export type ChatbotErrorResponse = {
+  error: string;
+};
+export type ChatbotContext = {
+  page?: string | null;
+  sub_page?: string | null;
+};
+export type ChatbotRequest = {
+  conversation_id: number;
+  content: string;
+  context?: ChatbotContext | null;
 };
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */
