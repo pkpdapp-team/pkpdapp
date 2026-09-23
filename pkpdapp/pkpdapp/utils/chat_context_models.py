@@ -134,11 +134,34 @@ class ParametersContext(BaseModel):
     rows: list[ParameterContext]
 
 
+# secondary parameters tab
+class TimeIntervalContext(BaseModel):
+    start_time: float
+    end_time: float
+    unit_symbol: str
+
+
+class VariableThresholdContext(BaseModel):
+    name: str
+    qname: str
+    description: str | None
+    lower_threshold: float
+    upper_threshold: float | None
+    unit_symbol: str | None
+
+
+class SecondaryParametersContext(BaseModel):
+    time_intervals: list[TimeIntervalContext]
+    variable_thresholds: list[VariableThresholdContext]
+
+
 # context containers
 class ModelContext(BaseModel):
+    # corresponds to tabs under the Model page
     pkpd_model: PKPDModelContext
     map_variables: MapVariablesContext
     parameters: ParametersContext
+    secondary_parameters: SecondaryParametersContext
 
 
 class ProjectContext(BaseModel):
