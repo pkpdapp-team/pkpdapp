@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, field_validator
 
-from pkpdapp.models import DerivedVariable
+from pkpdapp.models import Covariate, DerivedVariable
 
 
 # shared controls
@@ -16,7 +16,8 @@ class SelectionContext(BaseModel):
     enabled: bool
 
 
-# pk/pd model tab
+# model page
+## pk/pd model tab
 class ModelComponentContext(BaseModel):
     name: str
     description: str
@@ -45,7 +46,7 @@ class PKPDModelContext(BaseModel):
     has_hill_coefficient: bool
 
 
-# map variables tab
+## map variables tab
 class DosingVariableContext(BaseModel):
     name: str
     unit_symbol: str | None
@@ -73,7 +74,7 @@ class MapVariablesContext(BaseModel):
     variable_mappings: list[VariableMappingContext]
 
 
-# parameters tab
+## parameters tab
 class NonlinearityInputContext(BaseModel):
     name: str
     qname: str
@@ -134,7 +135,7 @@ class ParametersContext(BaseModel):
     rows: list[ParameterContext]
 
 
-# secondary parameters tab
+## secondary parameters tab
 class TimeIntervalContext(BaseModel):
     start_time: float
     end_time: float
@@ -174,6 +175,69 @@ class DrugTargetContext(BaseModel):
     efficacy_safety_data: list[EfficacySafetyContext]
 
 
+# trial design page
+## dosing
+class DoseContext(BaseModel):
+    amount: float
+    number_of_doses: int
+    start_time: float
+    duration: float
+    repeat_interval: float
+
+
+class ProtocolContext(BaseModel):
+    name: str
+    variable_qname: str | None
+    amount_unit_symbol: str | None
+    time_unit_symbol: str | None
+    per_body_weight: SelectionContext
+    from_dataset: bool
+    doses: list[DoseContext] | None
+
+
+## population
+class GroupPopulationContext(BaseModel):
+    study_size: int
+    age_min: float
+    age_max: float
+    male_fraction: float
+    region: str
+
+
+## custom covariates
+class ContinuousCovariateContext(BaseModel):
+    covariate_id: int
+    name: str
+    type: Literal[Covariate.Type.CONTINUOUS]
+    mean: float
+    standard_deviation: float
+    reference_value: float
+
+
+class CategoricalCovariateContext(BaseModel):
+    covariate_id: int
+    name: str
+    type: Literal[Covariate.Type.CATEGORICAL]
+    n_categories: int
+    category_probabilities: list[float]
+
+
+## groups
+class SubjectGroupContext(BaseModel):
+    name: str
+    from_dataset: bool
+    subject_count: int | None
+    protocols: list[ProtocolContext]
+    population: GroupPopulationContext | None
+    custom_covariates: list[
+        ContinuousCovariateContext | CategoricalCovariateContext
+    ]
+
+
+class TrialDesignContext(BaseModel):
+    groups: list[SubjectGroupContext]
+
+
 # context containers
 class ModelContext(BaseModel):
     # corresponds to tabs under the Model page
@@ -194,6 +258,7 @@ class ProjectContext(BaseModel):
     compound: CompoundContext
     drug_target: DrugTargetContext
     model: ModelContext | None
+    trial_design: TrialDesignContext
 
 
 class ChatContext(BaseModel):
