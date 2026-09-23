@@ -155,6 +155,25 @@ class SecondaryParametersContext(BaseModel):
     variable_thresholds: list[VariableThresholdContext]
 
 
+# drug & target page
+class EfficacySafetyContext(BaseModel):
+    selection: SelectionContext
+    name: str
+    c50: float
+    c50_unit_symbol: str
+    hill_coefficient: float
+
+
+class DrugTargetContext(BaseModel):
+    molecular_mass: float
+    molecular_mass_unit_symbol: str
+    target_molecular_mass: float
+    target_molecular_mass_unit_symbol: str
+    target2_molecular_mass: float
+    target2_molecular_mass_unit_symbol: str
+    efficacy_safety_data: list[EfficacySafetyContext]
+
+
 # context containers
 class ModelContext(BaseModel):
     # corresponds to tabs under the Model page
@@ -164,9 +183,16 @@ class ModelContext(BaseModel):
     secondary_parameters: SecondaryParametersContext
 
 
+class CompoundContext(BaseModel):
+    name: str
+    modality: str
+
+
 class ProjectContext(BaseModel):
     name: str
     description: str
+    compound: CompoundContext
+    drug_target: DrugTargetContext
     model: ModelContext | None
 
 
