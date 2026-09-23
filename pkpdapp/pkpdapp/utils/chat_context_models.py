@@ -36,3 +36,15 @@ class PKPDModelContext(BaseModel):
 
 class ModelContext(BaseModel):
     pkpd_model: PKPDModelContext
+
+
+class ProjectContext(BaseModel):
+    name: str
+    description: str
+    model: ModelContext | None
+
+
+class ChatContext(BaseModel):
+    page: str | None
+    sub_page: str | None
+    project: ProjectContext | None
