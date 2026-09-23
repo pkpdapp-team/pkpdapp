@@ -62,6 +62,21 @@ class DerivedVariable(StoredModel):
         CUSTOM_CONT_COVARIATE = "CCC", "Custom continuous covariate"
         CUSTOM_CAT_COVARIATE = "CCT", "Custom categorical covariate"
 
+    NONLINEARITY_TYPES = frozenset(
+        {
+            Type.MICHAELIS_MENTEN,
+            Type.EXTENDED_MICHAELIS_MENTEN,
+            Type.EMAX,
+            Type.IMAX,
+            Type.TIME_EMAX,
+            Type.TIME_IMAX,
+            Type.POWER,
+            Type.NEGATIVE_POWER,
+            Type.EXP_DECAY,
+            Type.EXP_INCREASE,
+        }
+    )
+
     #: covariate types, whose builders live in utils/covariate_effects.py
     COVARIATE_TYPES = frozenset(
         {
