@@ -136,6 +136,16 @@ const meta: Meta<typeof ParameterRow> = {
     },
   },
   render: () => <Harness />,
+  // The Covariates column is gated behind VITE_ENABLE_POPULATION_PARAMETERS.
+  // Enable it for these stories (restoring the previous value afterwards) so the
+  // covariates select renders and the interactions below can run.
+  beforeEach: () => {
+    const prev = import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS;
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS = "true";
+    return () => {
+      import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS = prev;
+    };
+  },
 };
 
 export default meta;
