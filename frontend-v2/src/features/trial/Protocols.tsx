@@ -165,7 +165,10 @@ export const Protocols: FC<ProtocolsProps> = ({
   refetchGroups,
   isSharedWithMe,
 }) => {
-  // the selected tab is always a group id 
+  const populationEnabled =
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS === "true";
+
+  // the selected tab is always a group id
   // (or false when the project has no groups at all).
   const [tab, setTab] = useState<number | false>(false);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
@@ -494,7 +497,7 @@ export const Protocols: FC<ProtocolsProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
-        {subjectGroup && (
+        {populationEnabled && subjectGroup && (
           <GroupPopulation
             group={subjectGroup}
             project={project}
