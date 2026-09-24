@@ -583,41 +583,43 @@ const ParameterRow: FC<Props> = ({
           </Stack>
         )}
       </TableCell>
-      <TableCell size="small" sx={{ width: "16rem" }}>
-        {showCovariates && (
-          <Tooltip title={hasNonlinearity ? covariatesDisabledReason : ""}>
-            <span>
-              <Select
-                size="small"
-                multiple
-                displayEmpty
-                sx={{ minWidth: "10rem" }}
-                value={selectedCovariateKeys}
-                onChange={handleCovariatesChange}
-                disabled={defaultProps.disabled || hasNonlinearity}
-                renderValue={(selected) =>
-                  selected.length === 0
-                    ? "None"
-                    : covariateOptions
-                        .filter((option) => selected.includes(option.key))
-                        .map((option) => option.label)
-                        .join(", ")
-                }
-              >
-                {covariateOptions.map((option) => (
-                  <MenuItem value={option.key} key={option.key}>
-                    <MuiCheckbox
-                      size="small"
-                      checked={selectedCovariateKeys.includes(option.key)}
-                    />
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </span>
-          </Tooltip>
-        )}
-      </TableCell>
+      {populationEnabled && (
+        <TableCell size="small" sx={{ width: "16rem" }}>
+          {showCovariates && (
+            <Tooltip title={hasNonlinearity ? covariatesDisabledReason : ""}>
+              <span>
+                <Select
+                  size="small"
+                  multiple
+                  displayEmpty
+                  sx={{ minWidth: "10rem" }}
+                  value={selectedCovariateKeys}
+                  onChange={handleCovariatesChange}
+                  disabled={defaultProps.disabled || hasNonlinearity}
+                  renderValue={(selected) =>
+                    selected.length === 0
+                      ? "None"
+                      : covariateOptions
+                          .filter((option) => selected.includes(option.key))
+                          .map((option) => option.label)
+                          .join(", ")
+                  }
+                >
+                  {covariateOptions.map((option) => (
+                    <MenuItem value={option.key} key={option.key}>
+                      <MuiCheckbox
+                        size="small"
+                        checked={selectedCovariateKeys.includes(option.key)}
+                      />
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </span>
+            </Tooltip>
+          )}
+        </TableCell>
+      )}
     </TableRow>
   );
 };
