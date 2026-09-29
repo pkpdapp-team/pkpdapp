@@ -8,43 +8,48 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema
 import myokit
-from pkpdapp.models import CombinedModel, PharmacodynamicModel, Variable
+from pkpdapp.api.views.profiling import profile_endpoint
+from pkpdapp.models import CombinedModel, PharmacodynamicModel
 
 
 class SimulateSerializer(serializers.Serializer):
     outputs = serializers.ListField(child=serializers.CharField())
     variables = serializers.DictField(child=serializers.FloatField())
     time_max = serializers.FloatField(required=False)
-
-
-class SimulateResponseSerializer(serializers.Serializer):
-    time = serializers.ListField(child=serializers.FloatField())
-    group = serializers.IntegerField(required=False, allow_null=True)
-    outputs = serializers.DictField(
-        child=serializers.ListField(child=serializers.FloatField())
+    use_diffsol = serializers.BooleanField(required=False, default=True)
+    sample_count = serializers.IntegerField(required=False, min_value=1)
+    seed = serializers.IntegerField(required=False)
+    quantiles = serializers.ListField(
+        child=serializers.FloatField(min_value=0.0, max_value=1.0),
+        required=False,
     )
-
-    def to_representation(self, instance):
-        outputs = {}
-        times = []
-        group = None
-        for var_id, values in instance.items():
-            if var_id == "group_id":
-                group = values
-                continue
-            variable = Variable.objects.get(pk=var_id)
-            if variable.name == "time" or variable.name == "t":
-                times = values
-            outputs[var_id] = values
-        return {
-            "outputs": outputs,
-            "time": times,
-            "group": group,
-        }
 
 
 class ErrorResponseSerializer(serializers.Serializer):
     error = serializers.CharField()
+
+
+class UncertaintySummarySerializer(serializers.Serializer):
+    mean = serializers.ListField(child=serializers.FloatField())
+    std = serializers.ListField(child=serializers.FloatField())
+    quantiles = serializers.DictField(
+        child=serializers.ListField(child=serializers.FloatField())
+    )
+
+
+class SimulateResponseSerializer(serializers.Serializer):
+    time = serializers.ListField(child=serializers.FloatField())
+    group = serializers.IntegerField(
+        source="group_id", required=False, allow_null=True
+    )
+    sample_count = serializers.IntegerField()
+    outputs = serializers.DictField(child=UncertaintySummarySerializer())
+    # per-parameter sampled values (keyed by variable id) for histogram plots;
+    # empty for a deterministic run
+    parameters = serializers.DictField(
+        child=serializers.ListField(child=serializers.FloatField()),
+        required=False,
+    )
 
 
 @extend_schema(
@@ -57,20 +62,42 @@ class ErrorResponseSerializer(serializers.Serializer):
 )
 class SimulateBaseView(views.APIView):
     def post(self, request, pk, format=None):
-        try:
-            m = self.model.objects.get(pk=pk)
-        except self.model.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        outputs = request.data.get("outputs", None)
-        variables = request.data.get("variables", None)
-        time_max = request.data.get("time_max", None)
-        try:
-            result = m.simulate(outputs, variables, time_max)
-        except myokit.MyokitError as e:
-            serialized_result = ErrorResponseSerializer({"error": str(e)})
-            return Response(serialized_result.data, status=status.HTTP_400_BAD_REQUEST)
-        serialized_result = SimulateResponseSerializer(result, many=True)
-        return Response(serialized_result.data)
+        with profile_endpoint(
+            "simulate",
+            view=self.__class__.__name__,
+            model=self.model.__name__,
+            pk=pk,
+        ):
+            try:
+                m = self.model.objects.get(pk=pk)
+            except self.model.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            serializer = SimulateSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    {"error": str(serializer.errors)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            data = serializer.validated_data
+            try:
+                result = m.simulate(
+                    data["outputs"],
+                    data["variables"],
+                    data.get("time_max"),
+                    use_diffsol=data.get("use_diffsol", True),
+                    sample_count=data.get("sample_count"),
+                    seed=data.get("seed"),
+                    quantiles=data.get("quantiles"),
+                )
+            except (myokit.MyokitError, RuntimeError, ValueError) as e:
+                serialized_result = ErrorResponseSerializer({"error": str(e)})
+                return Response(
+                    serialized_result.data, status=status.HTTP_400_BAD_REQUEST
+                )
+            serialized_result = SimulateResponseSerializer(result, many=True)
+            return Response(serialized_result.data)
 
 
 class SimulateCombinedView(SimulateBaseView):

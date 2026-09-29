@@ -1,9 +1,9 @@
 import {
-  SimulateResponse,
   TimeIntervalRead,
   VariableListApiResponse,
   VariableRead,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "../simulation/types";
 
 import { Parameter } from "./useParameters";
 import { columns } from "./columns";
@@ -31,7 +31,7 @@ function interpolate(x: [number, number], y: [number, number], x0: number) {
 export function valuesPerInterval(
   timeIntervals: TimeIntervalRead[],
   variable?: VariableRead,
-  simulation?: SimulateResponse,
+  simulation?: CentralSimulateResponse,
 ) {
   const times = simulation?.time || [];
   const tMax = times[times.length - 1];
@@ -186,24 +186,24 @@ export function formattedNumber(
   lowerThreshold: number = 1e-3,
 ) {
   if (value === 0) {
-    return "0.000";
+    return "0.00";
   }
   if (Math.abs(value) < TOLERANCE) {
-    return "0.000";
+    return "0.00";
   }
 
-  return value > upperThreshold || value < lowerThreshold
-    ? value.toExponential(4)
-    : value.toFixed(3);
+  return value > upperThreshold || value <= lowerThreshold
+    ? value.toExponential(2)
+    : value.toPrecision(3);
 }
 
 interface TableRowProps {
-  header: string | JSX.Element;
+  header: string | React.JSX.Element;
   interval?: TimeIntervalRead;
   intervals: TimeIntervalRead[];
   variables: VariableListApiResponse | undefined;
-  simulation?: SimulateResponse;
-  simulations: SimulateResponse[];
+  simulation?: CentralSimulateResponse;
+  simulations: CentralSimulateResponse[];
   parameter?: Parameter;
   parameters: Parameter[];
   variable?: VariableRead;

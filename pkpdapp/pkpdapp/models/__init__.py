@@ -11,7 +11,9 @@ from .compound import Compound
 from .efficacy_experiment import EfficacyExperiment
 from .project import Project, ProjectAccess
 from .results_table import ResultsTable
+from .covariate import Covariate
 from .subject_group import SubjectGroup
+from .covariate_population import CovariatePopulation
 from .protocol import Protocol
 from .dose import Dose
 from .subject import Subject
@@ -19,6 +21,13 @@ from .biomarker_type import BiomarkerType
 from .biomarker import Biomarker
 from .categorical_biomarker import CategoricalBiomarker
 from .myokit_model_mixin import MyokitModelMixin
+from .simulate_context import SimulateContext
+from .optimise_context import (
+    ObservationInfo,
+    OptimiseContext,
+    OptimiseResult,
+    ParameterInfo,
+)
 from .mechanistic_model import MechanisticModel
 from .pharmacodynamic_model import (
     PharmacodynamicModel,
@@ -29,19 +38,9 @@ from .pharmacokinetic_model import (
 from .derived_variable import DerivedVariable
 from .combined_model import CombinedModel, PkpdMapping, TimeInterval
 from .variable import Variable
+from .distribution import Distribution, Correlation
 from .dataset import Dataset
 from .profile import Profile
-from .myokit_forward_model import MyokitForwardModel
-from .likelihoods import (
-    LogLikelihood,
-    LogLikelihoodParameter,
-)
-from .inference_results import (
-    InferenceChain,
-    InferenceResult,
-    InferenceFunctionResult,
-    InferenceOutputResult,
-)
 from .simulation import (
     Simulation,
     SimulationYAxis,
@@ -49,11 +48,5 @@ from .simulation import (
     SimulationSlider,
     SimulationPlot,
 )
-from .inference import (
-    Inference,
-    Algorithm,
-)
 from .tag import Tag
-
-
-from .inference_mixin import InferenceMixin
+from .conversation import Conversation, Message

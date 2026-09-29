@@ -1,21 +1,296 @@
 import { FieldArrayWithId } from "react-hook-form";
 import {
+  BiomarkerTypeRead,
   CombinedModelRead,
   CompoundRead,
   EfficacyExperimentRead,
+  Optimise,
   SimulateResponse,
   Simulation,
+  SimulationSlider,
   SimulationYAxis,
   SubjectGroupRead,
-  UnitListApiResponse,
-  UnitRead,
   VariableRead,
   Y2ScaleEnum,
 } from "../../app/backendApi";
-import { Layout, ScatterData, Shape } from "plotly.js";
+import { CentralSimulateResponse } from "./types";
+import { Data, Layout, ScatterData, Shape } from "plotly.js";
 import { SubjectBiomarker } from "../../hooks/useDataset";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
+import {
+  DEFAULT_MAX_ITERATIONS,
+  DEFAULT_NOISE_MODEL,
+  DEFAULT_OPTIMISE_METHOD,
+  NoiseModel,
+} from "./useOptimise";
 
 export type ScatterDataWithVariable = ScatterData & { variable: string };
+
+// Reduce the full uncertainty response to the central series used for the plot line,
+// CSV export and results table (one flat number[] per output). Uses the median (P50)
+// so the line stays centred within the P5-P95 band for skewed population outputs;
+// falls back to the mean if no median quantile is present. For a deterministic run
+// (single sample) the median equals the mean equals the value.
+export function simulateResponseToCentral(
+  response: SimulateResponse[],
+): CentralSimulateResponse[] {
+  return response.map((scenario) => ({
+    time: scenario.time,
+    group: scenario.group ?? null,
+    outputs: Object.fromEntries(
+      Object.entries(scenario.outputs).map(([variableId, summary]) => [
+        variableId,
+        summary.quantiles?.["0.5"] ?? summary.mean,
+      ]),
+    ),
+  }));
+}
+
+// Coerce the max-iterations text field to a valid positive integer, falling
+// back to the default for empty/zero/negative/non-integer input. Guards both
+// optimise payloads so an invalid field can never reach the backend as 0
+// (which would run a no-op fit).
+export function sanitizeMaxIterations(value: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1
+    ? parsed
+    : Number(DEFAULT_MAX_ITERATIONS);
+}
+
+/**
+ * The maximum absolute observed value for each sigma output variable, converted
+ * into that variable's model units (the units the noise sigma lives in). Used to
+ * default a sigma's upper bound to the data scale. Observations are matched to a
+ * variable by qname and converted with the same unit factors as the scatter
+ * plots (target conversion factor for library-model CT1/AT1 variables).
+ */
+export function getMaxObservationByVariable(
+  sigmaVariables: number[],
+  subjectBiomarkers: SubjectBiomarker[][] | undefined,
+  variables: VariableRead[],
+  units: UnitReadWithCompatible[],
+  model?: CombinedModelRead,
+): Record<number, number> {
+  const result: Record<number, number> = {};
+  if (!subjectBiomarkers) {
+    return result;
+  }
+  const allObservations = subjectBiomarkers.flat();
+  for (const varId of sigmaVariables) {
+    const variable = variables.find((v) => v.id === varId);
+    if (!variable) continue;
+    const outputUnit = units.find((u) => u.id === variable.unit);
+    let maxAbs = 0;
+    for (const obs of allObservations) {
+      if (obs.qname !== variable.qname) continue;
+      const compatibleUnit = obs.unit?.compatible_units.find(
+        (u) => u.id === outputUnit?.id,
+      );
+      const isTarget = model?.is_library_model
+        ? obs.qname?.includes("CT1") || obs.qname?.includes("AT1")
+        : false;
+      const factor = compatibleUnit
+        ? isTarget
+          ? compatibleUnit.target_conversion_factor
+          : compatibleUnit.conversion_factor
+        : 1.0;
+      const value = Math.abs(obs.value * factor);
+      if (Number.isFinite(value) && value > maxAbs) {
+        maxAbs = value;
+      }
+    }
+    if (maxAbs > 0) {
+      result[varId] = maxAbs;
+    }
+  }
+  return result;
+}
+
+type GetDefaultOptimiseInputsProps = {
+  orderedSliders: (SimulationSlider & { fieldArrayIndex: number })[];
+  variables: VariableRead[];
+  getSliderValue: (variableId: number, variable?: VariableRead) => number;
+  getSliderBounds: (
+    variableId: number,
+    variable?: VariableRead,
+  ) => [number, number];
+  plots: { y_axes: SimulationYAxis[] }[];
+  biomarkerTypes: BiomarkerTypeRead[];
+  subjectGroups: number[];
+  noiseModel?: NoiseModel;
+  method?: string;
+  maxIterations?: string;
+  // Optional observation data used to default each sigma's upper bound to the
+  // maximum absolute observed value for that output variable.
+  subjectBiomarkers?: SubjectBiomarker[][];
+  units?: UnitReadWithCompatible[];
+  model?: CombinedModelRead;
+  // Optional per-variable "optimise in log space" overrides, keyed by model
+  // variable id (parameters keyed by input variable id, sigmas by output
+  // variable id). An absent entry falls back to the computed default. Shared
+  // with the OptimisationSettings dialog so the sidebar Fit honours the same
+  // persisted selections.
+  paramUseLogSpace?: Record<number, boolean>;
+  sigmaUseLogSpace?: Record<number, boolean>;
+  sigmaMultUseLogSpace?: Record<number, boolean>;
+  // Optional per-output-variable sigma start / bounds and noise-model overrides,
+  // keyed by output variable id. An absent entry falls back to the data-derived
+  // default. Shared with the OptimisationSettings dialog so the sidebar Fit
+  // honours the same persisted selections.
+  sigmaStartByVar?: Record<number, number>;
+  sigmaBoundsByVar?: Record<number, [number, number]>;
+  sigmaMultStartByVar?: Record<number, number>;
+  sigmaBoundsMultByVar?: Record<number, [number, number]>;
+  noiseModelByVar?: Record<number, NoiseModel>;
+};
+
+export function getDefaultOptimiseInputs({
+  orderedSliders,
+  variables,
+  getSliderValue,
+  getSliderBounds,
+  plots,
+  biomarkerTypes,
+  subjectGroups,
+  noiseModel = DEFAULT_NOISE_MODEL,
+  method = DEFAULT_OPTIMISE_METHOD,
+  maxIterations = DEFAULT_MAX_ITERATIONS,
+  subjectBiomarkers,
+  units,
+  model,
+  paramUseLogSpace = {},
+  sigmaUseLogSpace = {},
+  sigmaMultUseLogSpace = {},
+  sigmaStartByVar = {},
+  sigmaBoundsByVar = {},
+  sigmaMultStartByVar = {},
+  sigmaBoundsMultByVar = {},
+  noiseModelByVar = {},
+}: GetDefaultOptimiseInputsProps): Optimise {
+  const inputs = orderedSliders.map((slider) => slider.variable);
+  const starting = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderValue(variableId, variable);
+  });
+  const boundsByVariable = inputs.map((variableId) => {
+    const variable = variables.find((item) => item.id === variableId);
+    return getSliderBounds(variableId, variable);
+  });
+  const lowerBounds = boundsByVariable.map(([minValue]) => minValue);
+  const upperBounds = boundsByVariable.map(([, maxValue]) => maxValue);
+
+  // Determine which biomarker types are shown in the simulation plots
+  // by matching plot y-axis variable IDs to biomarker type variable IDs
+  const selectedBiomarkerTypes = getPlottedBiomarkerTypes(plots, biomarkerTypes);
+  const biomarker_types = selectedBiomarkerTypes.map((bt) => bt.id);
+
+  // One noise sigma per distinct output variable being fitted, in the same
+  // canonical (ascending variable id) order the backend derives from
+  // biomarker_types. Sigma start / bounds are in linear space; the upper bound
+  // defaults to the maximum absolute observed value for that output variable.
+  const sigmaVariables = getSigmaVariables(selectedBiomarkerTypes);
+  const maxObservationByVariable = getMaxObservationByVariable(
+    sigmaVariables,
+    subjectBiomarkers,
+    variables,
+    units ?? [],
+    model,
+  );
+  const sigma_start = sigmaVariables.map(
+    (varId) => sigmaStartByVar[varId] ?? (maxObservationByVariable[varId] ?? 1) / 10,
+  );
+  const sigma_bounds = sigmaVariables.map(
+    (varId) =>
+      sigmaBoundsByVar[varId] ?? [0, maxObservationByVariable[varId] ?? 1],
+  );
+  const sigma_use_log_space = sigmaVariables.map(
+    (varId) => sigmaUseLogSpace[varId] ?? true,
+  );
+  // Per-output-variable noise model, falling back to the uniform noiseModel. The
+  // combined model is emitted whenever any output resolves to "combined",
+  // mirroring the OptimisationSettings dialog payload.
+  const noise_models = sigmaVariables.map(
+    (varId) => noiseModelByVar[varId] ?? noiseModel,
+  );
+  const anyCombined = noise_models.some((model) => model === "combined");
+
+  return {
+    inputs,
+    starting,
+    bounds: [lowerBounds, upperBounds],
+    // One flag per model parameter (parallel to inputs). Uses the persisted
+    // per-variable override when present, otherwise defaults to log space where
+    // the lower bound is non-negative (log space is undefined otherwise),
+    // EXCEPT for parameters with a fixed upper bound set in the database, which
+    // default to linear space. Log space is only valid for a non-negative lower
+    // bound, so it is force-disabled there regardless of the override.
+    use_log_space: inputs.map((variableId, index) => {
+      const variable = variables.find((item) => item.id === variableId);
+      const hasFixedUpperBound =
+        variable?.upper_bound !== undefined && variable?.upper_bound !== null;
+      const useLogSpace =
+        paramUseLogSpace[variableId] ??
+        (lowerBounds[index] >= 0 && !hasFixedUpperBound);
+      return useLogSpace && lowerBounds[index] >= 0;
+    }),
+    biomarker_types,
+    subject_groups: subjectGroups,
+    // One noise model per fitted output variable, using the persisted
+    // per-variable override where present and the uniform noiseModel otherwise.
+    noise_models,
+    method,
+    max_iterations: sanitizeMaxIterations(maxIterations),
+    sigma_start,
+    sigma_bounds,
+    sigma_use_log_space,
+    // The combined noise model fits a second (proportional, dimensionless) sigma
+    // per output variable, mirroring the OptimisationSettings dialog payload.
+    // Emitted whenever any output resolves to the combined model.
+    ...(anyCombined
+      ? {
+          sigma_mult_start: sigmaVariables.map(
+            (varId) => sigmaMultStartByVar[varId] ?? 0.1,
+          ),
+          sigma_bounds_mult: sigmaVariables.map(
+            (varId) => sigmaBoundsMultByVar[varId] ?? [0, 1],
+          ),
+          sigma_mult_use_log_space: sigmaVariables.map(
+            (varId) => sigmaMultUseLogSpace[varId] ?? true,
+          ),
+        }
+      : {}),
+  };
+}
+
+/**
+ * The biomarker types whose model variable appears on a plot y-axis. These are
+ * the observations the optimiser fits against by default.
+ */
+export function getPlottedBiomarkerTypes(
+  plots: { y_axes: SimulationYAxis[] }[],
+  biomarkerTypes: BiomarkerTypeRead[],
+): BiomarkerTypeRead[] {
+  const plottedVariableIds = new Set(
+    plots.flatMap((plot) => plot.y_axes.map((axis) => axis.variable)),
+  );
+  return biomarkerTypes.filter(
+    (bt) => bt.variable != null && plottedVariableIds.has(bt.variable),
+  );
+}
+
+/**
+ * The distinct model output variable ids for a set of biomarker types, in a
+ * stable order (ascending variable id) that matches the backend's canonical
+ * sigma ordering. Each distinct output variable gets one noise sigma.
+ */
+export function getSigmaVariables(
+  biomarkerTypes: BiomarkerTypeRead[],
+): number[] {
+  const variableIds = biomarkerTypes
+    .map((bt) => bt.variable)
+    .filter((v): v is number => v != null);
+  return Array.from(new Set(variableIds)).sort((a, b) => a - b);
+}
 
 // https://github.com/plotly/plotly.js/blob/8c47c16daaa2020468baf9376130e085a4f01ec6/src/components/color/attributes.js#L4-L16
 export const plotColours = [
@@ -31,6 +306,44 @@ export const plotColours = [
   "#17becf", // blue-teal
 ];
 
+const hexToRgba = (hex: string, alpha: number): string => {
+  const normalizedHex = hex.replace("#", "");
+  const r = parseInt(normalizedHex.substring(0, 2), 16);
+  const g = parseInt(normalizedHex.substring(2, 4), 16);
+  const b = parseInt(normalizedHex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getQuantileBounds = (
+  uncertainty: SimulateResponse,
+  variableId: number,
+): { lower: number[]; upper: number[] } | null => {
+  const summary = uncertainty.outputs[String(variableId)];
+  if (!summary) {
+    return null;
+  }
+
+  const quantileEntries = Object.entries(
+    summary.quantiles as Record<string, number[]>,
+  )
+    .map(([key, values]) => ({ q: Number(key), values }))
+    .filter(({ q }) => Number.isFinite(q))
+    .sort((a, b) => a.q - b.q);
+
+  if (quantileEntries.length < 2) {
+    return null;
+  }
+
+  const lower =
+    quantileEntries.find((entry) => Math.abs(entry.q - 0.05) < 1e-9)?.values ||
+    quantileEntries[0].values;
+  const upper =
+    quantileEntries.find((entry) => Math.abs(entry.q - 0.95) < 1e-9)?.values ||
+    quantileEntries[quantileEntries.length - 1].values;
+
+  return { lower, upper };
+};
+
 type YAxisOptions = {
   unit: number | null | undefined;
   scale: Y2ScaleEnum;
@@ -38,7 +351,7 @@ type YAxisOptions = {
 export function getYAxisOptions(
   compound: CompoundRead,
   variable: VariableRead,
-  units: UnitListApiResponse,
+  units: UnitReadWithCompatible[],
 ): YAxisOptions {
   if (!variable.name.startsWith("C")) {
     return {
@@ -72,7 +385,7 @@ export function getYAxisOptions(
     };
   }
   return {
-    unit: parseInt(concentrationUnit.id),
+    unit: concentrationUnit.id,
     scale: "lg10",
   };
 }
@@ -81,26 +394,43 @@ export function getYAxisOptions(
 /// Includes non-constant variables that match the following criteria:
 /// - For library models: variables that start with C, receptor occupancy (RO), PD effects (E), protein or precursor (P), tumour size (TS) and PercInh, PDO, STM and INH.
 /// - For non-library models: all non-constant variables.
-export function filterOutputs(model: CombinedModelRead | undefined, variables: VariableRead[]): VariableRead[] {
-  return variables.filter(variable => {
+export function filterOutputs(
+  model: CombinedModelRead | undefined,
+  variables: VariableRead[],
+): VariableRead[] {
+  return variables.filter((variable) => {
     if (variable.constant) return false;
     if (model && !model.is_library_model) {
-      return variables
+      return variables;
     }
-    const isConcentration = (
-      variable.qname.startsWith("PKCompartment.C") ||
-      variable.qname.startsWith("Extravascular.Cah") ||
-      variable.qname.startsWith("Extravascular.Cvh") ||
-      (variable.qname.startsWith("EffectCompartment") && variable.name.startsWith("Ce"))
-    ) && !variable.name.startsWith("CLimm");
-    const isReceptorOccupancy = variable.qname.startsWith("PKCompartment") && variable.name.includes("RO");
+    const isConcentration =
+      (variable.qname.startsWith("PKCompartment.C") ||
+        variable.qname.startsWith("Extravascular.Cah") ||
+        variable.qname.startsWith("Extravascular.Cvh") ||
+        (variable.qname.startsWith("EffectCompartment") &&
+          variable.name.startsWith("Ce"))) &&
+      !variable.name.startsWith("CLimm");
+    const isReceptorOccupancy =
+      variable.qname.startsWith("PKCompartment") &&
+      variable.name.includes("RO");
     const isPDEffect = variable.qname.startsWith("PDCompartment.E");
     const isProteinOrPrecursor = variable.qname.startsWith("PDCompartment.P");
     const isTumourSize = variable.qname.startsWith("PDCompartment.TS");
-    const isInhibition = variable.name.startsWith("PerInh") || variable.name.startsWith("PercInh") || variable.name.startsWith("PDO") || variable.name.startsWith("STM") || variable.name.startsWith("INH");
-    return isConcentration || isReceptorOccupancy || isPDEffect || isProteinOrPrecursor || isTumourSize || isInhibition;
+    const isInhibition =
+      variable.name.startsWith("PerInh") ||
+      variable.name.startsWith("PercInh") ||
+      variable.name.startsWith("PDO") ||
+      variable.name.startsWith("STM") ||
+      variable.name.startsWith("INH");
+    return (
+      isConcentration ||
+      isReceptorOccupancy ||
+      isPDEffect ||
+      isProteinOrPrecursor ||
+      isTumourSize ||
+      isInhibition
+    );
   });
-
 }
 
 function getVariableName(
@@ -198,15 +528,15 @@ export function ranges(
 }
 
 export function genIcLines(
-  units: UnitRead[],
+  units: UnitReadWithCompatible[],
   plot: FieldArrayWithId<Simulation, "plots", "id">,
   exp: EfficacyExperimentRead | undefined,
-  concentrationUnit: UnitRead,
+  concentrationUnit: UnitReadWithCompatible,
 ) {
   let icLines: number[] = [];
 
   const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
-    parseInt(unit.id),
+    unit.id,
   );
   const yAxisIsConcentration = plot.y_unit
     ? concentrationUnitIds.includes(plot.y_unit)
@@ -217,10 +547,10 @@ export function genIcLines(
       const yAxisUnit = units.find((unit) => unit.id === plot.y_unit);
       const c50Unit = units.find((unit) => unit.id === exp.c50_unit);
       const compatibleUnit = c50Unit?.compatible_units.find(
-        (u) => parseInt(u.id) === yAxisUnit?.id,
+        (u) => u.id === yAxisUnit?.id,
       );
       const factor = compatibleUnit
-        ? parseFloat(compatibleUnit.conversion_factor)
+        ? compatibleUnit.conversion_factor
         : 1.0;
       icLines = plot.cx_lines.map((cx_line) => {
         const hc = exp.hill_coefficient || 1.0;
@@ -235,24 +565,20 @@ export function genIcLines(
 }
 
 export function generatePlotData(
-  d: SimulateResponse,
+  d: CentralSimulateResponse,
   visibleGroups: string[],
   colour: string,
-  dash: string,
-  index: number,
+  dash: "dot" | "solid",
   group: SubjectGroupRead | undefined,
   y_axis: SimulationYAxis,
   plot: FieldArrayWithId<Simulation, "plots", "id">,
-  units: UnitRead[],
+  units: UnitReadWithCompatible[],
   model: CombinedModelRead,
   variables: VariableRead[],
   xConversionFactor: number,
   isReference?: boolean,
-) {
-  const visible =
-    index === 0
-      ? visibleGroups.includes("Sim-Group 1")
-      : visibleGroups.includes(group?.name || "");
+): Partial<ScatterDataWithVariable> {
+  const visible = visibleGroups.includes(group?.name || "");
   const variableValues = d.outputs[y_axis.variable];
   const variable = variables.find((v) => v.id === y_axis.variable);
   const variableName = variable?.name;
@@ -262,7 +588,7 @@ export function generatePlotData(
     ? units.find((u) => u.id === plot.y_unit2)
     : units.find((u) => u.id === plot.y_unit);
   const yCompatibleUnit = variableUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === yaxisUnit?.id,
+    (u) => u.id === yaxisUnit?.id,
   );
 
   const starts_with_A = model.is_library_model
@@ -281,34 +607,107 @@ export function generatePlotData(
   const is_target2 = starts_with_C_or_A && has_target_2 && !has_drug;
 
   const yConversionFactor = yCompatibleUnit
-    ? parseFloat(
-      is_target
-        ? yCompatibleUnit.target_conversion_factor
-        : is_target2
-          ? yCompatibleUnit.target2_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-    )
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : is_target2
+        ? yCompatibleUnit.target2_conversion_factor
+        : yCompatibleUnit.conversion_factor
     : 1.0;
 
   const name = variableValues
-    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || "Sim-Group 1"}`
-    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || "Sim-Group 1"}`;
+    ? `${isReference ? "REF" : ""} ${variableName} ${group?.name || ""}`
+    : `${isReference ? "REF" : ""} ${y_axis.variable} ${group?.name || ""}`;
   const x = variableValues ? d.time.map((t) => t * xConversionFactor) : [];
   const y = variableValues
     ? variableValues.map((v) => v * yConversionFactor)
     : [];
   const yaxis = y_axis.right ? "y2" : undefined;
+  const visibleValue: ScatterData["visible"] = visible ? true : "legendonly";
+  const variableLabel = variableValues ? variableName : String(y_axis.variable);
   const basePlot = {
     yaxis,
     x,
     y,
     name: name.trim(),
-    variable: variableValues ? variableName : y_axis.variable,
-    visible: visible ? true : "legendonly",
+    variable: variableLabel,
+    visible: visibleValue,
   };
   return variableValues
     ? { ...basePlot, line: { color: colour, dash: dash } }
-    : { ...basePlot, type: "scatter" };
+    : { ...basePlot, type: "scatter" as const };
+}
+
+export function generateUncertaintyBandData(
+  uncertainty: SimulateResponse,
+  visibleGroups: string[],
+  colour: string,
+  group: SubjectGroupRead | undefined,
+  y_axis: SimulationYAxis,
+  plot: FieldArrayWithId<Simulation, "plots", "id">,
+  units: UnitReadWithCompatible[],
+  model: CombinedModelRead,
+  variables: VariableRead[],
+  xConversionFactor: number,
+  isReference?: boolean,
+): Partial<ScatterDataWithVariable>[] {
+  const visible = visibleGroups.includes(group?.name || "");
+
+  const bounds = getQuantileBounds(uncertainty, y_axis.variable);
+  if (!bounds) {
+    return [];
+  }
+
+  const variable = variables.find((v) => v.id === y_axis.variable);
+  const variableName = variable?.name;
+  const variableUnit = units.find((u) => u.id === variable?.unit);
+  const yaxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
+  const yCompatibleUnit = variableUnit?.compatible_units.find(
+    (u) => u.id === yaxisUnit?.id,
+  );
+
+  const is_target = model.is_library_model
+    ? variableName?.includes("CT1") || variableName?.includes("AT1")
+    : false;
+  const yConversionFactor = yCompatibleUnit
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : yCompatibleUnit.conversion_factor
+    : 1.0;
+
+  const x = uncertainty.time.map((t) => t * xConversionFactor);
+  const lowerY = bounds.lower.map((v) => v * yConversionFactor);
+  const upperY = bounds.upper.map((v) => v * yConversionFactor);
+  const yaxis = y_axis.right ? "y2" : undefined;
+  const visibleValue: ScatterData["visible"] = visible ? true : "legendonly";
+
+  return [
+    {
+      yaxis,
+      x,
+      y: lowerY,
+      mode: "lines",
+      line: { width: 0, color: hexToRgba(colour, isReference ? 0.04 : 0.1) },
+      hoverinfo: "skip",
+      showlegend: false,
+      visible: visibleValue,
+      variable: variableName || String(y_axis.variable),
+    },
+    {
+      yaxis,
+      x,
+      y: upperY,
+      mode: "lines",
+      line: { width: 0, color: hexToRgba(colour, isReference ? 0.04 : 0.1) },
+      fill: "tonexty",
+      fillcolor: hexToRgba(colour, isReference ? 0.08 : 0.16),
+      hoverinfo: "skip",
+      showlegend: false,
+      visible: visibleValue,
+      variable: variableName || String(y_axis.variable),
+    },
+  ];
 }
 
 export function minMaxAxisLimits(
@@ -351,7 +750,7 @@ type PlotProps = {
   isReference?: boolean;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   visibleGroups: string[];
   xConversionFactor: number;
@@ -370,43 +769,118 @@ const createPlot =
     xConversionFactor,
     y_axis,
   }: PlotProps) =>
-    (data: SimulateResponse, index: number) => {
-      const colourIndex = index + colourOffset;
-      const colour = plotColours[colourIndex % plotColours.length];
-      const group = groups?.find((g) => g.id === data.group);
-      const style = isReference ? "dot" : "solid";
-      return generatePlotData(
-        data,
-        visibleGroups,
-        colour,
-        style,
-        index,
-        group,
-        y_axis,
-        plot,
-        units,
-        model,
-        variables,
-        xConversionFactor,
-        isReference,
-      );
-    };
+  (data: CentralSimulateResponse, index: number) => {
+    const colourIndex = index + colourOffset;
+    const colour = plotColours[colourIndex % plotColours.length];
+    const group = groups?.find((g) => g.id === data.group);
+    const style = isReference ? "dot" : "solid";
+    return generatePlotData(
+      data,
+      visibleGroups,
+      colour,
+      style,
+      group,
+      y_axis,
+      plot,
+      units,
+      model,
+      variables,
+      xConversionFactor,
+      isReference,
+    );
+  };
 
 type PlotsProps = {
-  data: SimulateResponse[];
-  dataReference: SimulateResponse[];
+  data: CentralSimulateResponse[];
+  uncertaintyData: SimulateResponse[];
+  dataReference: CentralSimulateResponse[];
+  uncertaintyReferenceData: SimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   visibleGroups: string[];
   xConversionFactor: number;
 };
 
+// Number of bins used for the sampled-parameter histograms.
+const HISTOGRAM_BIN_COUNT = 30;
+
+// Build one overlaid histogram trace per subject group of a parameter's
+// Monte-Carlo sampled values, returned by the simulate endpoint under
+// `parameters` (keyed by variable id). Bins are computed here (as `bar` traces)
+// rather than using plotly's `histogram` type, which is not in the basic plotly
+// bundle used by the app; sharing a single set of bin edges across groups keeps
+// the overlaid bars aligned. Groups that are not currently visible are added as
+// "legendonly" so they can be toggled on from the legend. When the model has no
+// subject groups there is a single (group-less) response that is always shown.
+export function generateHistogramPlots(
+  uncertaintyData: SimulateResponse[],
+  groups: SubjectGroupRead[] | undefined,
+  visibleGroups: string[],
+  variableId: number,
+): Partial<Data>[] {
+  const series = uncertaintyData
+    .map((uncertainty) => ({
+      uncertainty,
+      samples: uncertainty.parameters?.[variableId],
+    }))
+    .filter(
+      (
+        s,
+      ): s is { uncertainty: SimulateResponse; samples: number[] } =>
+        Array.isArray(s.samples) && s.samples.length > 0,
+    );
+  if (series.length === 0) {
+    return [];
+  }
+
+  // shared bin edges across every group's samples so overlaid bars line up
+  let min = Infinity;
+  let max = -Infinity;
+  series.forEach(({ samples }) => {
+    samples.forEach((v) => {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    });
+  });
+  const width = (max - min) / HISTOGRAM_BIN_COUNT || 1;
+  const centres = Array.from(
+    { length: HISTOGRAM_BIN_COUNT },
+    (_, i) => min + (i + 0.5) * width,
+  );
+
+  return series.map(({ uncertainty, samples }, index) => {
+    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
+    samples.forEach((v) => {
+      let bin = Math.floor((v - min) / width);
+      if (bin < 0) bin = 0;
+      if (bin >= HISTOGRAM_BIN_COUNT) bin = HISTOGRAM_BIN_COUNT - 1;
+      counts[bin] += 1;
+    });
+    const group = groups?.find((g) => g.id === uncertainty.group);
+    const colour = plotColours[index % plotColours.length];
+    const visible = group ? visibleGroups.includes(group.name) : true;
+    return {
+      type: "bar",
+      x: centres,
+      y: counts,
+      width,
+      name: group?.name || "All",
+      marker: { color: colour },
+      opacity: 0.6,
+      visible: visible ? true : "legendonly",
+      showlegend: true,
+    } as Partial<Data>;
+  });
+}
+
 export const createPlots = ({
   data,
+  uncertaintyData,
   dataReference,
+  uncertaintyReferenceData,
   groups,
   model,
   plot,
@@ -417,19 +891,62 @@ export const createPlots = ({
 }: PlotsProps) => {
   return plot.y_axes.map((y_axis, i) => {
     const colourOffset = data.length * i;
-    return data
-      .map(
-        createPlot({
-          colourOffset,
-          groups,
-          model,
+
+    const bands = uncertaintyData.flatMap((uncertainty, index) => {
+      const colourIndex = index + colourOffset;
+      const colour = plotColours[colourIndex % plotColours.length];
+      const group = groups?.find((g) => g.id === uncertainty.group);
+      return generateUncertaintyBandData(
+        uncertainty,
+        visibleGroups,
+        colour,
+        group,
+        y_axis,
+        plot,
+        units,
+        model,
+        variables,
+        xConversionFactor,
+      );
+    });
+
+    const referenceBands = uncertaintyReferenceData.flatMap(
+      (uncertainty, index) => {
+        const colourIndex = index + colourOffset;
+        const colour = plotColours[colourIndex % plotColours.length];
+        const group = groups?.find((g) => g.id === uncertainty.group);
+        return generateUncertaintyBandData(
+          uncertainty,
+          visibleGroups,
+          colour,
+          group,
+          y_axis,
           plot,
           units,
+          model,
           variables,
-          visibleGroups,
           xConversionFactor,
-          y_axis,
-        }),
+          true,
+        );
+      },
+    );
+
+    return bands
+      .concat(referenceBands)
+      .concat(
+        data.map(
+          createPlot({
+            colourOffset,
+            groups,
+            model,
+            plot,
+            units,
+            variables,
+            visibleGroups,
+            xConversionFactor,
+            y_axis,
+          }),
+        ),
       )
       .concat(
         dataReference.map(
@@ -481,7 +998,7 @@ export const getDefaultAxisTitles = ({
   y2AxisVariableNames,
 }: {
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   yAxisVariableNames: (string | undefined)[];
   y2AxisVariableNames: (string | undefined)[];
 }) => {
@@ -522,25 +1039,25 @@ export const getPlotDimensions = ({
   if (isVertical && !isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height / 2 - buffer,
-        width: dimensions.width - buffer,
-      }
+          height: dimensions.height / 2 - buffer,
+          width: dimensions.width - buffer,
+        }
       : {
-        height: dimensions.height / 1.5 - buffer,
-        width: dimensions.width - buffer,
-      };
+          height: dimensions.height / 1.5 - buffer,
+          width: dimensions.width - buffer,
+        };
   }
 
   if (!isVertical && isHorizontal) {
     return dimensions.width > layoutBreakpoint
       ? {
-        height: dimensions.height - buffer,
-        width: dimensions.width / columnCount - buffer,
-      }
+          height: dimensions.height - buffer,
+          width: dimensions.width / columnCount - buffer,
+        }
       : {
-        height: dimensions.height - buffer,
-        width: dimensions.width / 1.5 - buffer,
-      };
+          height: dimensions.height - buffer,
+          width: dimensions.width / 1.5 - buffer,
+        };
   }
 
   return {
@@ -712,7 +1229,7 @@ type ScatterPlotData = {
   type: string;
   mode: string;
   visible: boolean | "legendonly";
-  marker: { color: string };
+  marker: { color: string; symbol?: string | string[] };
 };
 
 const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
@@ -729,7 +1246,7 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
   const groupBiomarkers = biomarkerData?.filter((d) =>
     group.subjects.includes(d.subjectId),
   );
-  const colourIndex = index + colourOffset + 1;
+  const colourIndex = index + colourOffset;
 
   return {
     name: group.name,
@@ -741,19 +1258,23 @@ const generateScatterPlot: (props: ScatterPlotProps) => ScatterPlotData = ({
     visible: visible ? true : "legendonly",
     marker: {
       color: plotColours[colourIndex % plotColours.length],
+      // excluded datapoints are drawn as open squares
+      symbol: groupBiomarkers?.map((d) =>
+        d?.exclude ? "square-open" : "circle",
+      ),
     },
   };
 };
 
 type ScatterPlotsProps = {
   biomarkerVariables: (number | undefined)[];
-  data: SimulateResponse[];
+  data: CentralSimulateResponse[];
   groups: SubjectGroupRead[] | undefined;
   i: number;
   model: CombinedModelRead;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
   subjectBiomarkers: SubjectBiomarker[][] | undefined;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   visibleGroups: string[];
   y_axis: SimulationYAxis;
 };
@@ -772,44 +1293,74 @@ export const generateScatterPlots: (
   visibleGroups,
   y_axis,
 }) => {
-    const xAxisUnit = units.find((u) => u.id === plot.x_unit);
-    const yAxisUnit = y_axis.right
-      ? units.find((u) => u.id === plot.y_unit2)
-      : units.find((u) => u.id === plot.y_unit);
+  const xAxisUnit = units.find((u) => u.id === plot.x_unit);
+  const yAxisUnit = y_axis.right
+    ? units.find((u) => u.id === plot.y_unit2)
+    : units.find((u) => u.id === plot.y_unit);
 
-    const colourOffset = data.length * i;
-    const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
-    const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
-    const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
-    const yCompatibleUnit = unit?.compatible_units.find(
-      (u) => parseInt(u.id) === yAxisUnit?.id,
-    );
-    const timeCompatibleUnit = timeUnit?.compatible_units.find(
-      (u) => parseInt(u.id) === xAxisUnit?.id,
-    );
-    const timeConversionFactor = timeCompatibleUnit
-      ? parseFloat(timeCompatibleUnit.conversion_factor)
-      : 1.0;
-    const is_target = model.is_library_model
-      ? qname?.includes("CT1") || qname?.includes("AT1")
-      : false;
-    const yConversionFactor = yCompatibleUnit
-      ? parseFloat(
-        is_target
-          ? yCompatibleUnit.target_conversion_factor
-          : yCompatibleUnit.conversion_factor,
-      )
-      : 1.0;
-    return groups?.map((group, index) =>
-      generateScatterPlot({
-        biomarkerData,
-        colourOffset,
-        group,
-        index,
-        timeConversionFactor,
-        visibleGroups,
-        y_axis,
-        yConversionFactor,
-      }),
-    );
-  };
+  const colourOffset = data.length * i;
+  const biomarkerIndex = biomarkerVariables.indexOf(y_axis.variable);
+  const biomarkerData = subjectBiomarkers?.[biomarkerIndex];
+  const { qname, unit, timeUnit } = biomarkerData?.[0] || {};
+  const yCompatibleUnit = unit?.compatible_units.find(
+    (u) => u.id === yAxisUnit?.id,
+  );
+  const timeCompatibleUnit = timeUnit?.compatible_units.find(
+    (u) => u.id === xAxisUnit?.id,
+  );
+  const timeConversionFactor = timeCompatibleUnit
+    ? timeCompatibleUnit.conversion_factor
+    : 1.0;
+  const is_target = model.is_library_model
+    ? qname?.includes("CT1") || qname?.includes("AT1")
+    : false;
+  const yConversionFactor = yCompatibleUnit
+    ? is_target
+      ? yCompatibleUnit.target_conversion_factor
+      : yCompatibleUnit.conversion_factor
+    : 1.0;
+  return groups?.map((group, index) =>
+    generateScatterPlot({
+      biomarkerData,
+      colourOffset,
+      group,
+      index,
+      timeConversionFactor,
+      visibleGroups,
+      y_axis,
+      yConversionFactor,
+    }),
+  );
+};
+
+/**
+ * Convert the `predictions` or `residuals` arrays from OptimiseResponse into
+ * CentralSimulateResponse[] so they can be consumed by the same plotting utilities.
+ *
+ * The backend returns each entry as a plain dict keyed by integer variable id
+ * (plus a "group_id" key).  CentralSimulateResponse expects:
+ *   { time: number[], group?: number|null, outputs: { [varId: string]: number[] } }
+ */
+export function optimisePredictionsToSimulateResponses(
+  predictions: { [key: string]: unknown }[],
+  variables: VariableRead[],
+): CentralSimulateResponse[] {
+  const timeVariable = variables.find((v) => v.binding === "time");
+  return predictions.map((pred) => {
+    const groupId = pred["group_id"] as number | null | undefined;
+    const time = timeVariable
+      ? ((pred[String(timeVariable.id)] as number[] | undefined) ?? [])
+      : [];
+    const times = pred["times"] as { [key: string]: number[] } | undefined;
+    const outputs: { [key: string]: number[] } = {};
+    for (const [key, values] of Object.entries(pred)) {
+      if (key === "group_id") continue;
+      if (key === "times") continue;
+      if (key === String(timeVariable?.id)) continue;
+      if (Array.isArray(values)) {
+        outputs[key] = values as number[];
+      }
+    }
+    return { time, group: groupId ?? null, outputs, times };
+  });
+}

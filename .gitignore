@@ -3,6 +3,7 @@ __pycache__/
 
 # Virtual environments
 venv
+.venv
 env*
 
 # Setuptools files
@@ -21,6 +22,7 @@ pkpdapp/static
 frontend/node_modules
 
 logfile.log*
+chatbot.log*
 
 .vscode
 
@@ -30,3 +32,13 @@ agent_plan
 tmp/
 .claude
 .devcontainer
+pkpdapp/pkpdapp/tests/test_models/optimise_verification_plots
+# TLS certs (private keys) and the ACME challenge webroot — runtime/secret, never commit
+.certs/
+certbot-webroot/
+
+# uv / npm — not used (repo uses pip + yarn)
+/pyproject.toml
+/uv.lock
+/.python-version
+/frontend-v2/package-lock.json

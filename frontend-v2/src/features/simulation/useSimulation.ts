@@ -8,6 +8,8 @@ import {
   SimulateResponse,
   useCombinedModelSimulateCreateMutation,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
+import { simulateResponseToCentral } from "./utils";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { PageName } from "../main/mainSlice";
@@ -17,31 +19,48 @@ interface ErrorObject {
 
 const SIMULATION_PAGES = [PageName.SIMULATIONS, PageName.RESULTS];
 
+type SimulateRequest = Simulate;
+
+// The response carries spread (and so warrants uncertainty bands) only when more
+// than one sample was drawn, i.e. when at least one variable had a distribution.
+const hasUncertainty = (response: SimulateResponse[]): boolean =>
+  response.some((scenario) => scenario.sample_count > 1);
+
 function useFetchSimulations() {
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
+
   const fetchSimulation = useCallback(
-    (model: CombinedModelRead, simInputs: Simulate) =>
-      simulate({
+    (model: CombinedModelRead, simInputs: SimulateRequest) => {
+      return simulate({
         id: model.id,
         simulate: simInputs,
-      }),
+      });
+    },
     [simulate],
   );
-  return { fetchSimulation, simulateErrorBase };
+
+  return {
+    fetchSimulation,
+    simulateErrorBase,
+  };
 }
 
-const simulationCache = new Map<string, SimulateResponse[]>();
+const simulationCache = new Map<string, CentralSimulateResponse[]>();
+const uncertaintySimulationCache = new Map<string, SimulateResponse[]>();
 
 export default function useSimulation(
-  simInputs: Simulate,
+  simInputs: SimulateRequest,
   model: CombinedModelRead | undefined,
   runSimulation: boolean = true,
 ) {
   const { compound, protocols } = useProtocols();
   const { setSimulations } = useContext(SimulationContext);
   const [loadingSimulate, setLoadingSimulate] = useState<boolean>(false);
-  const [data, setData] = useState<SimulateResponse[]>([]);
+  const [data, setData] = useState<CentralSimulateResponse[]>([]);
+  const [uncertaintyData, setUncertaintyData] = useState<SimulateResponse[]>(
+    [],
+  );
   const { fetchSimulation, simulateErrorBase } = useFetchSimulations();
   const simulateError: ErrorObject | undefined = simulateErrorBase
     ? "data" in simulateErrorBase
@@ -56,7 +75,7 @@ export default function useSimulation(
 
     const simulateModel = async (
       model: CombinedModelRead,
-      simInputs: Simulate,
+      simInputs: SimulateRequest,
       cacheKey: string,
     ) => {
       setLoadingSimulate(true);
@@ -64,9 +83,17 @@ export default function useSimulation(
       if (!ignore) {
         if ("data" in response) {
           const responseData = response.data as SimulateResponse[];
-          setData(responseData);
-          setSimulations(responseData);
-          simulationCache.set(cacheKey, responseData);
+          const centralData = simulateResponseToCentral(responseData);
+          setData(centralData);
+          setSimulations(centralData);
+          simulationCache.set(cacheKey, centralData);
+          if (hasUncertainty(responseData)) {
+            setUncertaintyData(responseData);
+            uncertaintySimulationCache.set(cacheKey, responseData);
+          } else {
+            setUncertaintyData([]);
+            uncertaintySimulationCache.delete(cacheKey);
+          }
         }
       }
       setLoadingSimulate(false);
@@ -93,12 +120,14 @@ export default function useSimulation(
           console.log("Using cached simulation data");
           setData(cachedData || []);
           setSimulations(cachedData || []);
+          setUncertaintyData(uncertaintySimulationCache.get(cacheKey) || []);
         } else {
           simulateModel(model, simInputs, cacheKey);
         }
       } else {
         console.log("Clearing simulation cache");
         simulationCache.clear();
+        uncertaintySimulationCache.clear();
       }
     }
     return () => {
@@ -118,6 +147,7 @@ export default function useSimulation(
   return {
     loadingSimulate,
     data,
+    uncertaintyData,
     error: simulateError,
   };
 }

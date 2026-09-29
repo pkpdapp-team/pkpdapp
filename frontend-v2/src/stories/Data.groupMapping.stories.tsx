@@ -4,9 +4,19 @@ import { useDispatch } from "react-redux";
 import { setProject as setReduxProject } from "../features/main/mainSlice";
 
 import Data from "../features/data/Data";
-import { project, projectHandlers } from "./generated-mocks";
-
-import { HttpResponse, http } from "msw";
+import {
+  project,
+  projectHandlers,
+  modelHandlers,
+  protocolHandlers,
+  unitHandlers,
+  variableHandlers,
+  simulationHandlers,
+  datasetHandlers,
+  subjectHandlers,
+  subjectGroupHandlers,
+  biomarkerTypeHandlers,
+} from "./generated-mocks";
 
 // Test CSV with a "Group" column that should be manually mappable to "Group ID"
 const testGroupCSV = `ID,Time,Observation,Group
@@ -15,39 +25,24 @@ const testGroupCSV = `ID,Time,Observation,Group
 2,0,12,B
 2,1,18,B`;
 
-const datasetHandlers = [
-  http.get("/api/dataset/:id", () => {
-    return HttpResponse.json(
-      {
-        id: 1,
-        name: "Test Dataset",
-        subjects: [],
-        groups: [],
-      },
-      { status: 200 },
-    );
-  }),
-  http.get("/api/subject_group", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/subject", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/biomarker_type", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-];
-
 const meta: Meta<typeof Data> = {
   title: "Data Upload (create dataset)/Group Mapping Fix",
   component: Data,
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: {
-        project: projectHandlers,
-        dataset: datasetHandlers,
-      },
+      handlers: [
+        ...projectHandlers,
+        ...modelHandlers,
+        ...protocolHandlers,
+        ...unitHandlers,
+        ...variableHandlers,
+        ...simulationHandlers,
+        ...datasetHandlers,
+        ...subjectHandlers,
+        ...subjectGroupHandlers,
+        ...biomarkerTypeHandlers,
+      ],
     },
   },
   decorators: [

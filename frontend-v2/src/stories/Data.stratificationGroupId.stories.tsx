@@ -7,15 +7,16 @@ import Data from "../features/data/Data";
 import {
   project,
   projectHandlers,
+  modelHandlers,
   protocolHandlers,
   unitHandlers,
+  variableHandlers,
   simulationHandlers,
-  combinedModels,
-  variables,
+  datasetHandlers,
+  subjectHandlers,
   subjectGroupHandlers,
+  biomarkerTypeHandlers,
 } from "./generated-mocks";
-
-import { HttpResponse, http } from "msw";
 
 // Test CSV with Group ID and multiple subjects in each group
 const testGroupIdCSV = `ID,Time,Observation,Group ID
@@ -26,45 +27,15 @@ const testGroupIdCSV = `ID,Time,Observation,Group ID
 3,1,16,GroupB
 4,0,13,GroupB`;
 
-const datasetHandlers = [
-  http.get("/api/dataset/:id", () => {
-    return HttpResponse.json(
-      {
-        id: 1,
-        name: "Test Dataset",
-        subjects: [],
-        groups: [],
-      },
-      { status: 200 },
-    );
-  }),
-  ...subjectGroupHandlers,
-  http.get("/api/subject", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/biomarker_type", () => {
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/combined_model", ({ request }) => {
-    const url = new URL(request.url);
-    const projectId = url.searchParams.get("project_id");
-    if (projectId && parseInt(projectId) === project.id) {
-      return HttpResponse.json(combinedModels, { status: 200 });
-    }
-    return HttpResponse.json([], { status: 200 });
-  }),
-  http.get("/api/variable", ({ request }) => {
-    const url = new URL(request.url);
-    const dosedPkModelId = url.searchParams.get("dosed_pk_model_id");
-    if (dosedPkModelId) {
-      const filtered = variables.filter(
-        (v) => v.dosed_pk_model === parseInt(dosedPkModelId, 10),
-      );
-      return HttpResponse.json(filtered, { status: 200 });
-    }
-    return HttpResponse.json(variables, { status: 200 });
-  }),
-];
+// Test CSV whose header is "GroupID" (no space); it auto-maps to the "Group ID"
+// type and must not produce a duplicate canonical "Group ID" stratification row.
+const testGroupIdNoSpaceCSV = `ID,Time,Observation,GroupID
+1,0,10,GroupA
+1,1,15,GroupA
+2,0,12,GroupA
+3,0,11,GroupB
+3,1,16,GroupB
+4,0,13,GroupB`;
 
 const meta: Meta<typeof Data> = {
   title: "Data Upload (create dataset)/Stratification with Group ID",
@@ -72,15 +43,18 @@ const meta: Meta<typeof Data> = {
   parameters: {
     layout: "fullscreen",
     msw: {
-      handlers: {
-        project: [
-          ...projectHandlers,
-          ...protocolHandlers,
-          ...unitHandlers,
-          ...simulationHandlers,
-        ],
-        dataset: datasetHandlers,
-      },
+      handlers: [
+        ...projectHandlers,
+        ...modelHandlers,
+        ...protocolHandlers,
+        ...unitHandlers,
+        ...variableHandlers,
+        ...simulationHandlers,
+        ...datasetHandlers,
+        ...subjectHandlers,
+        ...subjectGroupHandlers,
+        ...biomarkerTypeHandlers,
+      ],
     },
   },
   decorators: [
@@ -160,6 +134,75 @@ export const CanSelectGroupIdForStratification: Story = {
     // Verify the Group ID option exists in stratification and is selectable
     const radioButton = await canvas.findByLabelText("Group ID");
     expect(radioButton).toBeInTheDocument();
+  },
+};
+
+/**
+ * Test that verifies a mapped "Group ID" column is the default grouping column in
+ * the Stratification tab, without the user having to select it, and that no
+ * auto-created "Group" covariate is added alongside it.
+ */
+export const GroupIdIsDefaultStratification: Story = {
+  play: async ({ context, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Upload the file and move to the Stratification step.
+    //@ts-expect-error play function arg types mismatch
+    await CanSelectGroupIdForStratification.play(context);
+
+    // The Group ID radio is pre-selected as the primary grouping column.
+    const groupIdRadio = await canvas.findByLabelText("Group ID");
+    await waitFor(() => {
+      expect(groupIdRadio).toBeChecked();
+    });
+
+    // No redundant auto-created "Group" covariate row is present.
+    expect(canvas.queryByLabelText("Group")).not.toBeInTheDocument();
+
+    // Groups are derived from the Group ID column (GroupA, GroupB).
+    const groupTabs = await canvas.findAllByRole("tab");
+    expect(groupTabs.length).toBeGreaterThanOrEqual(2);
+  },
+};
+
+/**
+ * Test that verifies a "GroupID" (no space) column, which auto-maps to the
+ * "Group ID" type, is shown as a single stratification row and is not duplicated
+ * by the derived canonical "Group ID" data column.
+ */
+export const GroupIdColumnIsNotDuplicated: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+
+    // Upload a file whose header is "GroupID" (no space).
+    const fileInput = canvasElement.querySelector("input[type=file]");
+    expect(fileInput).toBeInTheDocument();
+    const file = new File([testGroupIdNoSpaceCSV], "test_group_id_no_space.csv", {
+      type: "text/csv",
+    });
+    await userEvent.upload(fileInput as HTMLInputElement, file);
+
+    await canvas.findByRole("heading", { name: "Imported Data Table" });
+
+    // Move to the Stratification step.
+    const nextButton = await canvas.findByRole("button", { name: "Next" });
+    await userEvent.click(nextButton);
+
+    await waitFor(() => {
+      expect(
+        canvas.queryByRole("heading", { name: "Stratification" }),
+      ).toBeInTheDocument();
+    });
+
+    // The user's "GroupID" column is the primary grouping column.
+    const groupIdRadio = await canvas.findByLabelText("GroupID");
+    await waitFor(() => {
+      expect(groupIdRadio).toBeChecked();
+    });
+
+    // The derived canonical "Group ID" (with space) column is not shown as a
+    // separate, duplicate stratification row.
+    expect(canvas.queryByLabelText("Group ID")).not.toBeInTheDocument();
   },
 };
 

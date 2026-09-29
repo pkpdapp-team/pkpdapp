@@ -21,6 +21,7 @@ const pk_model2_order = [
   "Ocular PK model",
   "Ocular PKPD VEGF (dimeric target) model",
   "Ocular PKPD bispecific (two different targets) model",
+  "Ocular PK model (front of the eye, FOTE)"
 ];
 
 export const PKModel2Select: FC<PKModel2SelectProps> = ({
@@ -43,15 +44,14 @@ export const PKModel2Select: FC<PKModel2SelectProps> = ({
   pk_model2_options.unshift({ value: "", label: "None" });
   return (
     <Stack
+      direction="row"
+      spacing={1}
       sx={{
+        alignItems: "center",
         marginTop: 2,
         display: "flex",
-        "& .MuiFormControlLabel-label": { fontSize: ".9rem" },
-      }}
-      direction="row"
-      alignItems="center"
-      spacing={1}
-    >
+        "& .MuiFormControlLabel-label": { fontSize: ".9rem" }
+      }}>
       <SelectField
         size="small"
         label="Extravascular PK Model"

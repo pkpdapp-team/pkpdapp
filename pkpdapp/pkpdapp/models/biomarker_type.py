@@ -105,29 +105,36 @@ class BiomarkerType(models.Model):
                     "values": [],
                 }
             )
+        # continuous biomarkers carry a per-datapoint id and exclude flag so
+        # individual points can be addressed and marked in the frontend
+        if is_continuous:
+            fields = ("time", "subject__id", "value", "id", "exclude")
+        else:
+            fields = ("time", "subject__id", "value")
+
         if first_time_only:
             earliest = biomarkers.filter(subject=OuterRef("subject")).order_by("time")
             times_subjects_values = (
                 biomarkers.filter(time=Subquery(earliest.values("time")[:1]))
                 .order_by("subject")
-                .values_list("time", "subject__id", "value")
+                .values_list(*fields)
             )
         else:
-            times_subjects_values = biomarkers.order_by("time").values_list(
-                "time", "subject__id", "value"
-            )
+            times_subjects_values = biomarkers.order_by("time").values_list(*fields)
 
         if not times_subjects_values:
             return None
 
-        times, subjects, values = list(zip(*times_subjects_values))
-        df = pd.DataFrame.from_dict(
-            {
-                "times": times,
-                "subjects": subjects,
-                "values": values,
-            }
-        )
+        columns = list(zip(*times_subjects_values))
+        data = {
+            "times": columns[0],
+            "subjects": columns[1],
+            "values": columns[2],
+        }
+        if is_continuous:
+            data["ids"] = columns[3]
+            data["exclude"] = columns[4]
+        df = pd.DataFrame.from_dict(data)
 
         time_conversion_factor = self.stored_time_unit.convert_to(
             self.display_time_unit

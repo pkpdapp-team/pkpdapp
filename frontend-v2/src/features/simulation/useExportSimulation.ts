@@ -4,11 +4,12 @@ import {
   CombinedModelRead,
   Simulate,
   useCombinedModelSimulateCreateMutation,
-  useUnitListQuery,
   useVariableListQuery,
   ProjectRead,
-  SimulateResponse,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
+import { simulateResponseToCentral } from "./utils";
+import { useUnits } from "../results/useUnits";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 
@@ -19,7 +20,7 @@ interface iExportSimulation {
 }
 
 const parseResponse = (
-  data: SimulateResponse,
+  data: CentralSimulateResponse,
   timeCol: number,
   label: string,
 ) => {
@@ -59,10 +60,7 @@ export default function useExportSimulation({
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
-  );
+  const units = useUnits();
   const [simulate, { error: simulateErrorBase }] =
     useCombinedModelSimulateCreateMutation();
   const exportSimulation = () => {
@@ -89,7 +87,8 @@ export default function useExportSimulation({
           return [`${key} (${unit?.symbol || ""})`, simInputs.variables[key]];
         });
         if (response?.data) {
-          const cols = Object.keys(response.data[0].outputs);
+          const centralData = simulateResponseToCentral(response.data);
+          const cols = Object.keys(centralData[0].outputs);
           const vars = cols.map((vid) =>
             variables.find((v) => v.id === parseInt(vid)),
           );
@@ -109,11 +108,9 @@ export default function useExportSimulation({
           rows = [
             ...rows,
             [...varNames, "Group"],
-            ...response.data.flatMap((data, index) => {
-              const label =
-                index === 0
-                  ? "Sim-Group 1"
-                  : groups[index - 1].id_in_dataset || groups[index - 1].name;
+            ...centralData.flatMap((data) => {
+              const group = groups.find((g) => g.id === data.group);
+              const label = group?.id_in_dataset || group?.name || "";
               return parseResponse(data, timeCol, label);
             }),
           ];

@@ -53,7 +53,7 @@ class DoseBase(models.Model):
         constraints = [
             models.CheckConstraint(
                 name="Duration must be greater than 0",
-                check=models.Q(duration__gt=0),
+                condition=models.Q(duration__gt=0),
             ),
         ]
 
@@ -61,7 +61,12 @@ class DoseBase(models.Model):
         return self.protocol.get_project()
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        super().save(force_insert, force_update, *args, **kwargs)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            **kwargs
+        )
 
         models = set()
         v = self.protocol.variable

@@ -21,6 +21,12 @@ router.register("user", api.UserView, basename="user")
 router.register("results_table", api.ResultsTableView, basename="results")
 router.register("subject", api.SubjectView, basename="subject")
 router.register("subject_group", api.SubjectGroupView, basename="subject_group")
+router.register("covariate", api.CovariateView, basename="covariate")
+router.register(
+    "covariate_population",
+    api.CovariatePopulationView,
+    basename="covariate_population",
+)
 router.register("compound", api.CompoundView, basename="compound")
 router.register(
     "efficacy_experiment", api.EfficacyExperimentView, basename="efficacy_experiment"
@@ -31,39 +37,37 @@ router.register("dose", api.DoseView, basename="dose")
 router.register("tag", api.TagView, basename="tag")
 router.register("unit", api.UnitView, basename="unit")
 router.register("variable", api.VariableView, basename="variable")
+router.register("correlation", api.CorrelationView, basename="correlation")
 router.register("protocol", api.ProtocolView, basename="protocol")
+router.register("biomarker", api.BiomarkerView, basename="biomarker")
 router.register("biomarker_type", api.BiomarkerTypeView, basename="biomarker_type")
 router.register("pharmacokinetic", api.PharmacokineticView, basename="pharmacokinetic")
 router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacodynamic")
 
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
-
-router.register("inference", api.InferenceView, basename="inference")
-router.register("algorithm", api.AlgorithmView, basename="algorithm")
-router.register("inference_chain", api.InferenceChainView, basename="inference_chain")
 router.register("simulation", api.SimulationViewSet, basename="simulation")
+router.register("conversations", api.ConversationViewSet, basename="conversation")
+router.register("messages", api.MessageViewSet, basename="message")
 
 urlpatterns = [
     path("admin/doc/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls),
-    path("accounts/", include("django.contrib.auth.urls")),
+    # django-allauth owns /accounts/ (login, logout, password, and the social
+    # provider login/callback URLs e.g. /accounts/google/login/).
+    path("accounts/", include("allauth.urls")),
     path("api/", include(router.urls), name="api"),
     path("api/nca/", api.NcaView.as_view(), name="nca"),
     path("api/auce/", api.AuceView.as_view(), name="auce"),
+    path("api/chatbot/", api.ChatbotView.as_view(), name="chatbot"),
     path(
         "api/combined_model/<int:pk>/simulate",
         api.SimulateCombinedView.as_view(),
         name="simulate-combined-model",
     ),
     path(
-        "api/inference/wizard",
-        api.InferenceWizardView.as_view(),
-        name="inference-wizard",
-    ),
-    path(
-        "api/inference/<int:pk>/stop",
-        api.StopInferenceView.as_view(),
-        name="stop-inference",
+        "api/combined_model/<int:pk>/optimise",
+        api.OptimiseCombinedView.as_view(),
+        name="optimise-combined-model",
     ),
     path(
         "api/pharmacodynamic/<int:pk>/simulate",
@@ -74,6 +78,11 @@ urlpatterns = [
     path("api/login/", api.login_view, name="auth-login"),
     path("api/logout/", api.logout_view, name="auth-logout"),
     path("api/register/", api.register_view, name="auth-register"),
+    path(
+        "api/verify-email/<str:key>/",
+        api.verify_email_view,
+        name="auth-verify-email",
+    ),
     path("api/session/", api.SessionView.as_view(), name="auth-session"),
     path("api/whoami/", api.WhoAmIView.as_view(), name="auth-whoami"),
     path("api-auth/", include("rest_framework.urls")),

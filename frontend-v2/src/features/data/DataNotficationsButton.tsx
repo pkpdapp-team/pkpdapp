@@ -25,20 +25,28 @@ export const DataNotificationsButton = ({
   >
     <InfoOutlinedIcon color="primary" fontSize="small" />{" "}
     <Typography
-      color="#1976d2"
-      sx={{ marginLeft: ".2rem", marginRight: ".5rem" }}
-    >
+      sx={{
+        color: "#1976d2",
+        marginLeft: ".2rem",
+        marginRight: ".5rem"
+      }}>
       1
     </Typography>
     <WarningAmberOutlinedIcon color="warning" fontSize="small" />{" "}
     <Typography
-      color="#ed6c02"
-      sx={{ marginLeft: ".2rem", marginRight: ".5rem" }}
-    >
+      sx={{
+        color: "#ed6c02",
+        marginLeft: ".2rem",
+        marginRight: ".5rem"
+      }}>
       {warnings?.length}
     </Typography>
     <ErrorOutlineOutlinedIcon color="error" fontSize="small" />
-    <Typography color="#d32f2f" sx={{ marginLeft: ".2rem" }}>
+    <Typography
+      sx={{
+        color: "#d32f2f",
+        marginLeft: ".2rem"
+      }}>
       {errors?.length}
     </Typography>
   </Button>

@@ -1,0 +1,27 @@
+# Optional override for deployments that obtain TLS certificates from Let's
+# Encrypt via certbot (installed on the host) instead of placing certs manually
+# in ./.certs.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.certbot.yml up -d
+#
+# This points nginx at certbot's live certificate directory and mounts the
+# shared ACME challenge webroot. HOST_NAME must be set (in .env.prod) and match
+# the domain the certificate is issued for. See docs/installation-prod.md for
+# the one-time bootstrap and the renewal cron.
+version: "2"
+services:
+  app:
+    environment:
+      # Read the live Let's Encrypt cert for HOST_NAME. The /etc/letsencrypt
+      # mount below makes renewals visible; nginx picks them up on reload.
+      #
+      # $$HOST_NAME (escaped, so compose passes the LITERAL string ${HOST_NAME}
+      # into the container) is expanded at container start by start-server.sh,
+      # using HOST_NAME from .env.prod. We must NOT use a single $ here: compose
+      # would substitute it at parse time from the shell / root .env, where
+      # HOST_NAME is not set, yielding an empty and broken path.
+      SSL_CERT_PATH: /etc/letsencrypt/live/$${HOST_NAME}/fullchain.pem
+      SSL_KEY_PATH: /etc/letsencrypt/live/$${HOST_NAME}/privkey.pem
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro

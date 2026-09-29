@@ -8,12 +8,12 @@
 
 from .login import login_view, logout_view, get_csrf, SessionView, WhoAmIView
 from .register import register_view
+from .verify_email import verify_email_view
 from .filters import (
     UserAccessFilter,
     DosedPkModelFilter,
     PdModelFilter,
     ProjectFilter,
-    InferenceFilter,
     DatasetFilter,
 )
 from .permissions import (
@@ -25,6 +25,7 @@ from .simulation import (
     SimulationViewSet,
 )
 from .auce import AuceView
+from .biomarker import BiomarkerView
 from .biomarker_type import BiomarkerTypeView
 from .dataset import DatasetView
 from .dose import DoseView
@@ -39,16 +40,12 @@ from .models import (
 from .nca import NcaView
 from .project import ProjectView, ProjectAccessView
 from .protocol import ProtocolView
-from .inference import (
-    InferenceView,
-    InferenceChainView,
-    AlgorithmView,
-    StopInferenceView,
-    InferenceWizardView,
-)
 from .simulate import (
     SimulateCombinedView,
     SimulatePdView,
+)
+from .optimise import (
+    OptimiseCombinedView,
 )
 from .results_table import ResultsTableView
 from .subject import SubjectView
@@ -56,5 +53,9 @@ from .subject_group import SubjectGroupView
 from .unit import UnitView
 from .user import UserView
 from .variable import VariableView
-from .likelihoods import LogLikelihoodView
+from .correlation import CorrelationView
+from .covariate import CovariateView
+from .covariate_population import CovariatePopulationView
 from .tag import TagView
+from .chatbot import ChatbotView
+from .conversation import ConversationViewSet, MessageViewSet

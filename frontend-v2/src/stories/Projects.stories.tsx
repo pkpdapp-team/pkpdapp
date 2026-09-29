@@ -43,7 +43,6 @@ const meta: Meta<typeof Projects> = {
       handlers: {
         project: [
           http.get("/api/user", async () => {
-            await delay();
             return HttpResponse.json(
               [
                 {
@@ -66,11 +65,15 @@ const meta: Meta<typeof Projects> = {
             );
           }),
           http.get("/api/project", async () => {
-            await delay();
             return HttpResponse.json(mockProjects, { status: 200 });
           }),
+          http.get("/api/tag/", async () => {
+            return HttpResponse.json([], { status: 200 });
+          }),
+          http.get("/api/tag", async () => {
+            return HttpResponse.json([], { status: 200 });
+          }),
           http.get("/api/project/:id", async ({ params }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const projectId = parseInt(params.id, 10);
             const foundProject = mockProjects.find(
@@ -85,7 +88,6 @@ const meta: Meta<typeof Projects> = {
             return HttpResponse.json(foundProject, { status: 200 });
           }),
           http.post("/api/project", async ({ request }) => {
-            await delay();
             const newProjectData = await request.json();
             // @ts-expect-error newProjectData is DefaultBodyType
             const newProject = { ...project, ...newProjectData, id: 1 };
@@ -93,7 +95,6 @@ const meta: Meta<typeof Projects> = {
             return HttpResponse.json(newProject, { status: 201 });
           }),
           http.put("/api/project/:id", async ({ params, request }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const projectId = parseInt(params.id, 10);
             const updatedProject = await request.json();
@@ -110,7 +111,6 @@ const meta: Meta<typeof Projects> = {
             );
           }),
           http.delete("/api/project/:id", async ({ params }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const projectId = parseInt(params.id, 10);
             mockProjects = mockProjects.filter(
@@ -118,8 +118,31 @@ const meta: Meta<typeof Projects> = {
             );
             return HttpResponse.json({ id: projectId }, { status: 204 });
           }),
+          http.post("/api/dataset/", async ({ request }) => {
+            const dataset = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error dataset is DefaultBodyType
+              { ...dataset, id: 1, subjects: [], groups: [] },
+              { status: 201 },
+            );
+          }),
+          http.post("/api/combined_model/", async ({ request }) => {
+            const model = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error model is DefaultBodyType
+              { ...model, id: 1 },
+              { status: 201 },
+            );
+          }),
+          http.post("/api/simulation/", async ({ request }) => {
+            const simulation = await request.json();
+            return HttpResponse.json(
+              // @ts-expect-error simulation is DefaultBodyType
+              { ...simulation, id: 1 },
+              { status: 201 },
+            );
+          }),
           http.get("/api/compound/:id", async () => {
-            await delay();
             // Simulate fetching a compound by ID
             return HttpResponse.json(
               { id: 1, name: "Compound A", projectId: 1 },
@@ -127,7 +150,6 @@ const meta: Meta<typeof Projects> = {
             );
           }),
           http.post("/api/compound/", async ({ request }) => {
-            await delay();
             const newCompound = await request.json();
             return HttpResponse.json(
               // @ts-expect-error newCompound is DefaultBodyType
@@ -136,7 +158,6 @@ const meta: Meta<typeof Projects> = {
             );
           }),
           http.put("/api/compound/:id", async ({ params, request }) => {
-            await delay();
             //@ts-expect-error params.id is a string
             const compoundId = parseInt(params.id, 10);
             const updatedCompound = await request.json();
@@ -147,11 +168,9 @@ const meta: Meta<typeof Projects> = {
             );
           }),
           http.get("/api/results_table", async () => {
-            await delay();
             return HttpResponse.json([], { status: 200 });
           }),
           http.post("/api/results_table", async ({ request }) => {
-            await delay();
             const newTable = await request.json();
             // Simulate creating a new results table
             const createdTable = {

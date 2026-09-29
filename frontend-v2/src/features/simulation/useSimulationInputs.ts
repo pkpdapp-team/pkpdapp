@@ -7,6 +7,7 @@ import {
 } from "../../app/backendApi";
 
 type SliderValues = Map<number, number>;
+type SliderValueGetter = (variableId: number, variable?: VariableRead) => number;
 
 enum simulationInputMode {
   REQUESTED_OUTPUTS = "REQUESTED",
@@ -17,12 +18,15 @@ enum simulationInputMode {
 const getSimulationInputs = (
   variables?: VariableRead[],
   sliderValues?: SliderValues,
+  getSliderValue?: SliderValueGetter,
 ) => {
   const constantVariables = variables?.filter((v) => v.constant) || [];
   const simulateVariables: { [key: string]: number } = {};
   constantVariables.forEach((v: VariableRead) => {
     const result = { qname: v.qname, value: v.default_value || 0 };
-    if (sliderValues?.has(v.id)) {
+    if (getSliderValue) {
+      result.value = getSliderValue(v.id, v);
+    } else if (sliderValues?.has(v.id)) {
       result.value = sliderValues.get(v.id)!;
     }
     simulateVariables[result.qname] = result.value;
@@ -55,7 +59,10 @@ const getSimulateOutputs = (
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
+        // constant y-axis variables are histogram plots (of a parameter's
+        // sampled values); they are not model outputs and cannot be requested
+        // as such — their samples come back in the response's `parameters`.
+        if (variable && !variable.constant && !outputs.includes(variable.qname)) {
           outputs.push(variable.qname);
         }
       }
@@ -64,7 +71,7 @@ const getSimulateOutputs = (
     for (const plot of simulation?.plots || []) {
       for (const y_axis of plot.y_axes) {
         const variable = variables?.find((v) => v.id === y_axis.variable);
-        if (variable && !outputs.includes(variable.qname)) {
+        if (variable && !variable.constant && !outputs.includes(variable.qname)) {
           outputs.push(variable.qname);
         }
       }
@@ -109,22 +116,24 @@ export default function useSimulationInputs(
   model: CombinedModelRead | undefined,
   simulation: SimulationRead | undefined,
   sliderValues: SliderValues | undefined,
+  getSliderValue: SliderValueGetter | undefined,
   variables: VariableRead[] | undefined,
   timeMax: number | undefined,
+  useLegacySolver: boolean = false,
 ) {
   const simulateVariables = useMemo(
-    () => getSimulationInputs(variables, sliderValues),
-    [variables, sliderValues],
+    () => getSimulationInputs(variables, sliderValues, getSliderValue),
+    [variables, sliderValues, getSliderValue],
   );
   const outputs = useMemo(
     () =>
       model && simulation
         ? getSimulateOutputs(
-            model,
-            simulation,
-            variables,
-            simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
-          )
+          model,
+          simulation,
+          variables,
+          simulationInputMode.ALL_OUTPUTS_NO_AMOUNTS,
+        )
         : [],
     [model, simulation, variables],
   );
@@ -133,8 +142,9 @@ export default function useSimulationInputs(
       variables: simulateVariables,
       outputs,
       time_max: timeMax || undefined,
+      use_diffsol: !useLegacySolver,
     }),
-    [simulateVariables, outputs, timeMax],
+    [simulateVariables, outputs, timeMax, useLegacySolver],
   );
   return simInputs as Simulate;
 }

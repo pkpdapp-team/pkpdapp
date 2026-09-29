@@ -8,11 +8,11 @@ import {
 import {
   CompoundRead,
   Simulation,
-  UnitRead,
   VariableRead,
   useEfficacyExperimentListQuery,
   useProjectRetrieveQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import {
   Divider,
   Grid,
@@ -39,7 +39,7 @@ interface SimulationPlotFormProps {
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   compound: CompoundRead;
 }
 
@@ -93,8 +93,8 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
   if (concentrationUnit === undefined) {
     return <>No concentration or amount unit found</>;
   }
-  const concentrationUnitIds = concentrationUnit.compatible_units.map((unit) =>
-    parseInt(unit.id),
+  const concentrationUnitIds = concentrationUnit.compatible_units.map(
+    (unit) => unit.id,
   );
   const concentrationVariables = variables.filter(
     (variable) => variable.unit && concentrationUnitIds.includes(variable.unit),
@@ -227,9 +227,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       const unitId = variables.find((v) => v.id === axes[0].variable)?.unit;
       const unit = units?.find((u) => u.id === unitId);
       if (unit) {
-        const compatibleUnits = unit.compatible_units.map((u) =>
-          parseInt(u.id),
-        );
+        const compatibleUnits = unit.compatible_units.map((u) => u.id);
         addAxisVars = addAxisVars.filter((v) =>
           v.unit ? compatibleUnits.includes(v.unit) : true,
         );
@@ -266,12 +264,53 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
     type: "search",
   };
 
+  // A plot whose y-axis variable is a constant parameter is a histogram of that
+  // parameter's sampled values. Only the x-axis (the parameter) is configurable;
+  // the y-axis / y2-axis / reference-line controls do not apply, and the single
+  // y_axes entry (which holds the parameter) is left untouched.
+  const histogramVariable = variables.find(
+    (v) => v.id === plot.y_axes[0]?.variable,
+  );
+  if (histogramVariable?.constant) {
+    const xUnit = units.find((u) => u.id === plot.x_unit);
+    const xTitleDefault = `${histogramVariable.name}${
+      xUnit?.symbol ? ` (${xUnit.symbol})` : ""
+    }`;
+    return (
+      <Stack>
+        <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
+          Parameter distribution (histogram)
+        </Typography>
+        <Stack direction={"row"} spacing={2} sx={{
+          alignItems: "center"
+        }}>
+          <TextField
+            label="X Axis Label"
+            name={`plots.${index}.x_label`}
+            control={control}
+            textFieldProps={axisLabelProps}
+            defaultValue={xTitleDefault}
+          />
+          <SelectField
+            label="X Axis Scale"
+            name={`plots.${index}.x_scale`}
+            options={axisScaleOptions}
+            control={control}
+            selectProps={defaultProps}
+          />
+        </Stack>
+      </Stack>
+    );
+  }
+
   return (
     <Stack>
       <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
         X Axis
       </Typography>
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
+      <Stack direction={"row"} spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <UnitField
           label="X Axis Unit"
           name={`plots.${index}.x_unit`}
@@ -310,9 +349,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       <Stack
         direction={"row"}
         spacing={2}
-        alignItems={"center"}
-        sx={{ paddingTop: "1.5rem" }}
-      >
+        sx={{
+          alignItems: "center",
+          paddingTop: "1.5rem"
+        }}>
         <UnitField
           label="Y Axis Unit"
           name={`plots.${index}.y_unit`}
@@ -376,7 +416,9 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
         ))}
       </List>
       <Divider sx={{ margin: 2 }} />
-      <Stack direction={"row"} spacing={2} alignItems={"center"}>
+      <Stack direction={"row"} spacing={2} sx={{
+        alignItems: "center"
+      }}>
         <Typography sx={{ fontWeight: "bold", paddingBottom: "1rem" }}>
           Reference lines (if Efficacy-Safety Data have been defined in Drug and
           Target)
@@ -402,7 +444,7 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
                   control={control}
                   textFieldProps={{
                     type: "number",
-                    inputProps: { step: 0.1 },
+                    slotProps: { htmlInput: { step: 0.1 } },
                     disabled: !yAxisIsConcentration || isSharedWithMe,
                   }}
                 />
@@ -435,9 +477,10 @@ const SimulationPlotForm: FC<SimulationPlotFormProps> = ({
       <Stack
         direction={"row"}
         spacing={2}
-        alignItems={"center"}
-        sx={{ paddingTop: "1rem" }}
-      >
+        sx={{
+          alignItems: "center",
+          paddingTop: "1rem"
+        }}>
         <UnitField
           label="Unit"
           name={`plots.${index}.y_unit2`}

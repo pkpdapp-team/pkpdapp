@@ -4,123 +4,36 @@
 # copyright notice and full license details.
 #
 
-import pkpdapp
+import logging
+import threading
+from collections import namedtuple
+
+import myokit
 import numpy as np
+import pints
+from django.core.cache import cache
 from myokit.formats.mathml import MathMLExpressionWriter
 from myokit.formats.sbml import SBMLParser
-import myokit
-import threading
-from django.core.cache import cache
-import logging
+
+from pkpdapp.models.optimise_context import (
+    OptimiseContext,
+    OptimiseResult,
+)
+from .uncertainty_simulation_mixin import UncertaintySimulationMixin
 
 logger = logging.getLogger(__name__)
 
 lock = threading.Lock()
 
+# Links a covariate to the model Variable id of its sampled-value input. The
+# centring reference is baked into the model as a fixed constant (see
+# ``covariate_effects._reference_value``), so it is not passed at run time.
+CovariateBinding = namedtuple("CovariateBinding", ["covariate", "input_id"])
 
-class MyokitModelMixin:
-    def _initialise_variables(self, model, variables):
-        # Convert units
-        variables = {
-            qname: self._convert_unit_qname(qname, value, model)
-            for qname, value in variables.items()
-        }
 
-        # Set constants in model
-        for var_name, var_value in variables.items():
-            model.get(var_name).set_rhs(float(var_value))
-
-        return variables
-
-    @staticmethod
-    def _get_protocol_amount_conversion_factor(
-        project, protocol, amount_var, compound, target
-    ):
-        # if the amount unit is in per kg, use species weight to convert
-        # to per animal
-        additional_conversion_factor = 1.0
-        if (
-            project is not None
-            and project.version > 2
-            and protocol.amount_per_body_weight
-        ):
-            additional_conversion_factor = project.species_weight
-
-        amount_conversion_factor = (
-            protocol.amount_unit.convert_to(
-                amount_var.unit(), compound=compound, target=target
-            )
-            * additional_conversion_factor
-        )
-        return amount_conversion_factor
-
-    def _get_myokit_protocols(self, model, dosing_protocols, override_tlag, time_max):
-        protocols = {}
-        time_var = model.binding("time")
-        project = self.get_project()
-        if project is None:
-            compound = None
-        else:
-            compound = project.compound
-
-        for qname, protocol in dosing_protocols.items():
-            amount_var = model.get(qname)
-            set_administration(model, amount_var)
-            tlag_value = self._get_tlag_value(qname)
-            # override tlag if set
-            if qname in override_tlag:
-                tlag_value = override_tlag[qname]
-
-            target = None
-            if self.is_library_model:
-                if "CT1" in qname or "AT1" in qname:
-                    target = 1
-                elif "CT2" in qname or "AT2" in qname:
-                    target = 2
-
-            amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                project, protocol, amount_var, compound, target
-            )
-
-            time_conversion_factor = protocol.time_unit.convert_to(
-                time_var.unit(), compound=compound
-            )
-
-            dosing_events = _get_dosing_events(
-                protocol.doses,
-                amount_conversion_factor,
-                time_conversion_factor,
-                tlag_value,
-                time_max,
-            )
-            protocols[_get_pacing_label(amount_var)] = get_protocol(dosing_events)
-        return protocols
-
-    def _get_override_tlag(self, variables):
-        override_tlag = {}
-        if isinstance(self, pkpdapp.models.CombinedModel):
-            for dv in self.derived_variables.all():
-                if dv.type == "TLG":
-                    derived_param = dv.pk_variable.qname + "_tlag_ud"
-                    if derived_param in variables:
-                        override_tlag[dv.pk_variable.qname] = variables[derived_param]
-        return override_tlag
-
-    def _get_tlag_value(self, qname):
-        from pkpdapp.models import Variable
-
-        # get tlag value default to 0
-        derived_param = qname + "_tlag_ud"
-        try:
-            return self.variables.get(qname=derived_param).default_value
-        except Variable.DoesNotExist:
-            return 0.0
-
+class MyokitModelMixin(UncertaintySimulationMixin):
     def _get_myokit_model_cache_key(self):
         return "myokit_model_{}_{}".format(self._meta.db_table, self.id)
-
-    def _get_myokit_simulator_cache_key(self):
-        return "myokit_simulator_{}_{}".format(self._meta.db_table, self.id)
 
     @staticmethod
     def sbml_string_to_mmt(sbml):
@@ -142,43 +55,6 @@ class MyokitModelMixin:
     def create_myokit_model(self):
         return self.parse_mmt_string(self.mmt)
 
-    def create_myokit_simulator(
-        self, override_tlag=None, model=None, time_max=None, dosing_protocols=None
-    ):
-        if override_tlag is None:
-            override_tlag = {}
-
-        if model is None:
-            model = self.get_myokit_model()
-
-        if dosing_protocols is None:
-            # add a dose_rate variable to the model for each
-            # dosed variable
-            dosing_protocols = {}
-            for v in self.variables.filter(state=True):
-                for p in v.protocols.all():
-                    dosing_protocols[v.qname] = p
-
-        protocols = self._get_myokit_protocols(
-            model=model,
-            dosing_protocols=dosing_protocols,
-            override_tlag=override_tlag,
-            time_max=time_max,
-        )
-
-        with lock:
-            sim = myokit.Simulation(model, protocol=protocols)
-        return sim
-
-    def get_myokit_simulator(self):
-        key = self._get_myokit_simulator_cache_key()
-        with lock:
-            myokit_simulator = cache.get(key)
-        if myokit_simulator is None:
-            myokit_simulator = self.create_myokit_simulator()
-            cache.set(key, myokit_simulator, timeout=None)
-        return myokit_simulator
-
     def get_myokit_model(self):
         key = self._get_myokit_model_cache_key()
         with lock:
@@ -191,7 +67,6 @@ class MyokitModelMixin:
     def is_variables_out_of_date(self):
         model = self.get_myokit_model()
 
-        # just check if the number of const variables is right
         # TODO: is this sufficient, we are also updating on save
         # so I think it should be ok....?
         all_const_variables = self.variables.filter(constant=True)
@@ -200,13 +75,11 @@ class MyokitModelMixin:
         return len(all_const_variables) != myokit_variable_count
 
     def update_simulator(self):
-        # delete simulator from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        return None
 
     def update_model(self):
         logger.info("UPDATE MODEL")
-        # delete model and simulators from cache
-        cache.delete(self._get_myokit_simulator_cache_key())
+        # delete model cache
         cache.delete(self._get_myokit_model_cache_key())
 
         # update the variables of the model
@@ -270,8 +143,7 @@ class MyokitModelMixin:
                 )
             else:
                 logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, state = {v.state}"
+                    f"{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}"
                 )
 
         logger.debug("ALL OLD VARIABLES")
@@ -283,8 +155,7 @@ class MyokitModelMixin:
                 )
             else:
                 logger.debug(
-                    f"{v.qname}, id = {v.id} "
-                    f"constant = {v.constant}, state = {v.state}"
+                    f"{v.qname}, id = {v.id} constant = {v.constant}, state = {v.state}"
                 )
 
         # delete all variables that are not in new
@@ -362,29 +233,6 @@ class MyokitModelMixin:
                 removed_variables += ["PKCompartment.CLada", "PKCompartment.tada"]
         return removed_variables
 
-    def set_variables_from_inference(self, inference):
-        results_for_mle = inference.get_maximum_likelihood()
-        for result in results_for_mle:
-            inference_var = result.log_likelihood.outputs.first().variable
-            # noise variables won't have a model variable
-            if inference_var is not None:
-                model_var = self.variables.filter(qname=inference_var.qname).first()
-            else:
-                model_var = None
-            if model_var is not None:
-                model_var.default_value = result.value
-                if (
-                    model_var.lower_bound
-                    and model_var.lower_bound > model_var.default_value
-                ):
-                    model_var.lower_bound = model_var.default_value
-                if (
-                    model_var.upper_bound
-                    and model_var.upper_bound < model_var.default_value
-                ):
-                    model_var.upper_bound = model_var.default_value
-                model_var.save()
-
     @staticmethod
     def _serialise_equation(equ):
         writer = MathMLExpressionWriter()
@@ -414,9 +262,13 @@ class MyokitModelMixin:
         outputs = [
             cls._serialise_variable(o) for o in c.variables(const=False, sort=True)
         ]
-        equations = [
+        # sort equations by their serialised MathML so the order is stable across
+        # runs AND myokit versions/environments (myokit's equations() iteration
+        # order is non-deterministic, and its Equation.__str__ form — used as a
+        # previous sort key — varies between versions, reordering the output)
+        equations = sorted(
             cls._serialise_equation(e) for e in c.equations(bound=False, const=False)
-        ]
+        )
         return {
             "name": c.name(),
             "states": states,
@@ -424,12 +276,6 @@ class MyokitModelMixin:
             "outputs": outputs,
             "equations": equations,
         }
-
-    def states(self):
-        """states are dependent variables of the model to be solved"""
-        model = self.get_myokit_model()
-        states = model.variables(state=True, sort=True)
-        return [self._serialise_variable(s) for s in states]
 
     def components(self):
         """
@@ -439,421 +285,679 @@ class MyokitModelMixin:
         model = self.get_myokit_model()
         return [self._serialise_component(c) for c in model.components(sort=True)]
 
-    def outputs(self):
-        """
-        outputs are dependent (e.g. y) and independent (e.g. time)
-        variables of the model to be solved
-        """
-        model = self.get_myokit_model()
-        outpts = model.variables(const=False, sort=True)
-        return [self._serialise_variable(o) for o in outpts]
-
-    def myokit_variables(self):
-        """
-        variables are independent variables of the model that are constant
-        over time. aka parameters of the model
-        """
-        model = self.get_myokit_model()
-        variables = model.variables(const=True, sort=True)
-        return [self._serialise_variable(v) for v in variables]
-
-    def _conversion_factor(self, variable, myokit_variable_sbml):
-        target = None
-        if self.is_library_model:
-            if "CT1" in variable.qname or "AT1" in variable.qname:
-                target = 1
-            elif "CT2" in variable.qname or "AT2" in variable.qname:
-                target = 2
-        if variable.unit is None:
-            conversion_factor = 1.0
-        else:
-            project = self.get_project()
-            compound = None
-            if project is not None:
-                compound = project.compound
-            conversion_factor = variable.unit.convert_to(
-                myokit_variable_sbml.unit(), compound=compound, target=target
-            )
-            if (
-                project is not None
-                and project.version > 2
-                and variable.unit_per_body_weight
-            ):
-                conversion_factor *= project.species_weight
-        return conversion_factor
-
-    def _convert_unit(self, variable, myokit_variable_sbml, value):
-        conversion_factor = self._conversion_factor(variable, myokit_variable_sbml)
-
-        return conversion_factor * value
-
-    def _convert_unit_qname(self, qname, value, myokit_model):
-        try:
-            variable = self.variables.get(qname=qname)
-        except pkpdapp.models.Variable.DoesNotExist:
-            raise ValueError(f"Variable with qname {qname} does not exist in model.")
-        myokit_variable_sbml = myokit_model.get(qname)
-        new_value = self._convert_unit(variable, myokit_variable_sbml, value)
-        return new_value
-
-    def _convert_bound_unit(self, binding, value, myokit_model):
-        myokit_variable_sbml = myokit_model.binding(binding)
-        variable = self.variables.get(qname=myokit_variable_sbml.qname())
-        return self._convert_unit(variable, myokit_variable_sbml, value)
-
-    def serialize_datalog(self, datalog, myokit_model):
-        result = {}
-        for k, v in datalog.items():
-            variable = self.variables.get(qname=k)
-            myokit_variable_sbml = myokit_model.get(k)
-
-            if variable.unit is None:
-                conversion_factor = 1.0
-            else:
-                conversion_factor = self._conversion_factor(
-                    variable, myokit_variable_sbml
-                )
-
-            result[variable.id] = (np.frombuffer(v) / conversion_factor).tolist()
-
-        return result
-
     def get_time_max(self):
         return self.time_max
 
-    def _handle_nonlinarities(self, model, dosing_protocols):
-        # For nonlinearities, add PKNonlinearities.C_Drug to variables with the
-        # value of the first dose concentration
-        if (
-            self.is_library_model
-            and model.has_variable("PKNonlinearities.C_Drug")
-            and dosing_protocols is not None
-            and len(dosing_protocols) > 0
-        ):
+    def _collect_variable_distributions(self, variables):
+        """Return ``{qname: Distribution}`` for constant variables that have one.
 
-            project = self.get_project()
-            myokit_var = model.get("PKNonlinearities.C_Drug")
-            # set C_Drug equal to the sum of the first dose amounts for all protocols
-            # within this group
-            # TODO: later we will get users to select which variable to use for the
-            # dose concentration via the nonlinearities UI interface.
-            dose_sum = 0.0
-            for protocol in dosing_protocols.values():
-                amount_conversion_factor = self._get_protocol_amount_conversion_factor(
-                    project, protocol, myokit_var, project.compound, target=None
-                )
-                dose_sum += protocol.doses.first().amount * amount_conversion_factor
+        Also ensures ``variables`` carries the typical value P for each distributed
+        variable: the caller-supplied override if present, otherwise the variable's
+        default value. ``variables`` is mutated in place (``simulate`` passes a copy).
+        """
+        variable_distributions = {}
+        for variable in self.variables.filter(constant=True):
+            # reverse one-to-one access returns None when no distribution exists
+            distribution = getattr(variable, "distribution", None)
+            if distribution is None:
+                continue
+            variables.setdefault(variable.qname, variable.get_default_value())
+            variable_distributions[variable.qname] = distribution
+        return variable_distributions
 
-            # C_Drug cannot be zero as it might be raised to a negative power
-            dose_sum = max(dose_sum, 1e-6)
-            myokit_var.set_rhs(dose_sum)
+    def _collect_variable_correlations(self, variable_distributions):
+        """Return ``{(qname_i, qname_j): coefficient}`` for correlated pairs.
 
-    def simulate_model(
+        Only pairs where both variables carry a distribution (i.e. are keys of
+        ``variable_distributions``) are returned; any pair without a
+        :class:`Correlation` row is uncorrelated (coefficient 0) and omitted.
+        """
+        from pkpdapp.models import Correlation
+
+        distribution_qname = {
+            distribution.id: qname
+            for qname, distribution in variable_distributions.items()
+        }
+        variable_correlations = {}
+        correlations = Correlation.objects.filter(
+            distribution_1__in=distribution_qname,
+            distribution_2__in=distribution_qname,
+        )
+        for correlation in correlations:
+            qname_1 = distribution_qname[correlation.distribution_1_id]
+            qname_2 = distribution_qname[correlation.distribution_2_id]
+            variable_correlations[(qname_1, qname_2)] = correlation.coefficient
+        return variable_correlations
+
+    def _covariate_bindings(self) -> list[CovariateBinding]:
+        """Return the covariate bindings for this model.
+
+        A covariate's value is a single input variable in the ``Covariates``
+        component, shared across every parameter that uses it, so bindings are
+        deduplicated by covariate. Each binding pairs a :class:`Covariate` (the
+        home of the sampling logic) with the model ``Variable`` id of its value
+        input, used to extend the Monte-Carlo dynamic inputs (see
+        ``simulate_uncertainty``). The centring reference is baked into the model,
+        so no median id is needed.
+        """
+        from pkpdapp.utils.covariate_effects import covariate_input_name
+
+        bindings: list[CovariateBinding] = []
+        if not hasattr(self, "derived_variables"):
+            return bindings
+
+        seen = set()
+        for dv in self.derived_variables.all():
+            if not dv.is_covariate():
+                continue
+            cov_name = covariate_input_name(dv)
+            if cov_name in seen:
+                continue
+            seen.add(cov_name)
+            input_var = self.variables.filter(qname=f"Covariates.{cov_name}").first()
+            if input_var is None:
+                continue
+            covariate = dv.get_covariate()
+            bindings.append(
+                CovariateBinding(covariate=covariate, input_id=input_var.id)
+            )
+
+        return bindings
+
+    def _subject_group(self, group_id):
+        """Return the :class:`SubjectGroup` for ``group_id`` (``None`` if none)."""
+        if group_id is None:
+            return None
+        from pkpdapp.models import SubjectGroup
+
+        return SubjectGroup.objects.filter(id=group_id).first()
+
+    def simulate(
         self,
         outputs=None,
         variables=None,
         time_max=None,
-        dosing_protocols=None,
+        use_diffsol=True,
+        sample_count=None,
+        seed=None,
+        quantiles=None,
     ):
-        model = self.get_myokit_model()
-
-        # Convert units
-        variables = self._initialise_variables(model, variables)
-        time_max = self._convert_bound_unit("time", time_max, model)
-        self._handle_nonlinarities(model, dosing_protocols)
-
-        # get tlag vars
-        override_tlag = self._get_override_tlag(variables)
-        # create simulator
-        sim = self.create_myokit_simulator(
-            override_tlag=override_tlag,
-            model=model,
-            time_max=time_max,
-            dosing_protocols=dosing_protocols,
-        )
-        # TODO: take these from simulation model
-        sim.set_tolerance(abs_tol=1e-08, rel_tol=1e-08)
-        # Simulate, logging only state variables given by `outputs`
-        datalog = sim.run(time_max, log=outputs)
-        return self.serialize_datalog(datalog, model)
-
-    def simulate(self, outputs=None, variables=None, time_max=None):
         """
+        Simulate the model, running a Monte-Carlo population whenever any of the
+        model's variables carry a :class:`Distribution`.
+
+        The result always uses the uncertainty shape (mean/std/quantiles per
+        output). When no variable has a distribution a single deterministic run is
+        performed, so ``std`` is zero and every quantile equals the mean.
+
         Arguments
         ---------
         outputs: list
             list of output names to return
         variables: dict
-            dict mapping variable names to values for model parameters
+            dict mapping variable names to values for model parameters. For a
+            variable with a distribution this value is the typical value (P).
         time_max: float
             maximum time to simulate to
+        use_diffsol: bool
+            if True use diffsol, otherwise use the legacy Myokit solver
+        sample_count: int (optional)
+            number of Monte-Carlo samples to draw when distributions are present
+            (default 200). Ignored (forced to 1) when there are no distributions.
+        seed: int (optional)
+            seed for the random number generator
+        quantiles: list (optional)
+            quantiles to compute for each output
 
         Returns
         -------
-        output: myokit.DataLog
-            a DataLog containing the solution, which is effectivly a dict
-            mapping output names to arrays of values
+        output: list of dict
+            one dict per subject group, each with:
+                - "group_id": id of the subject group, None if no subject group
+                - "sample_count": number of samples drawn
+                - "time": list of time values
+                - "outputs": {<variable id>: {"mean", "std", "quantiles"}}
+                - "parameters": {<variable id>: [sampled value per individual]} for
+                  each distributed parameter and covariate input (empty for a
+                  deterministic run)
         """
 
-        if time_max is None:
-            time_max = self.get_time_max()
+        variables = dict(variables or {})
+        variable_distributions = self._collect_variable_distributions(variables)
+        variable_correlations = self._collect_variable_correlations(
+            variable_distributions
+        )
+        covariate_bindings = self._covariate_bindings()
+        # validate all distributions up front so the sampling pipeline
+        # (simulate_uncertainty) can assume everything is valid
+        self._validate_variable_distributions(variables, variable_distributions)
+        if not variable_distributions and not covariate_bindings:
+            # deterministic run: a single sample gives std=0 and quantiles==mean
+            sample_count = 1
+        elif sample_count is None:
+            sample_count = 200
 
-        if outputs is None:
-            outputs = []
+        return self.simulate_uncertainty(
+            outputs=outputs or [],
+            variables=variables,
+            time_max=time_max,
+            variable_distributions=variable_distributions,
+            variable_correlations=variable_correlations,
+            covariate_bindings=covariate_bindings,
+            sample_count=sample_count,
+            seed=seed,
+            use_diffsol=use_diffsol,
+            quantiles=quantiles,
+        )
 
-        default_variables = {
-            v.qname: v.get_default_value() for v in self.variables.filter(constant=True)
-        }
-        if variables is None:
-            variables = default_variables
+    _OPTIMISE_METHODS = {
+        "cmaes": "CMAES",
+        "pso": "PSO",
+        "nelder-mead": "NelderMead",
+        "gradient_descent": "GradientDescent",
+        "adam": "Adam",
+        "irprop": "IRPropMinus",
+    }
+
+    _GRADIENT_OPTIMISE_METHODS = frozenset({"gradient_descent", "adam", "irprop"})
+
+    @classmethod
+    def _build_parameter_transformation(
+        cls, log_mask, linear_lower, linear_upper, method
+    ):
+        """Build the pints parameter transformation for ``optimise``.
+
+        One sub-transformation per parameter (log then linear sigma block), in
+        the same order as ``log_mask`` / ``linear_lower`` / ``linear_upper``:
+
+        - Log-scale parameters always use a log transformation (a genuine
+          log-uniform search).
+        - Linear-scale parameters depend on the optimiser. Gradient methods
+          explore an *unbounded* space (pints does not hard-enforce boundaries
+          for them), so they use the rectangular-boundaries (logit)
+          transformation, which maps ``[lower, upper]`` onto all reals and keeps
+          them from being trapped at a hard bound. Gradient-free methods use an
+          affine unit-cube transformation.
+
+        """
+        is_gradient_method = method in cls._GRADIENT_OPTIMISE_METHODS
+
+        def linear_transformation(lo, hi):
+            if is_gradient_method:
+                return pints.RectangularBoundariesTransformation([lo], [hi])
+            return pints.UnitCubeTransformation([lo], [hi])
+
+        return pints.ComposedTransformation(
+            *[
+                pints.LogTransformation(1) if log else linear_transformation(lo, hi)
+                for log, lo, hi in zip(log_mask, linear_lower, linear_upper)
+            ]
+        )
+
+    def optimise(
+        self,
+        parameters,
+        observations,
+        subject_groups=None,
+        max_iterations=None,
+        method="cmaes",
+    ) -> OptimiseResult:
+        """
+        Fits the model against the data indicated
+
+        The biomarker types to fit, and the noise model used for each, are given
+        by ``observations`` (a list of :class:`ObservationInfo`). Each observation
+        point contributes to the loss according to the noise model of *its*
+        biomarker type, so different biomarkers can use different noise models in
+        the same fit. Three noise models are supported per observation:
+          - "additive":       y ~ N(y_hat, sigma_a^2)
+          - "multiplicative": log(y) ~ N(log(y_hat), sigma^2) (log-normal)
+          - "combined":       y ~ N(y_hat, sigma_a^2 + sigma_m^2 * y_hat^2)
+
+        For additive / multiplicative outputs the loss is the negative
+        log-likelihood factored per output variable k:
+
+            nll = Σ_k ( N_k * log_sigma_k + SSR_k / (2 * sigma_k^2) )
+
+        where N_k is the number of observations of output variable k and SSR_k is
+        its sum of squared residuals. A "combined" output fits *two* sigmas
+        (sigma_a and sigma_m); its per-observation variance depends on the
+        prediction, so its contribution is accumulated point-by-point.
+
+        The sigma parameters are carried by each observation: ``sigma`` (sigma_a,
+        used by every model) and, for the combined model, ``sigma_mult``
+        (sigma_m). Each is optimised in linear or log space exactly like the model
+        parameters.
+
+        The package Pints is used for optimisation
+        (https://pints.readthedocs.io/en/stable/optimisers/index.html).
+        The optimisation method is chosen by the ``method`` argument.
+        Gradient-free methods (cmaes, pso, nelder-mead) only require the
+        loss function. Gradient-based methods (gradient_descent) also require
+        sensitivities, computed via forward sensitivity analysis using
+        ``solve_fwd_sens``. The methods ``adam`` and ``irprop`` are provided
+        for future compatibility but require a newer pints version exposing
+        ``pints.Adam`` / ``pints.IRPropMinus``.
+
+        Arguments
+        ---------
+        parameters: list of ParameterInfo
+            model (ODE input) parameters to optimise. Each carries the input
+            ``variable_id`` together with its ``starting`` value and
+            ``lower_bound`` / ``upper_bound``. The order chosen here defines the
+            order of the ``optimal`` result array.
+        observations: list of ObservationInfo (required)
+            the biomarker types to fit and, for each, its noise model and sigma
+            parameter(s). Every fitted output variable must correspond to exactly
+            one observation (its biomarker type). Each observation carries a
+            ``sigma`` ParameterInfo (sigma_a) and, for the "combined" model, a
+            ``sigma_mult`` ParameterInfo (sigma_m); each entry's ``starting`` /
+            ``lower_bound`` / ``upper_bound`` are the *linear* sigma value and
+            bounds and ``use_log_space`` selects log-space optimisation. The sigma
+            parameters are packed into the optimiser's canonical output order
+            (ascending variable id, reported as ``sigma_variables``): the per-output
+            sigma_a block followed by a compact sigma_m block for the combined
+            outputs.
+        subject_groups: list (optional)
+            list of subject groups (ids) to optimise against, None for all
+        max_iterations: int (optional)
+            maximum number of iterations of the opimisation algorithm (default 100)
+        method: str (optional)
+            optimisation method, one of "cmaes" (default), "pso", "nelder-mead",
+            "gradient_descent", "adam", "irprop"
+
+        Returns
+        -------
+        result: OptimiseResult
+            A dataclass with the fields below (see ``OptimiseResult``):
+            - "optimal": (list) optimal input values (same order as parameters)
+            - "loss": (float) value of loss function at optimal
+            - "reason": (str) stopping reason
+            - "sigma": (list) estimated (additive) noise standard deviation per
+              output variable, in the canonical order given by "sigma_variables"
+            - "sigma_mult": (list or None) estimated proportional noise standard
+              deviation per output variable; ``None`` for outputs whose noise model
+              is not "combined", and ``None`` entirely when no output is combined
+            - "sigma_variables": (list) output variable ids for the sigma arrays
+            - "sigma_start": (list) starting sigma_a (linear) per output variable
+            - "sigma_bounds": (list of [lo, hi]) linear sigma_a bounds per output
+            - "sigma_use_log_space": (list of bool) whether each sigma_a was fit in
+              log space
+            - "sigma_mult_start": (list or None) starting sigma_m (linear) per
+              output variable; per-output with ``None`` for non-combined outputs,
+              and ``None`` entirely when no output is combined
+            - "sigma_bounds_mult": (list of [lo, hi] or None) linear sigma_m bounds
+              per output (same None convention as sigma_mult_start)
+            - "sigma_mult_use_log_space": (list of bool or None) whether each
+              sigma_m was fit in log space (same None convention as
+              sigma_mult_start)
+            - "predictions": (list of dicts) simulated values at the optimal
+              parameters, one dict per subject group. Each dict has the same
+              format as the dicts returned by ``simulate``: keys are
+              ``"group_id"`` and integer variable ids, values are lists of
+              floats. The time variable is included.
+            - "residuals": (list of dicts) normalised residuals at observed data
+              points, one dict per subject group. Same format as ``predictions``
+              but only contains time-points for which observations exist.
+              Residuals are divided by the estimated sigma.
+            - "covariance": (list of lists or None) estimated covariance matrix
+              of the optimal parameters (n_params x n_params), scaled by the
+              estimated sigma^2. ``None`` if the matrix could not be computed
+              (e.g. insufficient observations).
+            - "condition_number": (float or None) condition number of the
+              covariance matrix computed from its singular values. ``None`` if
+              the covariance matrix is not available.
+            - "filtered_observations": (int) number of observations dropped from
+              the fit. Non-zero only for the "multiplicative" noise model, which
+              cannot use observations at or below a small floor near zero (since
+              it takes log(observed)). Always 0 for the additive and combined
+              models.
+        """
+
+        if method not in self._OPTIMISE_METHODS:
+            raise ValueError(
+                f"Unknown optimisation method '{method}'. "
+                f"Choose from: {list(self._OPTIMISE_METHODS.keys())}"
+            )
+        pints_method_name = self._OPTIMISE_METHODS[method]
+        pints_method = getattr(pints, pints_method_name, None)
+        if pints_method is None:
+            raise RuntimeError(
+                f"Optimisation method '{method}' ({pints_method_name}) is not "
+                f"available in the installed pints version ({pints.__version__}). "
+                "Please upgrade pints."
+            )
+
+        if max_iterations is None:
+            max_iterations = 100
+
+        # The model parameters arrive as a list of ParameterInfo; unpack them into
+        # the positionally-aligned inputs / starting / bounds arrays that the rest
+        # of the method (and OptimiseContext) work with. The order chosen by the
+        # caller defines the order of the returned ``optimal`` array.
+        inputs = [parameter.variable_id for parameter in parameters]
+        starting = [parameter.starting for parameter in parameters]
+        bounds = (
+            [parameter.lower_bound for parameter in parameters],
+            [parameter.upper_bound for parameter in parameters],
+        )
+
+        # The context validates ``observations`` (known noise models, one per
+        # fitted output variable, sigma_mult present iff combined) and resolves the
+        # canonical per-output ordering.
+        context = OptimiseContext(
+            model=self,
+            optimise_inputs=inputs,
+            starting=starting,
+            bounds=bounds,
+            observations=observations,
+            subject_groups=subject_groups,
+            use_diffsol=True,
+        )
+
+        starting = np.asarray(starting, dtype=float)
+        lower_bounds = np.asarray(bounds[0], dtype=float)
+        upper_bounds = np.asarray(bounds[1], dtype=float)
+        n_inputs = len(inputs)
+
+        # The sigma (noise) parameters live inside each observation. Pack them into
+        # the context's canonical output order (ascending variable id): the
+        # per-output sigma_a block, followed by a compact sigma_m block for the
+        # combined outputs (in ``combined_output_indices`` order).
+        output_variable_ids = context.sigma_output_variable_ids
+        n_outputs = len(output_variable_ids)
+        observation_by_output = context.observation_by_output
+        combined_output_indices = context.combined_output_indices
+        n_combined = len(combined_output_indices)
+
+        noise_parameters = [obs.sigma for obs in observation_by_output] + [
+            observation_by_output[k].sigma_mult for k in combined_output_indices
+        ]
+
+        conversion_factors = np.asarray(
+            [
+                context.get_variable_context(
+                    context.get_input_name(input_id)
+                ).conversion_factor
+                for input_id in inputs
+            ],
+            dtype=float,
+        )
+
+        # ODE and sigma parameters are treated identically: each is optimised in
+        # either linear or log space. Build one combined vector of *linear* values
+        # — ODE in model space (user value * conversion factor) followed by the
+        # linear sigma block — plus ``log_mask`` marking entries optimised in log
+        # space. These drive the per-parameter pints transformation below.
+        ode_start = starting * conversion_factors
+        ode_lower = lower_bounds * conversion_factors
+        ode_upper = upper_bounds * conversion_factors
+        ode_log = np.array([bool(p.use_log_space) for p in parameters], dtype=bool)
+
+        sigma_start_lin = np.array([p.starting for p in noise_parameters], dtype=float)
+        sigma_lower_lin = np.array(
+            [p.lower_bound for p in noise_parameters], dtype=float
+        )
+        sigma_upper_lin = np.array(
+            [p.upper_bound for p in noise_parameters], dtype=float
+        )
+        sigma_log = np.array(
+            [bool(p.use_log_space) for p in noise_parameters], dtype=bool
+        )
+
+        linear_start = np.concatenate([ode_start, sigma_start_lin])
+        linear_lower = np.concatenate([ode_lower, sigma_lower_lin])
+        linear_upper = np.concatenate([ode_upper, sigma_upper_lin])
+        log_mask = np.concatenate([ode_log, sigma_log])
+        n_sigma = n_outputs + n_combined
+
+        # Validate: log-space parameters need a non-negative lower bound and a
+        # positive starting value (log is undefined otherwise); every parameter
+        # needs lower < upper.
+        names = (
+            [f"parameter {input_id}" for input_id in inputs]
+            + [f"sigma {vid}" for vid in output_variable_ids]
+            + [f"sigma_mult {output_variable_ids[k]}" for k in combined_output_indices]
+        )
+        for i, name in enumerate(names):
+            if linear_lower[i] >= linear_upper[i]:
+                raise ValueError(
+                    f"{name} lower bound must be less than the upper bound, got "
+                    f"[{linear_lower[i]}, {linear_upper[i]}]."
+                )
+            if log_mask[i]:
+                if linear_lower[i] < 0:
+                    raise ValueError(
+                        f"{name} must have lower_bound >= 0 to be optimised in "
+                        f"log space, got {linear_lower[i]}."
+                    )
+                if linear_start[i] <= 0:
+                    raise ValueError(
+                        f"{name} must have a positive starting value to be "
+                        f"optimised in log space, got {linear_start[i]}."
+                    )
+
+        # The error measure works in model space; pints applies each parameter's
+        # transformation (and its Jacobian for the gradient). See
+        # ``_build_parameter_transformation`` for the per-parameter choice.
+        transformation = self._build_parameter_transformation(
+            log_mask, linear_lower, linear_upper, method
+        )
+
+        # Boundaries (model space) so gradient-free methods (CMA-ES / PSO /
+        # Nelder-Mead) respect the log-space parameters' bounds; pints does not
+        # hard-enforce them for gradient methods, which is what we want.
+        boundaries = pints.RectangularBoundaries(linear_lower, linear_upper)
+
+        # Explicit per-parameter sigma0 (model space). Passing this avoids pints
+        # deriving the step size from the transformed bound range, which is
+        # infinite for a log-space parameter whose lower bound is 0.
+        sigma0 = (linear_upper - linear_lower) / 6.0
+
+        # Model-space start, clamped strictly inside the bounds so the forward
+        # transform and pints' initial-position-in-bounds check stay finite.
+        span = linear_upper - linear_lower
+        x0 = np.clip(
+            linear_start,
+            linear_lower + 1e-9 * span,
+            linear_upper - 1e-9 * span,
+        )
+
+        def split_sigma(sigma_block):
+            """Split the packed linear sigma block into (sigma_a, sigma_m_full).
+
+            ``sigma_a`` is the per-output block (length ``n_outputs``).
+            ``sigma_m_full`` is a length-``n_outputs`` array with the compact
+            sigma_m values scattered into ``combined_output_indices`` (other
+            entries are inert and never read for non-combined outputs).
+            """
+            sigma_block = np.asarray(sigma_block, dtype=float)
+            sigma_a = sigma_block[:n_outputs]
+            sigma_m_compact = sigma_block[n_outputs:]
+            sigma_m_full = np.ones(n_outputs, dtype=float)
+            for position, k in enumerate(combined_output_indices):
+                sigma_m_full[k] = sigma_m_compact[position]
+            return sigma_a, sigma_m_full
+
+        class OptimiseError(pints.ErrorMeasure):
+            def values_by_id(self, values):
+                return {
+                    input_id: float(value)
+                    for input_id, value in zip(
+                        inputs,
+                        np.asarray(values, dtype=float),
+                    )
+                }
+
+            def n_parameters(self):
+                return n_inputs + n_sigma
+
+            def __call__(self, x):
+                # x is in model space (pints applies the transformation).
+                x = np.asarray(x, dtype=float)
+                sigma_a, sigma_m = split_sigma(x[n_inputs:])
+                loss = context.optimise_loss(
+                    context.optimisation_groups,
+                    self.values_by_id(x[:n_inputs]),
+                    sigma=sigma_a,
+                    sigma_mult=sigma_m,
+                )
+                if np.isfinite(loss) and loss < self.best_loss:
+                    self.best_loss = float(loss)
+                    self.best_values = x.copy()
+                return loss
+
+            def evaluateS1(self, x):
+                # x is in model space; the context returns gradients w.r.t. the
+                # model values, and pints applies the transformation Jacobian.
+                x = np.asarray(x, dtype=float)
+                sigma_a, sigma_m = split_sigma(x[n_inputs:])
+                try:
+                    result = context.optimise_loss_gradient(
+                        context.optimisation_groups,
+                        self.values_by_id(x[:n_inputs]),
+                        sigma=sigma_a,
+                        sigma_mult=sigma_m,
+                    )
+                    nll, ode_gradient, sigma_gradient = result
+                except Exception:
+                    logger.exception(
+                        "solve_fwd_sens failed during gradient computation."
+                    )
+                    return np.inf, np.zeros(n_inputs + n_sigma)
+                if not np.isfinite(nll):
+                    return np.inf, np.zeros(n_inputs + n_sigma)
+                total_gradient = np.concatenate([ode_gradient, sigma_gradient])
+                loss = float(nll)
+                if np.isfinite(loss) and loss < self.best_loss:
+                    self.best_loss = loss
+                    self.best_values = x.copy()
+                return loss, total_gradient
+
+        error = OptimiseError()
+        error.best_loss = np.inf
+        error.best_values = x0.copy()
+        starting_loss = error(x0)
+        if not np.isfinite(starting_loss):
+            raise RuntimeError(
+                "Initial optimisation loss is not finite. Check that the solver "
+                "returns all requested dense output times and that data are valid."
+            )
+
+        # The controller works in the transformed (search) space: it transforms
+        # x0 / boundaries / sigma0 and calls the error with model-space values.
+        optimiser = pints.OptimisationController(
+            error,
+            x0,
+            boundaries=boundaries,
+            transformation=transformation,
+            sigma0=sigma0,
+            method=pints_method,
+        )
+        optimiser.set_max_iterations(max_iterations)
+        optimiser.set_log_to_screen(False)
+
+        optimal, loss = optimiser.run()
+        # CMA-ES reports the final candidate, which may be worse than previously
+        # explored points. Return the best point evaluated during the run.
+        if np.isfinite(error.best_loss) and error.best_loss < float(loss):
+            optimal = error.best_values
+            loss = error.best_loss
+        # Work out why the optimiser stopped. pints' OptimisationController
+        # halts on several criteria; ``optimiser().stop()`` only reports the
+        # optimiser's own internal criterion. When it stops before reaching
+        # ``max_iterations`` this is almost always the "max unchanged
+        # iterations" convergence criterion (the objective function value stopped
+        # improving), so report that rather than misattributing it to the
+        # iteration cap.
+        iters = optimiser.iterations()
+        stop_error = optimiser.optimiser().stop()
+        if stop_error:
+            reason = f"Converged: {stop_error}"
+        elif max_iterations is not None and iters >= max_iterations:
+            reason = f"Maximum iterations ({iters}) reached."
         else:
-            variables = {
-                **default_variables,
-                **variables,
-            }
-
-        # add a dose_rate variable to the model for each
-        # dosed variable
-        project = self.get_project()
-        protocols = project.protocols.all()
-        project_dosing_protocols = {
-            p.variable.qname: p
-            for p in protocols
-            if p.group is None and p.variable is not None
-        }
-        model_dosing_protocols = [project_dosing_protocols]
-
-        groups = get_subject_groups(project)
-        # sort groups starting alphabetically, but with those starting with Sim first
-        groups = sorted(groups, key=lambda g: (not g.name.startswith("Sim"), g.name))
-
-        for group in groups:
-            print("GROUP:", group.name)
-            dosing_protocols = {
-                p.variable.qname: p for p in protocols if p.group == group
-            }
-            model_dosing_protocols.append(dosing_protocols)
-
-        result = [
-            self.simulate_model(
-                variables=variables,
-                time_max=time_max,
-                outputs=outputs,
-                dosing_protocols=dosing_protocols,
+            unchanged_iters, unchanged_threshold = (
+                optimiser.max_unchanged_iterations()
+                if hasattr(optimiser, "max_unchanged_iterations")
+                else (None, None)
             )
-            for dosing_protocols in model_dosing_protocols
-        ]
-        result[0].update({"group_id": None})
-        for r, group in zip(result[1:], groups):
-            r.update({"group_id": group.id if group is not None else None})
-        return result
+            if unchanged_iters is not None:
+                reason = (
+                    f"Converged after {iters} iterations: the objective "
+                    f"function value changed by less than "
+                    f"{unchanged_threshold:g} for {unchanged_iters} "
+                    f"consecutive iterations."
+                )
+            else:
+                reason = f"Converged after {iters} iterations."
 
-
-def set_administration(model, drug_amount, direct=True):
-    r"""
-    Sets the route of administration of the compound.
-
-    The compound is administered to the selected compartment either
-    directly or indirectly. If it is administered directly, a dose rate
-    variable is added to the drug amount's rate of change expression
-
-    .. math ::
-
-        \frac{\text{d}A}{\text{d}t} = \text{RHS} + r_d,
-
-    where :math:`A` is the drug amount in the selected compartment, RHS is
-    the rate of change of :math:`A` prior to adding the dose rate, and
-    :math:`r_d` is the dose rate.
-
-    The dose rate can be set by :meth:`set_dosing_regimen`.
-
-    If the route of administration is indirect, a dosing compartment
-    is added to the model, which is connected to the selected compartment.
-    The dose rate variable is then added to the rate of change expression
-    of the dose amount variable in the dosing compartment. The drug amount
-    in the dosing compartment flows at a linear absorption rate into the
-    selected compartment
-
-    .. math ::
-
-        \frac{\text{d}A_d}{\text{d}t} = -k_aA_d + r_d \\
-        \frac{\text{d}A}{\text{d}t} = \text{RHS} + k_aA_d,
-
-    where :math:`A_d` is the amount of drug in the dose compartment and
-    :math:`k_a` is the absorption rate.
-
-    Setting an indirect administration route changes the number of
-    parameters of the model, and resets the parameter names to their
-    defaults.
-
-    Parameters
-    ----------
-    compartment
-        Compartment to which doses are either directly or indirectly
-        administered.
-    amount_var
-        Drug amount variable in the compartment. By default the drug amount
-        variable is assumed to be 'drug_amount'.
-    direct
-        A boolean flag that indicates whether the dose is administered
-        directly or indirectly to the compartment.
-    """
-    if not drug_amount.is_state():
-        raise ValueError(
-            "The variable <" + str(drug_amount) + "> is not a state "
-            "variable, and can therefore not be dosed."
+        # run() returns the optimum in model space (pints de-transforms it).
+        optimal = np.asarray(optimal, dtype=float)
+        ode_optimal = optimal[:n_inputs]
+        sigma_a, sigma_m = split_sigma(optimal[n_inputs:])
+        diagnostics = context.optimise_diagnostics(
+            optimal_model=ode_optimal,
+            sigma=sigma_a,
+            sigma_mult=sigma_m,
         )
 
-    # If administration is indirect, add a dosing compartment and update
-    # the drug amount variable to the one in the dosing compartment
-    time_unit = _get_time_unit(model)
-    if not direct:
-        drug_amount = _add_dose_compartment(model, drug_amount, time_unit)
-
-    # Add dose rate variable to the right hand side of the drug amount
-    _add_dose_rate(drug_amount, time_unit)
-
-
-def get_protocol(events):
-    """
-
-    Parameters
-    ----------
-    events
-        list of (level, start, duration)
-    """
-    myokit_protocol = myokit.Protocol()
-    for e in events:
-        myokit_protocol.schedule(e[0], e[1], e[2])
-
-    return myokit_protocol
-
-
-def _get_pacing_label(variable):
-    return f'pace_{variable.qname().replace(".", "_")}'
-
-
-def _add_dose_rate(drug_amount, time_unit):
-    """
-    Adds a dose rate variable to the state variable, which is bound to the
-    dosing regimen.
-    """
-    # Register a dose rate variable to the compartment and bind it to
-    # pace, i.e. tell myokit that its value is set by the dosing regimen/
-    # myokit.Protocol
-    compartment = drug_amount.parent()
-    dose_rate = compartment.add_variable_allow_renaming(str("dose_rate"))
-    dose_rate.set_binding(_get_pacing_label(drug_amount))
-
-    # Set initial value to 0 and unit to unit of drug amount over unit of
-    # time
-    dose_rate.set_rhs(0)
-    drug_amount_unit = drug_amount.unit()
-    if drug_amount_unit is not None and time_unit is not None:
-        dose_rate.set_unit(drug_amount.unit() / time_unit)
-
-    # Add the dose rate to the rhs of the drug amount variable
-    rhs = drug_amount.rhs()
-    drug_amount.set_rhs(myokit.Plus(rhs, myokit.Name(dose_rate)))
-
-
-def _get_time_unit(model):
-    """
-    Gets the model's time unit.
-    """
-    # Get bound variables
-    bound_variables = [var for var in model.variables(bound=True)]
-
-    # Get the variable that is bound to time
-    # (only one can exist in myokit.Model)
-    for var in bound_variables:
-        if var._binding == "time":
-            return var.unit()
-
-
-def _add_dose_compartment(model, drug_amount, time_unit):
-    """
-    Adds a dose compartment to the model with a linear absorption rate to
-    the connected compartment.
-    """
-    # Add a dose compartment to the model
-    dose_comp = model.add_component_allow_renaming("dose")
-
-    # Create a state variable for the drug amount in the dose compartment
-    dose_drug_amount = dose_comp.add_variable("drug_amount")
-    dose_drug_amount.set_rhs(0)
-    dose_drug_amount.set_unit(drug_amount.unit())
-    dose_drug_amount.promote()
-
-    # Create an absorption rate variable
-    absorption_rate = dose_comp.add_variable("absorption_rate")
-    absorption_rate.set_rhs(1)
-    absorption_rate.set_unit(1 / time_unit)
-
-    # Add outflow expression to dose compartment
-    dose_drug_amount.set_rhs(
-        myokit.Multiply(
-            myokit.PrefixMinus(myokit.Name(absorption_rate)),
-            myokit.Name(dose_drug_amount),
+        # Multiplicative outputs drop observations at or below the observed-value
+        # floor (log(observed) is undefined near zero); other noise models never
+        # filter. If every observation was filtered there is nothing left to fit.
+        total_observations = sum(
+            len(group.records) for group in context.optimisation_groups
         )
-    )
-
-    # Add inflow expression to connected compartment
-    rhs = drug_amount.rhs()
-    drug_amount.set_rhs(
-        myokit.Plus(
-            rhs,
-            myokit.Multiply(
-                myokit.Name(absorption_rate), myokit.Name(dose_drug_amount)
-            ),
-        )
-    )
-
-    return dose_drug_amount
-
-
-def _get_dosing_events(
-    doses,
-    amount_conversion_factor=1.0,
-    time_conversion_factor=1.0,
-    tlag_time=0.0,
-    time_max=None,
-):
-    dosing_events = []
-    for d in doses.all():
-        if d.repeat_interval <= 0:
-            continue
-        start_times = np.arange(
-            d.start_time + tlag_time,
-            d.start_time + tlag_time + d.repeat_interval * d.repeats,
-            d.repeat_interval,
-        )
-        if len(start_times) == 0:
-            continue
-        dose_level = d.amount / d.duration
-        dosing_events += [
-            (
-                (amount_conversion_factor / time_conversion_factor) * dose_level,
-                time_conversion_factor * start_time,
-                time_conversion_factor * d.duration,
+        if diagnostics.get("filtered_observations", 0) >= total_observations:
+            raise ValueError(
+                "All observations were filtered out because they are at or "
+                "below the multiplicative-noise threshold "
+                "(values close to zero). The multiplicative noise model "
+                "cannot be used with this data."
             )
-            for start_time in start_times
-        ]
-    # if any dosing events are close to time_max,
-    # make them equal to time_max
-    if time_max is not None:
-        for i, (level, start, duration) in enumerate(dosing_events):
-            if abs(start - time_max) < 1e-6:
-                dosing_events[i] = (level, time_max, duration)
-            elif abs(start + duration - time_max) < 1e-6:
-                dosing_events[i] = (level, start, time_max - start)
-    return dosing_events
 
+        optimal_user = ode_optimal / conversion_factors
 
-def get_subject_groups(project):
-    if project is None:
-        return []
-    dataset = project.datasets.first()
-    if dataset is None:
-        return project.groups.all()
-    return dataset.groups.all().union(project.groups.all()).order_by("id")
+        # Sigma start / bounds are reported in linear space (the same units as the
+        # fitted ``sigma``), with a flag recording whether each was fit in log
+        # space. The proportional (``*_mult``) block is reported per output, with
+        # None for non-combined outputs (and None entirely when no output is
+        # combined). The packed sigma_m block (sigma_start_lin[n_outputs:], ...) is
+        # compact, in combined_output_indices order, so it is scattered back out.
+        if n_combined > 0:
+            sigma_mult_start = [None] * n_outputs
+            sigma_bounds_mult = [None] * n_outputs
+            sigma_mult_use_log_space = [None] * n_outputs
+            for position, k in enumerate(combined_output_indices):
+                idx = n_outputs + position
+                sigma_mult_start[k] = float(sigma_start_lin[idx])
+                sigma_bounds_mult[k] = [
+                    float(sigma_lower_lin[idx]),
+                    float(sigma_upper_lin[idx]),
+                ]
+                sigma_mult_use_log_space[k] = bool(sigma_log[idx])
+        else:
+            sigma_mult_start = None
+            sigma_bounds_mult = None
+            sigma_mult_use_log_space = None
+
+        return OptimiseResult(
+            optimal=np.asarray(optimal_user, dtype=float).tolist(),
+            loss=float(loss),
+            reason=str(reason),
+            sigma_start=sigma_start_lin[:n_outputs].tolist(),
+            sigma_bounds=[
+                [float(lo), float(hi)]
+                for lo, hi in zip(
+                    sigma_lower_lin[:n_outputs], sigma_upper_lin[:n_outputs]
+                )
+            ],
+            sigma_use_log_space=[bool(v) for v in sigma_log[:n_outputs]],
+            sigma_mult_start=sigma_mult_start,
+            sigma_bounds_mult=sigma_bounds_mult,
+            sigma_mult_use_log_space=sigma_mult_use_log_space,
+            # sigma_variables + the diagnostics fields (sigma, predictions,
+            # residuals, covariance, condition_number, filtered_observations,
+            # neg2ll, aic, bic) are supplied directly by optimise_diagnostics.
+            **diagnostics,
+        )

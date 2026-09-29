@@ -14,6 +14,8 @@ export const api = backendApi.enhanceEndpoints({
     "Dose",
     "BiomarkerType",
     "EfficacyExperiment",
+    "Conversation",
+    "CovariatePopulation",
   ],
   endpoints: {
     // EfficacyExperiment
@@ -63,6 +65,10 @@ export const api = backendApi.enhanceEndpoints({
             ]
           : [{ type: "BiomarkerType", id: "LIST" }],
     },
+    // Biomarker (individual datapoints)
+    biomarkerPartialUpdate: {
+      invalidatesTags: [{ type: "BiomarkerType", id: "LIST" }],
+    },
     // Doses
     doseList: {
       providesTags: (result) => [{ type: "Dose", id: "LIST" }],
@@ -71,15 +77,22 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Dose", id }],
     },
     doseUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: "Dose", id }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Dose", id },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     doseCreate: {
-      invalidatesTags: [{ type: "Dose", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Dose", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     doseDestroy: {
       invalidatesTags: (result, error, { id }) => [
         { type: "Dose", id },
         { type: "Dose", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
       ],
     },
     // Projects
@@ -150,10 +163,7 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Compound", id }],
     },
     compoundUpdate: {
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Compound", id },
-        { type: "Compound", id: "LIST" },
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: "Compound", id }],
     },
     compoundCreate: {
       invalidatesTags: [{ type: "Compound", id: "LIST" }],
@@ -207,6 +217,25 @@ export const api = backendApi.enhanceEndpoints({
               { type: "SubjectGroup", id: "LIST" },
             ]
           : [{ type: "SubjectGroup", id: "LIST" }],
+    },
+    // creating/deleting a group also creates/removes its covariate populations
+    subjectGroupCreate: {
+      invalidatesTags: [{ type: "CovariatePopulation", id: "LIST" }],
+    },
+    subjectGroupDestroy: {
+      invalidatesTags: [{ type: "CovariatePopulation", id: "LIST" }],
+    },
+    // refresh the cached group so controlled inputs (e.g. the region select)
+    // reflect edits without a page refresh
+    subjectGroupPartialUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
+    subjectGroupUpdate: {
+      invalidatesTags: (result, error, { id }) => [{ type: "SubjectGroup", id }],
+    },
+    // CovariatePopulation
+    covariatePopulationList: {
+      providesTags: [{ type: "CovariatePopulation", id: "LIST" }],
     },
     // CombinedModel
     combinedModelSetParamsToDefaultsUpdate: {
@@ -282,10 +311,12 @@ export const api = backendApi.enhanceEndpoints({
             (draftVariables) => {
               const index = draftVariables.findIndex((v) => v.id === id);
               if (index !== -1) {
+                // `variable` is the write shape (distribution has no id); cast the
+                // optimistic merge to the read shape. The real response replaces it.
                 draftVariables[index] = {
                   ...draftVariables[index],
                   ...variable,
-                };
+                } as (typeof draftVariables)[number];
               }
             },
             true,
@@ -371,14 +402,21 @@ export const api = backendApi.enhanceEndpoints({
       providesTags: (result, error, { id }) => [{ type: "Protocol", id }],
     },
     protocolUpdate: {
-      invalidatesTags: (result, error, { id }) => [{ type: "Protocol", id }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Protocol", id },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     protocolCreate: {
-      invalidatesTags: [{ type: "Protocol", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Protocol", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
+      ],
     },
     protocolDestroy: {
       invalidatesTags: (result, error, { id }) => [
         { type: "Protocol", id: "LIST" },
+        { type: "SubjectGroup", id: "LIST" },
       ],
     },
     unitList: {
@@ -403,6 +441,31 @@ export const api = backendApi.enhanceEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: "Unit", id },
         { type: "Unit", id: "LIST" },
+      ],
+    },
+    // Conversations
+    conversationsList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "Conversation" as const,
+                id,
+              })),
+              { type: "Conversation", id: "LIST" },
+            ]
+          : [{ type: "Conversation", id: "LIST" }],
+    },
+    conversationsRetrieve: {
+      providesTags: (result, error, { id }) => [{ type: "Conversation", id }],
+    },
+    conversationsCreate: {
+      invalidatesTags: [{ type: "Conversation", id: "LIST" }],
+    },
+    conversationsDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Conversation", id },
+        { type: "Conversation", id: "LIST" },
       ],
     },
   },

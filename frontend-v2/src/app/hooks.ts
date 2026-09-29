@@ -27,8 +27,12 @@ export function useDefaultValue<T extends FieldValues>({
   const keys = name.split(".");
   let nextValue = defaultValues;
   keys.forEach((key) => {
-    if (typeof nextValue === "object") {
+    // note: typeof null === "object", so guard against null before indexing a
+    // nested path that passes through a null value (e.g. a null distribution).
+    if (nextValue && typeof nextValue === "object") {
       nextValue = nextValue[key];
+    } else {
+      nextValue = undefined;
     }
   });
   return nextValue as string | number | undefined;

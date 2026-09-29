@@ -1,0 +1,20 @@
+{
+  "regions": {
+    "US": {
+      "female": { "mean": 77.5, "std": 21.0 },
+      "male": { "mean": 90.6, "std": 19.5 }
+    },
+    "EU": {
+      "female": { "mean": 67.5, "std": 13.8 },
+      "male": { "mean": 78.5, "std": 13.5 }
+    },
+    "ASIA": {
+      "female": { "mean": 54.0, "std": 9.5 },
+      "male": { "mean": 65.3, "std": 12.5 }
+    }
+  },
+  "default": {
+    "female": { "mean": 67.5, "std": 13.8 },
+    "male": { "mean": 78.5, "std": 13.5 }
+  }
+}

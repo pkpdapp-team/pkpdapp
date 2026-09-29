@@ -4,8 +4,6 @@
 # copyright notice and full license details.
 #
 
-from .celery import app as celery_app
-
 default_app_config = 'pkpdapp.apps.PkpdAppConfig'
 
-__all__ = ('celery_app', 'default_app_config')
+__all__ = ('default_app_config',)

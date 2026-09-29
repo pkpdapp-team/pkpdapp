@@ -1,0 +1,79 @@
+[[model]]
+name: Ocular PK model (front of the eye, FOTE)
+author: Michael Gertz
+
+# tags: no tags
+
+# Initial values:
+PKCompartment.Vtf = if(PKCompartment.Vdr + PKCompartment.Vtf_0 < PKCompartment.Vcap, PKCompartment.Vdr + PKCompartment.Vtf_0, PKCompartment.Vcap)
+PKCompartment.Atf = 0
+PKCompartment.Aco = 0
+PKCompartment.Aah = 0
+PKCompartment.Aa = 0
+
+[environment]
+t = 0 in [h] bind time
+
+
+[PKCompartment]
+Vcap = 0.00003 in [L]
+	desc: FOTE volume capacity (any volumes exceeding this value are lost immediately (epiphora))
+
+Vdr = 0.00003 in [L]
+	desc: Drop volume of topical formulation
+
+Vtf_0 = 0.00001 in [L]
+	desc: Tear film volume
+	
+kturn = 6 in [1/h]
+	desc: Tear film turn over rate constant	
+	
+krefl = 18 in [1/h]
+	desc: Reflex tear film turn over rate constant (as long as Vtf > Vtf_0)		
+	
+Vco = 0.00010 in [L]
+	desc: Cornea volume 	
+	
+Vah = 0.00020 in [L]
+	desc: Aqueous humour volume 	
+
+Qah = 0.00015 in [L/h]
+	desc: Aqueous humour flow  
+	
+CLper = 0.02 in [L/h]
+	desc: Apparent permeability clearance the tear film to cornea and cornea to aqueous humour 
+	
+ka = 1 in [1/h]
+	desc: First order absorption rate constant (from nasal cavity/ GI tract)
+
+
+RateAbs = Qah*Cah + ka*Aa in [pmol/h]
+	desc: Absorption rate
+
+	
+Ctf = Atf/Vtf in [pmol/L]
+	desc: Concentration of drug in the tear film
+	
+Cco = Aco/Vco in [pmol/L]
+	desc: Concentration of drug in the cornea	
+
+Cah = Aah/Vah in [pmol/L]
+	desc: Concentration of drug in the aqueous humour
+	
+Vex = if(Vtf-Vtf_0 > 0, Vtf-Vtf_0, 0)
+	desc: Excess volume by topic administration
+
+dot(Vtf) = kturn*(Vtf_0-Vtf) -krefl*Vex
+    desc: Dynamic volume of the tear film
+
+dot(Atf) = -CLper*Ctf -kturn*Atf -krefl*Vex*Ctf in [pmol]
+    desc: Amount of drug in the tear film
+	
+dot(Aco) = CLper*Ctf - CLper*Cco in [pmol]
+    desc: Amount of drug in the cornea	
+	
+dot(Aah) = CLper*Cco - Qah*Cah in [pmol]
+    desc: Amount of drug in the aqueous humour	
+	
+dot(Aa) = krefl*Vex*Ctf + kturn*Atf - ka*Aa in [pmol]
+    desc: Amount of drug in the extravacular absorption site	

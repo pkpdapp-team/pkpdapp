@@ -20,7 +20,6 @@ from pkpdapp.models import (
     PharmacokineticModel,
     PharmacodynamicModel,
     CombinedModel,
-    Inference,
 )
 
 
@@ -52,15 +51,15 @@ class CombinedModelView(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_update(self, serializer):
-        delete_protocols = self.request.query_params.get('delete_protocols', None)
+        delete_protocols = self.request.query_params.get("delete_protocols", None)
         # Set flag on instance before first save attempt
         instance = self.get_object()
-        if (delete_protocols is not None) and delete_protocols.lower() == 'true':
+        if (delete_protocols is not None) and delete_protocols.lower() == "true":
             instance._delete_protocols = True
         try:
             serializer.save()
         except IntegrityError as e:
-            if (delete_protocols is not None) and delete_protocols.lower() == 'true':
+            if (delete_protocols is not None) and delete_protocols.lower() == "true":
                 # After rollback, identify which variables will be deleted
                 # and only delete protocols for those variables
 
@@ -120,24 +119,6 @@ class CombinedModelView(viewsets.ModelViewSet):
         methods=["PUT"],
         serializer_class=CombinedModelSerializer,
     )
-    def set_variables_from_inference(self, request, pk):
-        obj = self.get_object()
-        try:
-            inference = Inference.objects.get(id=request.data["inference_id"])
-        except Inference.DoesNotExist:
-            return response.Response(
-                {"inference_id": "inference not found"}, status.HTTP_400_BAD_REQUEST
-            )
-
-        obj.set_variables_from_inference(inference)
-        serializer = self.serializer_class(obj)
-        return response.Response(serializer.data)
-
-    @decorators.action(
-        detail=True,
-        methods=["PUT"],
-        serializer_class=CombinedModelSerializer,
-    )
     def set_params_to_defaults(self, request, pk):
         obj = self.get_object()
         project = obj.get_project()
@@ -174,7 +155,6 @@ class PharmacodynamicView(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data)
-        print("xXXXXXx", serializer.errors)
         return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(
@@ -190,22 +170,3 @@ class PharmacodynamicView(viewsets.ModelViewSet):
             serializer.save()
             return response.Response(serializer.data)
         return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
-    @decorators.action(
-        detail=True,
-        methods=["PUT"],
-        serializer_class=PharmacodynamicSerializer,
-    )
-    def set_variables_from_inference(self, request, pk):
-        obj = self.get_object()
-        try:
-            print("got request", request.data)
-            inference = Inference.objects.get(id=request.data["inference_id"])
-        except Inference.DoesNotExist:
-            return response.Response(
-                {"inference_id": "inference not found"}, status.HTTP_400_BAD_REQUEST
-            )
-
-        obj.set_variables_from_inference(inference)
-        serializer = self.serializer_class(obj)
-        return response.Response(serializer.data)

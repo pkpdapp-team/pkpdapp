@@ -77,9 +77,10 @@ function TextField<T extends FieldValues>({
             }
             name={name}
             id={name}
-            InputLabelProps={
-              autoShrink !== undefined ? { shrink: autoShrink } : {}
-            }
+            slotProps={{
+              inputLabel:
+                autoShrink !== undefined ? { shrink: autoShrink } : undefined,
+            }}
             variant="outlined"
             value={fieldValue}
             onChange={handleChange}

@@ -1,18 +1,29 @@
 import { FC, SyntheticEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
+  useBiomarkerPartialUpdateMutation,
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useUnitListQuery,
   useVariableListQuery,
 } from "../../app/backendApi";
 import { RootState } from "../../app/store";
-import { Box, Button, Grid, Tab, Tabs, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
+import { DataGrid, GridRowModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
+import HelpOutline from "@mui/icons-material/HelpOutlineOutlined";
 import LoadDataStepper from "./LoadDataStepper";
+import ExampleFormatsDialog from "./ExampleFormatsDialog";
 import useDataset from "../../hooks/useDataset";
 import generateCSV from "./generateCSV";
 import { getTableHeight } from "../../shared/calculateTableHeights";
@@ -81,7 +92,7 @@ const Data: FC = () => {
     return models?.[0] || undefined;
   }, [models]);
   const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
+    {},
     { skip: !project?.compound },
   );
   const { data: variables } = useVariableListQuery(
@@ -89,6 +100,7 @@ const Data: FC = () => {
     { skip: !model?.id },
   );
   const { dataset, groups, subjectBiomarkers } = useDataset(projectIdOrZero);
+  const [updateBiomarker] = useBiomarkerPartialUpdateMutation();
   const csv = generateCSV(
     dataset,
     groups,
@@ -99,6 +111,7 @@ const Data: FC = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
 
   function editDataset() {
     if (csv) {
@@ -207,6 +220,8 @@ const Data: FC = () => {
           );
           const groupId = group?.id_in_dataset || group?.name;
           return {
+            // use the real biomarker DB id so individual points can be edited
+            id: row.datapointId,
             "Subject ID": row.subjectDatasetId,
             Time: row.time,
             "Time Unit": row.timeUnit?.symbol,
@@ -214,27 +229,51 @@ const Data: FC = () => {
             "Observation Unit": displayUnitSymbol(row.unit?.symbol),
             "Observation ID": row.label,
             "Observation Variable": row.qname,
+            Exclude: row.exclude,
             Group: groupId,
           };
         }),
       )
-      .filter((row) => row.Group === groupId)
-      .map((row, index) => ({ id: index + 1, ...row })) || [];
+      .filter((row) => row.Group === groupId) || [];
   const [firstRow] = observations;
   const columns = firstRow
     ? Object.keys(firstRow)
       .filter((field) => field !== "id")
-      .map((field) => ({
-        field,
-        headerName: field,
-        minWidth:
-          field === "Observation Variable"
-            ? 150
-            : field.length > 10
-              ? 120
-              : 30,
-      }))
+      .map((field) => {
+        if (field === "Exclude") {
+          return {
+            field,
+            headerName: "Exclude from fitting",
+            type: "boolean" as const,
+            editable: true,
+            minWidth: 150,
+          };
+        }
+        return {
+          field,
+          headerName: field,
+          minWidth:
+            field === "Observation Variable"
+              ? 150
+              : field.length > 10
+                ? 120
+                : 30,
+        };
+      })
     : [];
+
+  const processObservationRowUpdate = (
+    newRow: GridRowModel,
+    oldRow: GridRowModel,
+  ) => {
+    if (newRow.Exclude !== oldRow.Exclude && typeof newRow.id === "number") {
+      updateBiomarker({
+        id: newRow.id,
+        patchedBiomarker: { exclude: newRow.Exclude },
+      });
+    }
+    return newRow;
+  };
 
   const noData = !groups.length && !observations.length;
 
@@ -264,6 +303,12 @@ const Data: FC = () => {
           sx={{ display: "flex", justifyContent: "flex-end" }}
           size="grow"
         >
+          <IconButton
+            onClick={() => setShowExamples(true)}
+            sx={{ margin: ".2rem", maxHeight: "2rem" }}
+          >
+            <HelpOutline titleAccess="Example file formats" />
+          </IconButton>
           <Button
             variant="outlined"
             onClick={handleNewUpload}
@@ -315,7 +360,9 @@ const Data: FC = () => {
             }),
           }}
         >
-          <Box padding={1}>
+          <Box sx={{
+            padding: 1
+          }}>
             <Typography
               id="protocols-heading"
               variant="h6"
@@ -332,7 +379,9 @@ const Data: FC = () => {
               />
             </Box>
           </Box>
-          <Box padding={1}>
+          <Box sx={{
+            padding: 1
+          }}>
             <Typography
               id="observations-heading"
               variant="h6"
@@ -346,6 +395,7 @@ const Data: FC = () => {
                 aria-labelledby="observations-heading"
                 rows={observations}
                 columns={columns}
+                processRowUpdate={processObservationRowUpdate}
               />
             </Box>
           </Box>
@@ -353,7 +403,9 @@ const Data: FC = () => {
       ) : (
         <Box role="tabpanel" id={`group-tabpanel`}>
           {dosingRows.length !== 0 && (
-            <Box padding={1}>
+            <Box sx={{
+              padding: 1
+            }}>
               <Typography variant="h6" component="h2" gutterBottom>
                 Protocols
               </Typography>
@@ -370,7 +422,9 @@ const Data: FC = () => {
             </Box>
           )}
           {observations.length !== 0 && (
-            <Box padding={1}>
+            <Box sx={{
+              padding: 1
+            }}>
               <Typography variant="h6" component="h2" gutterBottom>
                 Observations
               </Typography>
@@ -381,13 +435,21 @@ const Data: FC = () => {
                     overflow: "auto",
                   }}
                 >
-                  <DataGrid rows={observations} columns={columns} />
+                  <DataGrid
+                    rows={observations}
+                    columns={columns}
+                    processRowUpdate={processObservationRowUpdate}
+                  />
                 </Box>
               </Box>
             </Box>
           )}
         </Box>
       )}
+      <ExampleFormatsDialog
+        open={showExamples}
+        onClose={() => setShowExamples(false)}
+      />
     </>
   );
 };

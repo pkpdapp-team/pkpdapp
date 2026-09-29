@@ -22,7 +22,9 @@ export function useResults() {
   const [createResults] = useResultsTableCreateMutation();
   const [deleteResults] = useResultsTableDestroyMutation();
   return {
-    results: results || [],
+    results: [...(results || [])].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true }),
+    ),
     updateResults,
     async createResults({ resultsTable }: { resultsTable: ResultsTableRead }) {
       await createResults({ resultsTable });

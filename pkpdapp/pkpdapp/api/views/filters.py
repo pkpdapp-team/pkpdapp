@@ -7,6 +7,10 @@ from rest_framework import filters
 from django.db.models import Q
 
 from pkpdapp.models import (
+    Conversation,
+    Correlation,
+    Covariate,
+    CovariatePopulation,
     Dataset,
     Project,
     PharmacodynamicModel,
@@ -17,11 +21,9 @@ from pkpdapp.models import (
     Variable,
     Subject,
     SubjectGroup,
-    Inference,
-    InferenceChain,
-    LogLikelihood,
     Simulation,
     ResultsTable,
+    Compound,
 )
 
 queryset_model_not_recognised_text = "queryset model {} not recognised"
@@ -36,9 +38,18 @@ class UserAccessFilter(filters.BaseFilterBackend):
         user = request.user
         if queryset.model == Project:
             queryset = queryset.filter(users=user)
+        elif queryset.model == Compound:
+            queryset = queryset.filter(project__users=user)
+        elif queryset.model == Covariate:
+            queryset = queryset.filter(project__users=user)
+        elif queryset.model == CovariatePopulation:
+            queryset = queryset.filter(
+                subject_group__project__users=user,
+                covariate__project__users=user,
+            )
         else:
             raise RuntimeError(queryset_model_not_recognised_text)
-        return queryset
+        return queryset.distinct()
 
 
 class DosedPkModelFilter(filters.BaseFilterBackend):
@@ -53,6 +64,10 @@ class DosedPkModelFilter(filters.BaseFilterBackend):
                 dosed_pk_model = CombinedModel.objects.get(id=dosed_pk_model_id)
                 if queryset.model == Variable:
                     queryset = dosed_pk_model.variables.all()
+                elif queryset.model == Correlation:
+                    queryset = Correlation.objects.filter(
+                        distribution_1__variable__dosed_pk_model=dosed_pk_model
+                    )
                 elif queryset.model == Unit:
                     unit_ids = dosed_pk_model.variables.values_list("unit", flat=True)
                     queryset = Unit.objects.filter(id__in=unit_ids)
@@ -82,34 +97,6 @@ class PdModelFilter(filters.BaseFilterBackend):
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)
             except PharmacodynamicModel.DoesNotExist:
-                queryset = queryset.model.objects.none()
-
-        return queryset
-
-
-class InferenceFilter(filters.BaseFilterBackend):
-    """
-    Filter that only allows users to filter by inference.
-    """
-
-    def filter_queryset(self, request, queryset, view):
-        inference_id = request.query_params.get("inference_id")
-        if inference_id is not None:
-            try:
-                inference = Inference.objects.get(id=inference_id)
-                if queryset.model == Variable:
-                    model = inference.get_model()
-                    if model:
-                        queryset = model.variables.all()
-                    else:
-                        queryset = queryset.model.objects.none()
-                elif queryset.model == InferenceChain:
-                    queryset = inference.chains.all()
-                elif queryset.model == LogLikelihood:
-                    queryset = inference.log_likelihoods.all()
-                else:
-                    raise RuntimeError(queryset_model_not_recognised_text)
-            except Inference.DoesNotExist:
                 queryset = queryset.model.objects.none()
 
         return queryset
@@ -163,24 +150,32 @@ class ProjectFilter(filters.BaseFilterBackend):
                     queryset = project.pk_models
                 elif queryset.model == Protocol:
                     queryset = project.protocols
-                elif queryset.model == Inference:
-                    queryset = project.inference_set
-                elif queryset.model == InferenceChain:
-                    queryset = InferenceChain.objects.filter(
-                        inference__in=project.inference_set.all()
-                    )
                 elif queryset.model == BiomarkerType:
                     queryset = BiomarkerType.objects.filter(dataset__project=project)
                 elif queryset.model == Subject:
                     queryset = Subject.objects.filter(dataset__project=project)
                 elif queryset.model == SubjectGroup:
                     queryset = project.groups.all()
+                elif queryset.model == Covariate:
+                    queryset = project.covariates.all()
+                elif queryset.model == CovariatePopulation:
+                    queryset = CovariatePopulation.objects.filter(
+                        subject_group__project=project
+                    )
                 elif queryset.model == ResultsTable:
                     queryset = project.results.all()
                 elif queryset.model == Variable:
                     queryset = Variable.objects.filter(
                         Q(dosed_pk_model__project=project)
                     )
+                elif queryset.model == Correlation:
+                    queryset = Correlation.objects.filter(
+                        distribution_1__variable__dosed_pk_model__project=project
+                    )
+                elif queryset.model == Conversation:
+                    # Filter (not replace) so the user/is_active scoping applied
+                    # in ConversationViewSet.get_queryset is preserved.
+                    queryset = queryset.filter(project=project)
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)
             except Project.DoesNotExist:

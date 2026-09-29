@@ -1,56 +1,56 @@
 import { emptySplitApi as api } from "./emptyApi";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    algorithmList: build.query<AlgorithmListApiResponse, AlgorithmListApiArg>({
-      query: () => ({ url: `/api/algorithm/` }),
-    }),
-    algorithmCreate: build.mutation<
-      AlgorithmCreateApiResponse,
-      AlgorithmCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/`,
-        method: "POST",
-        body: queryArg.algorithm,
-      }),
-    }),
-    algorithmRetrieve: build.query<
-      AlgorithmRetrieveApiResponse,
-      AlgorithmRetrieveApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/algorithm/${queryArg.id}/` }),
-    }),
-    algorithmUpdate: build.mutation<
-      AlgorithmUpdateApiResponse,
-      AlgorithmUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.algorithm,
-      }),
-    }),
-    algorithmPartialUpdate: build.mutation<
-      AlgorithmPartialUpdateApiResponse,
-      AlgorithmPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedAlgorithm,
-      }),
-    }),
-    algorithmDestroy: build.mutation<
-      AlgorithmDestroyApiResponse,
-      AlgorithmDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/algorithm/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
     auceCreate: build.mutation<AuceCreateApiResponse, AuceCreateApiArg>({
       query: () => ({ url: `/api/auce/`, method: "POST" }),
+    }),
+    biomarkerList: build.query<BiomarkerListApiResponse, BiomarkerListApiArg>({
+      query: () => ({ url: `/api/biomarker/` }),
+    }),
+    biomarkerCreate: build.mutation<
+      BiomarkerCreateApiResponse,
+      BiomarkerCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/`,
+        method: "POST",
+        body: queryArg.biomarker,
+      }),
+    }),
+    biomarkerRetrieve: build.query<
+      BiomarkerRetrieveApiResponse,
+      BiomarkerRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/biomarker/${queryArg.id}/` }),
+    }),
+    biomarkerUpdate: build.mutation<
+      BiomarkerUpdateApiResponse,
+      BiomarkerUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.biomarker,
+      }),
+    }),
+    biomarkerPartialUpdate: build.mutation<
+      BiomarkerPartialUpdateApiResponse,
+      BiomarkerPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedBiomarker,
+      }),
+    }),
+    biomarkerDestroy: build.mutation<
+      BiomarkerDestroyApiResponse,
+      BiomarkerDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/biomarker/${queryArg.id}/`,
+        method: "DELETE",
+      }),
     }),
     biomarkerTypeList: build.query<
       BiomarkerTypeListApiResponse,
@@ -106,6 +106,16 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/biomarker_type/${queryArg.id}/`,
         method: "DELETE",
+      }),
+    }),
+    chatbotCreate: build.mutation<
+      ChatbotCreateApiResponse,
+      ChatbotCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/chatbot/`,
+        method: "POST",
+        body: queryArg.chatbotRequest,
       }),
     }),
     combinedModelList: build.query<
@@ -167,22 +177,22 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    combinedModelOptimiseCreate: build.mutation<
+      CombinedModelOptimiseCreateApiResponse,
+      CombinedModelOptimiseCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/combined_model/${queryArg.id}/optimise`,
+        method: "POST",
+        body: queryArg.optimise,
+      }),
+    }),
     combinedModelSetParamsToDefaultsUpdate: build.mutation<
       CombinedModelSetParamsToDefaultsUpdateApiResponse,
       CombinedModelSetParamsToDefaultsUpdateApiArg
     >({
       query: (queryArg) => ({
         url: `/api/combined_model/${queryArg.id}/set_params_to_defaults/`,
-        method: "PUT",
-        body: queryArg.combinedModel,
-      }),
-    }),
-    combinedModelSetVariablesFromInferenceUpdate: build.mutation<
-      CombinedModelSetVariablesFromInferenceUpdateApiResponse,
-      CombinedModelSetVariablesFromInferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/combined_model/${queryArg.id}/set_variables_from_inference/`,
         method: "PUT",
         body: queryArg.combinedModel,
       }),
@@ -242,6 +252,210 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/compound/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    conversationsList: build.query<
+      ConversationsListApiResponse,
+      ConversationsListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    conversationsCreate: build.mutation<
+      ConversationsCreateApiResponse,
+      ConversationsCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/`,
+        method: "POST",
+        body: queryArg.conversation,
+      }),
+    }),
+    conversationsRetrieve: build.query<
+      ConversationsRetrieveApiResponse,
+      ConversationsRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/conversations/${queryArg.id}/` }),
+    }),
+    conversationsDestroy: build.mutation<
+      ConversationsDestroyApiResponse,
+      ConversationsDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/conversations/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    correlationList: build.query<
+      CorrelationListApiResponse,
+      CorrelationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/`,
+        params: {
+          dosed_pk_model_id: queryArg.dosedPkModelId,
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    correlationCreate: build.mutation<
+      CorrelationCreateApiResponse,
+      CorrelationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/`,
+        method: "POST",
+        body: queryArg.correlation,
+      }),
+    }),
+    correlationRetrieve: build.query<
+      CorrelationRetrieveApiResponse,
+      CorrelationRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/correlation/${queryArg.id}/` }),
+    }),
+    correlationUpdate: build.mutation<
+      CorrelationUpdateApiResponse,
+      CorrelationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.correlation,
+      }),
+    }),
+    correlationPartialUpdate: build.mutation<
+      CorrelationPartialUpdateApiResponse,
+      CorrelationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCorrelation,
+      }),
+    }),
+    correlationDestroy: build.mutation<
+      CorrelationDestroyApiResponse,
+      CorrelationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/correlation/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    covariateList: build.query<CovariateListApiResponse, CovariateListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/covariate/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    covariateCreate: build.mutation<
+      CovariateCreateApiResponse,
+      CovariateCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/`,
+        method: "POST",
+        body: queryArg.covariate,
+      }),
+    }),
+    covariateRetrieve: build.query<
+      CovariateRetrieveApiResponse,
+      CovariateRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/covariate/${queryArg.id}/` }),
+    }),
+    covariateUpdate: build.mutation<
+      CovariateUpdateApiResponse,
+      CovariateUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.covariate,
+      }),
+    }),
+    covariatePartialUpdate: build.mutation<
+      CovariatePartialUpdateApiResponse,
+      CovariatePartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCovariate,
+      }),
+    }),
+    covariateDestroy: build.mutation<
+      CovariateDestroyApiResponse,
+      CovariateDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
+    covariatePopulationList: build.query<
+      CovariatePopulationListApiResponse,
+      CovariatePopulationListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
+    }),
+    covariatePopulationCreate: build.mutation<
+      CovariatePopulationCreateApiResponse,
+      CovariatePopulationCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/`,
+        method: "POST",
+        body: queryArg.covariatePopulation,
+      }),
+    }),
+    covariatePopulationRetrieve: build.query<
+      CovariatePopulationRetrieveApiResponse,
+      CovariatePopulationRetrieveApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+      }),
+    }),
+    covariatePopulationUpdate: build.mutation<
+      CovariatePopulationUpdateApiResponse,
+      CovariatePopulationUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+        method: "PUT",
+        body: queryArg.covariatePopulation,
+      }),
+    }),
+    covariatePopulationPartialUpdate: build.mutation<
+      CovariatePopulationPartialUpdateApiResponse,
+      CovariatePopulationPartialUpdateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
+        method: "PATCH",
+        body: queryArg.patchedCovariatePopulation,
+      }),
+    }),
+    covariatePopulationDestroy: build.mutation<
+      CovariatePopulationDestroyApiResponse,
+      CovariatePopulationDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/covariate_population/${queryArg.id}/`,
         method: "DELETE",
       }),
     }),
@@ -402,119 +616,19 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
-    inferenceList: build.query<InferenceListApiResponse, InferenceListApiArg>({
-      query: () => ({ url: `/api/inference/` }),
-    }),
-    inferenceCreate: build.mutation<
-      InferenceCreateApiResponse,
-      InferenceCreateApiArg
-    >({
+    messagesList: build.query<MessagesListApiResponse, MessagesListApiArg>({
       query: (queryArg) => ({
-        url: `/api/inference/`,
-        method: "POST",
-        body: queryArg.inference,
+        url: `/api/messages/`,
+        params: {
+          conversation_id: queryArg.conversationId,
+        },
       }),
     }),
-    inferenceRetrieve: build.query<
-      InferenceRetrieveApiResponse,
-      InferenceRetrieveApiArg
+    messagesRetrieve: build.query<
+      MessagesRetrieveApiResponse,
+      MessagesRetrieveApiArg
     >({
-      query: (queryArg) => ({ url: `/api/inference/${queryArg.id}/` }),
-    }),
-    inferenceUpdate: build.mutation<
-      InferenceUpdateApiResponse,
-      InferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.inference,
-      }),
-    }),
-    inferencePartialUpdate: build.mutation<
-      InferencePartialUpdateApiResponse,
-      InferencePartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedInference,
-      }),
-    }),
-    inferenceDestroy: build.mutation<
-      InferenceDestroyApiResponse,
-      InferenceDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/`,
-        method: "DELETE",
-      }),
-    }),
-    inferenceStopCreate: build.mutation<
-      InferenceStopCreateApiResponse,
-      InferenceStopCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference/${queryArg.id}/stop`,
-        method: "POST",
-      }),
-    }),
-    inferenceWizardCreate: build.mutation<
-      InferenceWizardCreateApiResponse,
-      InferenceWizardCreateApiArg
-    >({
-      query: () => ({ url: `/api/inference/wizard`, method: "POST" }),
-    }),
-    inferenceChainList: build.query<
-      InferenceChainListApiResponse,
-      InferenceChainListApiArg
-    >({
-      query: () => ({ url: `/api/inference_chain/` }),
-    }),
-    inferenceChainCreate: build.mutation<
-      InferenceChainCreateApiResponse,
-      InferenceChainCreateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/`,
-        method: "POST",
-        body: queryArg.inferenceChain,
-      }),
-    }),
-    inferenceChainRetrieve: build.query<
-      InferenceChainRetrieveApiResponse,
-      InferenceChainRetrieveApiArg
-    >({
-      query: (queryArg) => ({ url: `/api/inference_chain/${queryArg.id}/` }),
-    }),
-    inferenceChainUpdate: build.mutation<
-      InferenceChainUpdateApiResponse,
-      InferenceChainUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "PUT",
-        body: queryArg.inferenceChain,
-      }),
-    }),
-    inferenceChainPartialUpdate: build.mutation<
-      InferenceChainPartialUpdateApiResponse,
-      InferenceChainPartialUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "PATCH",
-        body: queryArg.patchedInferenceChain,
-      }),
-    }),
-    inferenceChainDestroy: build.mutation<
-      InferenceChainDestroyApiResponse,
-      InferenceChainDestroyApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/inference_chain/${queryArg.id}/`,
-        method: "DELETE",
-      }),
+      query: (queryArg) => ({ url: `/api/messages/${queryArg.id}/` }),
     }),
     ncaCreate: build.mutation<NcaCreateApiResponse, NcaCreateApiArg>({
       query: () => ({ url: `/api/nca/`, method: "POST" }),
@@ -588,16 +702,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/pharmacodynamic/${queryArg.id}/sbml/`,
         method: "PUT",
         body: queryArg.pharmacodynamicSbml,
-      }),
-    }),
-    pharmacodynamicSetVariablesFromInferenceUpdate: build.mutation<
-      PharmacodynamicSetVariablesFromInferenceUpdateApiResponse,
-      PharmacodynamicSetVariablesFromInferenceUpdateApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/pharmacodynamic/${queryArg.id}/set_variables_from_inference/`,
-        method: "PUT",
-        body: queryArg.pharmacodynamic,
       }),
     }),
     pharmacodynamicSimulateCreate: build.mutation<
@@ -1103,7 +1207,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/unit/`,
         params: {
-          compound_id: queryArg.compoundId,
           ordering: queryArg.ordering,
         },
       }),
@@ -1116,12 +1219,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     unitRetrieve: build.query<UnitRetrieveApiResponse, UnitRetrieveApiArg>({
-      query: (queryArg) => ({
-        url: `/api/unit/${queryArg.id}/`,
-        params: {
-          compound_id: queryArg.compoundId,
-        },
-      }),
+      query: (queryArg) => ({ url: `/api/unit/${queryArg.id}/` }),
     }),
     unitUpdate: build.mutation<UnitUpdateApiResponse, UnitUpdateApiArg>({
       query: (queryArg) => ({
@@ -1247,37 +1345,37 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as backendApi };
-export type AlgorithmListApiResponse = /** status 200  */ AlgorithmRead[];
-export type AlgorithmListApiArg = void;
-export type AlgorithmCreateApiResponse = /** status 201  */ AlgorithmRead;
-export type AlgorithmCreateApiArg = {
-  algorithm: Algorithm;
-};
-export type AlgorithmRetrieveApiResponse = /** status 200  */ AlgorithmRead;
-export type AlgorithmRetrieveApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-};
-export type AlgorithmUpdateApiResponse = /** status 200  */ AlgorithmRead;
-export type AlgorithmUpdateApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-  algorithm: Algorithm;
-};
-export type AlgorithmPartialUpdateApiResponse =
-  /** status 200  */ AlgorithmRead;
-export type AlgorithmPartialUpdateApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-  patchedAlgorithm: PatchedAlgorithm;
-};
-export type AlgorithmDestroyApiResponse = unknown;
-export type AlgorithmDestroyApiArg = {
-  /** A unique integer value identifying this algorithm. */
-  id: number;
-};
 export type AuceCreateApiResponse = unknown;
 export type AuceCreateApiArg = void;
+export type BiomarkerListApiResponse = /** status 200  */ BiomarkerRead[];
+export type BiomarkerListApiArg = void;
+export type BiomarkerCreateApiResponse = /** status 201  */ BiomarkerRead;
+export type BiomarkerCreateApiArg = {
+  biomarker: Biomarker;
+};
+export type BiomarkerRetrieveApiResponse = /** status 200  */ BiomarkerRead;
+export type BiomarkerRetrieveApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+};
+export type BiomarkerUpdateApiResponse = /** status 200  */ BiomarkerRead;
+export type BiomarkerUpdateApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+  biomarker: Biomarker;
+};
+export type BiomarkerPartialUpdateApiResponse =
+  /** status 200  */ BiomarkerRead;
+export type BiomarkerPartialUpdateApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+  patchedBiomarker: PatchedBiomarker;
+};
+export type BiomarkerDestroyApiResponse = unknown;
+export type BiomarkerDestroyApiArg = {
+  /** A unique integer value identifying this biomarker. */
+  id: number;
+};
 export type BiomarkerTypeListApiResponse =
   /** status 200  */ BiomarkerTypeRead[];
 export type BiomarkerTypeListApiArg = {
@@ -1313,6 +1411,10 @@ export type BiomarkerTypeDestroyApiResponse = unknown;
 export type BiomarkerTypeDestroyApiArg = {
   /** A unique integer value identifying this biomarker type. */
   id: number;
+};
+export type ChatbotCreateApiResponse = /** status 200  */ string;
+export type ChatbotCreateApiArg = {
+  chatbotRequest: ChatbotRequest;
 };
 export type CombinedModelListApiResponse =
   /** status 200  */ CombinedModelRead[];
@@ -1352,16 +1454,15 @@ export type CombinedModelDestroyApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
 };
+export type CombinedModelOptimiseCreateApiResponse =
+  /** status 200  */ OptimiseResponse;
+export type CombinedModelOptimiseCreateApiArg = {
+  id: number;
+  optimise: Optimise;
+};
 export type CombinedModelSetParamsToDefaultsUpdateApiResponse =
   /** status 200  */ CombinedModelRead;
 export type CombinedModelSetParamsToDefaultsUpdateApiArg = {
-  /** A unique integer value identifying this combined model. */
-  id: number;
-  combinedModel: CombinedModel;
-};
-export type CombinedModelSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ CombinedModelRead;
-export type CombinedModelSetVariablesFromInferenceUpdateApiArg = {
   /** A unique integer value identifying this combined model. */
   id: number;
   combinedModel: CombinedModel;
@@ -1400,6 +1501,130 @@ export type CompoundDestroyApiArg = {
   /** A unique integer value identifying this compound. */
   id: number;
 };
+export type ConversationsListApiResponse =
+  /** status 200  */ ConversationRead[];
+export type ConversationsListApiArg = {
+  /** Filter conversations by project ID */
+  projectId?: number;
+};
+export type ConversationsCreateApiResponse =
+  /** status 201  */ ConversationRead;
+export type ConversationsCreateApiArg = {
+  conversation: Conversation;
+};
+export type ConversationsRetrieveApiResponse =
+  /** status 200  */ ConversationRead;
+export type ConversationsRetrieveApiArg = {
+  /** A unique integer value identifying this conversation. */
+  id: number;
+};
+export type ConversationsDestroyApiResponse = unknown;
+export type ConversationsDestroyApiArg = {
+  /** A unique integer value identifying this conversation. */
+  id: number;
+};
+export type CorrelationListApiResponse = /** status 200  */ CorrelationRead[];
+export type CorrelationListApiArg = {
+  /** Filter results by dosed_pk_model ID */
+  dosedPkModelId?: number;
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CorrelationCreateApiResponse = /** status 201  */ CorrelationRead;
+export type CorrelationCreateApiArg = {
+  correlation: Correlation;
+};
+export type CorrelationRetrieveApiResponse = /** status 200  */ CorrelationRead;
+export type CorrelationRetrieveApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+};
+export type CorrelationUpdateApiResponse = /** status 200  */ CorrelationRead;
+export type CorrelationUpdateApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+  correlation: Correlation;
+};
+export type CorrelationPartialUpdateApiResponse =
+  /** status 200  */ CorrelationRead;
+export type CorrelationPartialUpdateApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+  patchedCorrelation: PatchedCorrelation;
+};
+export type CorrelationDestroyApiResponse = unknown;
+export type CorrelationDestroyApiArg = {
+  /** A unique integer value identifying this correlation. */
+  id: number;
+};
+export type CovariateListApiResponse = /** status 200  */ CovariateRead[];
+export type CovariateListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CovariateCreateApiResponse = /** status 201  */ CovariateRead;
+export type CovariateCreateApiArg = {
+  covariate: Covariate;
+};
+export type CovariateRetrieveApiResponse = /** status 200  */ CovariateRead;
+export type CovariateRetrieveApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+};
+export type CovariateUpdateApiResponse = /** status 200  */ CovariateRead;
+export type CovariateUpdateApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+  covariate: Covariate;
+};
+export type CovariatePartialUpdateApiResponse =
+  /** status 200  */ CovariateRead;
+export type CovariatePartialUpdateApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+  patchedCovariate: PatchedCovariate;
+};
+export type CovariateDestroyApiResponse = unknown;
+export type CovariateDestroyApiArg = {
+  /** A unique integer value identifying this covariate. */
+  id: number;
+};
+export type CovariatePopulationListApiResponse =
+  /** status 200  */ CovariatePopulationRead[];
+export type CovariatePopulationListApiArg = {
+  /** Filter results by project ID */
+  projectId?: number;
+};
+export type CovariatePopulationCreateApiResponse =
+  /** status 201  */ CovariatePopulationRead;
+export type CovariatePopulationCreateApiArg = {
+  covariatePopulation: CovariatePopulation;
+};
+export type CovariatePopulationRetrieveApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationRetrieveApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+};
+export type CovariatePopulationUpdateApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationUpdateApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+  covariatePopulation: CovariatePopulation;
+};
+export type CovariatePopulationPartialUpdateApiResponse =
+  /** status 200  */ CovariatePopulationRead;
+export type CovariatePopulationPartialUpdateApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+  patchedCovariatePopulation: PatchedCovariatePopulation;
+};
+export type CovariatePopulationDestroyApiResponse = unknown;
+export type CovariatePopulationDestroyApiArg = {
+  /** A unique integer value identifying this covariate population. */
+  id: number;
+};
 export type DatasetListApiResponse = /** status 200  */ DatasetRead[];
 export type DatasetListApiArg = {
   /** Filter results by project ID */
@@ -1407,7 +1632,7 @@ export type DatasetListApiArg = {
 };
 export type DatasetCreateApiResponse = /** status 201  */ DatasetRead;
 export type DatasetCreateApiArg = {
-  dataset: Dataset;
+  dataset: DatasetWrite;
 };
 export type DatasetRetrieveApiResponse = /** status 200  */ DatasetRead;
 export type DatasetRetrieveApiArg = {
@@ -1418,13 +1643,13 @@ export type DatasetUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
-  dataset: Dataset;
+  dataset: DatasetWrite;
 };
 export type DatasetPartialUpdateApiResponse = /** status 200  */ DatasetRead;
 export type DatasetPartialUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
-  patchedDataset: PatchedDataset;
+  patchedDataset: PatchedDatasetWrite;
 };
 export type DatasetDestroyApiResponse = unknown;
 export type DatasetDestroyApiArg = {
@@ -1501,72 +1726,14 @@ export type EfficacyExperimentDestroyApiArg = {
   /** A unique integer value identifying this efficacy experiment. */
   id: number;
 };
-export type InferenceListApiResponse = /** status 200  */ InferenceRead[];
-export type InferenceListApiArg = void;
-export type InferenceCreateApiResponse = /** status 201  */ InferenceRead;
-export type InferenceCreateApiArg = {
-  inference: Inference;
+export type MessagesListApiResponse = /** status 200  */ MessageRead[];
+export type MessagesListApiArg = {
+  /** Filter messages by conversation ID */
+  conversationId: number;
 };
-export type InferenceRetrieveApiResponse = /** status 200  */ InferenceRead;
-export type InferenceRetrieveApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-};
-export type InferenceUpdateApiResponse = /** status 200  */ InferenceRead;
-export type InferenceUpdateApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-  inference: Inference;
-};
-export type InferencePartialUpdateApiResponse =
-  /** status 200  */ InferenceRead;
-export type InferencePartialUpdateApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-  patchedInference: PatchedInference;
-};
-export type InferenceDestroyApiResponse = unknown;
-export type InferenceDestroyApiArg = {
-  /** A unique integer value identifying this inference. */
-  id: number;
-};
-export type InferenceStopCreateApiResponse = unknown;
-export type InferenceStopCreateApiArg = {
-  id: number;
-};
-export type InferenceWizardCreateApiResponse = unknown;
-export type InferenceWizardCreateApiArg = void;
-export type InferenceChainListApiResponse =
-  /** status 200  */ InferenceChainRead[];
-export type InferenceChainListApiArg = void;
-export type InferenceChainCreateApiResponse =
-  /** status 201  */ InferenceChainRead;
-export type InferenceChainCreateApiArg = {
-  inferenceChain: InferenceChain;
-};
-export type InferenceChainRetrieveApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainRetrieveApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-};
-export type InferenceChainUpdateApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainUpdateApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-  inferenceChain: InferenceChain;
-};
-export type InferenceChainPartialUpdateApiResponse =
-  /** status 200  */ InferenceChainRead;
-export type InferenceChainPartialUpdateApiArg = {
-  /** A unique integer value identifying this inference chain. */
-  id: number;
-  patchedInferenceChain: PatchedInferenceChain;
-};
-export type InferenceChainDestroyApiResponse = unknown;
-export type InferenceChainDestroyApiArg = {
-  /** A unique integer value identifying this inference chain. */
+export type MessagesRetrieveApiResponse = /** status 200  */ MessageRead;
+export type MessagesRetrieveApiArg = {
+  /** A unique integer value identifying this message. */
   id: number;
 };
 export type NcaCreateApiResponse = unknown;
@@ -1617,13 +1784,6 @@ export type PharmacodynamicSbmlUpdateApiArg = {
   /** A unique integer value identifying this pharmacodynamic model. */
   id: number;
   pharmacodynamicSbml: PharmacodynamicSbmlWrite;
-};
-export type PharmacodynamicSetVariablesFromInferenceUpdateApiResponse =
-  /** status 200  */ PharmacodynamicRead;
-export type PharmacodynamicSetVariablesFromInferenceUpdateApiArg = {
-  /** A unique integer value identifying this pharmacodynamic model. */
-  id: number;
-  pharmacodynamic: Pharmacodynamic;
 };
 export type PharmacodynamicSimulateCreateApiResponse =
   /** status 200  */ SimulateResponse[];
@@ -1879,7 +2039,7 @@ export type SubjectGroupListApiArg = {
 };
 export type SubjectGroupCreateApiResponse = /** status 201  */ SubjectGroupRead;
 export type SubjectGroupCreateApiArg = {
-  subjectGroup: SubjectGroup;
+  subjectGroup: SubjectGroupWrite;
 };
 export type SubjectGroupRetrieveApiResponse =
   /** status 200  */ SubjectGroupRead;
@@ -1891,14 +2051,14 @@ export type SubjectGroupUpdateApiResponse = /** status 200  */ SubjectGroupRead;
 export type SubjectGroupUpdateApiArg = {
   /** A unique integer value identifying this subject group. */
   id: number;
-  subjectGroup: SubjectGroup;
+  subjectGroup: SubjectGroupWrite;
 };
 export type SubjectGroupPartialUpdateApiResponse =
   /** status 200  */ SubjectGroupRead;
 export type SubjectGroupPartialUpdateApiArg = {
   /** A unique integer value identifying this subject group. */
   id: number;
-  patchedSubjectGroup: PatchedSubjectGroup;
+  patchedSubjectGroup: PatchedSubjectGroupWrite;
 };
 export type SubjectGroupDestroyApiResponse = unknown;
 export type SubjectGroupDestroyApiArg = {
@@ -1935,8 +2095,6 @@ export type TagDestroyApiArg = {
 };
 export type UnitListApiResponse = /** status 200  */ UnitRead[];
 export type UnitListApiArg = {
-  /** Enable conversions based on compound information */
-  compoundId?: number;
   /** Which field to use when ordering the results. */
   ordering?: string;
 };
@@ -1946,8 +2104,6 @@ export type UnitCreateApiArg = {
 };
 export type UnitRetrieveApiResponse = /** status 200  */ UnitRead;
 export type UnitRetrieveApiArg = {
-  /** Enable conversions based on compound information */
-  compoundId?: number;
   /** A unique integer value identifying this unit. */
   id: number;
 };
@@ -2033,28 +2189,39 @@ export type VariableDestroyApiArg = {
 };
 export type WhoamiRetrieveApiResponse = unknown;
 export type WhoamiRetrieveApiArg = void;
-export type CategoryEnum = "SA" | "OP" | "OT";
-export type Algorithm = {
-  /** name of the algorithm */
-  name: string;
-  category: CategoryEnum;
+export type Biomarker = {
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
 };
-export type AlgorithmRead = {
+export type BiomarkerRead = {
   id: number;
-  /** name of the algorithm */
-  name: string;
-  category: CategoryEnum;
+  /** time point of measurement, in hours. */
+  time: number;
+  /** value of the measurement */
+  value: number;
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+  /** subject associated with this biomarker */
+  subject: number;
+  /** biomarker type, for example "concentration in mg" */
+  biomarker_type: number;
 };
-export type PatchedAlgorithm = {
-  /** name of the algorithm */
-  name?: string;
-  category?: CategoryEnum;
+export type PatchedBiomarker = {
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
 };
-export type PatchedAlgorithmRead = {
+export type PatchedBiomarkerRead = {
   id?: number;
-  /** name of the algorithm */
-  name?: string;
-  category?: CategoryEnum;
+  /** time point of measurement, in hours. */
+  time?: number;
+  /** value of the measurement */
+  value?: number;
+  /** if true, this datapoint is excluded from fitting */
+  exclude?: boolean;
+  /** subject associated with this biomarker */
+  subject?: number;
+  /** biomarker type, for example "concentration in mg" */
+  biomarker_type?: number;
 };
 export type BiomarkerType = {
   /** name of the biomarker type */
@@ -2164,6 +2331,18 @@ export type PatchedBiomarkerTypeRead = {
   /** mapped variable */
   variable?: number | null;
 };
+export type ChatbotErrorResponse = {
+  error: string;
+};
+export type ChatbotContext = {
+  page?: string | null;
+  sub_page?: string | null;
+};
+export type ChatbotRequest = {
+  conversation_id: number;
+  content: string;
+  context?: ChatbotContext | null;
+};
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */
   pkpd_model: number;
@@ -2183,7 +2362,7 @@ export type PkpdMappingRead = {
   /** variable in PD part of model */
   pd_variable: number;
 };
-export type TypeEnum =
+export type DerivedVariableTypeEnum =
   | "AUC"
   | "RO"
   | "FUP"
@@ -2193,10 +2372,17 @@ export type TypeEnum =
   | "EMM"
   | "EMX"
   | "IMX"
+  | "TEM"
+  | "TIM"
   | "POW"
   | "NPW"
   | "TDI"
-  | "IND";
+  | "IND"
+  | "WTC"
+  | "AGC"
+  | "SXC"
+  | "CCC"
+  | "CCT";
 export type DerivedVariable = {
   /** true if object has been stored */
   read_only?: boolean;
@@ -2213,17 +2399,26 @@ export type DerivedVariable = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
-    * `IND` - Exponential Increase */
-  type: TypeEnum;
+    * `IND` - Exponential Increase
+    * `WTC` - Weight covariate
+    * `AGC` - Age covariate
+    * `SXC` - Sex covariate
+    * `CCC` - Custom continuous covariate
+    * `CCT` - Custom categorical covariate */
+  type: DerivedVariableTypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
   /** base variable */
   pk_variable: number;
   /** secondary variable */
   secondary_variable?: number | null;
+  /** custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only) */
+  covariate?: number | null;
 };
 export type DerivedVariableRead = {
   id: number;
@@ -2242,17 +2437,26 @@ export type DerivedVariableRead = {
     * `EMM` - Extended Michaelis-Menten
     * `EMX` - Emax
     * `IMX` - Imax
+    * `TEM` - Time Emax
+    * `TIM` - Time Imax
     * `POW` - Power
     * `NPW` - Negative Power
     * `TDI` - Exponential Decay
-    * `IND` - Exponential Increase */
-  type: TypeEnum;
+    * `IND` - Exponential Increase
+    * `WTC` - Weight covariate
+    * `AGC` - Age covariate
+    * `SXC` - Sex covariate
+    * `CCC` - Custom continuous covariate
+    * `CCT` - Custom categorical covariate */
+  type: DerivedVariableTypeEnum;
   /** PKPD model that this derived variable is for */
   pkpd_model: number;
   /** base variable */
   pk_variable: number;
   /** secondary variable */
   secondary_variable?: number | null;
+  /** custom covariate (CUSTOM_CONT/CUSTOM_CAT covariate types only) */
+  covariate?: number | null;
 };
 export type TimeInterval = {
   /** true if object has been stored */
@@ -2500,15 +2704,87 @@ export type PatchedCombinedModelRead = {
   /** second PD part of model */
   pd_model2?: number | null;
 };
-export type SimulateResponse = {
-  time: number[];
-  group?: number | null;
-  outputs: {
-    [key: string]: number[];
-  };
+export type OptimiseResponse = {
+  optimal: number[];
+  loss: number;
+  reason: string;
+  sigma: number[];
+  sigma_mult: number[] | null;
+  inputs: number[];
+  starting: number[];
+  bounds: number[][];
+  biomarker_types?: number[] | null;
+  subject_groups?: number[] | null;
+  max_iterations?: number | null;
+  noise_models: string[];
+  method: string;
+  predictions:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  residuals:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  observations:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
+  covariance: number[][] | null;
+  condition_number: number | null;
+  neg2ll: number | null;
+  aic: number | null;
+  bic: number | null;
+  filtered_observations?: number | null;
+  sigma_variables: number[] | null;
+  sigma_start: number[] | null;
+  sigma_bounds: number[][] | null;
+  sigma_use_log_space: boolean[] | null;
+  sigma_mult_start: number[] | null;
+  sigma_bounds_mult: number[][] | null;
+  sigma_mult_use_log_space: boolean[] | null;
 };
 export type ErrorResponse = {
   error: string;
+};
+export type NoiseModelsEnum = "additive" | "multiplicative" | "combined";
+export type Optimise = {
+  inputs: number[];
+  starting: number[];
+  bounds: number[][];
+  biomarker_types?: number[] | null;
+  subject_groups?: number[] | null;
+  max_iterations?: number | null;
+  noise_models?: NoiseModelsEnum[] | null;
+  method?: string;
+  sigma_start?: number[] | null;
+  sigma_bounds?: number[][] | null;
+  sigma_use_log_space?: boolean[] | null;
+  sigma_mult_start?: number[] | null;
+  sigma_bounds_mult?: number[][] | null;
+  sigma_mult_use_log_space?: boolean[] | null;
+  use_log_space?: boolean[] | null;
+};
+export type UncertaintySummary = {
+  mean: number[];
+  std: number[];
+  quantiles: {
+    [key: string]: number[];
+  };
+};
+export type SimulateResponse = {
+  time: number[];
+  group?: number | null;
+  sample_count: number;
+  outputs: {
+    [key: string]: UncertaintySummary;
+  };
+  parameters?: {
+    [key: string]: number[];
+  };
 };
 export type Simulate = {
   outputs: string[];
@@ -2516,6 +2792,10 @@ export type Simulate = {
     [key: string]: number;
   };
   time_max?: number;
+  use_diffsol?: boolean;
+  sample_count?: number;
+  seed?: number;
+  quantiles?: number[];
 };
 export type CompoundTypeEnum = "SM" | "LM";
 export type IntrinsicClearanceAssayEnum = "MS" | "HC";
@@ -2685,6 +2965,207 @@ export type PatchedCompoundRead = {
   /** unit for dissociation constant */
   dissociation_unit?: number;
 };
+export type Conversation = {
+  project?: number | null;
+  title?: string;
+};
+export type ConversationRead = {
+  id: number;
+  project?: number | null;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+  last_message_preview: string;
+};
+export type Correlation = {
+  /** first distribution of the correlated pair */
+  distribution_1: number;
+  /** second distribution of the correlated pair */
+  distribution_2: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type CorrelationRead = {
+  id: number;
+  /** first distribution of the correlated pair */
+  distribution_1: number;
+  /** second distribution of the correlated pair */
+  distribution_2: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type PatchedCorrelation = {
+  /** first distribution of the correlated pair */
+  distribution_1?: number;
+  /** second distribution of the correlated pair */
+  distribution_2?: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type PatchedCorrelationRead = {
+  id?: number;
+  /** first distribution of the correlated pair */
+  distribution_1?: number;
+  /** second distribution of the correlated pair */
+  distribution_2?: number;
+  /** Pearson correlation coefficient of the ETAs, in [-1, 1] */
+  coefficient?: number;
+};
+export type CovariateTypeEnum = "CONT" | "CAT";
+export type BuiltinEnum = "WT" | "AGE" | "SEX";
+export type BlankEnum = "";
+export type Covariate = {
+  /** name of the covariate (e.g. albumin) */
+  name: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type CovariateRead = {
+  id: number;
+  /** name of the covariate (e.g. albumin) */
+  name: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type PatchedCovariate = {
+  /** name of the covariate (e.g. albumin) */
+  name?: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type PatchedCovariateRead = {
+  id?: number;
+  /** name of the covariate (e.g. albumin) */
+  name?: string;
+  /** whether the covariate is continuous or categorical
+    
+    * `CONT` - Continuous
+    * `CAT` - Categorical */
+  type?: CovariateTypeEnum;
+  /** standard covariate kind (weight/age/sex); blank for custom
+    
+    * `WT` - Weight
+    * `AGE` - Age
+    * `SEX` - Sex */
+  builtin?: BuiltinEnum | BlankEnum;
+  /** number of categories (categorical covariates only) */
+  n_categories?: number | null;
+  /** optional labels for each category (categorical covariates only); index 0 is the base category */
+  category_names?: any | null;
+  /** reference value used to centre this covariate's effect (continuous covariates only): P_i = tvP * (cov_i / reference)^a */
+  reference_value?: number;
+  /** Project that this covariate belongs to. */
+  project?: number | null;
+  /** unit of the covariate (continuous covariates only) */
+  unit?: number | null;
+};
+export type CovariatePopulation = {
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group: number;
+  /** custom covariate this distribution describes */
+  covariate: number;
+};
+export type CovariatePopulationRead = {
+  id: number;
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group: number;
+  /** custom covariate this distribution describes */
+  covariate: number;
+};
+export type PatchedCovariatePopulation = {
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group?: number;
+  /** custom covariate this distribution describes */
+  covariate?: number;
+};
+export type PatchedCovariatePopulationRead = {
+  id?: number;
+  /** median value of the covariate (continuous covariates only) */
+  median?: number;
+  /** variance of the log-normal random effect (continuous covariates only) */
+  variance?: number;
+  /** probability of each category (categorical covariates only); one entry per category, index 0 is the base category */
+  category_probabilities?: any;
+  /** subject group (virtual population) this distribution is for */
+  subject_group?: number;
+  /** custom covariate this distribution describes */
+  covariate?: number;
+};
 export type Dataset = {
   /** name of the dataset */
   name: string;
@@ -2787,12 +3268,28 @@ export type ProtocolRead = {
   /** Group that uses this protocol */
   group?: number | null;
 };
+export type PopulationRegionEnum = "US" | "EU" | "ASIA" | "CUSTOM";
 export type SubjectGroup = {
   protocols: Protocol[];
   /** name of the group */
   name: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -2802,10 +3299,54 @@ export type SubjectGroupRead = {
   id: number;
   subjects: number[];
   protocols: ProtocolRead[];
+  covariate_populations: CovariatePopulationRead[];
   /** name of the group */
   name: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
+  /** Dataset that this group belongs to. */
+  dataset?: number | null;
+  /** Project that this group belongs to. */
+  project?: number | null;
+};
+export type SubjectGroupWrite = {
+  protocols: Protocol[];
+  /** on create, copy covariate population values from this group; defaults are used when unset or from another project */
+  copy_covariates_from?: number | null;
+  /** name of the group */
+  name: string;
+  /** unique identifier in the dataset */
+  id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -2817,6 +3358,16 @@ export type DatasetRead = {
   subjects: number[];
   groups: SubjectGroupRead[];
   protocols: ProtocolRead[];
+  /** name of the dataset */
+  name: string;
+  /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
+  datetime?: string | null;
+  /** short description of the dataset */
+  description?: string;
+  /** Project that "owns" this model */
+  project?: number | null;
+};
+export type DatasetWrite = {
   /** name of the dataset */
   name: string;
   /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
@@ -2842,6 +3393,16 @@ export type PatchedDatasetRead = {
   subjects?: number[];
   groups?: SubjectGroupRead[];
   protocols?: ProtocolRead[];
+  /** name of the dataset */
+  name?: string;
+  /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
+  datetime?: string | null;
+  /** short description of the dataset */
+  description?: string;
+  /** Project that "owns" this model */
+  project?: number | null;
+};
+export type PatchedDatasetWrite = {
   /** name of the dataset */
   name?: string;
   /** date/time the experiment was conducted. All time measurements are relative to this date/time, which is in YYYY-MM-DD HH:MM:SS format. For example, 2020-07-18 14:30:59 */
@@ -2942,242 +3503,20 @@ export type PatchedEfficacyExperimentRead = {
   /** compound for efficacy experiment */
   compound?: number;
 };
-export type LogLikelihoodParameter = {
-  /** name of log_likelihood parameter. */
-  name: string;
-  /** parameter index for distribution and equation parameters. blank for models (variable is used instead) */
-  parent_index?: number | null;
-  /** output index for all log_likelihoods.  */
-  child_index?: number;
-  /** length of array representing parameter. null for scalar */
-  length?: number | null;
-  child: number;
-  /** input model variable for this parameter. */
-  variable?: number | null;
-};
-export type LogLikelihoodParameterRead = {
-  id: number;
-  /** name of log_likelihood parameter. */
-  name: string;
-  /** parameter index for distribution and equation parameters. blank for models (variable is used instead) */
-  parent_index?: number | null;
-  /** output index for all log_likelihoods.  */
-  child_index?: number;
-  /** length of array representing parameter. null for scalar */
-  length?: number | null;
-  parent: number;
-  child: number;
-  /** input model variable for this parameter. */
-  variable?: number | null;
-};
-export type FormEnum = "N" | "U" | "LN" | "F" | "S" | "E" | "M";
-export type LogLikelihood = {
-  parameters: LogLikelihoodParameter[];
-  /** name of log_likelihood. */
-  name: string;
-  /** description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3 */
-  description?: string | null;
-  /** set if a fixed value is required */
-  value?: number | null;
-  /** True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken  */
-  time_independent_data?: boolean;
-  /** True if this log_likelihood is observed  */
-  observed?: boolean;
-  form?: FormEnum;
-  /** If form=MODEL, a variable (any) in the deterministic model.  */
-  variable?: number | null;
-  /** data associated with this log_likelihood. This is used for measurement data (observed=True) or for covariates (observed=False). The random variable associated with this log_likelihood has the same shape as this data. For covariates the subject ids in the data correspond to the values of the random variable at that location. */
-  biomarker_type?: number | null;
-  /** filter subject data on this protocol(null implies all subjects) */
-  protocol_filter?: number | null;
-};
-export type LogLikelihoodRead = {
-  id: number;
-  parameters: LogLikelihoodParameterRead[];
-  model: string[] | null;
-  dataset: number | null;
-  time_variable: number | null;
-  is_a_prior: boolean;
-  /** name of log_likelihood. */
-  name: string;
-  /** description of log_likelihood. For equations will be the code of that equation using Python syntax: arg1 * arg2^arg3 */
-  description?: string | null;
-  /** set if a fixed value is required */
-  value?: number | null;
-  /** True if biomarker_type refers to time-independent data. If there are multiple timepoints in biomarker_type then only the first is taken  */
-  time_independent_data?: boolean;
-  /** True if this log_likelihood is observed  */
-  observed?: boolean;
-  form?: FormEnum;
-  /** Log_likelihood belongs to this inference object.  */
-  inference: number;
-  /** If form=MODEL, a variable (any) in the deterministic model.  */
-  variable?: number | null;
-  /** data associated with this log_likelihood. This is used for measurement data (observed=True) or for covariates (observed=False). The random variable associated with this log_likelihood has the same shape as this data. For covariates the subject ids in the data correspond to the values of the random variable at that location. */
-  biomarker_type?: number | null;
-  /** filter subject data on this protocol(null implies all subjects) */
-  protocol_filter?: number | null;
-  children: number[];
-};
-export type InitializationStrategyEnum = "D" | "R" | "F";
-export type Inference = {
-  log_likelihoods: LogLikelihood[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
+export type RoleEnum = "user" | "assistant" | "tool_call" | "tool_result";
+export type Message = {
+  role: RoleEnum;
+  content: string;
   metadata?: any;
-  /** Project that "owns" this inference object */
-  project: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
 };
-export type InferenceRead = {
+export type MessageRead = {
   id: number;
-  log_likelihoods: LogLikelihoodRead[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
+  role: RoleEnum;
+  content: string;
   metadata?: any;
-  /** Project that "owns" this inference object */
-  project: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type PatchedInference = {
-  log_likelihoods?: LogLikelihood[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name?: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project?: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type PatchedInferenceRead = {
-  id?: number;
-  log_likelihoods?: LogLikelihoodRead[];
-  /** true if object has been stored */
-  read_only?: boolean;
-  /** datetime the object was stored. */
-  datetime?: string | null;
-  /** name of the dataset */
-  name?: string;
-  /** short description of what this inference does */
-  description?: string;
-  initialization_strategy?: InitializationStrategyEnum;
-  /** number of chains */
-  number_of_chains?: number;
-  /** maximum number of iterations */
-  max_number_of_iterations?: number;
-  /** final iteration of burn-in */
-  burn_in?: number;
-  /** number of iterations calculated */
-  number_of_iterations?: number;
-  /** Elapsed run time for inference in seconds */
-  time_elapsed?: number;
-  /** number of function evaluations */
-  number_of_function_evals?: number;
-  /** If executing, this is the celery task id */
-  task_id?: string | null;
-  /** metadata for inference */
-  metadata?: any;
-  /** Project that "owns" this inference object */
-  project?: number;
-  /** algorithm used to perform the inference */
-  algorithm?: number;
-  initialization_inference?: number | null;
-};
-export type InferenceChain = {
-  /** inference for this chain */
-  inference: number;
-};
-export type InferenceChainRead = {
-  id: number;
-  data: string;
-  outputs: string;
-  /** inference for this chain */
-  inference: number;
-};
-export type PatchedInferenceChain = {
-  /** inference for this chain */
-  inference?: number;
-};
-export type PatchedInferenceChainRead = {
-  id?: number;
-  data?: string;
-  outputs?: string;
-  /** inference for this chain */
-  inference?: number;
+  created_at: string;
 };
 export type ModelTypeEnum = "PK" | "PKEF" | "PKEX" | "PD" | "TG" | "TGI";
-export type BlankEnum = "";
 export type NullEnum = null;
 export type Pharmacodynamic = {
   mmt?: string;
@@ -3982,6 +4321,21 @@ export type PatchedSubjectGroup = {
   name?: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -3991,10 +4345,54 @@ export type PatchedSubjectGroupRead = {
   id?: number;
   subjects?: number[];
   protocols?: ProtocolRead[];
+  covariate_populations?: CovariatePopulationRead[];
   /** name of the group */
   name?: string;
   /** unique identifier in the dataset */
   id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
+  /** Dataset that this group belongs to. */
+  dataset?: number | null;
+  /** Project that this group belongs to. */
+  project?: number | null;
+};
+export type PatchedSubjectGroupWrite = {
+  protocols?: Protocol[];
+  /** on create, copy covariate population values from this group; defaults are used when unset or from another project */
+  copy_covariates_from?: number | null;
+  /** name of the group */
+  name?: string;
+  /** unique identifier in the dataset */
+  id_in_dataset?: string | null;
+  /** number of virtual individuals (N) in this population */
+  study_size?: number;
+  /** minimum age of the population (age is sampled uniformly) */
+  age_min?: number;
+  /** maximum age of the population (age is sampled uniformly) */
+  age_max?: number;
+  /** male-to-female ratio, i.e. probability an individual is male */
+  m2f_ratio?: number;
+  /** region used to sample body weight
+    
+    * `US` - United States
+    * `EU` - Europe
+    * `ASIA` - Asia
+    * `CUSTOM` - Custom */
+  population_region?: PopulationRegionEnum;
   /** Dataset that this group belongs to. */
   dataset?: number | null;
   /** Project that this group belongs to. */
@@ -4040,9 +4438,6 @@ export type Unit = {
 };
 export type UnitRead = {
   id: number;
-  compatible_units: {
-    [key: string]: string;
-  }[];
   /** symbol for unit display */
   symbol: string;
   /** grams exponent */
@@ -4084,9 +4479,6 @@ export type PatchedUnit = {
 };
 export type PatchedUnitRead = {
   id?: number;
-  compatible_units?: {
-    [key: string]: string;
-  }[];
   /** symbol for unit display */
   symbol?: string;
   /** grams exponent */
@@ -4114,10 +4506,14 @@ export type User = {
   email?: string;
 };
 export type Profile = {
+  /** the user's department */
+  department?: string;
   user: number;
 };
 export type ProfileRead = {
   id: number;
+  /** the user's department */
+  department?: string;
   user: number;
 };
 export type UserRead = {
@@ -4147,7 +4543,30 @@ export type PatchedUserRead = {
   profile?: ProfileRead;
   project_set?: number[];
 };
+export type PdfEnum = "normal" | "lognormal" | "logit";
+export type Distribution = {
+  /** probability density function
+    
+    * `normal` - Normal
+    * `lognormal` - Log-normal
+    * `logit` - Logit-normal */
+  pdf?: PdfEnum;
+  /** variance of the ETA (normal random effect) */
+  variance?: number;
+};
+export type DistributionRead = {
+  id: number;
+  /** probability density function
+    
+    * `normal` - Normal
+    * `lognormal` - Log-normal
+    * `logit` - Logit-normal */
+  pdf?: PdfEnum;
+  /** variance of the ETA (normal random effect) */
+  variance?: number;
+};
 export type Variable = {
+  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4201,6 +4620,7 @@ export type Variable = {
 export type VariableRead = {
   id: number;
   protocols: number[];
+  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4252,6 +4672,7 @@ export type VariableRead = {
   dosed_pk_model?: number | null;
 };
 export type PatchedVariable = {
+  distribution?: Distribution | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4305,6 +4726,7 @@ export type PatchedVariable = {
 export type PatchedVariableRead = {
   id?: number;
   protocols?: number[];
+  distribution?: DistributionRead | null;
   /** true if object has been stored */
   read_only?: boolean;
   /** datetime the object was stored. */
@@ -4356,27 +4778,28 @@ export type PatchedVariableRead = {
   dosed_pk_model?: number | null;
 };
 export const {
-  useAlgorithmListQuery,
-  useAlgorithmCreateMutation,
-  useAlgorithmRetrieveQuery,
-  useAlgorithmUpdateMutation,
-  useAlgorithmPartialUpdateMutation,
-  useAlgorithmDestroyMutation,
   useAuceCreateMutation,
+  useBiomarkerListQuery,
+  useBiomarkerCreateMutation,
+  useBiomarkerRetrieveQuery,
+  useBiomarkerUpdateMutation,
+  useBiomarkerPartialUpdateMutation,
+  useBiomarkerDestroyMutation,
   useBiomarkerTypeListQuery,
   useBiomarkerTypeCreateMutation,
   useBiomarkerTypeRetrieveQuery,
   useBiomarkerTypeUpdateMutation,
   useBiomarkerTypePartialUpdateMutation,
   useBiomarkerTypeDestroyMutation,
+  useChatbotCreateMutation,
   useCombinedModelListQuery,
   useCombinedModelCreateMutation,
   useCombinedModelRetrieveQuery,
   useCombinedModelUpdateMutation,
   useCombinedModelPartialUpdateMutation,
   useCombinedModelDestroyMutation,
+  useCombinedModelOptimiseCreateMutation,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
-  useCombinedModelSetVariablesFromInferenceUpdateMutation,
   useCombinedModelSimulateCreateMutation,
   useCompoundListQuery,
   useCompoundCreateMutation,
@@ -4384,6 +4807,28 @@ export const {
   useCompoundUpdateMutation,
   useCompoundPartialUpdateMutation,
   useCompoundDestroyMutation,
+  useConversationsListQuery,
+  useConversationsCreateMutation,
+  useConversationsRetrieveQuery,
+  useConversationsDestroyMutation,
+  useCorrelationListQuery,
+  useCorrelationCreateMutation,
+  useCorrelationRetrieveQuery,
+  useCorrelationUpdateMutation,
+  useCorrelationPartialUpdateMutation,
+  useCorrelationDestroyMutation,
+  useCovariateListQuery,
+  useCovariateCreateMutation,
+  useCovariateRetrieveQuery,
+  useCovariateUpdateMutation,
+  useCovariatePartialUpdateMutation,
+  useCovariateDestroyMutation,
+  useCovariatePopulationListQuery,
+  useCovariatePopulationCreateMutation,
+  useCovariatePopulationRetrieveQuery,
+  useCovariatePopulationUpdateMutation,
+  useCovariatePopulationPartialUpdateMutation,
+  useCovariatePopulationDestroyMutation,
   useDatasetListQuery,
   useDatasetCreateMutation,
   useDatasetRetrieveQuery,
@@ -4403,20 +4848,8 @@ export const {
   useEfficacyExperimentUpdateMutation,
   useEfficacyExperimentPartialUpdateMutation,
   useEfficacyExperimentDestroyMutation,
-  useInferenceListQuery,
-  useInferenceCreateMutation,
-  useInferenceRetrieveQuery,
-  useInferenceUpdateMutation,
-  useInferencePartialUpdateMutation,
-  useInferenceDestroyMutation,
-  useInferenceStopCreateMutation,
-  useInferenceWizardCreateMutation,
-  useInferenceChainListQuery,
-  useInferenceChainCreateMutation,
-  useInferenceChainRetrieveQuery,
-  useInferenceChainUpdateMutation,
-  useInferenceChainPartialUpdateMutation,
-  useInferenceChainDestroyMutation,
+  useMessagesListQuery,
+  useMessagesRetrieveQuery,
   useNcaCreateMutation,
   usePharmacodynamicListQuery,
   usePharmacodynamicCreateMutation,
@@ -4426,7 +4859,6 @@ export const {
   usePharmacodynamicDestroyMutation,
   usePharmacodynamicMmtUpdateMutation,
   usePharmacodynamicSbmlUpdateMutation,
-  usePharmacodynamicSetVariablesFromInferenceUpdateMutation,
   usePharmacodynamicSimulateCreateMutation,
   usePharmacokineticListQuery,
   usePharmacokineticCreateMutation,

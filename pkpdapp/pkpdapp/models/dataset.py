@@ -50,7 +50,7 @@ class Dataset(models.Model):
         help_text='Project that "owns" this model',
     )
 
-    def copy(self, new_project):
+    def copy(self, new_project, group_map=None):
         """
         Create a copy of this dataset with the same values but a different project.
         """
@@ -60,6 +60,34 @@ class Dataset(models.Model):
             description=self.description,
             project=new_project,
         )
+
+        # copy groups and subjects directly, rather than relying on them being
+        # recreated as a side effect of copying protocols. This ensures subjects
+        # that are not attached to any protocol (e.g. observation-only subjects,
+        # or subjects with no group) are still copied across. Protocols are
+        # copied later (during model/variable copy), so subject protocols are
+        # linked at that point (see Protocol.copy).
+        if group_map is None:
+            group_map = {}
+        for group in self.groups.all():
+            group_map[group.id] = SubjectGroup.objects.create(
+                name=group.name,
+                id_in_dataset=group.id_in_dataset,
+                dataset=new_dataset,
+                project=new_project,
+                study_size=group.study_size,
+                age_min=group.age_min,
+                age_max=group.age_max,
+                m2f_ratio=group.m2f_ratio,
+                population_region=group.population_region,
+            )
+
+        for subject in self.subjects.all():
+            subject.copy(
+                new_protocol=None,
+                new_dataset=new_dataset,
+                new_group=group_map.get(subject.group_id),
+            )
 
         return new_dataset
 
@@ -290,7 +318,7 @@ class Dataset(models.Model):
             try:
                 event_id_int = int(event_id)
                 is_dosing_event = event_id_int == 1 or event_id_int == 4
-            except ValueError:
+            except (ValueError, TypeError):
                 is_dosing_event = has_amount
 
             if is_dosing_event and has_amount:
@@ -322,7 +350,7 @@ class Dataset(models.Model):
             try:
                 event_id_int = int(event_id)
                 is_observation_event = event_id_int == 0
-            except ValueError:
+            except (ValueError, TypeError):
                 is_observation_event = has_observation
             if is_observation_event and has_observation:  # measurement observation
                 try:

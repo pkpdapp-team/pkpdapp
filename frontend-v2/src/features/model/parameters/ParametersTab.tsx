@@ -3,10 +3,10 @@ import { Control } from "react-hook-form";
 import {
   CombinedModelRead,
   ProjectRead,
-  UnitRead,
   VariableRead,
   useCombinedModelSetParamsToDefaultsUpdateMutation,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import {
   TableContainer,
   Table,
@@ -20,6 +20,7 @@ import {
   Box,
 } from "@mui/material";
 import ParameterRow from "./ParameterRow";
+import CorrelationMatrix from "./CorrelationMatrix";
 import HelpButton from "../../../components/HelpButton";
 import { useConstVariables, useNoReset } from "./getConstVariables";
 import { defaultHeaderSx } from "../../../shared/tableHeadersSx";
@@ -38,7 +39,7 @@ interface Props {
   project: ProjectRead;
   variables: VariableRead[];
   control: Control<ModelFormData>;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const ParametersTab: FC<Props> = ({
@@ -57,6 +58,9 @@ const ParametersTab: FC<Props> = ({
 
   const constVariables = useConstVariables();
   const noReset = useNoReset();
+
+  const populationEnabled =
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS === "true";
 
   const myResetToSpeciesDefaults = () => {
     setParamsToDefault({ id: model.id, combinedModel: model });
@@ -133,15 +137,55 @@ const ParametersTab: FC<Props> = ({
               <TableCell>
                 <div style={{ ...defaultHeaderSx }}>Per Body Weight (kg)</div>
               </TableCell>
-              <TableCell>
-                <div style={{ ...defaultHeaderSx }}>Nonlinearity</div>
+              {populationEnabled && (
+                <TableCell sx={{ width: "19rem" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Population{" "}
+                    <HelpButton title="Population">
+                      Tick to make this a population parameter and run a
+                      population (Monte-Carlo) simulation. The parameter value is
+                      the typical value; the standard deviation sets the spread of
+                      the random effect. The distribution defaults from the bounds
+                      (logit for a parameter bounded to 0–1, otherwise log-normal)
+                      and can be changed.
+                    </HelpButton>{" "}
+                  </div>
+                </TableCell>
+              )}
+              <TableCell sx={{ width: "20rem" }}>
+                <div style={{ ...defaultHeaderSx }}>
+                  Nonlinearity{" "}
+                  <HelpButton title="Nonlinearity">
+                    Make this parameter vary instead of staying constant.
+                    Michaelis-Menten options make it concentration-dependent,
+                    while the dose- and time-dependent options (Emax, Imax,
+                    power increase/decrease, time increase/decrease) make it
+                    change with dose or over time.
+                  </HelpButton>{" "}
+                </div>
               </TableCell>
+              {populationEnabled && (
+                <TableCell sx={{ width: "16rem" }}>
+                  <div style={{ ...defaultHeaderSx }}>
+                    Covariates{" "}
+                    <HelpButton title="Covariates">
+                      Make this parameter depend on individual characteristics
+                      (weight, age, sex, or a custom covariate defined under Trial
+                      Design). Each covariate adds an editable coefficient
+                      parameter; per-individual covariate values are sampled from
+                      the population of each subject group when simulating.
+                    </HelpButton>{" "}
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
             {constVariables.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>No variables found</TableCell>
+                <TableCell colSpan={populationEnabled ? 10 : 8}>
+                  No variables found
+                </TableCell>
               </TableRow>
             )}
             {constVariables.map((variable) => (
@@ -158,6 +202,14 @@ const ParametersTab: FC<Props> = ({
           </TableBody>
         </Table>
       </TableContainer>
+
+      {populationEnabled && (
+        <CorrelationMatrix
+          model={model}
+          project={project}
+          variables={variables}
+        />
+      )}
     </Stack>
   );
 };

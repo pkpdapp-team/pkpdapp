@@ -11,17 +11,17 @@ import {
   ProjectRead,
   Protocol,
   ProtocolRead,
-  UnitRead,
   useDoseCreateMutation,
   useProtocolUpdateMutation,
   useVariableRetrieveQuery,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { useForm, useFormState } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { TableHeader } from "../../components/TableHeader";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import DoseRow from "./DoseRow";
 import useDirty from "../../hooks/useDirty";
 
@@ -29,7 +29,7 @@ interface Props {
   onChange: () => void;
   project: ProjectRead;
   protocol: ProtocolRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
@@ -120,7 +120,7 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
 
   const selectedAmountId = protocol.amount_unit;
   const selectedAmountLabel =
-    baseUnit?.compatible_units?.find(({ id }) => +id === selectedAmountId)
+    baseUnit?.compatible_units?.find(({ id }) => id === selectedAmountId)
       ?.symbol || "";
 
   const protocolName = mappedVariable.split(".").pop();
@@ -145,10 +145,12 @@ const Doses: FC<Props> = ({ onChange, project, protocol, units }) => {
                       selected under Model/ Map Variables"
             />{" "}
             <Stack
-              sx={{ paddingLeft: "1rem", alignItems: "center" }}
               direction="row"
-              width="max-content"
-            >
+              sx={{
+                width: "max-content",
+                paddingLeft: "1rem",
+                alignItems: "center"
+              }}>
               <Button
                 size="small"
                 onClick={handleAddRow}

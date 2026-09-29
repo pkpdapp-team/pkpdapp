@@ -116,7 +116,7 @@ export const EditDataset: Story = {
     );
     await userEvent.click(editDatasetButton);
 
-    await canvas.findByRole("button", {
+    await canvas.findByRole("tab", {
       name: /Upload data/i,
     });
     const notificationsButton = await canvas.findByRole("button", {
@@ -142,7 +142,7 @@ export const MapDosing: Story = {
 
     await EditDataset.play?.(context);
 
-    const mapDosingButton = await canvas.findByRole("button", {
+    const mapDosingButton = await canvas.findByRole("tab", {
       name: /Map Dosing/i,
     });
     expect(mapDosingButton).toBeInTheDocument();
@@ -201,7 +201,7 @@ export const MapObservations: Story = {
 
     await EditDataset.play?.(context);
 
-    const mapObservationsButton = await canvas.findByRole("button", {
+    const mapObservationsButton = await canvas.findByRole("tab", {
       name: /Map Observations/i,
     });
     expect(mapObservationsButton).toBeInTheDocument();

@@ -131,9 +131,9 @@ class CombinedModelTestCase(APITestCase):
         data = response.data[0]
         keys = [key for key in data["outputs"].keys()]
         return (
-            data["outputs"][keys[0]],
-            data["outputs"][keys[1]],
-            data["outputs"][keys[2]],
+            data["outputs"][keys[0]]["mean"],
+            data["outputs"][keys[1]]["mean"],
+            data["outputs"][keys[2]]["mean"],
         )
 
     def test_swap_mapped_pd_model(self):

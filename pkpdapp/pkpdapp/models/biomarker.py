@@ -42,6 +42,10 @@ class Biomarker(models.Model):
         help_text='biomarker type, for example "concentration in mg"',
     )
     value = models.FloatField(help_text="value of the measurement")
+    exclude = models.BooleanField(
+        default=False,
+        help_text="if true, this datapoint is excluded from fitting",
+    )
 
     def get_project(self):
         return self.biomarker_type.get_project()
@@ -56,4 +60,5 @@ class Biomarker(models.Model):
             subject=new_subject,
             biomarker_type=new_biomarker_type,
             value=self.value,
+            exclude=self.exclude,
         )

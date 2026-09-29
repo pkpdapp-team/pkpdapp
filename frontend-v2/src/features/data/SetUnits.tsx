@@ -17,6 +17,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { validateState } from "./dataValidation";
+import { useUnits } from "../results/useUnits";
 
 interface IMapObservations {
   state: StepperState;
@@ -34,9 +35,10 @@ const SetUnits: FC<IMapObservations> = ({
   );
   const { data: project, isLoading: isProjectLoading } =
     useProjectRetrieveQuery({ id: projectId || 0 }, { skip: !projectId });
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
+  const units = useUnits();
+  const { isLoading: isLoadingUnits } = useUnitListQuery(
+    {},
+    { skip: !project },
   );
 
   if (isProjectLoading || isLoadingUnits) {

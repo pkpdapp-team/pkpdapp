@@ -153,13 +153,15 @@ const NONMEM_HEADER_MAPPING: { [key: string]: string } = {
 
 function nonMemModifier(rows: Data) {
   rows.forEach((row) => {
-    // add MDV and EVID columns
+    // add MDV and EVID columns following NONMEM convention. In this generated
+    // data a dose row has no observation (Observation === "."), so EVID=1/MDV=1;
+    // an observation row carries a value, so EVID=0/MDV=0.
     if (row["Observation"] === ".") {
-      row["MDV"] = 0;
-      row["EVID"] = 0;
-    } else {
       row["MDV"] = 1;
       row["EVID"] = 1;
+    } else {
+      row["MDV"] = 0;
+      row["EVID"] = 0;
     }
 
     // RATE column

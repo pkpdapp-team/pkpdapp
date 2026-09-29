@@ -7,7 +7,7 @@ import {
   PageName,
   setPage,
 } from "../features/main/mainSlice";
-import { project, projectHandlers } from "./project.mock";
+import { project, projectHandlers, variables } from "./project.mock";
 import { simulationData, simulationWithGroupsData } from "./simulations.mock";
 
 import Simulations from "../features/simulation/Simulations";
@@ -40,7 +40,6 @@ const meta: Meta<typeof Simulations> = {
             );
           }),
           http.get("/api/subject_group", async () => {
-            await delay();
             return HttpResponse.json([], { status: 200 });
           }),
           http.get("/api/subject", () => {
@@ -50,10 +49,26 @@ const meta: Meta<typeof Simulations> = {
             return HttpResponse.json([], { status: 200 });
           }),
         ],
+        efficacyExperiment: http.get(
+          "/api/efficacy_experiment/:id/",
+          async ({ params }) => {
+            return HttpResponse.json(
+              {
+                id: Number(params.id),
+                hill_coefficient: null,
+                c50: null,
+                c50_unit: null,
+              },
+              { status: 200 },
+            );
+          },
+        ),
+        efficacyExperiments: http.get("/api/efficacy_experiment/", async () => {
+          return HttpResponse.json([], { status: 200 });
+        }),
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
-            await delay();
             const simulationParams = await request.json();
             simulationSpy(simulationParams);
             return HttpResponse.json(simulationData, {
@@ -86,7 +101,9 @@ const meta: Meta<typeof Simulations> = {
             aria-label="simulations sidebar"
             id="simulations-portal"
           />
-          <Box width="100%">
+          <Box sx={{
+            width: "100%"
+          }}>
             <Story />
           </Box>
         </Box>
@@ -112,47 +129,32 @@ export const Default: Story = {
 export const Parameters: Story = {
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const parametersButton = await canvas.findByRole(
-      "button",
-      {
-        name: "Parameters 0",
-        expanded: false,
-      },
-    );
+    const parametersButton = await canvas.findByRole("button", {
+      name: "Parameters",
+      expanded: false,
+    });
     expect(parametersButton).toBeInTheDocument();
     await userEvent.click(parametersButton);
     expect(parametersButton).toHaveAttribute("aria-expanded", "true");
 
-    const addParameterButton = await canvas.findByRole(
-      "button",
-      {
-        name: /Add parameter/i,
-      },
-    );
+    const addParameterButton = await canvas.findByRole("button", {
+      name: /Add parameter/i,
+    });
     await userEvent.click(addParameterButton);
 
-    const parameterOption = await screen.findByRole(
-      "button",
-      {
-        name: /^V1/,
-      },
-    );
+    const parameterOption = await screen.findByRole("button", {
+      name: /^V1/,
+    });
     await userEvent.click(parameterOption);
 
-    const simulationSlider = await screen.findByRole(
-      "slider",
-      {
-        name: "V1 [mL/kg]",
-      },
-    );
+    const simulationSlider = await screen.findByRole("slider", {
+      name: "V1 [mL/kg]",
+    });
     expect(simulationSlider).toBeInTheDocument();
 
-    const inputField = await screen.findByRole(
-      "spinbutton",
-      {
-        name: "V1 [mL/kg]",
-      },
-    );
+    const inputField = await screen.findByRole("spinbutton", {
+      name: "V1 [mL/kg]",
+    });
     expect(inputField).toBeInTheDocument();
     await userEvent.click(inputField);
     expect(inputField).toHaveFocus();
@@ -166,6 +168,71 @@ export const Parameters: Story = {
       const [simulationParams] = simulationSpy.mock.lastCall || [];
       expect(simulationParams.variables["PKCompartment.V1"]).toBe(100);
     });
+  },
+};
+
+// V1 (id 2184) served as a per-body-weight variable with a plain "mL" unit
+// (id 33). The slider label should append "/kg", i.e. show "V1 [mL/kg]", even
+// though the raw unit symbol is just "mL".
+const perBodyWeightVariables = variables.map((v) =>
+  v.id === 2184 ? { ...v, unit: 33, unit_per_body_weight: true } : v,
+);
+
+export const ParametersPerBodyWeight: Story = {
+  parameters: {
+    msw: {
+      handlers: {
+        project: [
+          http.get("/api/variable/:id", async ({ params }) => {
+            const variableId = parseInt(params.id as string, 10);
+            const variable = perBodyWeightVariables.find(
+              (v) => v.id === variableId,
+            );
+            if (!variable) {
+              return HttpResponse.json(
+                { detail: "Variable not found" },
+                { status: 404 },
+              );
+            }
+            return HttpResponse.json(variable, { status: 200 });
+          }),
+          http.get("/api/variable", async ({ request }) => {
+            const url = new URL(request.url);
+            const projectId = url.searchParams.get("project_id");
+            const pkModel = url.searchParams.get("dosed_pk_model_id");
+            if (pkModel || projectId) {
+              return HttpResponse.json(perBodyWeightVariables, { status: 200 });
+            }
+            return HttpResponse.json([], { status: 200 });
+          }),
+          ...projectHandlers,
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const parametersButton = await canvas.findByRole("button", {
+      name: "Parameters",
+      expanded: false,
+    });
+    await userEvent.click(parametersButton);
+
+    const addParameterButton = await canvas.findByRole("button", {
+      name: /Add parameter/i,
+    });
+    await userEvent.click(addParameterButton);
+
+    const parameterOption = await screen.findByRole("button", {
+      name: /^V1/,
+    });
+    await userEvent.click(parameterOption);
+
+    // per_body_weight appends "/kg" to the plain "mL" unit symbol.
+    const simulationSlider = await screen.findByRole("slider", {
+      name: "V1 [mL/kg]",
+    });
+    expect(simulationSlider).toBeInTheDocument();
   },
 };
 
@@ -245,32 +312,40 @@ export const WithGroups: Story = {
     msw: {
       handlers: {
         dataset: [
-          http.get("/api/dataset/:id", async () => {
-            await delay();
+          http.get(/\/api\/dataset\/\d+\/?$/, async () => {
             return HttpResponse.json(dataset, { status: 200 });
           }),
-          http.get("/api/subject_group", async ({ request }) => {
-            await delay();
+          http.get(/\/api\/subject_group\/?$/, async ({ request }) => {
             const url = new URL(request.url);
             const projectId = url.searchParams.get("project_id");
             if (projectId) {
-              return HttpResponse.json(dataset.groups, { status: 200 });
+              // the subject_group list includes project-level groups (the base
+              // "Sim-Group 1") alongside the dataset's groups.
+              const baseGroup = {
+                id: 9991,
+                name: "Sim-Group 1",
+                id_in_dataset: null,
+                dataset: null,
+                project: project.id,
+                subjects: [],
+                protocols: [],
+              };
+              return HttpResponse.json([baseGroup, ...dataset.groups], {
+                status: 200,
+              });
             }
             return HttpResponse.json([], { status: 200 });
           }),
-          http.get("/api/subject", async () => {
-            await delay();
+          http.get(/\/api\/subject\/?$/, async () => {
             return HttpResponse.json(subjects, { status: 200 });
           }),
-          http.get("/api/biomarker_type", async () => {
-            await delay();
+          http.get(/\/api\/biomarker_type\/?$/, async () => {
             return HttpResponse.json(biomarkerTypes, { status: 200 });
           }),
         ],
         simulate: http.post(
           "/api/combined_model/:id/simulate",
           async ({ request }) => {
-            await delay();
             const simulationParams = await request.json();
             simulationSpy(simulationParams);
             return HttpResponse.json(simulationWithGroupsData, { status: 200 });
@@ -287,7 +362,7 @@ export const WithGroups: Story = {
     expect(simulationsHeading).toBeInTheDocument();
 
     const groupsButton = await screen.findByRole("button", {
-      name: "Groups 3",
+      name: "Groups",
       expanded: false,
     });
     expect(groupsButton).toBeInTheDocument();

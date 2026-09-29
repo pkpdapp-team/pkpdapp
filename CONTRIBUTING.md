@@ -1,20 +1,35 @@
 # Contributing to the PKPDApp
 
-The PKPDApp is built with the Django framework and as such adheres largely to Django's philosophy - one project contains multiple smaller apps that each perform exactly one task and are as self-contained as possible. As a result, the PKPDApp is really a collection of smaller apps that take care of model building, result illustration and so on.
+The PKPDApp is built with the Django framework on the backend and a React (Vite + TypeScript) frontend. The backend is organised as a single, self-contained Django app whose internal modules each handle a focused concern (model building, simulation, the REST API, and so on).
+
+For development setup see the [Developer Installation Guide](docs/installation-dev.md), and for a technical overview see the [Architecture Overview](docs/architecture.md).
 
 ## Repository Structure
 
-To meet the modular structure of Django apps, the repository is organised in 3 layers
+The repository is organised in two layers:
 
-1) `\pkpdapp`: The top level folder that contains administrative files, such as `setup.py`, `README.md` or this file `CONTRIBUTING.md`.
-2) `\pkpdapp\pkpdapp`: The Django project folder that contains the various smaller apps and the executible `manage.py`.
-3) `\pkpdapp\pkdpapp\pkpdapp`: The website application that defines the structure of the PKPDApp.
+1. **`pkpdapp/`** (repository root) — top-level folder containing administrative files (`README.md`, this `CONTRIBUTING.md`, `LICENSE.md`, `requirements.txt`), the Docker/deployment files (`Dockerfile`, `docker-compose*.yml`, `build.sh`, `nginx.default.template`), the helper scripts (`start-server-dev.sh`, `start-server.sh`, `run-tests.py`), and the main subdirectories:
+   - `docs/` — project documentation
+   - `frontend-v2/` — the React frontend
+   - `pkpdapp/` — the Django project (see below)
+2. **`pkpdapp/pkpdapp/`** — the Django project folder, containing the executable `manage.py` and the single `pkpdapp` Django application.
 
-## Summary of apps
+## The Django Application
 
-Apps in the PKPDApp can be broadly categorised into function and integration apps. Function apps are applications that perform a specific function, for example building a model, simulating the model or providing a plotting interface for simulation results. Those individual apps may be used at multiple occasions in the PKPDApp, i.e. for simulation or inference. The integration apps are applications that patch various functional apps together, and are in essence responsible for a good user experience.
+All backend functionality lives in the single `pkpdapp` app at `pkpdapp/pkpdapp/`. It is organised into modules by concern:
 
-For an overview of apps and their purpose in the PKPDApp, please check out the list below. We will reference all apps realtive to the Django project root `\pkpdapp\pkdpapp`.
+- `models/` — the data models (e.g. `CombinedModel`, `Variable`, `Unit`, `Protocol`, `Dose`, `Project`, `Compound`, `Simulation`).
+- `api/` — Django REST Framework serializers and views exposing CRUD operations and simulation execution.
+- `migrations/` — database migrations, including the Myokit `.mmt` model definitions under `migrations/models-v3/`.
+- `management/` — custom `manage.py` commands (e.g. `generate_storybook_mocks`, `test_snapshots`).
+- `signals/` — Django signal handlers.
+- `utils/` — shared helper utilities.
+- `tests/` — the backend test suite.
 
-- `\pkpdapp`: The main app of the website. It defines base templates and the url structure of the PKPDApp.
+See the [Architecture Overview](docs/architecture.md) for how these pieces fit together.
 
+## Development Workflow
+
+- Create feature branches from the `develop` branch and open pull requests against `develop` (not `master`).
+- Use conventional commits for commit messages.
+- Run the backend tests, style checks, and frontend tests before opening a PR — see the [Developer Installation Guide](docs/installation-dev.md#testing).

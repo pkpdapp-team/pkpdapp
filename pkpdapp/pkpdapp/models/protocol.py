@@ -154,7 +154,12 @@ class Protocol(StoredModel):
         return True
 
     def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        super().save(force_insert, force_update, *args, **kwargs)
+        super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            **kwargs
+        )
 
         if self.dose_type != self.__original_dose_type:
             for dosed_pk_model in self.dosed_pk_models.all():
@@ -191,6 +196,13 @@ class Protocol(StoredModel):
             # create a copy of it and link to the new protocol
             try:
                 new_group = groups.get(name=self.group.name)
+                # subjects are copied up front in Dataset.copy (with no
+                # protocol), so link any that aren't already assigned to a
+                # protocol to this one (first protocol referencing the group
+                # wins, matching the previous behaviour)
+                new_group.subjects.filter(protocol__isnull=True).update(
+                    protocol=stored_protocol
+                )
             except SubjectGroup.DoesNotExist:
                 new_group = self.group.copy(
                     stored_protocol, new_project, new_dataset=new_dataset

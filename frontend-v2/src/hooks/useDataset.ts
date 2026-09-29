@@ -8,22 +8,24 @@ import {
   useDatasetCreateMutation,
   useProjectRetrieveQuery,
   useSubjectListQuery,
-  useUnitListQuery,
   useBiomarkerTypeListQuery,
-  UnitRead,
   useVariableListQuery,
   useProtocolListQuery,
 } from "../app/backendApi";
 import useSubjectGroups from "./useSubjectGroups";
+import { useUnits } from "../features/results/useUnits";
+import { UnitReadWithCompatible } from "../shared/unitConversion";
 
 export type SubjectBiomarker = {
   id: number;
+  datapointId: number;
+  exclude: boolean;
   subjectId: number;
   subjectDatasetId: number | undefined;
   time: number;
-  timeUnit: UnitRead | undefined;
+  timeUnit: UnitReadWithCompatible | undefined;
   value: number;
-  unit: UnitRead | undefined;
+  unit: UnitReadWithCompatible | undefined;
   qname: string | undefined;
   label: string;
 };
@@ -43,10 +45,7 @@ export default function useDataset(selectedProject: number | null) {
   const model = useMemo(() => {
     return models?.[0] || undefined;
   }, [models]);
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
-  );
+  const units = useUnits();
   const datasetIdOrZero = project?.datasets[0] || 0;
 
   const { data: dataset, refetch } = useDatasetRetrieveQuery(
@@ -67,7 +66,9 @@ export default function useDataset(selectedProject: number | null) {
       { datasetId: datasetIdOrZero },
       { skip: !datasetIdOrZero },
     );
-  const biomarkerTypes = biomarkerTypeData || DEFAULT_BIOMARKERS;
+  const biomarkerTypes = (biomarkerTypeData || DEFAULT_BIOMARKERS).filter(
+    (b) => b.variable != null,
+  );
 
   const { data: variables } = useVariableListQuery(
     { dosedPkModelId: model?.id || 0 },
@@ -120,6 +121,8 @@ export default function useDataset(selectedProject: number | null) {
       return (
         b.data?.subjects
           .map((subjectId, index) => ({
+            datapointId: b.data?.ids[index],
+            exclude: b.data?.exclude[index],
             subjectId,
             subjectDatasetId: subjects?.find((s) => s.id === subjectId)
               ?.id_in_dataset,
@@ -138,6 +141,7 @@ export default function useDataset(selectedProject: number | null) {
   return {
     dataset,
     groups: subjectGroups,
+    biomarkerTypes,
     subjectBiomarkers: subjectBiomarkers,
     addDataset,
     updateDataset,

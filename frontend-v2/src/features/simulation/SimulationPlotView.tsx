@@ -5,11 +5,12 @@ import {
   CompoundRead,
   SimulateResponse,
   Simulation,
-  UnitRead,
   VariableRead,
   useEfficacyExperimentRetrieveQuery,
   useProtocolListQuery,
 } from "../../app/backendApi";
+import { CentralSimulateResponse } from "./types";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Data, Layout, ScatterData } from "plotly.js";
 import Plotly from "plotly.js-basic-dist-min";
 import {
@@ -27,6 +28,7 @@ import useDataset from "../../hooks/useDataset";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import {
   createPlots,
+  generateHistogramPlots,
   generateScatterPlots,
   genIcLines,
   getICLineShapes,
@@ -38,19 +40,22 @@ import {
   getDefaultAxisTitles,
 } from "./utils";
 import { useConfig } from "./config";
+import parameterDisplayName from "../model/parameters/parameterDisplayName";
 
 const Plot = createPlotlyComponent(Plotly);
 
 interface SimulationPlotProps {
   index: number;
   plot: FieldArrayWithId<Simulation, "plots", "id">;
-  data: SimulateResponse[];
-  dataReference: SimulateResponse[];
+  data: CentralSimulateResponse[];
+  uncertaintyData: SimulateResponse[];
+  dataReference: CentralSimulateResponse[];
+  uncertaintyReferenceData: SimulateResponse[];
   variables: VariableRead[];
   control: Control<Simulation>;
   setValue: UseFormSetValue<Simulation>;
   remove: (index: number) => void;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   compound: CompoundRead;
   model: CombinedModelRead;
   visibleGroups: string[];
@@ -68,7 +73,9 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
   index,
   plot,
   data,
+  uncertaintyData,
   dataReference,
+  uncertaintyReferenceData,
   variables,
   control,
   setValue,
@@ -107,19 +114,105 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     setOpen(false);
   };
 
+  const plotDimensions = getPlotDimensions({
+    isVertical,
+    isHorizontal,
+    dimensions,
+    plotCount,
+  });
+  const basePlotLayout: Partial<Layout> = getPlotLayout({
+    plotDimensions,
+    shouldShowLegend,
+  });
+
+  // A plot whose (single) y-axis variable is a constant parameter is rendered as
+  // a histogram of that parameter's Monte-Carlo sampled values (returned by the
+  // simulate endpoint under `parameters`), overlaid one trace per visible group.
+  const histogramVariableId = plot.y_axes[0]?.variable;
+  const histogramVariable = variables.find(
+    (v) => v.id === histogramVariableId,
+  );
+  const isHistogram = Boolean(histogramVariable?.constant);
+
+  if (isHistogram) {
+    const histogramData = generateHistogramPlots(
+      uncertaintyData,
+      groups,
+      visibleGroups,
+      histogramVariableId,
+    );
+    const xUnit = units.find((u) => u.id === plot.x_unit);
+    const defaultXTitle = histogramVariable
+      ? `${parameterDisplayName(histogramVariable, model)}${
+          xUnit?.symbol ? ` (${xUnit.symbol})` : ""
+        }`
+      : "";
+    const xAxisType: Layout["xaxis"]["type"] =
+      plot.x_scale && plot.x_scale !== "lin" ? "log" : "linear";
+    const histogramLayout: Partial<Layout> = {
+      ...basePlotLayout,
+      barmode: "overlay",
+      xaxis: {
+        title: { text: plot.x_label || defaultXTitle },
+        type: xAxisType,
+        exponentformat: "power",
+      },
+      yaxis: {
+        title: { text: plot.y_label || "Count" },
+        exponentformat: "power",
+      },
+    };
+    return (
+      <>
+        <Plot
+          data={histogramData as Data[]}
+          layout={histogramLayout}
+          style={{ width: "100%", height: "100%" }}
+          config={config}
+        />
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          fullWidth
+          maxWidth="lg"
+          sx={{ maxHeight: "90%", top: "5rem" }}
+        >
+          <DialogTitle sx={{ fontWeight: "bold" }}>Customise Plot</DialogTitle>
+          <DialogContent>
+            <SimulationPlotForm
+              index={index}
+              variables={variables}
+              plot={plot}
+              control={control}
+              setValue={setValue}
+              units={units}
+              compound={compound}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDelete}>Delete</Button>
+            <Button onClick={handleClose}>Done</Button>
+          </DialogActions>
+        </Dialog>
+      </>
+    );
+  }
+
   const timeVariable = variables.find((v) => v.binding === "time");
   const timeUnit = units.find((u) => u.id === timeVariable?.unit);
   const xAxisUnit = units.find((u) => u.id === plot.x_unit);
   const xCompatibleUnit = timeUnit?.compatible_units.find(
-    (u) => parseInt(u.id) === xAxisUnit?.id,
+    (u) => u.id === xAxisUnit?.id,
   );
   const xConversionFactor = xCompatibleUnit
-    ? parseFloat(xCompatibleUnit.conversion_factor)
+    ? xCompatibleUnit.conversion_factor
     : 1.0;
 
   const plotData = createPlots({
     data,
+    uncertaintyData,
     dataReference,
+    uncertaintyReferenceData,
     groups,
     model,
     plot,
@@ -163,24 +256,12 @@ const SimulationPlotView: FC<SimulationPlotProps> = ({
     y2AxisVariableNames,
   });
 
-  const plotDimensions = getPlotDimensions({
-    isVertical,
-    isHorizontal,
-    dimensions,
-    plotCount,
-  });
-
   const plotAxes: Partial<Layout> = getPlotAxes({
     plot,
     xAxisTitle: plot.x_label || defaultAxisTitles.xAxisTitle,
     yAxisTitle: plot.y_label || defaultAxisTitles.yAxisTitle,
     y2AxisTitle: plot.y2_label || defaultAxisTitles.y2AxisTitle,
     yRanges,
-  });
-
-  const basePlotLayout: Partial<Layout> = getPlotLayout({
-    plotDimensions,
-    shouldShowLegend,
   });
 
   const plotLayout: Partial<Layout> = {

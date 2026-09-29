@@ -17,7 +17,11 @@ import {
 } from "@mui/material";
 import { StepperState } from "../LoadDataStepper";
 import { ProjectRead, UnitRead, VariableRead } from "../../../app/backendApi";
-import { validateState } from "../dataValidation";
+import {
+  CompatibleUnit,
+  UnitReadWithCompatible,
+} from "../../../shared/unitConversion";
+import { isDoseRow, validateState } from "../dataValidation";
 import { Row } from "../LoadData";
 import { TableHeader } from "../../../components/TableHeader";
 import { generateAdministrationIds } from "./generateAdministrationIds";
@@ -36,7 +40,7 @@ interface IDosingProtocols {
   amountUnitField?: string;
   amountUnit?: UnitRead;
   state: StepperState;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
   variables: VariableRead[];
   notificationsInfo: {
     isOpen: boolean;
@@ -55,16 +59,6 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   notificationsInfo,
   project,
 }: IDosingProtocols) => {
-  console.log("DosingProtocols render", {
-    administrationIdField,
-    amountUnitField,
-    amountUnit,
-    state,
-    units,
-    variables,
-    notificationsInfo,
-    project,
-  });
   const amountField = findFieldByType("Amount", state);
   const amountVariableField = findFieldByType("Amount Variable", state);
   const timeField = findFieldByType("Time", state);
@@ -73,13 +67,9 @@ const DosingProtocols: FC<IDosingProtocols> = ({
   const addlDosesField = findFieldByType("Additional Doses", state);
   const interDoseField = findFieldByType("Interdose Interval", state);
   const perKgField = findFieldByType("Per Body Weight(kg)", state);
-  const dosingRows: Row[] = amountField
-    ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
-    : state.data.filter((row) => parseInt(row[administrationIdField]));
+  const dosingRows: Row[] = state.data.filter((row) =>
+    isDoseRow(row, state.normalisedFields, true),
+  );
 
   const isAmount = (variable: VariableRead) => {
     const amountUnits = units?.find(
@@ -89,8 +79,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
     return (
       variable.constant === false &&
       variableUnit?.symbol !== "" &&
-      amountUnits?.find((unit) => parseInt(unit.id) === variable.unit) !==
-        undefined
+      amountUnits?.find((unit) => unit.id === variable.unit) !==
+      undefined
     );
   };
   const amountVariables = variables?.filter(isAmount) || [];
@@ -227,8 +217,8 @@ const DosingProtocols: FC<IDosingProtocols> = ({
         .filter((row) => {
           return uniqueDoseRow
             ? doseGroupingFields.every(
-                (field) => row[field] === uniqueDoseRow[field],
-              )
+              (field) => row[field] === uniqueDoseRow[field],
+            )
             : row[dosingRowKeyField] === rowKey;
         })
         .forEach((row) => {
@@ -289,25 +279,25 @@ const DosingProtocols: FC<IDosingProtocols> = ({
 
   const handleFieldChange =
     (rowKey: string, field: string) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const nextData = [...state.data];
-      const { value } = event.target;
-      const uniqueDoseRow = uniqueDosingRows.find(
-        (row) => row[dosingRowKeyField] === rowKey,
-      );
-      nextData
-        .filter((row) => {
-          return uniqueDoseRow
-            ? doseGroupingFields.every(
+      (event: ChangeEvent<HTMLInputElement>) => {
+        const nextData = [...state.data];
+        const { value } = event.target;
+        const uniqueDoseRow = uniqueDosingRows.find(
+          (row) => row[dosingRowKeyField] === rowKey,
+        );
+        nextData
+          .filter((row) => {
+            return uniqueDoseRow
+              ? doseGroupingFields.every(
                 (field) => row[field] === uniqueDoseRow[field],
               )
-            : row[dosingRowKeyField] === rowKey;
-        })
-        .forEach((row) => {
-          row[field] = value;
-        });
-      state.data = nextData;
-    };
+              : row[dosingRowKeyField] === rowKey;
+          })
+          .forEach((row) => {
+            row[field] = value;
+          });
+        state.data = nextData;
+      };
 
   return (
     <Box component="div">
@@ -451,7 +441,7 @@ interface DosingTableRowProps {
   time?: string;
   timeUnit?: string;
   isPerKg?: boolean;
-  amountUnits?: { [key: string]: string }[];
+  amountUnits?: CompatibleUnit[];
   amountVariables?: VariableRead[];
   additionalDoses?: string;
   interDoseInterval?: string;

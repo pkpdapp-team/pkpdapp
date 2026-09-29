@@ -245,6 +245,93 @@ class TestDerivedVariables(TestCase):
         self.assertEqual(d50_var.unit, dose_unit)
         self.assertEqual(d50_var.unit_per_body_weight, True)
 
+    def test_time_emax(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=parent_var,
+            type=DerivedVariable.Type.TIME_EMAX,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        myokit_model = self.pkpd_model.get_myokit_model()
+
+        vars = [v.qname() for v in myokit_model.variables()]
+        for var in [
+            "PDCompartment.C_Drug",
+            "PKNonlinearities.C_Drug_TEmax",
+            "PKNonlinearities.t50_C_Drug",
+            "PKNonlinearities.hll_C_Drug",
+            "PKNonlinearities.C_Drug_min",
+        ]:
+            self.assertIn(var, vars)
+        self.assertTrue(myokit_model.get("PDCompartment.C_Drug").is_constant())
+        # depends on time, so it is not constant
+        self.assertFalse(
+            myokit_model.get("PKNonlinearities.C_Drug_TEmax").is_constant()
+        )
+        self.assertEqual(
+            str(myokit_model.get("PKNonlinearities.C_Drug_TEmax").rhs()),
+            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (environment.t^PKNonlinearities.hll_C_Drug / (environment.t^PKNonlinearities.hll_C_Drug + PKNonlinearities.t50_C_Drug^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
+        )
+        self.assertEqual(
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
+            "PKNonlinearities.C_Drug_TEmax^PDCompartment.HC / (PKNonlinearities.C_Drug_TEmax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
+        )
+
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
+
+    def test_time_imax(self):
+        parent_var = self.pkpd_model.variables.get(qname="PDCompartment.C_Drug")
+        # Set unit_per_body_weight to True to test if Pmin inherits it
+        parent_var.unit_per_body_weight = True
+        parent_var.save()
+        parent_unit = parent_var.unit
+        parent_per_kg = parent_var.unit_per_body_weight
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=parent_var,
+            type=DerivedVariable.Type.TIME_IMAX,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        myokit_model = self.pkpd_model.get_myokit_model()
+        vars = [v.qname() for v in myokit_model.variables()]
+        for var in [
+            "PDCompartment.C_Drug",
+            "PKNonlinearities.C_Drug_TImax",
+            "PKNonlinearities.t50_C_Drug",
+            "PKNonlinearities.hll_C_Drug",
+            "PKNonlinearities.C_Drug_min",
+        ]:
+            self.assertIn(var, vars)
+        self.assertTrue(myokit_model.get("PDCompartment.C_Drug").is_constant())
+        # depends on time, so it is not constant
+        self.assertFalse(
+            myokit_model.get("PKNonlinearities.C_Drug_TImax").is_constant()
+        )
+        self.assertEqual(
+            str(myokit_model.get("PKNonlinearities.C_Drug_TImax").rhs()),
+            "(PDCompartment.C_Drug - PKNonlinearities.C_Drug_min) * (1 - environment.t^PKNonlinearities.hll_C_Drug / (environment.t^PKNonlinearities.hll_C_Drug + PKNonlinearities.t50_C_Drug^PKNonlinearities.hll_C_Drug)) + PKNonlinearities.C_Drug_min",  # noqa E501
+        )
+        self.assertEqual(
+            str(myokit_model.get("PDCompartment.PDO").rhs()),
+            "PKNonlinearities.C_Drug_TImax^PDCompartment.HC / (PKNonlinearities.C_Drug_TImax^PDCompartment.HC + PDCompartment.C50^PDCompartment.HC)",  # noqa E501
+        )
+
+        # Check that Pmin has the same unit as parent
+        pmin_var = self.pkpd_model.variables.get(qname="PKNonlinearities.C_Drug_min")
+        self.assertEqual(pmin_var.unit, parent_unit)
+        self.assertEqual(pmin_var.unit_per_body_weight, parent_per_kg)
+
     def test_power(self):
         # base_variable_Power = base_variable * (C_Drug/Ref_D)**a_D
         # Set protocol with specific amount unit and per_kg

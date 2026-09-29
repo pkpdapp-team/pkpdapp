@@ -1,5 +1,5 @@
 // src/components/ProjectTable.tsx
-import { FC, SyntheticEvent, useMemo, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   TableRow,
   Tabs,
   Tab,
+  TextField,
 } from "@mui/material";
 import Error from "@mui/icons-material/Error";
 import IconNonButton from "../../components/IconNonButton";
@@ -19,6 +20,7 @@ import {
   useCombinedModelListQuery,
   useSubjectGroupCreateMutation,
   useSubjectGroupDestroyMutation,
+  useSubjectGroupPartialUpdateMutation,
   useUnitListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
@@ -26,18 +28,32 @@ import {
   ProjectRead,
   ProtocolListApiResponse,
   VariableListApiResponse,
-  UnitListApiResponse,
   SubjectGroupRead,
 } from "../../app/backendApi";
+import { useUnits } from "../results/useUnits";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { RootState } from "../../app/store";
 import Doses from "./Doses";
+import GroupPopulation from "./GroupPopulation";
 import HelpButton from "../../components/HelpButton";
 import { defaultHeaderSx } from "../../shared/tableHeadersSx";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
 import { TableHeader } from "../../components/TableHeader";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { getTableHeight } from "../../shared/calculateTableHeights";
 import { selectIsProjectShared } from "../login/loginSlice";
+
+// Refetching a query throws "Cannot refetch a query that has not been started
+// yet" when the component unmounts before an awaited mutation settles (the query
+// subscription is already gone). Swallow that case so it doesn't surface as an
+// unhandled rejection.
+async function safeRefetch(refetch: () => unknown) {
+  try {
+    await refetch();
+  } catch {
+    // Query is no longer active; nothing to refresh.
+  }
+}
 
 const TABLE_BREAKPOINTS = [
   {
@@ -103,8 +119,9 @@ function useApiQueries() {
     { dosedPkModelId: model?.id || 0 },
     { skip: !model?.id },
   );
-  const { data: units, isLoading: unitsLoading } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
+  const units = useUnits();
+  const { isLoading: unitsLoading } = useUnitListQuery(
+    {},
     { skip: !project?.compound },
   );
 
@@ -130,7 +147,7 @@ interface ProtocolsProps {
   projectProtocols: ProtocolListApiResponse;
   refetchProtocols: () => void;
   variables?: VariableListApiResponse;
-  units: UnitListApiResponse;
+  units: UnitReadWithCompatible[];
   groups: SubjectGroupRead[];
   refetchGroups: () => void;
   isSharedWithMe: boolean;
@@ -148,10 +165,35 @@ export const Protocols: FC<ProtocolsProps> = ({
   refetchGroups,
   isSharedWithMe,
 }) => {
-  const [tab, setTab] = useState(0);
+  const populationEnabled =
+    import.meta.env.VITE_ENABLE_POPULATION_PARAMETERS === "true";
+
+  // the selected tab is always a group id
+  // (or false when the project has no groups at all).
+  const [tab, setTab] = useState<number | false>(false);
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the inline editor when a group enters edit mode.
+  useEffect(() => {
+    if (editingGroupId !== null) {
+      editInputRef.current?.focus();
+    }
+  }, [editingGroupId]);
+
+  // Keep the selected tab valid: default to the first group (the base group,
+  // since groups are sorted Sim-first) and recover if the current tab is gone.
+  useEffect(() => {
+    const ids = groups?.map((g) => g.id) ?? [];
+    if (tab === false || !ids.includes(tab)) {
+      setTab(ids.length > 0 ? ids[0] : false);
+    }
+  }, [groups, tab]);
 
   const [createSubjectGroup] = useSubjectGroupCreateMutation();
   const [destroySubjectGroup] = useSubjectGroupDestroyMutation();
+  const [updateSubjectGroup] = useSubjectGroupPartialUpdateMutation();
 
   const handleTabChange = (
     event: SyntheticEvent<Element, Event>,
@@ -163,42 +205,82 @@ export const Protocols: FC<ProtocolsProps> = ({
     setTab(newValue);
   };
 
-  const filteredProtocols = projectProtocols.filter((p) => p.group === null);
+  const startEditing = (group: SubjectGroupRead) => {
+    if (isSharedWithMe) {
+      return; // Read-only viewers cannot rename groups
+    }
+    setEditingGroupId(group.id);
+    setEditValue(group.name);
+  };
+
+  const cancelEditing = () => {
+    setEditingGroupId(null);
+    setEditValue("");
+  };
+
+  const commitEditing = async (group: SubjectGroupRead) => {
+    const trimmed = editValue.trim();
+    if (trimmed === "" || trimmed === group.name) {
+      cancelEditing();
+      return;
+    }
+    await updateSubjectGroup({
+      id: group.id,
+      patchedSubjectGroup: { name: trimmed },
+    });
+    await safeRefetch(refetchGroups);
+    cancelEditing();
+  };
+
+  // Seed a new group from the base group's protocols (base is the first group).
+  const baseGroupId = groups?.[0]?.id;
+  const filteredProtocols = projectProtocols.filter(
+    (p) => p.group === baseGroupId,
+  );
 
   const handleAddTab = async () => {
-    const existingSimGroupNames = groups?.filter((g) => g.name.startsWith("Sim-Group")).map((g) => g.name);
+    const existingSimGroupNames =
+      groups?.filter((g) => g.name.startsWith("Sim-Group")) ?? [];
     const existingNames = groups?.map((g) => g.name) || [];
     const newGroupId = (groups?.length || 1) + 1;
-    let nextSimGroupValue = existingSimGroupNames.length + 2;
+    let nextSimGroupValue = existingSimGroupNames.length + 1;
     let newGroupName = `Sim-Group ${nextSimGroupValue}`;
     while (existingNames?.includes(newGroupName)) {
       nextSimGroupValue++;
       newGroupName = `Sim-Group ${nextSimGroupValue}`;
     }
-    await createSubjectGroup({
+    // seed the new group's population settings from the currently selected group
+    const sourceGroup = groups?.find((g) => g.id === tab);
+    const newGroup = await createSubjectGroup({
       subjectGroup: {
         name: newGroupName,
         id_in_dataset: `${newGroupId}`,
         project: project.id,
+        study_size: sourceGroup?.study_size,
+        age_min: sourceGroup?.age_min,
+        age_max: sourceGroup?.age_max,
+        m2f_ratio: sourceGroup?.m2f_ratio,
+        population_region: sourceGroup?.population_region,
+        // seed covariate population values from the currently selected group
+        copy_covariates_from: typeof tab === "number" ? tab : undefined,
         protocols: filteredProtocols.map((p) => {
           const { project, ...newProtocol } = p;
           return {
             ...newProtocol,
             dataset: null,
             project,
-            name: `${newProtocol.name} - {newGroupName}`,
+            name: `${newProtocol.name} - ${newGroupName}`,
           };
         }),
       },
-    });
-    await refetchGroups();
-    await refetchProtocols();
-    setTab(groups.length + 1);
+    }).unwrap();
+    await safeRefetch(refetchGroups);
+    await safeRefetch(refetchProtocols);
+    setTab(newGroup.id);
   };
 
   const removeGroup = (groupID: number) => async () => {
     const subjectGroup = groups?.find((g) => g.id === groupID);
-    const subjectGroupIndex = groups?.findIndex((g) => g.id === groupID) + 1; // +1 because the first tab is the project
     const subjectCount = subjectGroup?.subjects.length || 0;
     const confirmationMessage =
       subjectCount === 0
@@ -206,20 +288,18 @@ export const Protocols: FC<ProtocolsProps> = ({
         : `Are you sure you want to delete group ${subjectGroup?.name} and all its subjects?`;
     if (window?.confirm(confirmationMessage)) {
       await destroySubjectGroup({ id: groupID });
-      await refetchGroups();
-      if (subjectGroupIndex === tab) {
-        setTab(subjectGroupIndex - 1);
-      }
-      if (tab > subjectGroupIndex) {
-        setTab(tab - 1);
+      await safeRefetch(refetchGroups);
+      if (groupID === tab) {
+        // fall back to the first remaining group (or none if all were deleted)
+        const remaining = groups?.filter((g) => g.id !== groupID) ?? [];
+        setTab(remaining.length > 0 ? remaining[0].id : false);
       }
     }
   };
 
   const onProtocolChange = () => {
-    console.log("Protocol changed, refetching groups and protocols...");
-    refetchGroups();
-    refetchProtocols();
+    safeRefetch(refetchGroups);
+    safeRefetch(refetchProtocols);
   };
 
   function a11yProps(index: number) {
@@ -229,9 +309,9 @@ export const Protocols: FC<ProtocolsProps> = ({
     };
   }
 
-  const subjectGroup = tab === 0 ? null : groups?.[tab - 1];
-  const selectedProtocols = projectProtocols.filter((protocol) =>
-    subjectGroup ? protocol.group === subjectGroup.id : protocol.group === null,
+  const subjectGroup = groups?.find((g) => g.id === tab) ?? null;
+  const selectedProtocols = projectProtocols.filter(
+    (protocol) => protocol.group === subjectGroup?.id,
   );
 
   // sort protocols alphabetically by name
@@ -262,7 +342,6 @@ export const Protocols: FC<ProtocolsProps> = ({
           value={tab}
           onChange={handleTabChange}
         >
-          <Tab label={"Sim-Group 1"} {...a11yProps(0)} />
           {groups?.map((group, index) => {
             const selectedProtocols = projectProtocols.filter(
               (protocol) => protocol.group === group.id,
@@ -273,8 +352,34 @@ export const Protocols: FC<ProtocolsProps> = ({
             return (
               <Tab
                 key={group.id}
-                label={group.name}
-                {...a11yProps(index + 1)}
+                value={group.id}
+                label={
+                  editingGroupId === group.id ? (
+                    <TextField
+                      variant="standard"
+                      size="small"
+                      inputRef={editInputRef}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") {
+                          commitEditing(group);
+                        } else if (e.key === "Escape") {
+                          cancelEditing();
+                        }
+                      }}
+                      onBlur={() => commitEditing(group)}
+                    />
+                  ) : (
+                    <span onDoubleClick={() => startEditing(group)}>
+                      {group.name}
+                    </span>
+                  )
+                }
+                {...a11yProps(index)}
                 icon={
                   !groups?.[index] ? undefined : (
                     <IconNonButton
@@ -317,7 +422,7 @@ export const Protocols: FC<ProtocolsProps> = ({
       <Box role="tabpanel" id={`group-tabpanel`}>
         <TableContainer
           sx={{
-            height: getTableHeight({ steps: TABLE_BREAKPOINTS }),
+            maxHeight: getTableHeight({ steps: TABLE_BREAKPOINTS }),
           }}
         >
           <Table stickyHeader>
@@ -363,15 +468,13 @@ export const Protocols: FC<ProtocolsProps> = ({
                 <TableCell size="small" sx={{ textWrap: "nowrap" }}>
                   <div style={{ ...defaultHeaderSx }}>Time Unit</div>
                 </TableCell>
-                {tab === 0 && (
-                  <TableCell
-                    align="right"
-                    size="small"
-                    sx={{ textWrap: "nowrap" }}
-                  >
-                    <div style={{ ...defaultHeaderSx }}> Remove </div>
-                  </TableCell>
-                )}
+                <TableCell
+                  align="right"
+                  size="small"
+                  sx={{ textWrap: "nowrap" }}
+                >
+                  <div style={{ ...defaultHeaderSx }}> Remove </div>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -394,6 +497,13 @@ export const Protocols: FC<ProtocolsProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
+        {populationEnabled && subjectGroup && (
+          <GroupPopulation
+            group={subjectGroup}
+            project={project}
+            disabled={isSharedWithMe}
+          />
+        )}
       </Box>
     </>
   );

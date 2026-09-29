@@ -6,8 +6,8 @@ import {
   usePharmacodynamicListQuery,
   usePharmacokineticListQuery,
   CompoundRead,
-  UnitRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
 import { Control } from "react-hook-form";
 import { Stack, Grid, Tooltip, Box, Button } from "@mui/material";
 import FloatField from "../../../components/FloatField";
@@ -36,7 +36,7 @@ interface Props {
   modelControl: Control<ModelFormData>;
   projectControl: Control<ProjectFormData>;
   compound: CompoundRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 // Maps of model name to documentation image filename (to be filled later)
@@ -49,12 +49,22 @@ const helpImages: {
 } = {
   pk: {
     "1-compartmental model": "One compartmenal PK model.jpg",
+    "2-compartmental model": "Two compartmenal PK model.jpg",
     "3-compartmental model": "Three compartmenal PK model (mammillary).jpg",
     "3-compartment catenary model":
       "Three compartmenal PK model (catenary).jpg",
+    "1-compartmental Michaelis-Menten TMDD model (linear and saturable CL)":
+      "One compartmental Michaelis-Menten TMDD model (lin + sat).jpg",
+    "1-compartmental Michaelis-Menten TMDD model (saturable CL only)":
+      "One compartmental Michaelis-Menten TMDD model (sat).jpg",
+    "2-compartmental Michaelis-Menten TMDD model (linear and saturable CL)":
+      "Two compartmental Michaelis-Menten TMDD model (lin + sat).jpg",
+    "2-compartmental Michaelis-Menten TMDD model (saturable CL only)":
+      "Two compartmental Michaelis-Menten TMDD model (sat).jpg",
   },
   pk2: {
     "First order absorption model": "First order absorption model.jpg",
+    "First order absorption model (two absorption sites)": "First order absorption model (two sites).jpg",
     "Ocular PK model": "Ocular PK model.jpg",
     "Transit compartments absorption model":
       "Transit compartments absorption model.jpg",
@@ -147,7 +157,9 @@ const PKPDModelTab: FC<Props> = ({
     "placeholder.jpg";
 
   return (
-    <Stack direction="column" spacing={2} marginTop={5}>
+    <Stack direction="column" spacing={2} sx={{
+      marginTop: 5
+    }}>
       <Grid container spacing={2}>
         <Grid
           size={{
@@ -206,7 +218,9 @@ const PKPDModelTab: FC<Props> = ({
             xs: 10,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <PKTagSelect control={projectControl} project={project} />
           </Stack>
           <PKModelSelect
@@ -256,7 +270,9 @@ const PKPDModelTab: FC<Props> = ({
                 </Tooltip>
               )}
               {version_greater_than_2 && (
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   <Tooltip title={effectCompartmentTooltip} placement="top">
                     <div style={{ fontSize: "12px !important" }}>
                       <SelectField
@@ -369,7 +385,9 @@ const PKPDModelTab: FC<Props> = ({
             project={project}
           />
         </Grid>
-        <Box width="100%" />
+        <Box sx={{
+          width: "100%"
+        }} />
         {pdIsTumourGrowth && (
           <Grid
             size={{

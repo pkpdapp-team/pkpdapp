@@ -1,5 +1,5 @@
 import { StepperState } from "../LoadDataStepper";
-import { normalisedFieldsFromData } from "../dataValidation";
+import { isObservationRow, normalisedFieldsFromData } from "../dataValidation";
 import { Row } from "../LoadData";
 
 const DEFAULT_VARIABLE_FIELD = "Observation Variable";
@@ -71,7 +71,8 @@ export default function useObservationRows(state: StepperState, tab: string) {
         row["Group ID"] === tab &&
         observationField in row &&
         row[observationField] !== "" &&
-        row[observationField] !== ".",
+        row[observationField] !== "." &&
+        isObservationRow(row, state.normalisedFields),
     )
     : [];
   const observationIds = observationIdField

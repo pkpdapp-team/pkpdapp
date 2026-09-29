@@ -6,7 +6,6 @@ import {
   PharmacodynamicRead,
   ProjectRead,
   ProtocolListApiResponse,
-  UnitListApiResponse,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
   usePharmacodynamicListQuery,
@@ -17,6 +16,8 @@ import {
   useVariableListQuery,
   VariableListApiResponse,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
+import { useUnits } from "../results/useUnits";
 import { useFormState } from "react-hook-form";
 import { FC, useEffect, useMemo } from "react";
 import { DynamicTabs, TabPanel } from "../../components/DynamicTabs";
@@ -65,9 +66,10 @@ function useApiQueries() {
       { projectId: projectIdOrZero },
       { skip: !projectId },
     );
-  const { data: units, isLoading: isLoadingUnits } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
+  const units = useUnits();
+  const { isLoading: isLoadingUnits } = useUnitListQuery(
+    {},
+    { skip: !project },
   );
 
   const simulation = useMemo(() => {
@@ -104,7 +106,7 @@ interface TabbedModelFormProps {
   variables: VariableListApiResponse;
   protocols: ProtocolListApiResponse;
   compound: CompoundRead;
-  units: UnitListApiResponse;
+  units: UnitReadWithCompatible[];
   pd_model?: PharmacodynamicRead;
   pd_models?: PharmacodynamicRead[];
 }

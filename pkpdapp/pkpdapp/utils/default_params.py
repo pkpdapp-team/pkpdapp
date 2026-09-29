@@ -4,11 +4,15 @@
 # copyright notice and full license details.
 #
 import openpyxl
-
+from pathlib import Path
 
 # Load the workbook
 workbook = openpyxl.load_workbook(
-    "pkpdapp/migrations/models/ParametersValue_Species.xlsx", data_only=True
+    Path(__file__).resolve().parents[1]
+    / "migrations"
+    / "models"
+    / "ParametersValue_Species.xlsx",
+    data_only=True,
 )
 
 sheet_names = [

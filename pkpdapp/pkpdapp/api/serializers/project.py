@@ -4,7 +4,7 @@
 # copyright notice and full license details.
 #
 from rest_framework import serializers
-from pkpdapp.models import ProjectAccess, Project
+from pkpdapp.models import ProjectAccess, Project, SubjectGroup
 
 
 class ProjectAccessSerializer(serializers.ModelSerializer):
@@ -31,14 +31,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ("created",)
 
     def create(self, validated_data):
-        # save method of log_likelihood will create its own parameters,
-        # so ignore any parameters that are given
         users = validated_data.pop("projectaccess_set")
         project = BaseProjectSerializer().create(validated_data)
         for user in users:
             user["project"] = project
             serializer = ProjectAccessSerializer()
             serializer.create(user)
+        # every project starts with a base simulation group ("Sim-Group 1")
+        SubjectGroup.objects.create(name="Sim-Group 1", project=project, dataset=None)
         return project
 
     def update(self, instance, validated_data):

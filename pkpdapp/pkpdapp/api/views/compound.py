@@ -7,7 +7,7 @@ from rest_framework import viewsets
 from pkpdapp.api.serializers import CompoundSerializer
 from pkpdapp.models import Compound
 from pkpdapp.api.views import (
-    CheckAccessToProject
+    CheckAccessToProject, UserAccessFilter
 )
 from rest_framework.permissions import IsAuthenticated
 
@@ -18,3 +18,4 @@ class CompoundView(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthenticated & CheckAccessToProject
     ]
+    filter_backends = [UserAccessFilter]

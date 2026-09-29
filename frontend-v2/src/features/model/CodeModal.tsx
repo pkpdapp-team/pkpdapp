@@ -15,7 +15,7 @@ hljs.configure({
 hljs.registerLanguage("xml", xml);
 hljs.registerLanguage("mmt", mmt);
 
-function highlightCode(code: string, language: string): JSX.Element {
+function highlightCode(code: string, language: string): React.JSX.Element {
   const highlightedCode = hljs.highlight(code, { language }).value;
   return rehypeDom().use(rehypeReact, production).processSync(highlightedCode)
     .result;

@@ -26,7 +26,9 @@ export const PDModel2Select: FC<PDModel2SelectProps> = ({
     });
   pd_model2_options.unshift({ value: "", label: "None" });
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
+    <Stack direction="row" spacing={1} sx={{
+      alignItems: "center"
+    }}>
       <SelectField
         size="small"
         label="Secondary PD Model"

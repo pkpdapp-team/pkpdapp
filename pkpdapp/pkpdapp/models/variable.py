@@ -158,11 +158,11 @@ class Variable(StoredModel):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
+                condition=((Q(is_log=True) & Q(lower_bound__gt=0)) | Q(is_log=False)),
                 name=("%(class)s: log scale must have a lower bound greater than zero"),
             ),
             models.CheckConstraint(
-                check=(
+                condition=(
                     (
                         Q(pk_model__isnull=True)
                         & Q(dosed_pk_model__isnull=True)
@@ -489,3 +489,16 @@ class Variable(StoredModel):
             new_biomarker_type.save()
 
         self.save()
+
+        # copy distribution (one-to-one)
+        from pkpdapp.models import Distribution
+
+        source_distribution = getattr(variable, "distribution", None)
+        Distribution.objects.filter(variable=self).delete()
+        if source_distribution is not None:
+            Distribution.objects.create(
+                variable=self,
+                pdf=source_distribution.pdf,
+                variance=source_distribution.variance,
+                read_only=source_distribution.read_only,
+            )

@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC } from "react";
 import {
   MenuItem,
   Select,
@@ -17,16 +17,16 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../app/store";
 import {
   CombinedModelRead,
-  UnitRead,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
   useProjectRetrieveQuery,
-  useUnitListQuery,
   useVariableListQuery,
   useVariableRetrieveQuery,
   useVariableUpdateMutation,
   VariableRead,
 } from "../../../app/backendApi";
+import { UnitReadWithCompatible } from "../../../shared/unitConversion";
+import { useUnits } from "../../results/useUnits";
 import { getTableHeight } from "../../../shared/calculateTableHeights";
 import { renameVariable } from "../../simulation/utils";
 import { getYAxisOptions } from "../../simulation/utils";
@@ -76,22 +76,6 @@ function useModel() {
   return models?.[0] || null;
 }
 
-function useUnits() {
-  const projectId = useSelector(
-    (state: RootState) => state.main.selectedProject,
-  );
-  const projectIdOrZero = projectId || 0;
-  const { data: project } = useProjectRetrieveQuery(
-    { id: projectIdOrZero },
-    { skip: !projectId },
-  );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
-  return units;
-}
-
 function useVariables() {
   const model = useModel();
   const { data: variables } = useVariableListQuery(
@@ -120,23 +104,19 @@ function useCompound() {
 function VariableRow({
   variable_id,
   variableName,
-  unit,
   timeUnit,
 }: {
   variable_id: number;
   variableName: string;
-  unit?: UnitRead;
-  timeUnit?: UnitRead;
+  timeUnit?: UnitReadWithCompatible;
 }) {
   const units = useUnits();
   const variables = useVariables();
   const compound = useCompound();
   const { data: variable_read } = useVariableRetrieveQuery({ id: variable_id });
   const [updateVariable] = useVariableUpdateMutation();
-  const [unitSymbol, setUnitSymbol] = useState<string | undefined>(
-    unit?.symbol,
-  );
-  if (!variable_read || !compound || !units) {
+  const unit = units.find((u) => u.id === variable_read?.secondary_unit);
+  if (!variable_read || !compound || units.length === 0) {
     return "Loading...";
   }
   const unitList = units;
@@ -154,7 +134,6 @@ function VariableRow({
       newThresholdUnit,
     );
     if (newThresholdUnit && !variable.secondary_unit) {
-      setUnitSymbol(newThresholdUnit.symbol);
       updateVariable({
         id: variable.id,
         variable: {
@@ -174,35 +153,30 @@ function VariableRow({
     }
   }
 
-  const selectedUnit = units.find((u) => u.symbol === unitSymbol);
+  const selectedUnit = units.find((u) => u.symbol === unit?.symbol);
   const compatibleUnits = selectedUnit?.compatible_units || [];
 
   function onChangeLowerThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    if (!isNaN(newValue)) {
-      updateVariable({
-        id: variable.id,
-        variable: {
-          ...variable,
-          lower_threshold: newValue,
-        },
-      });
-    }
+    updateVariable({
+      id: variable.id,
+      variable: {
+        ...variable,
+        lower_threshold: isNaN(newValue) ? 0 : newValue,
+      },
+    });
   }
   function onChangeUpperThreshold(event: ChangeEvent<HTMLInputElement>) {
     const newValue = parseFloat(event.target.value);
-    if (!isNaN(newValue)) {
-      updateVariable({
-        id: variable.id,
-        variable: {
-          ...variable,
-          upper_threshold: newValue,
-        },
-      });
-    }
+    updateVariable({
+      id: variable.id,
+      variable: {
+        ...variable,
+        upper_threshold: isNaN(newValue) ? null : newValue,
+      },
+    });
   }
   function onChangeUnit(event: SelectChangeEvent) {
-    setUnitSymbol(event.target.value as string);
     const unit = unitList.find((unit) => unit.symbol === event.target.value);
     const aucUnit = getCompositeAucUnit(timeUnit, variable, unitList, unit);
     if (unit) {
@@ -236,7 +210,7 @@ function VariableRow({
         <TextField
           sx={{ minWidth: "5rem" }}
           type="number"
-          defaultValue={variable.lower_threshold || 0}
+          value={variable.lower_threshold ?? 0}
           onChange={onChangeLowerThreshold}
           size="small"
           slotProps={{
@@ -248,7 +222,7 @@ function VariableRow({
         <TextField
           sx={{ minWidth: "5rem" }}
           type="number"
-          defaultValue={variable.upper_threshold || Infinity}
+          value={variable.upper_threshold ?? ""}
           onChange={onChangeUpperThreshold}
           size="small"
           slotProps={{
@@ -259,7 +233,7 @@ function VariableRow({
       <TableCell>
         <Select
           sx={{ minWidth: "8rem" }}
-          value={unitSymbol}
+          value={unit?.symbol}
           onChange={onChangeUnit}
           size="small"
           inputProps={{ "aria-label": `Unit: ${variable.name}` }}
@@ -314,9 +288,6 @@ const ThresholdsTable: FC<TableProps> = (props) => {
                 key={variable.id}
                 variable_id={variable.id}
                 variableName={variable.name}
-                unit={units?.find(
-                  (unit) => unit.id === variable.secondary_unit,
-                )}
                 timeUnit={timeUnit}
               />
             ))}

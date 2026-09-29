@@ -62,9 +62,11 @@ export const Notifications = ({
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <HighlightOffIcon color="error" fontSize="small" />
               <Typography
-                color="#d32f2f"
-                sx={{ marginLeft: ".5rem", marginRight: ".5rem" }}
-              >
+                sx={{
+                  color: "#d32f2f",
+                  marginLeft: ".5rem",
+                  marginRight: ".5rem"
+                }}>
                 {errors?.length}
               </Typography>
             </Box>
@@ -73,16 +75,22 @@ export const Notifications = ({
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <WarningAmberOutlinedIcon color="warning" fontSize="small" />{" "}
               <Typography
-                color="#ed6c02"
-                sx={{ marginLeft: ".5rem", marginRight: ".5rem" }}
-              >
+                sx={{
+                  color: "#ed6c02",
+                  marginLeft: ".5rem",
+                  marginRight: ".5rem"
+                }}>
                 {warnings?.length}
               </Typography>
             </Box>
           )}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <InfoOutlinedIcon color="primary" fontSize="small" />{" "}
-            <Typography color="#1976d2" sx={{ marginLeft: ".5rem" }}>
+            <Typography
+              sx={{
+                color: "#1976d2",
+                marginLeft: ".5rem"
+              }}>
               {showData && showTimeUnitSelector ? "2" : "1"}
             </Typography>
           </Box>

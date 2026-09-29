@@ -8,12 +8,13 @@ import {
   useCombinedModelListQuery,
   useProjectRetrieveQuery,
   useProtocolListQuery,
-  useUnitListQuery,
   useVariableListQuery,
 } from "../../../app/backendApi";
 import { Row } from "../LoadData";
 import { findFieldByType } from "../findFieldByType";
+import { isDoseRow } from "../dataValidation";
 import { normaliseUnitSymbol } from "../unitUtils";
+import { useUnits } from "../../results/useUnits";
 
 interface IMapDosing {
   state: StepperState;
@@ -41,10 +42,7 @@ function useApiQueries() {
     { projectId: projectIdOrZero },
     { skip: !projectId },
   );
-  const { data: units } = useUnitListQuery(
-    { compoundId: project?.compound },
-    { skip: !project || !project.compound },
-  );
+  const units = useUnits();
   const amountUnit = units?.find((unit) => unit.symbol === "pmol");
   const [model] = models;
   const { data: variables } = useVariableListQuery(
@@ -52,10 +50,10 @@ function useApiQueries() {
     { skip: !model?.id },
   );
 
-  const loading = [project, projectProtocols, units, variables];
+  const loading = [project, projectProtocols, variables];
 
   return {
-    isLoading: loading.some((x) => !x),
+    isLoading: loading.some((x) => !x) || units.length === 0,
     amountUnit,
     project,
     projectProtocols,
@@ -69,16 +67,11 @@ const MapDosing: FC<IMapDosing> = ({
   notificationsInfo,
 }: IMapDosing) => {
   // Derived state from the uploaded CSV data.
-  const amountField = findFieldByType("Amount", state);
   const amountUnitField = findFieldByType("Amount Unit", state);
   const administrationIdField = findFieldByType("Administration ID", state);
-  const dosingRows: Row[] = amountField
-    ? state.data.filter(
-        (row) =>
-          (row[amountField] && row[amountField] !== ".") ||
-          parseInt(row[administrationIdField]),
-      )
-    : state.data.filter((row) => parseInt(row[administrationIdField]));
+  const dosingRows: Row[] = state.data.filter((row) =>
+    isDoseRow(row, state.normalisedFields, true),
+  );
 
   // Fetch API data.
   const { isLoading, amountUnit, project, projectProtocols, units, variables } =

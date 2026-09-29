@@ -11,16 +11,18 @@ import { RootState } from "../../app/store";
 import {
   CombinedModelRead,
   CompoundRead,
+  Optimise,
+  OptimiseResponse,
   ProjectRead,
   Simulation,
   SimulationPlotRead,
   SimulationRead,
   SimulationSliderRead,
   SubjectGroupRead,
-  UnitRead,
   VariableRead,
   useCombinedModelListQuery,
   useCompoundRetrieveQuery,
+  useCovariateListQuery,
   useProjectRetrieveQuery,
   useSimulationListQuery,
   useSimulationUpdateMutation,
@@ -40,6 +42,7 @@ import {
   useState,
 } from "react";
 import SimulationPlotView from "./SimulationPlotView";
+import useOptimise from "./useOptimise";
 import useSimulation from "./useSimulation";
 import useSimulationInputs from "./useSimulationInputs";
 import useDirty from "../../hooks/useDirty";
@@ -47,14 +50,19 @@ import paramPriority from "../model/parameters/paramPriority";
 import { selectIsProjectShared } from "../login/loginSlice";
 import { useConstVariables } from "../model/parameters/getConstVariables";
 import useSubjectGroups from "../../hooks/useSubjectGroups";
+import useDataset from "../../hooks/useDataset";
 import useExportSimulation from "./useExportSimulation";
 import { SimulationsSidePanel } from "./SimulationsSidePanel";
 import parameterDisplayName from "../model/parameters/parameterDisplayName";
-import { filterOutputs, getYAxisOptions, renameVariable } from "./utils";
-
-const EMPTY_MAP: SliderValues = new Map();
-
-type SliderValues = Map<number, number>;
+import {
+  filterOutputs,
+  getDefaultOptimiseInputs,
+  getYAxisOptions,
+  renameVariable,
+} from "./utils";
+import useSliderSettings from "./useSliderSettings";
+import { useUnits } from "../results/useUnits";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 
 interface ErrorObject {
   error: string;
@@ -69,53 +77,35 @@ function addPlotVariableOption(variable: VariableRead) {
   };
 }
 
-const getSliderInitialValues = (
-  simulation?: SimulationRead,
-  existingSliderValues?: SliderValues,
-  variables?: VariableRead[],
-): SliderValues => {
-  const initialValues: SliderValues = new Map();
-  for (const slider of simulation?.sliders || []) {
-    if (existingSliderValues && existingSliderValues.has(slider.variable)) {
-      initialValues.set(
-        slider.variable,
-        existingSliderValues.get(slider.variable)!,
-      );
-    } else {
-      const variable = variables?.find((v) => v.id === slider.variable);
-      if (variable?.default_value) {
-        initialValues.set(slider.variable, variable.default_value);
-      }
-    }
-  }
-  return initialValues;
-};
-
 interface UseSimulationDataProps {
   model?: CombinedModelRead;
   simulation?: SimulationRead;
-  sliderValues?: SliderValues;
+  sliderValues?: Map<number, number>;
+  getSliderValue?: (variableId: number, variable?: VariableRead) => number;
   variables?: VariableRead[];
-  units?: UnitRead[];
+  units?: UnitReadWithCompatible[];
   showReference?: boolean;
+  useLegacySolver?: boolean;
 }
 
 function useSimulationData({
   model,
   simulation,
   sliderValues,
+  getSliderValue,
   variables,
   units,
   showReference = false,
+  useLegacySolver = false,
 }: UseSimulationDataProps) {
   // generate a simulation if slider values change
   const getTimeMax = (sim: SimulationRead): number => {
     const timeMaxUnit = units?.find((u) => u.id === sim.time_max_unit);
     const compatibleTimeUnit = timeMaxUnit?.compatible_units?.find(
-      (u) => parseInt(u.id) === model?.time_unit,
+      (u) => u.id === model?.time_unit,
     );
     const timeMaxConversionFactor = compatibleTimeUnit
-      ? parseFloat(compatibleTimeUnit.conversion_factor)
+      ? compatibleTimeUnit.conversion_factor
       : 1.0;
     const timeMax = (sim?.time_max || 0) * timeMaxConversionFactor;
     return timeMax;
@@ -125,8 +115,10 @@ function useSimulationData({
     model,
     simulation,
     sliderValues,
+    getSliderValue,
     variables,
     timeMax,
+    useLegacySolver,
   );
   const hasPlots = simulation ? simulation.plots.length > 0 : false;
   const hasSecondaryParameters = model
@@ -138,21 +130,30 @@ function useSimulationData({
   const {
     loadingSimulate,
     data,
+    uncertaintyData,
     error: simulateError,
   } = useSimulation(simInputs, model, hasPlots || hasSecondaryParameters);
 
   const refSimInputs = useSimulationInputs(
     model,
     simulation,
-    EMPTY_MAP,
+    undefined,
+    undefined,
     variables,
     timeMax,
+    useLegacySolver,
   );
-  const { data: dataReference } = useSimulation(
-    refSimInputs,
-    showReference ? model : undefined,
-  );
-  return { loadingSimulate, simInputs, data, simulateError, dataReference };
+  const { data: dataReference, uncertaintyData: uncertaintyReferenceData } =
+    useSimulation(refSimInputs, showReference ? model : undefined);
+  return {
+    loadingSimulate,
+    simInputs,
+    data,
+    uncertaintyData,
+    simulateError,
+    dataReference,
+    uncertaintyReferenceData,
+  };
 }
 
 interface SimulationsTabProps {
@@ -162,7 +163,7 @@ interface SimulationsTabProps {
   model: CombinedModelRead;
   variables: VariableRead[];
   simulation: SimulationRead;
-  units: UnitRead[];
+  units: UnitReadWithCompatible[];
 }
 
 const SimulationsTab: FC<SimulationsTabProps> = ({
@@ -175,7 +176,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   units,
 }) => {
   const groupNames = useMemo(
-    () => ["Sim-Group 1", ...groups.map((group) => group.name)],
+    () => groups.map((group) => group.name),
     [groups],
   );
   const initialGroupVisibility: { [key: string]: boolean } = {};
@@ -188,7 +189,18 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const visibleGroups = Object.keys(groupVisibility).filter(
     (key: string) => groupVisibility[key],
   );
+  const visibleSubjectGroupIds = useMemo(
+    () =>
+      groups
+        .filter(
+          (group) =>
+            visibleGroups.includes(group.name) && group.dataset != null,
+        )
+        .map((group) => group.id),
+    [groups, visibleGroups],
+  );
   const [showReference, setShowReference] = useState<boolean>(false);
+  const [useLegacySolver, setUseLegacySolver] = useState<boolean>(false);
   useEffect(() => {
     setGroupVisibility((prevState) => {
       const newState: Record<string, boolean> = {};
@@ -203,19 +215,57 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const [updateSimulation] = useSimulationUpdateMutation();
   const [updateVariable] = useVariableUpdateMutation();
   const constVariables = useConstVariables();
+  const { data: covariates } = useCovariateListQuery(
+    { projectId: project.id },
+    { skip: !project.id },
+  );
 
-  const [sliderValues, setSliderValues] = useState<SliderValues>(EMPTY_MAP);
-  const handleChangeSlider = useCallback((variable: number, value: number) => {
-    setSliderValues((prevSliderValues) => {
-      const newSliderValues = new Map(prevSliderValues);
-      newSliderValues.set(variable, value);
-      return newSliderValues;
-    });
-  }, []);
+  const {
+    setSliderValues,
+    handleChangeSlider,
+    addSlider,
+    removeSliderSettings,
+    initialiseSliderSettings,
+    getSliderValue,
+    getSliderBounds,
+    widenSliderRange,
+    narrowSliderRange,
+  } = useSliderSettings();
+  const [optimiseResult, setOptimiseResult] = useState<OptimiseResponse | null>(
+    null,
+  );
+  const [optimiseResultOpen, setOptimiseResultOpen] = useState(false);
+  const [optimiseError, setOptimiseError] = useState<ErrorObject | null>(null);
   const [shouldShowLegend, setShouldShowLegend] = useState(true);
   const isSharedWithMe = useSelector((state: RootState) =>
     selectIsProjectShared(state, project),
   );
+  const {
+    optimiseModel,
+    loadingOptimise,
+    method,
+    setMethod,
+    noiseModel,
+    maxIterations,
+    setMaxIterations,
+    paramUseLogSpace,
+    setParamUseLogSpace,
+    sigmaUseLogSpace,
+    setSigmaUseLogSpace,
+    sigmaMultUseLogSpace,
+    setSigmaMultUseLogSpace,
+    sigmaStartByVar,
+    setSigmaStartByVar,
+    sigmaBoundsByVar,
+    setSigmaBoundsByVar,
+    sigmaMultStartByVar,
+    setSigmaMultStartByVar,
+    sigmaBoundsMultByVar,
+    setSigmaBoundsMultByVar,
+    noiseModelByVar,
+    setNoiseModelByVar,
+  } = useOptimise(model);
+  const { biomarkerTypes, subjectBiomarkers } = useDataset(project.id);
 
   const defaultSimulation: SimulationRead = {
     id: 0,
@@ -228,15 +278,24 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
     time_max_unit: model?.time_unit || 0,
   };
 
-  const { loadingSimulate, simInputs, data, simulateError, dataReference } =
-    useSimulationData({
-      model,
-      simulation,
-      sliderValues,
-      variables,
-      units,
-      showReference,
-    });
+  const {
+    loadingSimulate,
+    simInputs,
+    data,
+    uncertaintyData,
+    simulateError,
+    dataReference,
+    uncertaintyReferenceData,
+  } = useSimulationData({
+    model,
+    simulation,
+    sliderValues: undefined,
+    getSliderValue,
+    variables,
+    units,
+    showReference,
+    useLegacySolver,
+  });
 
   const {
     reset,
@@ -276,14 +335,11 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   // reset form and sliders if simulation changes
   useEffect(() => {
     if (simulation && variables) {
-      setSliderValues((s) => {
-        const initialValues = getSliderInitialValues(simulation, s, variables);
-        return initialValues;
-      });
+      initialiseSliderSettings(simulation, variables);
       //setLoadingSimulate(true);
       reset(simulation);
     }
-  }, [simulation, reset, variables]);
+  }, [initialiseSliderSettings, reset, simulation, variables]);
 
   const [exportSimulation, { error: exportSimulateErrorBase }] =
     useExportSimulation({
@@ -348,9 +404,44 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
 
   outputsSorted.sort((a, b) => b.priority - a.priority);
 
-  const addPlotOptions = outputsSorted.map((variable) =>
-    addPlotVariableOption(renameVariable(variable, model)),
+  // Population/covariate parameters that can be plotted as a histogram of their
+  // Monte-Carlo sampled values: any parameter with a distribution, plus the
+  // covariate value inputs (Covariates.WT / AGE / SEX / COV_<id>). These are the
+  // same variable ids the backend returns under the simulate response's
+  // "parameters" field. A plot is rendered as a histogram whenever its y-axis
+  // variable is constant, so no extra flag is stored on the plot.
+  const covariateLabelByInputName: Record<string, string> = {
+    WT: "Weight",
+    AGE: "Age",
+    SEX: "Sex",
+  };
+  (covariates || []).forEach((covariate) => {
+    covariateLabelByInputName[`COV_${covariate.id}`] = covariate.name;
+  });
+  const isCovariateInput = (variable: VariableRead) =>
+    variable.qname.startsWith("Covariates.") &&
+    (variable.name in covariateLabelByInputName ||
+      variable.name.startsWith("COV_"));
+  const histogramVariables = (variables || []).filter(
+    (variable) =>
+      variable.constant &&
+      (Boolean(variable.distribution) || isCovariateInput(variable)),
   );
+  const histogramOptions = histogramVariables.map((variable) => ({
+    value: variable.id,
+    label: `Histogram: ${
+      isCovariateInput(variable)
+        ? covariateLabelByInputName[variable.name] || variable.name
+        : parameterDisplayName(variable, model)
+    }`,
+  }));
+
+  const addPlotOptions = [
+    ...outputsSorted.map((variable) =>
+      addPlotVariableOption(renameVariable(variable, model)),
+    ),
+    ...histogramOptions,
+  ];
 
   const handleAddPlot = (variableId: number) => {
     const variable = variables?.find((v) => v.id === variableId);
@@ -358,7 +449,28 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       return;
     }
     const defaultXUnit =
-      units?.find((unit: UnitRead) => unit.symbol === "h")?.id || 0;
+      units?.find((unit: UnitReadWithCompatible) => unit.symbol === "h")?.id ||
+      0;
+    // A constant variable is plotted as a histogram of its sampled values: the
+    // parameter itself is the x-axis (its own unit), and there is no y unit.
+    if (variable.constant) {
+      const histogramPlot: SimulationPlotRead = {
+        id: 0,
+        y_axes: [
+          {
+            id: 0,
+            variable: variable.id,
+          },
+        ],
+        cx_lines: [],
+        index: 0,
+        x_unit: variable.unit ?? defaultXUnit,
+        y_unit: null,
+        y_unit2: null,
+      };
+      addSimulationPlot(histogramPlot);
+      return;
+    }
     const { unit: defaultYUnit, scale: defaultYScale } = getYAxisOptions(
       compound,
       variable,
@@ -414,10 +526,14 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       variable: variableId,
     };
     addSimulationSlider(defaultSlider);
+
+    const variable = variables.find((item) => item.id === variableId);
+    addSlider(variableId, variable);
   };
 
-  const handleRemoveSlider = (index: number) => () => {
+  const handleRemoveSlider = (index: number, variableId: number) => () => {
     removeSlider(index);
+    removeSliderSettings(variableId);
   };
 
   const handleSaveAllSlider = () => {
@@ -426,16 +542,110 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
       if (!variable) {
         return;
       }
-      const value = sliderValues?.get(slider.variable);
-      if (value === undefined) {
-        return;
-      }
+      const value = getSliderValue(slider.variable, variable);
       updateVariable({
         id: slider.variable,
         variable: { ...variable, default_value: value },
       });
     }
   };
+
+  const handleOptimiseWithInputs = useCallback(
+    async (optimiseInputs: Optimise) => {
+      if (!model) {
+        setOptimiseError({ error: "Model not found" });
+        return;
+      }
+
+      if (optimiseInputs.inputs.length < 1) {
+        setOptimiseError({
+          error: "At least one slider is required to optimise.",
+        });
+        return;
+      }
+
+      setOptimiseError(null);
+
+      const response = await optimiseModel(optimiseInputs);
+
+      if (response.error) {
+        setOptimiseError(response.error);
+        return;
+      }
+
+      if (
+        !response.data ||
+        response.data.optimal.length !== optimiseInputs.inputs.length
+      ) {
+        setOptimiseError({
+          error: "Optimise response did not match the selected sliders.",
+        });
+        return;
+      }
+
+      setSliderValues((currentSliderValues) => {
+        const nextSliderValues = new Map(currentSliderValues);
+        optimiseInputs.inputs.forEach((variableId, index) => {
+          nextSliderValues.set(variableId, response.data!.optimal[index]);
+        });
+        return nextSliderValues;
+      });
+      setOptimiseResult(response.data);
+      setOptimiseResultOpen(true);
+    },
+    [model, optimiseModel, setSliderValues],
+  );
+
+  const handleOptimise = useCallback(() => {
+    handleOptimiseWithInputs(
+      getDefaultOptimiseInputs({
+        orderedSliders,
+        variables,
+        getSliderValue,
+        getSliderBounds,
+        plots,
+        biomarkerTypes,
+        subjectGroups: visibleSubjectGroupIds,
+        noiseModel,
+        method,
+        maxIterations,
+        subjectBiomarkers,
+        units,
+        model,
+        paramUseLogSpace,
+        sigmaUseLogSpace,
+        sigmaMultUseLogSpace,
+        sigmaStartByVar,
+        sigmaBoundsByVar,
+        sigmaMultStartByVar,
+        sigmaBoundsMultByVar,
+        noiseModelByVar,
+      }),
+    );
+  }, [
+    orderedSliders,
+    variables,
+    getSliderValue,
+    getSliderBounds,
+    plots,
+    biomarkerTypes,
+    visibleSubjectGroupIds,
+    noiseModel,
+    method,
+    maxIterations,
+    handleOptimiseWithInputs,
+    subjectBiomarkers,
+    units,
+    model,
+    paramUseLogSpace,
+    sigmaUseLogSpace,
+    sigmaMultUseLogSpace,
+    sigmaStartByVar,
+    sigmaBoundsByVar,
+    sigmaMultStartByVar,
+    sigmaBoundsMultByVar,
+    noiseModelByVar,
+  ]);
 
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
@@ -496,6 +706,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         addPlotOptions={addPlotOptions}
         handleAddPlot={handleAddPlot}
         model={model}
+        compound={compound}
         isSharedWithMe={isSharedWithMe}
         layoutOptions={layoutOptions}
         layout={layout}
@@ -510,14 +721,47 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         addSliderOptions={addSliderOptions}
         handleAddSlider={handleAddSlider}
         orderedSliders={orderedSliders}
+        getSliderValue={getSliderValue}
+        getSliderBounds={getSliderBounds}
         handleChangeSlider={handleChangeSlider}
+        handleWidenSlider={widenSliderRange}
+        handleNarrowSlider={narrowSliderRange}
         handleRemoveSlider={handleRemoveSlider}
         handleSaveAllSlider={handleSaveAllSlider}
+        handleOptimise={handleOptimise}
+        handleOptimiseWithInputs={handleOptimiseWithInputs}
+        visibleSubjectGroupIds={visibleSubjectGroupIds}
+        loadingOptimise={loadingOptimise}
+        optimiseMethod={method}
+        setOptimiseMethod={setMethod}
+        maxIterations={maxIterations}
+        setMaxIterations={setMaxIterations}
+        paramUseLogSpace={paramUseLogSpace}
+        setParamUseLogSpace={setParamUseLogSpace}
+        sigmaUseLogSpace={sigmaUseLogSpace}
+        setSigmaUseLogSpace={setSigmaUseLogSpace}
+        sigmaMultUseLogSpace={sigmaMultUseLogSpace}
+        setSigmaMultUseLogSpace={setSigmaMultUseLogSpace}
+        sigmaStartByVar={sigmaStartByVar}
+        setSigmaStartByVar={setSigmaStartByVar}
+        sigmaBoundsByVar={sigmaBoundsByVar}
+        setSigmaBoundsByVar={setSigmaBoundsByVar}
+        sigmaMultStartByVar={sigmaMultStartByVar}
+        setSigmaMultStartByVar={setSigmaMultStartByVar}
+        sigmaBoundsMultByVar={sigmaBoundsMultByVar}
+        setSigmaBoundsMultByVar={setSigmaBoundsMultByVar}
+        noiseModelByVar={noiseModelByVar}
+        setNoiseModelByVar={setNoiseModelByVar}
+        optimiseResult={optimiseResult}
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}
+        useLegacySolver={useLegacySolver}
+        setUseLegacySolver={setUseLegacySolver}
         shouldShowLegend={shouldShowLegend}
         setShouldShowLegend={setShouldShowLegend}
+        variables={variables}
+        biomarkerTypes={biomarkerTypes}
       />
       <Box
         sx={{
@@ -554,7 +798,11 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
                   index={index}
                   plot={plot}
                   data={data}
+                  uncertaintyData={uncertaintyData}
                   dataReference={showReference ? dataReference : []}
+                  uncertaintyReferenceData={
+                    showReference ? uncertaintyReferenceData : []
+                  }
                   variables={
                     variables?.map((variable) =>
                       renameVariable(variable, model),
@@ -587,6 +835,28 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
             <Alert severity="error">
               Error exporting model:{" "}
               {exportSimulateError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
+          <Snackbar
+            open={Boolean(optimiseError)}
+            autoHideDuration={6000}
+            onClose={() => setOptimiseError(null)}
+          >
+            <Alert severity="error" onClose={() => setOptimiseError(null)}>
+              Error optimising model: {optimiseError?.error || "unknown error"}
+            </Alert>
+          </Snackbar>
+          <Snackbar
+            open={optimiseResultOpen}
+            autoHideDuration={6000}
+            onClose={() => setOptimiseResultOpen(false)}
+          >
+            <Alert
+              severity="success"
+              onClose={() => setOptimiseResultOpen(false)}
+            >
+              Optimisation complete. Objective: {optimiseResult?.loss.toFixed(4)}.{" "}
+              {optimiseResult?.reason}
             </Alert>
           </Snackbar>
         </Grid>
@@ -623,9 +893,10 @@ const Simulations: FC = () => {
   const simulation = useMemo(() => {
     return simulations?.[0] || undefined;
   }, [simulations]);
-  const { data: units, isLoading: isUnitsLoading } = useUnitListQuery(
-    { compoundId: project?.compound || 0 },
-    { skip: !project?.compound },
+  const units = useUnits();
+  const { isLoading: isUnitsLoading } = useUnitListQuery(
+    {},
+    { skip: !project },
   );
   const { data: compound, isLoading: isLoadingCompound } =
     useCompoundRetrieveQuery(

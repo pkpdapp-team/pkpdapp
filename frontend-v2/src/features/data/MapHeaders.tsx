@@ -16,7 +16,8 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import { Data, Field } from "./LoadData";
-import { groupedHeaders } from "./dataValidation";
+import { groupedHeaders, headerTypeDescriptions } from "./dataValidation";
+import HelpButton from "../../components/HelpButton";
 import { usePagination } from "../../hooks/usePagination";
 import {
   calculateTableHeights,
@@ -93,31 +94,50 @@ const MapHeaders: FC<IMapHeaders> = ({
                   >
                     {field}
                   </Typography>
-                  <FormControl fullWidth>
-                    <InputLabel size="small" id={`select-${index}-label`}>
-                      Column Type
-                    </InputLabel>
-                    <Select
-                      labelId={`select-${index}-label`}
-                      id={`select-${index}`}
-                      value={normalisedFields.get(field)}
-                      label="Column Type"
-                      onChange={handleFieldChange(field)}
-                      size="small"
-                      margin="dense"
-                    >
-                      {Object.entries(groupedHeaders).map(
-                        ([group, headers]) => [
-                          <ListSubheader key={group}>{group}</ListSubheader>,
-                          ...headers.map((header) => (
-                            <MenuItem key={header} value={header}>
-                              {header}
-                            </MenuItem>
-                          )),
-                        ],
-                      )}
-                    </Select>
-                  </FormControl>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <FormControl fullWidth>
+                      <InputLabel size="small" id={`select-${index}-label`}>
+                        Column Type
+                      </InputLabel>
+                      <Select
+                        labelId={`select-${index}-label`}
+                        id={`select-${index}`}
+                        value={normalisedFields.get(field)}
+                        label="Column Type"
+                        onChange={handleFieldChange(field)}
+                        size="small"
+                        margin="dense"
+                      >
+                        {Object.entries(groupedHeaders).map(
+                          ([group, headers]) => [
+                            <ListSubheader key={group}>{group}</ListSubheader>,
+                            ...headers.map((header) => (
+                              <MenuItem key={header} value={header}>
+                                {header}
+                              </MenuItem>
+                            )),
+                          ],
+                        )}
+                      </Select>
+                    </FormControl>
+                    {(() => {
+                      const mappedType = normalisedFields.get(field);
+                      const longDescription = mappedType
+                        ? headerTypeDescriptions[mappedType]?.long
+                        : undefined;
+                      return longDescription ? (
+                        <HelpButton
+                          title={mappedType as string}
+                          maxWidth="20rem"
+                        >
+                          <p>
+                            <strong>{mappedType}</strong>
+                          </p>
+                          <p>{longDescription}</p>
+                        </HelpButton>
+                      ) : null;
+                    })()}
+                  </div>
                 </TableCell>
               ))}
             </TableRow>

@@ -285,10 +285,13 @@ def _serialize_component(model, component, myokit_model):
         if v.qname.startswith(component.name())
     ]
 
-    equations = [
+    # sort by the serialised MathML so the order is stable across runs AND
+    # myokit versions/environments (myokit's equations() iteration order is not
+    # deterministic across environments); mirrors MyokitModelMixin._serialise_component
+    equations = sorted(
         MyokitModelMixin._serialise_equation(e)
         for e in component.equations(bound=False, const=False)
-    ]
+    )
     return {
         "name": component.name(),
         "states": states,

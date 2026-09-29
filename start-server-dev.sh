@@ -48,25 +48,34 @@ cd "$BACKEND_DIR"
 echo -e "${GREEN}[Backend]${NC} Running migrations..."
 python manage.py migrate --no-input
 
-# Create test user
-echo -e "${GREEN}[Backend]${NC} Creating test user (username: test, password: test)..."
+# Create test users
+echo -e "${GREEN}[Backend]${NC} Creating test users (password matches username)..."
 python manage.py shell -c "
 from django.contrib.auth import get_user_model;
+from pkpdapp.models import Profile;
 User = get_user_model();
-user, created = User.objects.get_or_create(
-    username='test',
-    defaults={'email': 'test@example.com'}
-);
-user.email = 'test@example.com';
-user.is_staff = False;
-user.is_superuser = False;
-user.set_password('test');
-user.save();
-if created:
-    print('Test user created');
-else:
-    print('Test user updated to a normal user');
-" 2>/dev/null || echo "Note: Could not create test user (may already exist)"
+test_users = [
+    ('test', 'test@example.com', 'Test', 'User', 'Clinical Pharmacology'),
+    ('alice', 'alice@example.com', 'Alice', 'Anderson', 'Pharmacometrics'),
+    ('bob', 'bob@example.com', 'Bob', 'Baker', 'Drug Metabolism'),
+];
+for username, email, first_name, last_name, department in test_users:
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={'email': email}
+    );
+    user.email = email;
+    user.first_name = first_name;
+    user.last_name = last_name;
+    user.is_staff = False;
+    user.is_superuser = False;
+    user.set_password(username);
+    user.save();
+    profile, _ = Profile.objects.get_or_create(user=user);
+    profile.department = department;
+    profile.save();
+    print(('Created ' if created else 'Updated ') + username);
+" 2>/dev/null || echo "Note: Could not create test users (may already exist)"
 
 # Start Django development server in background
 echo -e "${GREEN}[Backend]${NC} Starting Django dev server on http://127.0.0.1:8000..."
@@ -97,7 +106,7 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${BLUE}Frontend:${NC} http://127.0.0.1:3000"
 echo -e "${GREEN}Backend:${NC}  http://127.0.0.1:8000"
 echo -e "${GREEN}Admin:${NC}    http://127.0.0.1:8000/admin"
-echo -e "\n${YELLOW}Test Login:${NC} username=test, password=test"
+echo -e "\n${YELLOW}Test Logins:${NC} test/test, alice/alice, bob/bob (password = username)"
 echo -e "\n${YELLOW}Press Ctrl+C to stop all servers${NC}"
 echo -e "${GREEN}========================================${NC}\n"
 

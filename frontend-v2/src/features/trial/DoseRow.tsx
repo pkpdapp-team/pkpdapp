@@ -7,16 +7,16 @@ import UnitField from "../../components/UnitField";
 import {
   DoseRead,
   Protocol,
-  UnitRead,
   useDoseDestroyMutation,
   useDoseUpdateMutation,
 } from "../../app/backendApi";
+import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { Control, useForm, useFormState } from "react-hook-form";
 import useDirty from "../../hooks/useDirty";
 import Checkbox from "../../components/Checkbox";
 
 type Props = {
-  baseUnit?: UnitRead;
+  baseUnit?: UnitReadWithCompatible;
   control: Control<Protocol>;
   disabled: boolean;
   dose: DoseRead;
@@ -24,7 +24,7 @@ type Props = {
   minStartTime: number;
   onChange: () => void;
   selectedAmountLabel: string;
-  timeUnit?: UnitRead;
+  timeUnit?: UnitReadWithCompatible;
 };
 
 const DoseRow: FC<Props> = ({

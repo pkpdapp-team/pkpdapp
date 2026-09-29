@@ -83,9 +83,18 @@ const Stratification: FC<IStratification> = ({
   const subjectDoses = getSubjectDoses(state);
   const protocols = getProtocols(subjectDoses);
 
-  const catCovariates = state.fields.filter((field) =>
-    CAT_COVARIATE_COLUMNS.includes(state.normalisedFields.get(field) || ""),
-  );
+  const catCovariates = state.fields.filter((field) => {
+    if (!CAT_COVARIATE_COLUMNS.includes(state.normalisedFields.get(field) || "")) {
+      return false;
+    }
+    // The canonical "Group ID" data column is a derived copy of the selected
+    // grouping column and is needed downstream, but should not be shown as a
+    // separate stratification option.
+    if (field === "Group ID" && state.groupColumn !== "Group ID") {
+      return false;
+    }
+    return true;
+  });
   const uniqueCovariateValues = catCovariates.map((field) => {
     const values = state.data.map((row) => row[field]);
     return [...new Set(values)];
@@ -171,7 +180,9 @@ const Stratification: FC<IStratification> = ({
         tooltip="Stratify your observations into groups based on the covariates you have
         provided."
       />
-      <Stack marginTop={2} spacing={2}>
+      <Stack spacing={2} sx={{
+        marginTop: 2
+      }}>
         {!!catCovariates.length && (
           <TableContainer
             sx={{
