@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, field_validator
 
-from pkpdapp.models import Covariate, DerivedVariable
+from pkpdapp.models import Covariate, DerivedVariable, Project
 
 
 # shared controls
@@ -251,6 +251,10 @@ class CompoundContext(BaseModel):
     name: str
     modality: str
 
+    @classmethod
+    def from_compound(cls, compound):
+        return cls(name=compound.name, modality=compound.get_compound_type_display())
+
 
 class ProjectContext(BaseModel):
     name: str
@@ -259,6 +263,10 @@ class ProjectContext(BaseModel):
     drug_target: DrugTargetContext
     model: ModelContext | None
     trial_design: TrialDesignContext
+
+
+def load_project_for_chat(project_id):
+    return Project.objects.select_related("compound").get(pk=project_id)
 
 
 class ChatContext(BaseModel):
