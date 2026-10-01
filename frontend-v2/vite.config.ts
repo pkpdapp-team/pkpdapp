@@ -87,6 +87,10 @@ export default ({ mode }) => {
               configDir: path.join(import.meta.dirname, ".storybook"),
             }),
           ],
+          optimizeDeps: {
+            // Prebundle the MSW loader before tests start to avoid a browser reload.
+            include: ["msw-storybook-addon/csf3"],
+          },
           test: {
             name: "storybook",
             browser: {

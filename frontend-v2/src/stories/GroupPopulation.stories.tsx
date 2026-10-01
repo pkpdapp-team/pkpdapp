@@ -1,6 +1,6 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { expect, within, waitFor, waitForElementToBeRemoved, fn } from "storybook/test";
+import { expect, within, waitFor, fn } from "storybook/test";
 import { useDispatch } from "react-redux";
 
 import GroupPopulation from "../features/trial/GroupPopulation";
@@ -87,7 +87,9 @@ const meta: Meta<typeof GroupPopulation> = {
               "project_id",
             );
             const filtered = projectId
-              ? covariateMocks.filter((c) => c.project === parseInt(projectId, 10))
+              ? covariateMocks.filter(
+                  (c) => c.project === parseInt(projectId, 10),
+                )
               : covariateMocks;
             return HttpResponse.json(filtered, { status: 200 });
           }),
@@ -129,7 +131,8 @@ const meta: Meta<typeof GroupPopulation> = {
             "/api/covariate_population/:id",
             async ({ request, params }) => {
               const id = parseInt(params.id as string, 10);
-              const body = (await request.json()) as Partial<CovariatePopulationRead>;
+              const body =
+                (await request.json()) as Partial<CovariatePopulationRead>;
               populationPatchSpy(body);
               populationMocks = populationMocks.map((p) =>
                 p.id === id ? { ...p, ...body } : p,
@@ -143,9 +146,12 @@ const meta: Meta<typeof GroupPopulation> = {
           http.patch("/api/subject_group/:id", async ({ request }) => {
             const body = await request.json();
             groupPatchSpy(body);
-            return HttpResponse.json({ ...group, ...(body as object) }, {
-              status: 200,
-            });
+            return HttpResponse.json(
+              { ...group, ...(body as object) },
+              {
+                status: 200,
+              },
+            );
           }),
         ],
       },
@@ -186,7 +192,9 @@ export const Default: Story = {
     expect(canvas.getByLabelText("Mean")).toBeInTheDocument();
     expect(canvas.getByLabelText("Std deviation")).toBeInTheDocument();
     // "Add covariate" is disabled until a name is typed
-    expect(canvas.getByRole("button", { name: /Add covariate/i })).toBeDisabled();
+    expect(
+      canvas.getByRole("button", { name: /Add covariate/i }),
+    ).toBeDisabled();
   },
 };
 
@@ -276,7 +284,9 @@ export const AddCategoricalCovariate: Story = {
     await userEvent.type(categories, "4");
     const nameField = canvas.getByLabelText("Name");
     await userEvent.type(nameField, "genotype");
-    await userEvent.click(canvas.getByRole("button", { name: /Add covariate/i }));
+    await userEvent.click(
+      canvas.getByRole("button", { name: /Add covariate/i }),
+    );
     await waitFor(() =>
       expect(covariateCreateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: "genotype", type: "CAT" }),
@@ -366,7 +376,9 @@ export const EditCovariatePopulation: Story = {
     // add a second covariate that has no population, then edit it to exercise
     // the "create population" branch (it commits converted median + variance)
     await userEvent.type(canvas.getByLabelText("Name"), "creatinine");
-    await userEvent.click(canvas.getByRole("button", { name: /Add covariate/i }));
+    await userEvent.click(
+      canvas.getByRole("button", { name: /Add covariate/i }),
+    );
     await canvas.findByText("creatinine");
     const meanFields = canvas.getAllByLabelText("Mean");
     const newMean = meanFields[meanFields.length - 1];
@@ -393,7 +405,9 @@ export const RemoveCovariate: Story = {
     const deleteButton = within(row as HTMLElement).getByRole("button");
     await userEvent.click(deleteButton);
     await waitFor(() => expect(covariateDestroySpy).toHaveBeenCalledWith(1));
-    await waitForElementToBeRemoved(() => canvas.queryByText("albumin"));
+    await waitFor(() =>
+      expect(canvas.queryByText("albumin")).not.toBeInTheDocument(),
+    );
   },
 };
 
@@ -403,7 +417,9 @@ export const Disabled: Story = {
     const canvas = within(canvasElement);
     expect(canvas.getByLabelText(/Study size/i)).toBeDisabled();
     expect(canvas.getByLabelText("Name")).toBeDisabled();
-    expect(canvas.getByRole("button", { name: /Add covariate/i })).toBeDisabled();
+    expect(
+      canvas.getByRole("button", { name: /Add covariate/i }),
+    ).toBeDisabled();
   },
 };
 

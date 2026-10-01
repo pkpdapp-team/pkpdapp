@@ -1,7 +1,8 @@
 import type { Preview } from "@storybook/react-vite";
 import { Provider } from "react-redux";
-import { initialize, mswLoader } from "msw-storybook-addon";
+import { mswLoader } from "msw-storybook-addon/csf3";
 import { http, HttpResponse, isCommonAssetRequest } from "msw";
+import { setupWorker } from "msw/browser";
 import { configure } from "storybook/test";
 import { store } from "../src/app/store";
 import { api } from "../src/app/api";
@@ -15,29 +16,35 @@ configure({ asyncUtilTimeout: 10000 });
  * See https://github.com/mswjs/msw-storybook-addon#configuring-msw
  * to learn how to customize it
  */
-initialize(
-  {
-    quiet: true, // Set to true to avoid logging in the console
-    serviceWorker: {
-      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-    },
-    onUnhandledRequest(request, print) {
-      // Suppress warnings for common static assets (CSS, JS, images, fonts, etc.)
-      if (isCommonAssetRequest(request)) {
-        return;
-      }
-      // Still log warnings for unhandled API requests
-      print.warning();
-    },
-  },
+async function setupMsw() {
   // Low-priority fallback handlers. Per-story handlers are registered on top of
   // these (and take precedence), so this only catches API GETs that no story
   // mocks — e.g. /api/covariate, /api/correlation. Without it those requests
   // fall through to the vite proxy and fail with ECONNREFUSED, adding latency
   // and noise. An empty list is a safe default for the (list) endpoints that
   // reach here.
-  [http.get("/api/*", () => HttpResponse.json([], { status: 200 }))],
-);
+  const worker = setupWorker(
+    http.get("/api/*", () => HttpResponse.json([], { status: 200 })),
+  );
+  await worker.start({
+    quiet: true, // Set to true to avoid logging in the console
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+    onUnhandledFrame(frame, defaults) {
+      if (frame.protocol === "http") {
+        const request = frame.data.request;
+        // Suppress warnings for common static assets (CSS, JS, images, fonts, etc.)
+        if (isCommonAssetRequest(request)) {
+          return;
+        }
+        // Still log warnings for unhandled API requests
+        defaults.warn();
+      }
+    },
+  });
+  return worker;
+}
 
 const preview: Preview = {
   parameters: {
@@ -79,7 +86,7 @@ const preview: Preview = {
     },
   ],
   tags: ["autodocs"],
-  loaders: [mswLoader],
+  loaders: [mswLoader(setupMsw)],
   async beforeEach() {
     // Reset API state to ensure clean cache before each story
     // Note: Each story's decorator handles setting the project appropriately
