@@ -6,10 +6,20 @@
 import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 
-from pkpdapp.models import Compound, EfficacyExperiment, Project, Unit
+from pkpdapp.models import (
+    Compound,
+    Dataset,
+    Dose,
+    EfficacyExperiment,
+    Project,
+    Protocol,
+    SubjectGroup,
+    Unit,
+)
 from pkpdapp.utils.chat_context_models import (
     CompoundContext,
     DrugTargetContext,
+    ProtocolContext,
     load_project_for_chat,
 )
 
@@ -62,3 +72,61 @@ class ChatContextTestCase(TestCase):
                 }
             ],
         )
+
+    def test_describes_protocols_and_doses(self):
+        group = SubjectGroup.objects.create(name="Sim-Group 1", project=self.project)
+        protocol = Protocol.objects.create(
+            name="IV", project=self.project, group=group
+        )
+        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
+        Dose.objects.create(
+            protocol=protocol, start_time=24.0, amount=5.0, repeats=3
+        )
+
+        (loaded,) = self.load_project().chat_groups[0].chat_protocols
+        described = ProtocolContext.from_protocol(loaded, can_edit=True).model_dump()
+
+        self.assertEqual(
+            described,
+            {
+                "name": "IV",
+                "variable_qname": None,
+                "amount_unit_symbol": "mg",
+                "time_unit_symbol": "h",
+                "per_body_weight": {"selected": False, "enabled": True},
+                "from_dataset": False,
+                "doses": [
+                    {
+                        "amount": 10.0,
+                        "number_of_doses": 1,
+                        "start_time": 0.0,
+                        "duration": 1.0,
+                        "repeat_interval": 1.0,
+                    },
+                    {
+                        "amount": 5.0,
+                        "number_of_doses": 3,
+                        "start_time": 24.0,
+                        "duration": 1.0,
+                        "repeat_interval": 1.0,
+                    },
+                ],
+            },
+        )
+
+    def test_dataset_protocols_have_no_doses(self):
+        dataset = Dataset.objects.create(name="observed", project=self.project)
+        group = SubjectGroup.objects.create(
+            name="Data-Group 1", dataset=dataset, project=self.project
+        )
+        protocol = Protocol.objects.create(
+            name="observed", project=self.project, group=group, dataset=dataset
+        )
+        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
+
+        (loaded,) = self.load_project().chat_groups[0].chat_protocols
+        described = ProtocolContext.from_protocol(loaded, can_edit=True)
+
+        self.assertTrue(described.from_dataset)
+        self.assertIsNone(described.doses)
+        self.assertFalse(described.per_body_weight.enabled)

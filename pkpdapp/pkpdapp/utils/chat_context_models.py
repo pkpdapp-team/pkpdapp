@@ -8,7 +8,14 @@ from typing import Literal
 from django.db.models import Prefetch
 from pydantic import BaseModel, field_validator
 
-from pkpdapp.models import Covariate, DerivedVariable, EfficacyExperiment, Project
+from pkpdapp.models import (
+    Covariate,
+    DerivedVariable,
+    Dose,
+    EfficacyExperiment,
+    Project,
+    Protocol,
+)
 
 
 # shared controls
@@ -218,6 +225,16 @@ class DoseContext(BaseModel):
     duration: float
     repeat_interval: float
 
+    @classmethod
+    def from_dose(cls, dose):
+        return cls(
+            amount=dose.amount,
+            number_of_doses=dose.repeats,
+            start_time=dose.start_time,
+            duration=dose.duration,
+            repeat_interval=dose.repeat_interval,
+        )
+
 
 class ProtocolContext(BaseModel):
     name: str
@@ -227,6 +244,30 @@ class ProtocolContext(BaseModel):
     per_body_weight: SelectionContext
     from_dataset: bool
     doses: list[DoseContext] | None
+
+    @classmethod
+    def from_protocol(cls, protocol, *, can_edit):
+        variable = protocol.variable
+        amount_unit = protocol.amount_unit
+        time_unit = protocol.time_unit
+        from_dataset = protocol.dataset_id is not None
+        return cls(
+            name=protocol.name,
+            variable_qname=variable.qname if variable else None,
+            amount_unit_symbol=amount_unit.symbol if amount_unit else None,
+            time_unit_symbol=time_unit.symbol if time_unit else None,
+            per_body_weight=SelectionContext(
+                selected=protocol.amount_per_body_weight,
+                # the api rejects edits to dataset protocols
+                enabled=can_edit and not from_dataset,
+            ),
+            from_dataset=from_dataset,
+            doses=(
+                None
+                if from_dataset
+                else [DoseContext.from_dose(dose) for dose in protocol.chat_doses]
+            ),
+        )
 
 
 ## population
@@ -301,6 +342,10 @@ class ProjectContext(BaseModel):
 
 def load_project_for_chat(project_id):
     experiments = EfficacyExperiment.objects.select_related("c50_unit").order_by("pk")
+    protocols = Protocol.objects.select_related(
+        "variable", "amount_unit", "time_unit"
+    ).order_by("pk")
+    doses = Dose.objects.filter(protocol__dataset__isnull=True).order_by("pk")
 
     return (
         # query 1: project + compound + units as one query
@@ -316,6 +361,20 @@ def load_project_for_chat(project_id):
                 "compound__efficacy_experiments",
                 queryset=experiments,
                 to_attr="chat_efficacy_experiments",
+            ),
+            # query 3: groups of the project -> project.chat_groups
+            Prefetch("groups", to_attr="chat_groups"),
+            # query 4: protocols of those groups -> group.chat_protocols
+            Prefetch(
+                "chat_groups__protocols",
+                queryset=protocols,
+                to_attr="chat_protocols",
+            ),
+            # query 5: doses of those protocols -> protocol.chat_doses
+            Prefetch(
+                "chat_groups__chat_protocols__doses",
+                queryset=doses,
+                to_attr="chat_doses",
             ),
         )
         .get(pk=project_id)
