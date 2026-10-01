@@ -1,0 +1,387 @@
+#
+# This file is part of PKPDApp (https://github.com/pkpdapp-team/pkpdapp) which
+# is released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+from typing import Literal
+
+from django.db.models import Prefetch
+from pydantic import BaseModel, field_validator
+
+from pkpdapp.models import (
+    Covariate,
+    DerivedVariable,
+    Dose,
+    EfficacyExperiment,
+    Project,
+    Protocol,
+)
+
+
+# shared controls
+class SelectionContext(BaseModel):
+    selected: bool
+    enabled: bool
+
+
+# model page
+## pk/pd model tab
+class ModelComponentContext(BaseModel):
+    name: str
+    description: str
+    tags: list[str]
+
+
+class PKPDModelContext(BaseModel):
+    species: str
+    weight: float
+    weight_unit: str
+
+    pk_filter_tags: list[str]
+    pk_model: ModelComponentContext | None
+
+    effect_model: ModelComponentContext
+    effect_compartments: int
+    has_anti_drug_antibodies: bool
+
+    extravascular_model: ModelComponentContext | None
+    has_lag: bool
+    has_bioavailability: bool
+
+    pd_filter_tags: list[str]
+    pd_model: ModelComponentContext | None
+    secondary_pd_model: ModelComponentContext | None
+    has_hill_coefficient: bool
+
+
+## map variables tab
+class DosingVariableContext(BaseModel):
+    name: str
+    unit_symbol: str | None
+    model_type: Literal["PK", "PD"]
+    is_dosing_compartment: bool
+    has_lag_time: bool
+    description: str | None
+    qname: str
+
+
+class VariableMappingContext(BaseModel):
+    name: str
+    qname: str
+    description: str | None
+
+    link_to_pd: SelectionContext | None
+    secondary_parameters: SelectionContext | None
+    static_receptor_occupancy: SelectionContext | None
+    unbound_concentration: SelectionContext | None
+    blood_concentration: SelectionContext | None
+
+
+class MapVariablesContext(BaseModel):
+    dosing_variables: list[DosingVariableContext]
+    variable_mappings: list[VariableMappingContext]
+
+
+## parameters tab
+class NonlinearityInputContext(BaseModel):
+    name: str
+    qname: str
+    enabled: bool
+
+
+class NonlinearityContext(BaseModel):
+    type: DerivedVariable.Type | None
+    label: str
+    enabled: bool
+    disabled_reason: str | None
+    secondary_variable: NonlinearityInputContext | None
+
+    @field_validator("type")
+    @classmethod
+    def validate_nonlinearity_type(cls, value: DerivedVariable.Type | None):
+        if value is not None and value not in DerivedVariable.NONLINEARITY_TYPES:
+            raise ValueError("expected a nonlinearity type")
+        return value
+
+
+class ParameterCovariateContext(BaseModel):
+    type: DerivedVariable.Type
+    label: str
+    covariate_id: int | None
+
+    @field_validator("type")
+    @classmethod
+    def validate_covariate_type(cls, value: DerivedVariable.Type):
+        if value not in DerivedVariable.COVARIATE_TYPES:
+            raise ValueError("expected a covariate type")
+        return value
+
+
+class ParameterCovariatesContext(BaseModel):
+    selected: list[ParameterCovariateContext]
+    enabled: bool
+    disabled_reason: str | None
+
+
+class ParameterContext(BaseModel):
+    name: str
+    qname: str
+    description: str | None
+    model_type: Literal["PK", "PD", "UD"]
+
+    lower_bound: float | None
+    displayed_value: float
+    upper_bound: float | None
+    unit_symbol: str | None
+    unit_per_body_weight: SelectionContext | None
+    is_log: bool
+    nonlinearity: NonlinearityContext | None
+    covariates: ParameterCovariatesContext | None
+
+
+class ParametersContext(BaseModel):
+    rows: list[ParameterContext]
+
+
+## secondary parameters tab
+class TimeIntervalContext(BaseModel):
+    start_time: float
+    end_time: float
+    unit_symbol: str
+
+
+class VariableThresholdContext(BaseModel):
+    name: str
+    qname: str
+    description: str | None
+    lower_threshold: float
+    upper_threshold: float | None
+    unit_symbol: str | None
+
+
+class SecondaryParametersContext(BaseModel):
+    time_intervals: list[TimeIntervalContext]
+    variable_thresholds: list[VariableThresholdContext]
+
+
+# drug & target page
+class EfficacySafetyContext(BaseModel):
+    selection: SelectionContext
+    name: str
+    c50: float
+    c50_unit_symbol: str
+    hill_coefficient: float
+
+    @classmethod
+    def from_experiment(cls, experiment, *, selected, can_edit):
+        return cls(
+            selection=SelectionContext(selected=selected, enabled=can_edit),
+            name=experiment.name,
+            c50=experiment.c50,
+            c50_unit_symbol=experiment.c50_unit.symbol,
+            hill_coefficient=experiment.hill_coefficient,
+        )
+
+
+class DrugTargetContext(BaseModel):
+    molecular_mass: float
+    molecular_mass_unit_symbol: str
+    target_molecular_mass: float
+    target_molecular_mass_unit_symbol: str
+    target2_molecular_mass: float
+    target2_molecular_mass_unit_symbol: str
+    efficacy_safety_data: list[EfficacySafetyContext]
+
+    @classmethod
+    def from_compound(cls, compound, *, can_edit):
+        return cls(
+            molecular_mass=compound.molecular_mass,
+            molecular_mass_unit_symbol=compound.molecular_mass_unit.symbol,
+            target_molecular_mass=compound.target_molecular_mass,
+            target_molecular_mass_unit_symbol=(
+                compound.target_molecular_mass_unit.symbol
+            ),
+            target2_molecular_mass=compound.target2_molecular_mass,
+            target2_molecular_mass_unit_symbol=(
+                compound.target2_molecular_mass_unit.symbol
+            ),
+            efficacy_safety_data=[
+                EfficacySafetyContext.from_experiment(
+                    experiment,
+                    selected=experiment.id == compound.use_efficacy_id,
+                    can_edit=can_edit,
+                )
+                for experiment in compound.chat_efficacy_experiments
+            ],
+        )
+
+
+# trial design page
+## dosing
+class DoseContext(BaseModel):
+    amount: float
+    number_of_doses: int
+    start_time: float
+    duration: float
+    repeat_interval: float
+
+    @classmethod
+    def from_dose(cls, dose):
+        return cls(
+            amount=dose.amount,
+            number_of_doses=dose.repeats,
+            start_time=dose.start_time,
+            duration=dose.duration,
+            repeat_interval=dose.repeat_interval,
+        )
+
+
+class ProtocolContext(BaseModel):
+    name: str
+    variable_qname: str | None
+    amount_unit_symbol: str | None
+    time_unit_symbol: str | None
+    per_body_weight: SelectionContext
+    from_dataset: bool
+    doses: list[DoseContext] | None
+
+    @classmethod
+    def from_protocol(cls, protocol, *, can_edit):
+        variable = protocol.variable
+        amount_unit = protocol.amount_unit
+        time_unit = protocol.time_unit
+        from_dataset = protocol.dataset_id is not None
+        return cls(
+            name=protocol.name,
+            variable_qname=variable.qname if variable else None,
+            amount_unit_symbol=amount_unit.symbol if amount_unit else None,
+            time_unit_symbol=time_unit.symbol if time_unit else None,
+            per_body_weight=SelectionContext(
+                selected=protocol.amount_per_body_weight,
+                # the api rejects edits to dataset protocols
+                enabled=can_edit and not from_dataset,
+            ),
+            from_dataset=from_dataset,
+            doses=(
+                None
+                if from_dataset
+                else [DoseContext.from_dose(dose) for dose in protocol.chat_doses]
+            ),
+        )
+
+
+## population
+class GroupPopulationContext(BaseModel):
+    study_size: int
+    age_min: float
+    age_max: float
+    male_fraction: float
+    region: str
+
+
+## custom covariates
+class ContinuousCovariateContext(BaseModel):
+    covariate_id: int
+    name: str
+    type: Literal[Covariate.Type.CONTINUOUS]
+    mean: float
+    standard_deviation: float
+    reference_value: float
+
+
+class CategoricalCovariateContext(BaseModel):
+    covariate_id: int
+    name: str
+    type: Literal[Covariate.Type.CATEGORICAL]
+    n_categories: int
+    category_probabilities: list[float]
+
+
+## groups
+class SubjectGroupContext(BaseModel):
+    name: str
+    from_dataset: bool
+    subject_count: int | None
+    protocols: list[ProtocolContext]
+    population: GroupPopulationContext | None
+    custom_covariates: list[
+        ContinuousCovariateContext | CategoricalCovariateContext
+    ]
+
+
+class TrialDesignContext(BaseModel):
+    groups: list[SubjectGroupContext]
+
+
+# context containers
+class ModelContext(BaseModel):
+    # corresponds to tabs under the Model page
+    pkpd_model: PKPDModelContext
+    map_variables: MapVariablesContext
+    parameters: ParametersContext
+    secondary_parameters: SecondaryParametersContext
+
+
+class CompoundContext(BaseModel):
+    name: str
+    modality: str
+
+    @classmethod
+    def from_compound(cls, compound):
+        return cls(name=compound.name, modality=compound.get_compound_type_display())
+
+
+class ProjectContext(BaseModel):
+    name: str
+    description: str
+    compound: CompoundContext
+    drug_target: DrugTargetContext
+    model: ModelContext | None
+    trial_design: TrialDesignContext
+
+
+def load_project_for_chat(project_id):
+    experiments = EfficacyExperiment.objects.select_related("c50_unit").order_by("pk")
+    protocols = Protocol.objects.select_related(
+        "variable", "amount_unit", "time_unit"
+    ).order_by("pk")
+    doses = Dose.objects.filter(protocol__dataset__isnull=True).order_by("pk")
+
+    return (
+        # query 1: project + compound + units as one query
+        Project.objects.select_related(
+            "compound",
+            "compound__molecular_mass_unit",
+            "compound__target_molecular_mass_unit",
+            "compound__target2_molecular_mass_unit",
+        )
+        .prefetch_related(
+            # query 2: experiments of the compound -> compound.chat_efficacy_experiments
+            Prefetch(
+                "compound__efficacy_experiments",
+                queryset=experiments,
+                to_attr="chat_efficacy_experiments",
+            ),
+            # query 3: groups of the project -> project.chat_groups
+            Prefetch("groups", to_attr="chat_groups"),
+            # query 4: protocols of those groups -> group.chat_protocols
+            Prefetch(
+                "chat_groups__protocols",
+                queryset=protocols,
+                to_attr="chat_protocols",
+            ),
+            # query 5: doses of those protocols -> protocol.chat_doses
+            Prefetch(
+                "chat_groups__chat_protocols__doses",
+                queryset=doses,
+                to_attr="chat_doses",
+            ),
+        )
+        .get(pk=project_id)
+    )
+
+
+class ChatContext(BaseModel):
+    page: str | None
+    sub_page: str | None
+    project: ProjectContext | None
