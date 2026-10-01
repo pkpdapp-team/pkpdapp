@@ -34,17 +34,6 @@ class ChatContextTestCase(TestCase):
             species=Project.Species.HUMAN,
         )
 
-    def load_project(self):
-        return load_project_for_chat(self.project.pk)
-
-    def test_describes_the_compound(self):
-        project = self.load_project()
-
-        compound = CompoundContext.from_compound(project.compound).model_dump()
-
-        self.assertEqual(compound, {"name": "demo", "modality": "Small Molecule"})
-
-    def test_describes_drug_and_target(self):
         experiment = EfficacyExperiment.objects.create(
             name="in vitro",
             c50=2.0,
@@ -55,6 +44,29 @@ class ChatContextTestCase(TestCase):
         self.compound.use_efficacy = experiment
         self.compound.save()
 
+        group = SubjectGroup.objects.create(name="Sim-Group 1", project=self.project)
+        protocol = Protocol.objects.create(name="IV", project=self.project, group=group)
+        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
+        Dose.objects.create(protocol=protocol, start_time=24.0, amount=5.0, repeats=3)
+
+    def load_project(self):
+        return load_project_for_chat(self.project.pk)
+
+    def load_protocol(self, name):
+        for group in self.load_project().chat_groups:
+            for protocol in group.chat_protocols:
+                if protocol.name == name:
+                    return protocol
+        self.fail(f"no protocol named {name!r}")
+
+    def test_describes_the_compound(self):
+        project = self.load_project()
+
+        compound = CompoundContext.from_compound(project.compound).model_dump()
+
+        self.assertEqual(compound, {"name": "demo", "modality": "Small Molecule"})
+
+    def test_describes_drug_and_target(self):
         drug_target = DrugTargetContext.from_compound(
             self.load_project().compound, can_edit=True
         ).model_dump()
@@ -74,20 +86,12 @@ class ChatContextTestCase(TestCase):
         )
 
     def test_describes_protocols_and_doses(self):
-        group = SubjectGroup.objects.create(name="Sim-Group 1", project=self.project)
-        protocol = Protocol.objects.create(
-            name="IV", project=self.project, group=group
+        described = ProtocolContext.from_protocol(
+            self.load_protocol("IV"), can_edit=True
         )
-        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
-        Dose.objects.create(
-            protocol=protocol, start_time=24.0, amount=5.0, repeats=3
-        )
-
-        (loaded,) = self.load_project().chat_groups[0].chat_protocols
-        described = ProtocolContext.from_protocol(loaded, can_edit=True).model_dump()
 
         self.assertEqual(
-            described,
+            described.model_dump(),
             {
                 "name": "IV",
                 "variable_qname": None,
@@ -124,8 +128,9 @@ class ChatContextTestCase(TestCase):
         )
         Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
 
-        (loaded,) = self.load_project().chat_groups[0].chat_protocols
-        described = ProtocolContext.from_protocol(loaded, can_edit=True)
+        described = ProtocolContext.from_protocol(
+            self.load_protocol("observed"), can_edit=True
+        )
 
         self.assertTrue(described.from_dataset)
         self.assertIsNone(described.doses)
