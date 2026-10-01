@@ -5,9 +5,10 @@
 #
 from typing import Literal
 
+from django.db.models import Prefetch
 from pydantic import BaseModel, field_validator
 
-from pkpdapp.models import Covariate, DerivedVariable, Project
+from pkpdapp.models import Covariate, DerivedVariable, EfficacyExperiment, Project
 
 
 # shared controls
@@ -164,6 +165,16 @@ class EfficacySafetyContext(BaseModel):
     c50_unit_symbol: str
     hill_coefficient: float
 
+    @classmethod
+    def from_experiment(cls, experiment, *, selected, can_edit):
+        return cls(
+            selection=SelectionContext(selected=selected, enabled=can_edit),
+            name=experiment.name,
+            c50=experiment.c50,
+            c50_unit_symbol=experiment.c50_unit.symbol,
+            hill_coefficient=experiment.hill_coefficient,
+        )
+
 
 class DrugTargetContext(BaseModel):
     molecular_mass: float
@@ -173,6 +184,29 @@ class DrugTargetContext(BaseModel):
     target2_molecular_mass: float
     target2_molecular_mass_unit_symbol: str
     efficacy_safety_data: list[EfficacySafetyContext]
+
+    @classmethod
+    def from_compound(cls, compound, *, can_edit):
+        return cls(
+            molecular_mass=compound.molecular_mass,
+            molecular_mass_unit_symbol=compound.molecular_mass_unit.symbol,
+            target_molecular_mass=compound.target_molecular_mass,
+            target_molecular_mass_unit_symbol=(
+                compound.target_molecular_mass_unit.symbol
+            ),
+            target2_molecular_mass=compound.target2_molecular_mass,
+            target2_molecular_mass_unit_symbol=(
+                compound.target2_molecular_mass_unit.symbol
+            ),
+            efficacy_safety_data=[
+                EfficacySafetyContext.from_experiment(
+                    experiment,
+                    selected=experiment.id == compound.use_efficacy_id,
+                    can_edit=can_edit,
+                )
+                for experiment in compound.chat_efficacy_experiments
+            ],
+        )
 
 
 # trial design page
@@ -266,7 +300,26 @@ class ProjectContext(BaseModel):
 
 
 def load_project_for_chat(project_id):
-    return Project.objects.select_related("compound").get(pk=project_id)
+    experiments = EfficacyExperiment.objects.select_related("c50_unit").order_by("pk")
+
+    return (
+        # query 1: project + compound + units as one query
+        Project.objects.select_related(
+            "compound",
+            "compound__molecular_mass_unit",
+            "compound__target_molecular_mass_unit",
+            "compound__target2_molecular_mass_unit",
+        )
+        .prefetch_related(
+            # query 2: experiments of the compound -> compound.chat_efficacy_experiments
+            Prefetch(
+                "compound__efficacy_experiments",
+                queryset=experiments,
+                to_attr="chat_efficacy_experiments",
+            ),
+        )
+        .get(pk=project_id)
+    )
 
 
 class ChatContext(BaseModel):
