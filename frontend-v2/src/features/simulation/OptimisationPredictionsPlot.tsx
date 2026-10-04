@@ -188,6 +188,7 @@ const OptimisationPredictionsPlot: FC<OptimisationPredictionsPlotProps> = ({
             layout={plotLayout}
             style={{ width: "100%", height: 400 }}
             useResizeHandler
+            config={{ showSendToCloud: false }}
           />
         );
       })}

@@ -58,6 +58,7 @@ export function useConfig({
   };
 
   const config: Partial<Config> = {
+    showSendToCloud: false,
     modeBarButtonsToAdd: [
       {
         name: "Copy to Clipboard",
