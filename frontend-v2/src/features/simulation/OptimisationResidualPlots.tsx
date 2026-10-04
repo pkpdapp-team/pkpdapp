@@ -328,6 +328,7 @@ const ResidualPlotGroup: FC<{
               },
               yaxis: { title: { text: "Residual" }, exponentformat: "power" },
             }}
+            config={{ showSendToCloud: false }}
             style={{ width: "100%", height: 380 }}
             useResizeHandler
           />
@@ -357,6 +358,7 @@ const ResidualPlotGroup: FC<{
               },
               yaxis: { title: { text: "Residual" }, exponentformat: "power" },
             }}
+            config={{ showSendToCloud: false }}
             style={{ width: "100%", height: 380 }}
             useResizeHandler
           />
@@ -392,6 +394,7 @@ const ResidualPlotGroup: FC<{
                     type: logObsPred ? "log" : "linear",
                   },
                 }}
+                config={{ showSendToCloud: false }}
                 style={{ width: "100%", height: 380 }}
                 useResizeHandler
               />
@@ -422,7 +425,7 @@ const ResidualPlotGroup: FC<{
                 variant="caption"
                 align="center"
                 sx={{
-                  color: "text.secondary"
+                  color: "text.secondary",
                 }}
               >
                 Observed vs Predicted plot unavailable — no observation data was
@@ -443,6 +446,7 @@ const ResidualPlotGroup: FC<{
               }}
               style={{ width: "100%", height: 380 }}
               useResizeHandler
+              config={{ showSendToCloud: false }}
             />
           ) : (
             <Box
@@ -458,7 +462,7 @@ const ResidualPlotGroup: FC<{
                 variant="caption"
                 align="center"
                 sx={{
-                  color: "text.secondary"
+                  color: "text.secondary",
                 }}
               >
                 QQ plot hidden — requires at least {QQ_MIN_POINTS} residuals
@@ -561,13 +565,13 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
   });
 
   // One observation type per varId, in first-appearance order.
-  const observationTypes: ObservationType[] = Array.from(
-    typeMap.entries(),
-  ).map(([varId, groupSeries]) => ({
-    varId,
-    name: variables.find((v) => v.id === varId)?.name ?? String(varId),
-    seriesEntries: Array.from(groupSeries.entries()),
-  }));
+  const observationTypes: ObservationType[] = Array.from(typeMap.entries()).map(
+    ([varId, groupSeries]) => ({
+      varId,
+      name: variables.find((v) => v.id === varId)?.name ?? String(varId),
+      seriesEntries: Array.from(groupSeries.entries()),
+    }),
+  );
 
   if (observationTypes.length === 0) {
     return (
@@ -580,9 +584,13 @@ const OptimisationResidualPlots: FC<OptimisationResidualPlotsProps> = ({
           p: 2,
         }}
       >
-        <Typography variant="caption" align="center" sx={{
-          color: "text.secondary"
-        }}>
+        <Typography
+          variant="caption"
+          align="center"
+          sx={{
+            color: "text.secondary",
+          }}
+        >
           No residual data available to plot.
         </Typography>
       </Box>
