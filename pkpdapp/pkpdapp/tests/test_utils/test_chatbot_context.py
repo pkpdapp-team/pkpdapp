@@ -7,6 +7,8 @@ import pkpdapp.tests  # noqa: F401
 from django.test import TestCase
 
 from pkpdapp.models import (
+    Biomarker,
+    BiomarkerType,
     CombinedModel,
     Compound,
     Correlation,
@@ -22,6 +24,11 @@ from pkpdapp.models import (
     PkpdMapping,
     Project,
     Protocol,
+    ResultsTable,
+    Simulation,
+    SimulationPlot,
+    SimulationSlider,
+    SimulationYAxis,
     Subject,
     SubjectGroup,
     Tag,
@@ -33,13 +40,16 @@ from pkpdapp.utils.chatbot_context import (
     ChatContext,
     CompoundContext,
     ContinuousCovariateContext,
+    DataPageContext,
     DrugTargetContext,
     GroupPopulationContext,
     MapVariablesContext,
     ParametersContext,
     PKPDModelContext,
     ProtocolContext,
+    ResultsContext,
     SecondaryParametersContext,
+    SimulationsContext,
     SubjectGroupContext,
     TrialDesignContext,
     load_project_for_chat,
@@ -384,6 +394,99 @@ class ChatContextTestCase(TestCase):
         thresholds = secondary_parameters.variable_thresholds
         self.assertEqual([t.name for t in thresholds], ["C1"])
         self.assertEqual(thresholds[0].lower_threshold, 1.0)
+
+    def test_describes_the_data_page(self):
+        dataset = Dataset.objects.create(name="observed", project=self.project)
+        group = SubjectGroup.objects.create(
+            name="Data-Group 1", dataset=dataset, project=self.project
+        )
+        hours = Unit.objects.get(symbol="h")
+        ng_per_ml = Unit.objects.get(symbol="ng/mL")
+        pk = BiomarkerType.objects.create(
+            name="PK",
+            dataset=dataset,
+            variable=self.model.variables.get(qname="PKCompartment.C1"),
+            stored_unit=ng_per_ml,
+            display_unit=ng_per_ml,
+            stored_time_unit=hours,
+            display_time_unit=hours,
+        )
+        # not mapped to a model output, so the ui hides it
+        unmapped = BiomarkerType.objects.create(
+            name="unmapped",
+            dataset=dataset,
+            stored_unit=ng_per_ml,
+            display_unit=ng_per_ml,
+            stored_time_unit=hours,
+            display_time_unit=hours,
+        )
+        subject = Subject.objects.create(id_in_dataset=1, dataset=dataset, group=group)
+        Biomarker.objects.create(
+            subject=subject, biomarker_type=pk, time=0.5, value=4.2
+        )
+        Biomarker.objects.create(
+            subject=subject, biomarker_type=pk, time=48.0, value=1.1, exclude=True
+        )
+        Biomarker.objects.create(
+            subject=subject, biomarker_type=unmapped, time=1.0, value=2.0
+        )
+
+        data_page = DataPageContext.from_project(self.load_project())
+
+        self.assertEqual(
+            [t.observation_id for t in data_page.observation_types], ["PK"]
+        )
+        pk_summary = data_page.observation_types[0]
+        self.assertEqual(pk_summary.point_count, 2)
+        self.assertEqual(pk_summary.excluded_from_fitting, 1)
+        self.assertEqual(pk_summary.time_range, (0.5, 48.0))
+
+    def test_describes_the_simulations_page(self):
+        simulation = Simulation.objects.create(
+            name="default",
+            project=self.project,
+            time_max=48,
+            time_max_unit=Unit.objects.get(symbol="h"),
+        )
+        plot = SimulationPlot.objects.create(
+            simulation=simulation, index=0, x_unit=Unit.objects.get(symbol="h")
+        )
+        SimulationYAxis.objects.create(
+            plot=plot, variable=self.model.variables.get(qname="PKCompartment.C1")
+        )
+        SimulationSlider.objects.create(
+            simulation=simulation,
+            variable=self.model.variables.get(qname="PKCompartment.V1"),
+        )
+        SimulationSlider.objects.create(
+            simulation=simulation,
+            variable=self.model.variables.get(qname="PKCompartment.CL"),
+        )
+
+        project = self.load_project()
+        simulations_page = SimulationsContext.from_simulation(
+            project.simulations.all()[0], project.pk_models.all()[0]
+        )
+
+        self.assertEqual(simulations_page.duration, 48.0)
+        self.assertEqual(simulations_page.plots[0].left_axis, ["C1"])
+        # added V1 first, the ui sorts CL before V1
+        self.assertEqual(simulations_page.slider_parameters, ["CL", "V1"])
+
+    def test_describes_the_results_page(self):
+        ResultsTable.objects.create(
+            name="Table 2", rows="variables", columns="intervals", project=self.project
+        )
+        ResultsTable.objects.create(
+            name="Table 1", rows="groups", columns="parameters", project=self.project
+        )
+
+        tables = ResultsContext.from_project(self.load_project()).tables
+
+        # created out of order, the ui sorts the tabs by name
+        self.assertEqual([table.name for table in tables], ["Table 1", "Table 2"])
+        self.assertEqual(tables[0].rows, "groups")
+        self.assertEqual(tables[0].columns, "parameters")
 
     def test_builds_the_whole_chat_context(self):
         context = ChatContext.from_project(

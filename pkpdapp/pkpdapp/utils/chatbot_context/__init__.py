@@ -7,7 +7,8 @@
 
 # the chat context mirrors the ui, from the root down: ChatContext (chat_context.py)
 # -> ProjectContext (project.py) -> pages (drug_and_target.py, model_page.py,
-# trial_design.py) -> model tabs (model_*.py) and page parts -> rows and fields
+# data_page.py, trial_design.py, simulations_page.py, results_page.py) -> model tabs
+# (model_*.py) and page parts -> rows and fields
 # the from_* methods read relations that loaders.py prefetches (see the
 # comments there for what each one holds)
 
@@ -35,6 +36,9 @@ from .model_secondary_parameters import (
     SecondaryParametersContext,
 )
 from .model_page import ModelContext
+from .data_page import ObservationTypeContext, DataPageContext
+from .simulations_page import SimulationPlotContext, SimulationsContext
+from .results_page import ResultsTableContext, ResultsContext
 from .trial_design import (
     DoseContext,
     ProtocolContext,
