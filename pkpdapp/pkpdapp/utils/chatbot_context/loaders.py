@@ -6,12 +6,16 @@
 from django.db.models import Count, Prefetch
 
 from pkpdapp.models import (
+    CombinedModel,
     CovariatePopulation,
+    DerivedVariable,
     Dose,
     EfficacyExperiment,
     Project,
     Protocol,
     SubjectGroup,
+    Tag,
+    Variable,
 )
 
 
@@ -20,6 +24,8 @@ from pkpdapp.models import (
 # -------------------------
 # prefetches everything the chat context reads, to avoid redundant queries
 def load_project_for_chat(project: Project) -> Project:
+    tags = Tag.objects.order_by("name")
+
     return (
         # query 1: project + compound + units as one query
         Project.objects.select_related(
@@ -27,6 +33,7 @@ def load_project_for_chat(project: Project) -> Project:
             "compound__molecular_mass_unit",
             "compound__target_molecular_mass_unit",
             "compound__target2_molecular_mass_unit",
+            "species_weight_unit",
         )
         .prefetch_related(
             # query 2: project.compound.efficacy_experiments.all()
@@ -59,6 +66,38 @@ def load_project_for_chat(project: Project) -> Project:
                     "covariate"
                 ).order_by("pk"),
             ),
+            # queries 7-8: project.pk_tags.all(), project.pd_tags.all()
+            Prefetch("pk_tags", queryset=tags),
+            Prefetch("pd_tags", queryset=tags),
+            # query 9: project.pk_models.all(), its combined model (one per project)
+            Prefetch("pk_models", queryset=CombinedModel.objects.order_by("pk")),
+
+            # ----- below, model means project.pk_models.all()[0] -----
+            # model.pk_model.tags.all(), model.pd_model.tags.all() etc.
+            Prefetch("pk_models__pk_model__tags", queryset=tags),
+            Prefetch("pk_models__pk_model2__tags", queryset=tags),
+            Prefetch("pk_models__pk_effect_model__tags", queryset=tags),
+            Prefetch("pk_models__pd_model__tags", queryset=tags),
+            Prefetch("pk_models__pd_model2__tags", queryset=tags),
+            # query 10: model.variables.all() (+ unit)
+            Prefetch(
+                "pk_models__variables",
+                queryset=Variable.objects.select_related("unit").order_by("pk"),
+            ),
+            # query 11: model.variables.all() -> variable.chat_non_dataset_protocols,
+            # a filtered list, so it gets its own name instead of protocols
+            Prefetch(
+                "pk_models__variables__protocols",
+                queryset=Protocol.objects.filter(dataset__isnull=True),
+                to_attr="chat_non_dataset_protocols",
+            ),
+            # query 12: model.variables.all() -> variable.derived_variables.all()
+            Prefetch(
+                "pk_models__variables__derived_variables",
+                queryset=DerivedVariable.objects.order_by("pk"),
+            ),
+            # query 13: model.variables.all() -> variable.pk_mappings.all()
+            Prefetch("pk_models__variables__pk_mappings"),
         )
         .get(pk=project.pk)
     )

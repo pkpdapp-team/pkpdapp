@@ -12,10 +12,12 @@ from pkpdapp.models import (
     Covariate,
     CovariatePopulation,
     Dataset,
+    DerivedVariable,
     Dose,
     EfficacyExperiment,
     PharmacodynamicModel,
     PharmacokineticModel,
+    PkpdMapping,
     Project,
     Protocol,
     Subject,
@@ -30,6 +32,8 @@ from pkpdapp.utils.chatbot_context import (
     ContinuousCovariateContext,
     DrugTargetContext,
     GroupPopulationContext,
+    MapVariablesContext,
+    PKPDModelContext,
     ProtocolContext,
     SubjectGroupContext,
     TrialDesignContext,
@@ -112,6 +116,9 @@ class ChatContextTestCase(TestCase):
 
     def load_project(self):
         return load_project_for_chat(self.project)
+
+    def load_model(self):
+        return self.load_project().pk_models.all()[0]
 
     def load_protocol(self, name):
         for group in self.load_project().groups.all():
@@ -234,6 +241,67 @@ class ChatContextTestCase(TestCase):
         # dataset imports leave the population fields at their defaults
         self.assertIsNone(data_group.population)
 
+    def test_describes_the_pkpd_model_tab(self):
+        pkpd_model = PKPDModelContext.from_combined_model(
+            self.load_model(), can_edit=True
+        )
+
+        self.assertEqual(pkpd_model.species, "Human")
+        self.assertEqual(pkpd_model.pk_filter_tags, ["1-compartment"])
+        self.assertEqual(pkpd_model.pk_model.name, "1-compartmental model")
+        self.assertEqual(
+            pkpd_model.pd_model.name,
+            "Indirect effect model (stimulation of production)",
+        )
+        # lag time is only shown once an extravascular model is picked
+        self.assertIsNone(pkpd_model.extravascular_model)
+        self.assertIsNone(pkpd_model.has_lag)
+        # anti-drug antibodies can only be ticked for large molecules
+        self.assertFalse(pkpd_model.has_anti_drug_antibodies.enabled)
+        # the indirect effect pd model has a hill coefficient
+        self.assertTrue(pkpd_model.has_hill_coefficient.enabled)
+
+    def test_describes_the_dosing_table(self):
+        self.model.has_lag = True
+        self.model.save()
+        a1 = self.model.variables.get(qname="PKCompartment.A1")
+        DerivedVariable.objects.create(
+            pkpd_model=self.model, pk_variable=a1, type=DerivedVariable.Type.TLAG
+        )
+
+        map_variables = MapVariablesContext.from_combined_model(
+            self.load_model(), can_edit=True
+        )
+
+        self.assertEqual([row.name for row in map_variables.dosing_variables], ["A1"])
+        a1_row = map_variables.dosing_variables[0]
+        # setUp doses A1, and A1 has a lag time
+        self.assertTrue(a1_row.is_dosing_compartment.selected)
+        self.assertTrue(a1_row.has_lag_time.selected)
+
+    def test_describes_the_map_variables_tab(self):
+        c1 = self.model.variables.get(qname="PKCompartment.C1")
+        PkpdMapping.objects.create(
+            pkpd_model=self.model,
+            pk_variable=c1,
+            pd_variable=self.model.variables.get(qname="PDCompartment.C_Drug"),
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.model,
+            pk_variable=c1,
+            type=DerivedVariable.Type.AREA_UNDER_CURVE,
+        )
+
+        map_variables = MapVariablesContext.from_combined_model(
+            self.load_model(), can_edit=True
+        )
+
+        rows = map_variables.variable_mappings
+        # concentrations first, then amounts, then the rest
+        self.assertEqual([row.name for row in rows], ["C1", "A1", "E", "PDO", "STM"])
+        self.assertTrue(rows[0].link_to_pd.selected)
+        self.assertTrue(rows[0].secondary_parameters.selected)
+
     def test_builds_the_whole_chat_context(self):
         context = ChatContext.from_project(
             self.project,
@@ -247,5 +315,20 @@ class ChatContextTestCase(TestCase):
         self.assertEqual(context.project.name, "demo project")
         self.assertEqual(context.project.compound.name, "demo")
         self.assertEqual(
+            context.project.model_page.pkpd_model_sub_page.pk_model.name,
+            "1-compartmental model",
+        )
+        self.assertEqual(
             context.project.trial_design_page.groups[0].name, "Sim-Group 1"
         )
+
+    def test_project_without_a_model_has_no_model_context(self):
+        # protocols restrict deleting the variables they dose
+        Protocol.objects.filter(project=self.project).delete()
+        CombinedModel.objects.filter(project=self.project).delete()
+
+        context = ChatContext.from_project(
+            self.project, can_edit=True, current_page=None, current_sub_page=None
+        )
+
+        self.assertIsNone(context.project.model_page)
