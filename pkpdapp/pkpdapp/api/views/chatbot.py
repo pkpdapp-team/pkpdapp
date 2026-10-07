@@ -16,7 +16,7 @@ from rest_framework import serializers, status
 
 from pkpdapp.models import Conversation, ProjectAccess
 from pkpdapp.api.serializers import ChatbotRequestSerializer
-from pkpdapp.utils.chat_context import build_chat_context
+from pkpdapp.utils.chatbot_context import ChatContext
 from pkpdapp.utils.chatbot import (
     stream_chat_response,
     check_chatbot_config,
@@ -80,20 +80,31 @@ class ChatbotView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        project = conversation.get_project()
+        if project is None:
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": "Conversation has no project."}
+            )
+            return Response(
+                error_response.data,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Ownership above guarantees conversation.user == request.user, but a
         # conversation also belongs to a project. Mirror CheckAccessToProject
         # (used by ConversationViewSet) so a user who no longer has access to
         # the conversation's project cannot keep chatting against it.
-        project = conversation.get_project()
-        if project is not None and not request.user.is_superuser:
-            has_access = ProjectAccess.objects.filter(
+        can_edit = True
+        if not request.user.is_superuser:
+            access = ProjectAccess.objects.filter(
                 project=project,
                 user=request.user,
-            ).exists()
-            if not has_access:
+            ).first()
+            if access is None:
                 raise PermissionDenied(
                     "You do not have access to this conversation's project."
                 )
+            can_edit = not access.read_only
 
         try:
             check_chatbot_config()
@@ -103,23 +114,27 @@ class ChatbotView(APIView):
                 error_response.data, status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        server_context = {}
-        if project is not None:
-            try:
-                server_context = build_chat_context(project)
-            except Exception:
-                logger.exception(
-                    "[chatbot] failed to build context for project=%s",
-                    project.pk,
-                )
+        current_page = client_context.get("page")
+        current_sub_page = client_context.get("sub_page")
+        try:
+            chat_context = ChatContext.from_project(
+                project,
+                can_edit=can_edit,
+                current_page=current_page,
+                current_sub_page=current_sub_page,
+            )
+        except Exception:
+            logger.exception(
+                "[chatbot] failed to build context for project=%s",
+                project.pk,
+            )
+            chat_context = ChatContext(
+                current_page=current_page,
+                current_sub_page=current_sub_page,
+                project=None,
+            )
 
-        # Server-owned context takes precedence.
-        assert client_context.keys().isdisjoint(server_context.keys())
-        merged_context = {**client_context, **server_context}
-
-        generator = stream_chat_response(
-            conversation, content, context=merged_context or None
-        )
+        generator = stream_chat_response(conversation, content, context=chat_context)
         response = StreamingHttpResponse(
             generator,
             content_type="text/event-stream; charset=utf-8",
