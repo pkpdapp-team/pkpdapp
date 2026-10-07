@@ -7,6 +7,7 @@ from django.db.models import Count, Prefetch
 
 from pkpdapp.models import (
     CombinedModel,
+    Correlation,
     CovariatePopulation,
     DerivedVariable,
     Dose,
@@ -15,6 +16,7 @@ from pkpdapp.models import (
     Protocol,
     SubjectGroup,
     Tag,
+    TimeInterval,
     Variable,
 )
 
@@ -82,7 +84,9 @@ def load_project_for_chat(project: Project) -> Project:
             # query 10: model.variables.all() (+ unit)
             Prefetch(
                 "pk_models__variables",
-                queryset=Variable.objects.select_related("unit").order_by("pk"),
+                queryset=Variable.objects.select_related(
+                    "unit", "secondary_unit"
+                ).order_by("pk"),
             ),
             # query 11: model.variables.all() -> variable.chat_non_dataset_protocols,
             # a filtered list, so it gets its own name instead of protocols
@@ -94,10 +98,26 @@ def load_project_for_chat(project: Project) -> Project:
             # query 12: model.variables.all() -> variable.derived_variables.all()
             Prefetch(
                 "pk_models__variables__derived_variables",
-                queryset=DerivedVariable.objects.order_by("pk"),
+                queryset=DerivedVariable.objects.select_related(
+                    "covariate", "secondary_variable"
+                ).order_by("pk"),
             ),
             # query 13: model.variables.all() -> variable.pk_mappings.all()
             Prefetch("pk_models__variables__pk_mappings"),
+            # query 14: model.variables.all() -> variable.distribution
+            Prefetch("pk_models__variables__distribution"),
+            # query 15: ... -> variable.distribution.correlations_as_1.all()
+            Prefetch(
+                "pk_models__variables__distribution__correlations_as_1",
+                queryset=Correlation.objects.select_related(
+                    "distribution_2__variable"
+                ).order_by("pk"),
+            ),
+            # query 16: model.time_intervals.all() (+ unit)
+            Prefetch(
+                "pk_models__time_intervals",
+                queryset=TimeInterval.objects.select_related("unit").order_by("pk"),
+            ),
         )
         .get(pk=project.pk)
     )

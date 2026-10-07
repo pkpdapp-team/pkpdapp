@@ -9,10 +9,12 @@ from django.test import TestCase
 from pkpdapp.models import (
     CombinedModel,
     Compound,
+    Correlation,
     Covariate,
     CovariatePopulation,
     Dataset,
     DerivedVariable,
+    Distribution,
     Dose,
     EfficacyExperiment,
     PharmacodynamicModel,
@@ -23,6 +25,7 @@ from pkpdapp.models import (
     Subject,
     SubjectGroup,
     Tag,
+    TimeInterval,
     Unit,
 )
 from pkpdapp.utils.chatbot_context import (
@@ -33,8 +36,10 @@ from pkpdapp.utils.chatbot_context import (
     DrugTargetContext,
     GroupPopulationContext,
     MapVariablesContext,
+    ParametersContext,
     PKPDModelContext,
     ProtocolContext,
+    SecondaryParametersContext,
     SubjectGroupContext,
     TrialDesignContext,
     load_project_for_chat,
@@ -301,6 +306,84 @@ class ChatContextTestCase(TestCase):
         self.assertEqual([row.name for row in rows], ["C1", "A1", "E", "PDO", "STM"])
         self.assertTrue(rows[0].link_to_pd.selected)
         self.assertTrue(rows[0].secondary_parameters.selected)
+
+    def test_describes_the_parameters_tab(self):
+        cl = self.model.variables.get(qname="PKCompartment.CL")
+        v1 = self.model.variables.get(qname="PKCompartment.V1")
+        cl_population = Distribution.objects.create(
+            variable=cl, pdf=Distribution.PDF.LOGNORMAL, variance=0.09
+        )
+        v1_population = Distribution.objects.create(
+            variable=v1, pdf=Distribution.PDF.LOGNORMAL, variance=0.04
+        )
+        Correlation.objects.create(
+            distribution_1=cl_population, distribution_2=v1_population, coefficient=0.5
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.model,
+            pk_variable=v1,
+            type=DerivedVariable.Type.AGE_COVARIATE,
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.model,
+            pk_variable=v1,
+            type=DerivedVariable.Type.WEIGHT_COVARIATE,
+        )
+
+        parameters = ParametersContext.from_combined_model(
+            self.load_model(), can_edit=True
+        )
+
+        # pk parameters first, covariate coefficients right after their parameter
+        self.assertEqual(
+            [row.name for row in parameters.rows],
+            ["CL", "V1", "V1_a_AGE", "V1_a_WT", "C50", "E0", "Emax", "kdegE"],
+        )
+        v1_row = parameters.rows[1]
+        self.assertTrue(v1_row.population.selected)
+        # std deviation = sqrt(variance)
+        self.assertEqual(v1_row.population_distribution.std_deviation, 0.2)
+        # weight is listed before age, like the ui options
+        self.assertEqual(
+            [c.label for c in v1_row.covariates.selected], ["Weight", "Age"]
+        )
+        # a parameter with covariates cannot also get a nonlinearity
+        self.assertFalse(v1_row.nonlinearity.enabled)
+        correlation = parameters.correlations[0]
+        self.assertEqual(
+            (correlation.parameter_1, correlation.parameter_2), ("CL", "V1")
+        )
+        self.assertEqual(correlation.coefficient, 0.5)
+
+    def test_describes_the_secondary_parameters_tab(self):
+        hours = Unit.objects.get(symbol="h")
+        TimeInterval.objects.create(
+            pkpd_model=self.model, start_time=0, end_time=24, unit=hours
+        )
+        TimeInterval.objects.create(
+            pkpd_model=self.model, start_time=24, end_time=48, unit=hours
+        )
+        c1 = self.model.variables.get(qname="PKCompartment.C1")
+        c1.lower_threshold = 1.0
+        c1.save()
+        DerivedVariable.objects.create(
+            pkpd_model=self.model,
+            pk_variable=c1,
+            type=DerivedVariable.Type.AREA_UNDER_CURVE,
+        )
+
+        secondary_parameters = SecondaryParametersContext.from_combined_model(
+            self.load_model()
+        )
+
+        self.assertEqual(
+            [(i.start_time, i.end_time) for i in secondary_parameters.time_intervals],
+            [(0.0, 24.0), (24.0, 48.0)],
+        )
+        # only variables with secondary parameters ticked (an AUC) get thresholds
+        thresholds = secondary_parameters.variable_thresholds
+        self.assertEqual([t.name for t in thresholds], ["C1"])
+        self.assertEqual(thresholds[0].lower_threshold, 1.0)
 
     def test_builds_the_whole_chat_context(self):
         context = ChatContext.from_project(
