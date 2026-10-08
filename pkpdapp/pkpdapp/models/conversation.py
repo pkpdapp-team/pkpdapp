@@ -137,10 +137,7 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-    # The full role set is declared up front. Basic chat only ever writes
-    # "user" and "assistant" rows, but tool-calling (added in a later change)
-    # writes "tool_call"/"tool_result" rows — declaring them now means that
-    # feature adds behaviour, not a schema migration.
+    # tool roles are for saving tool calls later, declared now to avoid a migration
     ROLE_CHOICES = [
         ("user", "User"),
         ("assistant", "Assistant"),
