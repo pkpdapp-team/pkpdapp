@@ -32,13 +32,15 @@ class Conversation(models.Model):
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     last_message_at = models.DateTimeField(null=True, blank=True)
     summary = models.TextField(blank=True, default="")
     summarized_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ["-updated_at"]
+        ordering = [
+            F("last_message_at").desc(nulls_first=True),
+            "-created_at",
+        ]
 
     def __str__(self):
         return self.title or f"Conversation {self.pk}"
