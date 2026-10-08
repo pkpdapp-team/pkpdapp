@@ -80,6 +80,24 @@ class ConversationViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_list_shows_new_chats_first_then_latest_message(self):
+        replied_last = Conversation.objects.create(
+            user=self.user, project=self.project, title="replied last"
+        )
+        replied_first = Conversation.objects.create(
+            user=self.user, project=self.project, title="replied first"
+        )
+        replied_first.add_user_message("hi")
+        replied_last.add_user_message("hi")
+        Conversation.objects.create(
+            user=self.user, project=self.project, title="empty"
+        )
+
+        response = self.client.get("/api/conversations/")
+
+        titles = [conversation["title"] for conversation in response.data]
+        self.assertEqual(titles, ["empty", "replied last", "replied first"])
+
     def test_list_excludes_soft_deleted(self):
         Conversation.objects.create(
             user=self.user, project=self.project, is_active=False

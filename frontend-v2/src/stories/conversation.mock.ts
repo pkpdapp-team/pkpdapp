@@ -7,7 +7,7 @@ export const conversations: ConversationRead[] = [
     project: 57,
     title: "Clearance estimation",
     created_at: "2025-06-01T09:00:00Z",
-    updated_at: "2025-06-01T09:30:00Z",
+    last_message_at: "2025-06-01T09:30:00Z",
     last_message_preview: "How is clearance estimated?",
   },
   {
@@ -15,7 +15,7 @@ export const conversations: ConversationRead[] = [
     project: 57,
     title: "Volume of distribution",
     created_at: "2025-06-02T14:00:00Z",
-    updated_at: "2025-06-02T14:15:00Z",
+    last_message_at: "2025-06-02T14:15:00Z",
     last_message_preview: "What drives the central compartment volume?",
   },
 ];

@@ -4310,18 +4310,19 @@ components:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        last_message_at:
           type: string
           format: date-time
           readOnly: true
+          nullable: true
         last_message_preview:
           type: string
           readOnly: true
       required:
       - created_at
       - id
+      - last_message_at
       - last_message_preview
-      - updated_at
     Correlation:
       type: object
       properties:
