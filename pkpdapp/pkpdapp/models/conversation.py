@@ -85,7 +85,7 @@ class Conversation(models.Model):
         are replayed.
         """
         db_messages = list(
-            self.messages.order_by("id")
+            self.messages.order_by("created_at")
         )
         if len(db_messages) > max_messages:
             db_messages = db_messages[-max_messages:]
