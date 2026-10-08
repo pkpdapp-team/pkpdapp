@@ -140,7 +140,7 @@ if settings.CHATBOT_SMALL_MODEL == settings.CHATBOT_MODEL:
 _client = None
 
 
-def _get_client():
+def get_client():
     """Return a cached Portkey client, creating it on first call."""
     global _client
     if _client is None:
@@ -495,7 +495,7 @@ def stream_chat_response(
             _build_system_prompt(context, conversation=conversation, indent=2),
         )
 
-        client = _get_client()
+        client = get_client()
 
         yield _sse({"type": "start", "messageId": message_id})
 

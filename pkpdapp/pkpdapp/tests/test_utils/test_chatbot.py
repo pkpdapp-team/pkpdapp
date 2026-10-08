@@ -44,7 +44,7 @@ class ChatbotUtilsTestCase(TestCase):
         self.conversation = Conversation.objects.create(
             user=self.user, project=self.project, title="demo chat"
         )
-        # _get_client caches a singleton, reset it so a leaked real client
+        # get_client caches a singleton, reset it so a leaked real client
         # from a previous test cannot bleed into this one.
         chatbot._client = None
 
@@ -61,7 +61,7 @@ class ChatbotUtilsTestCase(TestCase):
 
         fake_client = mock.Mock()
         fake_client.responses.create.return_value = [completed_event()]
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             list(chatbot.stream_chat_response(self.conversation, "new question"))
 
         input_items = fake_client.responses.create.call_args.kwargs["input"]
@@ -83,7 +83,7 @@ class ChatbotUtilsTestCase(TestCase):
 
         fake_client = mock.Mock()
         fake_client.responses.create.return_value = [completed_event()]
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             list(chatbot.stream_chat_response(self.conversation, "new"))
 
         # 45 existing + "new" = 46 total; window of 40 drops the oldest 6.
@@ -99,7 +99,7 @@ class ChatbotUtilsTestCase(TestCase):
             event("response.output_text.delta", delta="lo"),
             event("error", message="boom"),
         ]
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             chunks = list(chatbot.stream_chat_response(self.conversation, "question"))
 
         output = "".join(chunks)
@@ -118,7 +118,7 @@ class ChatbotUtilsTestCase(TestCase):
             ),
         ]
 
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             chunks = list(chatbot.stream_chat_response(self.conversation, "question"))
 
         # The user turn and the assistant reply are both persisted.
@@ -139,7 +139,7 @@ class ChatbotUtilsTestCase(TestCase):
             event("error", message="boom"),
         ]
 
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             list(chatbot.stream_chat_response(self.conversation, "question"))
 
         # User message is saved, but no assistant message for a failed stream.
@@ -155,7 +155,7 @@ class ChatbotUtilsTestCase(TestCase):
             completed_event(),
         ]
 
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             with mock.patch.object(
                 self.conversation,
                 "save_assistant_message",
@@ -180,7 +180,7 @@ class ChatbotUtilsTestCase(TestCase):
         """
         fake_client = mock.Mock()
         fake_client.responses.create.return_value = [completed_event()]
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             list(
                 chatbot.stream_chat_response(
                     self.conversation, "question", context=context
@@ -279,7 +279,7 @@ class ChatbotUtilsTestCase(TestCase):
             ],
         ]
 
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             chunks = list(chatbot.stream_chat_response(self.conversation, "question"))
 
         # The second round is where the tool result reaches the model.
@@ -303,7 +303,7 @@ class ChatbotUtilsTestCase(TestCase):
             SimpleNamespace(output_text='**Title: "PK Model Setup."**'),
         ]
 
-        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             # list() runs the generator to the end
             list(chatbot.stream_chat_response(conversation, "question"))
 
