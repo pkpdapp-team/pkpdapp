@@ -12,6 +12,12 @@ from drf_spectacular.types import OpenApiTypes
 from pkpdapp.models import Conversation, Message
 from pkpdapp.api.serializers import ConversationSerializer, MessageSerializer
 from pkpdapp.api.views import CheckAccessToProject, ProjectFilter
+from pkpdapp.utils.chatbot import (
+    ChatbotConfigError,
+    check_chatbot_config,
+    get_client,
+)
+from pkpdapp.utils.chatbot_summary import summarize_changed
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -28,7 +34,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        conversation = serializer.save(user=self.request.user)
+        try:
+            check_chatbot_config()
+        except ChatbotConfigError:
+            return
+        summarize_changed(self.request.user, conversation.project, get_client())
 
     def perform_destroy(self, instance):
         instance.is_active = False
