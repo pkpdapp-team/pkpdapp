@@ -21,6 +21,7 @@ from pkpdapp.utils.chatbot_usage import (
     get_model_pricing,
     record_usage,
 )
+from pkpdapp.utils.chatbot_title import set_title_if_default
 
 from portkey_ai import Portkey
 
@@ -613,6 +614,7 @@ def stream_chat_response(
             logger.exception(
                 "[chatbot] [%s] error saving assistant message", req_id
             )
+        set_title_if_default(conversation, client)
         _log_io(req_id, "ASSISTANT FINAL", "".join(assistant_text_parts))
         logger.info("[chatbot] [%s] done", req_id)
 
