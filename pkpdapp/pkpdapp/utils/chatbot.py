@@ -16,6 +16,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
 )
 from pkpdapp.utils.chatbot_app_layout import APP_LAYOUT, CONTEXT_NOTES
+from pkpdapp.utils.chatbot_summary import past_summaries_section
 from pkpdapp.utils.chatbot_title import set_title_if_default
 
 from portkey_ai import Portkey
@@ -222,6 +223,11 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     parts = [SYSTEM_PROMPT, f"\n\n[APP LAYOUT]\n{app_layout_json}"]
     if catalog:
         parts.append(f"\n\n[LIBRARY MODELS]\n{catalog}")
+
+    if conversation is not None:
+        past_summaries = past_summaries_section(conversation)
+        if past_summaries:
+            parts.append(past_summaries)
 
     if context is not None:
         notes = "\n".join(f"- {note}" for note in CONTEXT_NOTES)

@@ -207,6 +207,26 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn('"current_page":"Trial Design"', block)
         self.assertIn('"name":"demo project"', block)
 
+    def summarized_chat(self, user, summary):
+        conversation = Conversation.objects.create(user=user, project=self.project)
+        conversation.add_user_message("hello")
+        conversation.summary = summary
+        conversation.save(update_fields=["summary"])
+        return conversation
+
+    def test_system_prompt_includes_only_my_other_summaries(self):
+        other_user = User.objects.create_user(username="other", password="12345")
+        self.summarized_chat(self.user, "- my earlier chat")
+        self.summarized_chat(other_user, "- their chat")
+        self.conversation.summary = "- this chat"
+        self.conversation.save(update_fields=["summary"])
+
+        prompt = chatbot._build_system_prompt(conversation=self.conversation)
+
+        self.assertIn("- my earlier chat", prompt)
+        self.assertNotIn("- their chat", prompt)
+        self.assertNotIn("- this chat", prompt)
+
     def test_system_prompt_includes_the_app_layout(self):
         prompt = chatbot._build_system_prompt()
 

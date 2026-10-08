@@ -4,11 +4,15 @@
 # copyright notice and full license details.
 #
 import pkpdapp.tests  # noqa: F401
+from unittest import mock
+
 from django.contrib.auth.models import User
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from pkpdapp.models import Compound, Conversation, Message, Project
+from pkpdapp.api.views import conversation as conversation_views
 
 
 class ConversationViewTestCase(APITestCase):
@@ -29,6 +33,32 @@ class ConversationViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         conversation = Conversation.objects.get(id=response.data["id"])
         self.assertEqual(conversation.user, self.user)
+
+    @override_settings(PORTKEY_API_KEY="some-key", CHATBOT_MODEL="some-model")
+    def test_create_summarises_my_three_newest_changed_chats(self):
+        mine = []
+        for i in range(4):
+            conversation = Conversation.objects.create(
+                user=self.user, project=self.project
+            )
+            conversation.add_user_message(f"question {i}")
+            mine.append(conversation)
+        other_user = User.objects.create_user(username="other", password="12345")
+        theirs = Conversation.objects.create(user=other_user, project=self.project)
+        theirs.add_user_message("their question")
+
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value.output_text = "- a summary"
+        with mock.patch.object(
+            conversation_views, "get_client", return_value=fake_client
+        ):
+            response = self.client.post(
+                "/api/conversations/", {"project": self.project.id}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        summarized = Conversation.objects.exclude(summary="")
+        self.assertCountEqual(summarized, mine[1:])
 
     def test_cannot_create_in_project_without_access(self):
         other_compound = Compound.objects.create(name="other")

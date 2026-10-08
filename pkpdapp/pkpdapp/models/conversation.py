@@ -4,8 +4,12 @@
 # copyright notice and full license details.
 #
 
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import F, Q
 from django.conf import settings
+
+from pkpdapp.models.project import Project
 
 
 class Conversation(models.Model):
@@ -29,6 +33,9 @@ class Conversation(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_message_at = models.DateTimeField(null=True, blank=True)
+    summary = models.TextField(blank=True, default="")
+    summarized_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-updated_at"]
@@ -41,6 +48,31 @@ class Conversation(models.Model):
 
     def has_default_title(self):
         return self.title in ("", self.DEFAULT_TITLE)
+
+    @classmethod
+    def changed_since_summary(cls, user: User, project: Project):
+        return (
+            cls.objects.filter(
+                user=user,
+                project=project,
+                is_active=True,
+                last_message_at__isnull=False,
+            )
+            .filter(
+                Q(summarized_at__isnull=True)
+                | Q(last_message_at__gt=F("summarized_at"))
+            )
+            .order_by("-last_message_at")
+        )
+
+    def other_summaries(self):
+        return (
+            self.project.conversations
+            .filter(user=self.user, is_active=True)
+            .exclude(pk=self.pk)
+            .exclude(summary="")
+            .order_by("-last_message_at")
+        )
 
     def last_message_preview(self):
         """Return the first text line from the last user/assistant message."""
@@ -61,21 +93,26 @@ class Conversation(models.Model):
 
     def add_user_message(self, content):
         """Persist a user message to the database and return it."""
-        return Message.objects.create(
+        message = Message.objects.create(
             conversation=self,
             role="user",
             content=content,
         )
+        self.last_message_at = message.created_at
+        self.save(update_fields=["last_message_at"])
+        return message
 
     def save_assistant_message(self, text_parts):
         """Persist accumulated assistant text to the database."""
         content = "".join(text_parts)
         if content.strip():
-            Message.objects.create(
+            message = Message.objects.create(
                 conversation=self,
                 role="assistant",
                 content=content,
             )
+            self.last_message_at = message.created_at
+            self.save(update_fields=["last_message_at"])
 
     def build_input_items(self, max_messages=40):
         """Reconstruct the Responses API input array from DB messages.
