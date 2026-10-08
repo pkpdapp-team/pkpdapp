@@ -63,7 +63,7 @@ def set_title_if_default(conversation: Conversation, client: Portkey):
         if user_message is None or reply is None:
             return
         response = client.responses.create(
-            model=settings.CHATBOT_MODEL,
+            model=settings.CHATBOT_SMALL_MODEL,
             instructions=TITLE_INSTRUCTIONS,
             input=[{
                 "role": "user",

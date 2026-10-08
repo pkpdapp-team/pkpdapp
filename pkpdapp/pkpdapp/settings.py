@@ -324,6 +324,7 @@ SPECTACULAR_SETTINGS = {
 
 # Chatbot / LLM (Portkey) configuration
 CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "")
+CHATBOT_SMALL_MODEL = os.environ.get("CHATBOT_SMALL_MODEL") or CHATBOT_MODEL
 CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL")
 PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
 

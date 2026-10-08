@@ -126,10 +126,16 @@ dAe/dt = CLr * C1
 where `CLr` is renal clearance and `C1` is the central concentration."""
 
 logger.info(
-    "[chatbot] config: model=%s base_url=%s",
+    "[chatbot] config: model=%s small_model=%s base_url=%s",
     settings.CHATBOT_MODEL,
+    settings.CHATBOT_SMALL_MODEL,
     settings.CHATBOT_BASE_URL,
 )
+if settings.CHATBOT_SMALL_MODEL == settings.CHATBOT_MODEL:
+    logger.info(
+        "[chatbot] CHATBOT_SMALL_MODEL not set, "
+        "small tasks use CHATBOT_MODEL"
+    )
 
 _client = None
 

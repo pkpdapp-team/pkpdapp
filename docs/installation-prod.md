@@ -85,7 +85,8 @@ The chatbot feature uses an LLM via [Portkey] as a gateway. Set the following va
 - `VITE_ENABLE_CHATBOT`: set to `true` to show the chat button in the UI
 - `CHATBOT_BASE_URL`: base URL of the Portkey (or compatible OpenAI-API) gateway
 - `PORTKEY_API_KEY`: Portkey API key
-- `CHATBOT_MODEL`: model identifier to use (default `gpt-5-nano-2025-08-07`)
+- `CHATBOT_MODEL`: model identifier for the chat (required)
+- `CHATBOT_SMALL_MODEL`: cheaper model for small tasks such as conversation titles (optional, defaults to `CHATBOT_MODEL`)
 
 ### Frontend Environment Variables
 
