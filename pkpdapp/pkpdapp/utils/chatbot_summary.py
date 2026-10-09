@@ -81,7 +81,4 @@ def past_summaries_section(conversation: Conversation) -> str:
     if not entries:
         return ""
     summaries = "\n\n".join(entries)
-    return (
-        f"\n\n[PAST CONVERSATION SUMMARIES]\n{PAST_SUMMARIES_NOTE}"
-        f"\n\n{summaries}"
-    )
+    return f"{PAST_SUMMARIES_NOTE}\n\n{summaries}"
