@@ -393,6 +393,9 @@ class ChatbotUtilsTestCase(TestCase):
         # reload to check the title was saved
         conversation.refresh_from_db()
         self.assertEqual(conversation.title, "PK Model Setup")
+        # the title call got the first exchange as a transcript
+        title_input = fake_client.responses.create.call_args.kwargs["input"]
+        self.assertIn("USER: question\n\nASSISTANT: Answer", title_input[0]["content"])
 
     def test_existing_title_is_kept(self):
         # the setUp conversation already has a title
