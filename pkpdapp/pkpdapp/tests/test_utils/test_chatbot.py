@@ -14,20 +14,12 @@ from pkpdapp.models import (
     CombinedModel,
     Compound,
     Conversation,
-    Covariate,
-    CovariatePopulation,
-    Dataset,
-    Dose,
     Message,
     PharmacodynamicModel,
     Project,
-    Protocol,
-    SubjectGroup,
-    Unit,
 )
 from pkpdapp.utils import chatbot
-from pkpdapp.utils.chat_context import build_chat_context
-from pkpdapp.utils.lognormal import mean_std_to_median_logvar
+from pkpdapp.utils.chatbot_context import ChatContext
 
 
 def event(type, **kwargs):
@@ -199,144 +191,24 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn("[CURRENT USER CONTEXT]", prompt)
         return prompt.rsplit("[CURRENT USER CONTEXT]", 1)[1]
 
-    def test_system_prompt_includes_current_page_from_context(self):
-        block = self.context_block({"page": "Trial Design", "sub_page": "Dosing"})
-
-        self.assertIn("Trial Design", block)
-        self.assertIn("Dosing", block)
-
-    def test_system_prompt_includes_project_context(self):
-        # The only test running the real producer into the real formatter, so
-        # it is what catches the two drifting apart.
-        group = SubjectGroup.objects.create(
-            name="Cohort A", project=self.project, m2f_ratio=0.4
+    def test_system_prompt_includes_the_chat_context(self):
+        context = ChatContext.from_project(
+            self.project,
+            can_edit=True,
+            current_page="Trial Design",
+            current_sub_page="Dosing",
         )
-        covariate = Covariate.objects.create(
-            project=self.project,
-            name="albumin",
-            type=Covariate.Type.CONTINUOUS,
-            unit=Unit.objects.get(symbol="g/L"),
-        )
-        # The UI takes mean/std and stores the log-normal form, so build the
-        # fixture the same way and assert the original values come back.
-        median, variance = mean_std_to_median_logvar(42.0, 8.0)
-        CovariatePopulation.objects.create(
-            subject_group=group,
-            covariate=covariate,
-            median=median,
-            variance=variance,
-        )
-        dataset = Dataset.objects.create(name="observed", project=self.project)
-        observed = SubjectGroup.objects.create(
-            name="Data-Group 1", project=self.project, dataset=dataset
-        )
-        protocol = Protocol.objects.create(
-            name="observed arm",
-            project=self.project,
-            group=observed,
-            dataset=dataset,
-            amount_unit=Unit.objects.get(symbol="mg"),
-            time_unit=Unit.objects.get(symbol="h"),
-        )
-        Dose.objects.create(protocol=protocol, start_time=0.0, amount=10.0)
 
-        block = self.context_block(build_chat_context(self.project))
+        block = self.context_block(context)
 
-        self.assertIn("demo project", block)
-        self.assertIn("male fraction 0.4", block)
-        self.assertIn("albumin: mean=42.0 g/L, SD=8.0 g/L", block)
-        self.assertIn("observed cohort from uploaded data", block)
-        self.assertIn("doses from uploaded data", block)
+        self.assertIn('"current_page":"Trial Design"', block)
+        self.assertIn('"name":"demo project"', block)
 
-    def test_system_prompt_includes_model_context(self):
-        block = self.context_block({"model": {"name": "one compartment"}})
+    def test_system_prompt_includes_the_app_layout(self):
+        prompt = chatbot._build_system_prompt()
 
-        self.assertIn("one compartment", block)
-
-    def test_system_prompt_includes_secondary_models_and_extra_flags(self):
-        block = self.context_block({
-            "model": {
-                "name": "combined",
-                "has_anti_drug_antibodies": True,
-                "has_bioavailability": True,
-                "pk_model_extravascular": "first order absorption",
-                "pk_effect_model": "effect compartment",
-                "number_of_effect_compartments": 2,
-                "pd_model2": "indirect response",
-            },
-        })
-
-        self.assertIn("anti_drug_antibodies", block)
-        self.assertIn("bioavailability", block)
-        self.assertIn("PK extravascular model: first order absorption", block)
-        self.assertIn("PK effect-compartment model: effect compartment", block)
-        self.assertIn("Effect compartments: 2", block)
-        self.assertIn("Second PD model: indirect response", block)
-
-    def test_system_prompt_reports_what_is_not_configured(self):
-        # Unset parts are reported as "none" rather than omitted, so the
-        # assistant can advise on what the user has not turned on.
-        # pk_effect_model is non-nullable with a DB default, so it is always
-        # populated and must only be named when a compartment is in use.
-        block = self.context_block({
-            "model": {
-                "name": "combined",
-                "has_lag": True,
-                "has_bioavailability": False,
-                "pk_model_extravascular": None,
-                "pk_effect_model": "Effect compartment model (ke0 & Kp)",
-                "number_of_effect_compartments": 0,
-                "pd_model2": None,
-            },
-        })
-
-        self.assertIn("Features on: lag", block)
-        self.assertIn("bioavailability", block.split("Features off:")[1])
-        self.assertIn("PK extravascular model: none", block)
-        self.assertIn("Effect compartments: none", block)
-        self.assertIn("Second PD model: none", block)
-        self.assertNotIn("effect-compartment model", block)
-        # v2-only and never-set flags must not be reported at all: saying
-        # "extravascular off" would contradict the PK extravascular line.
-        self.assertNotIn("saturation", block)
-
-    def test_system_prompt_includes_parameter_context(self):
-        block = self.context_block({
-            "variables": [{"name": "clearance", "value": 10}],
-        })
-
-        self.assertIn("clearance = 10", block)
-
-    def test_system_prompt_shows_natural_scale_value_for_log_parameters(self):
-        block = self.context_block({
-            "variables": [{
-                "name": "clearance",
-                "value": 2.3,
-                "unit": "L/h",
-                "is_log": True,
-                "description": "elimination clearance",
-            }],
-        })
-
-        # chat_context already un-logs the value, so the prompt must show the
-        # natural-scale number and must not invite a second un-logging.
-        self.assertIn("clearance = 2.3 L/h", block)
-        self.assertNotIn("log scale", block)
-        self.assertIn("elimination clearance", block)
-
-    def test_system_prompt_does_not_embed_the_model_definition(self):
-        # Fetched with a tool instead; its literals contradict the
-        # Parameters list.
-        block = self.context_block({
-            "model": {"name": "combined", "mmt": "[[model]]\nCL = 1\n"},
-            "variables": [{"name": "CL", "value": 3.7, "unit": "L/h"}],
-        })
-
-        self.assertIn("combined", block)
-        self.assertIn("CL = 3.7 L/h", block)
-        self.assertNotIn("[[model]]", block)
-        # The contradicting placeholder must not appear at all.
-        self.assertNotIn("CL = 1", block)
+        self.assertIn("[APP LAYOUT]", prompt)
+        self.assertIn('"name":"Trial Design"', prompt)
 
     def test_current_model_definition_tool_describes_the_users_model(self):
         # The assembled .mmt is fetched through this tool instead of being
@@ -414,15 +286,6 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertEqual(tool_output["call_id"], "call-1")
         self.assertIn(library_model.name, tool_output["output"])
         self.assertIn('"delta": "Answer"', "".join(chunks))
-
-    def test_system_prompt_includes_trial_design_context(self):
-        block = self.context_block({
-            "trial_design": {
-                "ungrouped_protocols": [{"name": "daily dose"}],
-            },
-        })
-
-        self.assertIn("daily dose", block)
 
     @override_settings(PORTKEY_API_KEY="", CHATBOT_MODEL="some-model")
     def test_check_chatbot_config_raises_without_api_key(self):

@@ -103,6 +103,10 @@ LOGGING = {
 if "test" in sys.argv:
     LOGGING["loggers"]["pkpdapp"]["level"] = "WARNING"
     LOGGING["loggers"]["django"]["level"] = "WARNING"
+    # keep test runs out of the dev log files
+    LOGGING["loggers"]["pkpdapp"]["handlers"] = ["console"]
+    LOGGING["loggers"]["django"]["handlers"] = ["console"]
+    LOGGING["loggers"]["pkpdapp.utils.chatbot"]["handlers"] = ["console"]
 
 
 # Quick-start development settings - unsuitable for production

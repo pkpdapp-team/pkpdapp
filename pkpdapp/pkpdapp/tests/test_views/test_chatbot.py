@@ -74,6 +74,14 @@ class ChatbotViewTestCase(APITestCase):
         self.assertIsInstance(response.data["error"], str)
         self.assertIn("context", response.data["error"])
 
+    def test_conversation_without_project(self):
+        conversation = Conversation.objects.create(user=self.user)
+        data = {"conversation_id": conversation.id, "content": "Hello"}
+
+        response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_stream_receives_trimmed_message(self):
         data = {
             "conversation_id": self.conversation.id,
