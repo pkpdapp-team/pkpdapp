@@ -20,14 +20,17 @@ from pkpdapp.models import (
 )
 from pkpdapp.utils import chatbot
 from pkpdapp.utils.chatbot_context import ChatContext
+from pkpdapp.utils.chatbot_title import set_title_if_default
 
 
 def event(type, **kwargs):
     """Build a fake Responses API stream event."""
+    # a bare object with only these attributes, e.g. .type and .delta
     return SimpleNamespace(type=type, **kwargs)
 
 
 def completed_event():
+    # the event that ends a stream, with a successful .response.status
     return event("response.completed", response=SimpleNamespace(status="completed"))
 
 
@@ -39,7 +42,7 @@ class ChatbotUtilsTestCase(TestCase):
         )
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.conversation = Conversation.objects.create(
-            user=self.user, project=self.project
+            user=self.user, project=self.project, title="demo chat"
         )
         # _get_client caches a singleton, reset it so a leaked real client
         # from a previous test cannot bleed into this one.
@@ -286,6 +289,49 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertEqual(tool_output["call_id"], "call-1")
         self.assertIn(library_model.name, tool_output["output"])
         self.assertIn('"delta": "Answer"', "".join(chunks))
+
+    def test_first_reply_gives_the_conversation_a_clean_title(self):
+        conversation = Conversation.objects.create(
+            user=self.user, project=self.project
+        )
+        fake_client = mock.Mock()
+        # side_effect makes each create() call return the next item in this list
+        fake_client.responses.create.side_effect = [
+            # chat call: a list of stream events
+            [event("response.output_text.delta", delta="Answer"), completed_event()],
+            # title call: a response with only .output_text
+            SimpleNamespace(output_text='**Title: "PK Model Setup."**'),
+        ]
+
+        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+            # list() runs the generator to the end
+            list(chatbot.stream_chat_response(conversation, "question"))
+
+        # reload to check the title was saved
+        conversation.refresh_from_db()
+        self.assertEqual(conversation.title, "PK Model Setup")
+
+    def test_existing_title_is_kept(self):
+        # the setUp conversation already has a title
+        fake_client = mock.Mock()
+
+        set_title_if_default(self.conversation, fake_client)
+
+        fake_client.responses.create.assert_not_called()
+        self.assertEqual(self.conversation.title, "demo chat")
+
+    def test_failing_title_call_keeps_the_default_title(self):
+        self.conversation.title = Conversation.DEFAULT_TITLE
+        self.conversation.add_user_message("question")
+        self.conversation.save_assistant_message(["Answer"])
+        fake_client = mock.Mock()
+        # create() raises
+        fake_client.responses.create.side_effect = Exception("boom")
+
+        # should not raise
+        set_title_if_default(self.conversation, fake_client)
+
+        self.assertEqual(self.conversation.title, Conversation.DEFAULT_TITLE)
 
     @override_settings(PORTKEY_API_KEY="", CHATBOT_MODEL="some-model")
     def test_check_chatbot_config_raises_without_api_key(self):

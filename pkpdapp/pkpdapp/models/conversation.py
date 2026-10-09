@@ -9,6 +9,8 @@ from django.conf import settings
 
 
 class Conversation(models.Model):
+    DEFAULT_TITLE = "Untitled conversation"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -22,7 +24,7 @@ class Conversation(models.Model):
         blank=True,
     )
     title = models.CharField(
-        max_length=200, blank=True, default="Untitled conversation"
+        max_length=200, blank=True, default=DEFAULT_TITLE
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,6 +38,9 @@ class Conversation(models.Model):
 
     def get_project(self):
         return self.project
+
+    def has_default_title(self):
+        return self.title in ("", self.DEFAULT_TITLE)
 
     def last_message_preview(self):
         """Return the first text line from the last user/assistant message."""
