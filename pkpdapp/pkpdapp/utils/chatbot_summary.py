@@ -31,20 +31,12 @@ settled on, and questions left open. Output only the bullet points.
 """
 
 
-def _transcript(conversation: Conversation) -> str:
-    messages = conversation.messages.filter(
-        role__in=["user", "assistant"]
-    ).order_by("created_at")
-    text = "\n\n".join(f"{m.role.upper()}: {m.content}" for m in messages)
-    return f"<transcript>\n{text}\n</transcript>"
-
-
 def summarize_conversation(conversation: Conversation, client: Portkey):
     try:
         response = client.responses.create(
             model=settings.CHATBOT_SMALL_MODEL,
             instructions=SUMMARY_INSTRUCTIONS,
-            input=[{"role": "user", "content": _transcript(conversation)}],
+            input=[{"role": "user", "content": conversation.transcript()}],
             store=False,
             reasoning={"effort": "low"},
             timeout=SUMMARY_TIMEOUT_SECONDS,
