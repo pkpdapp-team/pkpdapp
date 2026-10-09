@@ -59,6 +59,21 @@ class Conversation(models.Model):
         first_line = text.split("\n", 1)[0]
         return first_line[:120]
 
+    def transcript(
+        self,
+        max_messages: int | None = None,
+        max_message_chars: int | None = None,
+    ) -> str:
+        """Return the chat as USER:/ASSISTANT: lines in <transcript> tags."""
+        messages = self.messages.filter(
+            role__in=["user", "assistant"]
+        ).order_by("created_at")[:max_messages]
+        text = "\n\n".join(
+            f"{m.role.upper()}: {m.content[:max_message_chars]}"
+            for m in messages
+        )
+        return f"<transcript>\n{text}\n</transcript>"
+
     def add_user_message(self, content):
         """Persist a user message to the database and return it."""
         return Message.objects.create(
