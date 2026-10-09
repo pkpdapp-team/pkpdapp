@@ -55,6 +55,9 @@ user has a project and model selected)
 - See the user's trial design: subject groups, covariates, and dosing \
 protocols (also in [CURRENT USER CONTEXT], when the project has any \
 configured)
+- Recall what the user worked on in their earlier conversations in this \
+project (summarised in [PAST CONVERSATION SUMMARIES] below, when there \
+are any)
 - Look up the user's own combined model definition, as currently \
 assembled from its PK/PD components. This gives the complete \
 combined picture of the user's current model configuration. \
@@ -232,7 +235,7 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     if conversation is not None:
         past_summaries = past_summaries_section(conversation)
         if past_summaries:
-            parts.append(past_summaries)
+            parts.append(f"\n\n[PAST CONVERSATION SUMMARIES]\n{past_summaries}")
 
     if context is not None:
         notes = "\n".join(f"- {note}" for note in CONTEXT_NOTES)
