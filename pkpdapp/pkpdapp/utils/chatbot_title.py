@@ -14,6 +14,10 @@ from portkey_ai import Portkey
 
 logger = logging.getLogger(__name__)
 
+MAX_TITLE_INPUT_CHARS = 4000  # per message
+TITLE_TIMEOUT_SECONDS = 5
+MAX_TITLE_CHARS = 80
+
 
 TITLE_INSTRUCTIONS = """\
 You name chat conversations. The user message holds a transcript between \
@@ -35,7 +39,7 @@ _EDGE_JUNK = " *_`\"'“”‘’.!?,;:"
 
 def _title_input(conversation: Conversation) -> str:
     first_exchange = conversation.transcript(
-        max_messages=2, max_message_chars=2000
+        max_messages=2, max_message_chars=MAX_TITLE_INPUT_CHARS
     )
     return (
         f"{first_exchange}\n\n"
@@ -50,7 +54,7 @@ def _clean_title(raw: str) -> str:
         return ""
     title = lines[0].strip(_EDGE_JUNK)
     title = _TITLE_PREFIX.sub("", title).strip(_EDGE_JUNK)
-    return title[:80].rstrip()
+    return title[:MAX_TITLE_CHARS].rstrip()
 
 
 def set_title_if_default(conversation: Conversation, client: Portkey):
@@ -63,7 +67,7 @@ def set_title_if_default(conversation: Conversation, client: Portkey):
             input=[{"role": "user", "content": _title_input(conversation)}],
             store=False,
             reasoning={"effort": "low"},
-            timeout=5,
+            timeout=TITLE_TIMEOUT_SECONDS,
         )
         title = _clean_title(response.output_text or "")
         if title:
