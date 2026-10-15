@@ -6,11 +6,19 @@
 from unittest.mock import ANY, patch
 
 import pkpdapp.tests  # noqa: F401
-from pkpdapp.models import Compound, Project, Conversation  # noqa: F401
+from pkpdapp.models import (  # noqa: F401
+    ChatbotUsage,
+    Compound,
+    Project,
+    Conversation,
+)
+from pkpdapp.utils.chatbot_usage import ModelPricing, next_reset_date
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
 from django.test import override_settings
 from rest_framework import status
+
+PRICING = ModelPricing(input=1e-6, output=4e-6)
 
 
 @override_settings(
@@ -108,3 +116,57 @@ class ChatbotViewTestCase(APITestCase):
             }
             response = self.client.post("/api/chatbot/", data=data, format="json")
             self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0)
+    @patch(
+        "pkpdapp.utils.chatbot_usage.get_model_pricing", return_value=PRICING
+    )
+    def test_monthly_spend_limit_reached(self, _):
+        ChatbotUsage.record(self.user, 1.5, 1000, 100)
+        data = {"conversation_id": self.conversation.id, "content": "Hello"}
+
+        with patch(
+            "pkpdapp.api.views.chatbot.stream_chat_response",
+        ) as stream_response:
+            response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(response.data["code"], "monthly_limit_reached")
+        self.assertEqual(
+            response.data["reset_date"], next_reset_date().isoformat()
+        )
+        self.assertIn("monthly", response.data["error"])
+        stream_response.assert_not_called()
+
+    @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0)
+    @patch(
+        "pkpdapp.utils.chatbot_usage.get_model_pricing", return_value=PRICING
+    )
+    def test_monthly_spend_limit_not_reached(self, _):
+        ChatbotUsage.record(self.user, 0.5, 1000, 100)
+        data = {"conversation_id": self.conversation.id, "content": "Hello"}
+
+        with patch(
+            "pkpdapp.api.views.chatbot.stream_chat_response",
+            return_value=iter(()),
+        ):
+            response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0)
+    @patch("pkpdapp.utils.chatbot_usage.get_model_pricing", return_value=None)
+    def test_blocked_when_limit_set_and_pricing_unknown(self, _):
+        data = {"conversation_id": self.conversation.id, "content": "Hello"}
+
+        with patch(
+            "pkpdapp.api.views.chatbot.stream_chat_response",
+        ) as stream_response:
+            response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(
+            response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+        self.assertEqual(response.data["code"], "pricing_unavailable")
+        self.assertIn("unavailable", response.data["error"])
+        stream_response.assert_not_called()

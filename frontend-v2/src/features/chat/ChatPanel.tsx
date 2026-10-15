@@ -35,7 +35,10 @@ import {
 } from "./chatSlice";
 import { useConversations } from "./useConversations";
 import ConversationList from "./ConversationList";
-import transport, { type ChatTransportBody } from "./chatTransport";
+import transport, {
+  type ChatTransportBody,
+  getChatError,
+} from "./chatTransport";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
@@ -103,6 +106,7 @@ const ChatPanel: FC = () => {
   });
 
   const isLoading = status === "submitted" || status === "streaming";
+  const chatError = error ? getChatError(error) : null;
 
   // Sync stored history only when switching conversations.
   const syncedConversationRef = useRef<number | null>(null);
@@ -559,13 +563,13 @@ const ChatPanel: FC = () => {
               <div ref={messagesEndRef} />
             </Box>
 
-            {error && (
+            {chatError && (
               <Alert
-                severity="error"
+                severity={chatError.isLimitReached ? "warning" : "error"}
                 sx={{ mx: 1.5, mb: 0.5, fontSize: "0.8rem" }}
                 onClose={() => {}}
               >
-                Failed to get a response. Please try again.
+                {chatError.message}
               </Alert>
             )}
 

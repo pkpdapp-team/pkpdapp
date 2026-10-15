@@ -2333,6 +2333,12 @@ export type PatchedBiomarkerTypeRead = {
 };
 export type ChatbotErrorResponse = {
   error: string;
+  code?: string;
+};
+export type ChatbotLimitResponse = {
+  error: string;
+  code: string;
+  reset_date: string;
 };
 export type ChatbotContext = {
   page?: string | null;

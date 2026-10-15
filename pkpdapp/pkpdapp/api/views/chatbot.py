@@ -22,6 +22,11 @@ from pkpdapp.utils.chatbot import (
     check_chatbot_config,
     ChatbotConfigError,
 )
+from pkpdapp.utils.chatbot_usage import (
+    check_spend_limit,
+    ChatbotUnavailable,
+    SpendLimitExceeded,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +37,13 @@ class ChatbotRateThrottle(UserRateThrottle):
 
 class ChatbotErrorResponseSerializer(serializers.Serializer):
     error = serializers.CharField()
+    # Set when `error` is a message meant to be shown to the user.
+    code = serializers.CharField(required=False)
+
+
+class ChatbotLimitResponseSerializer(ChatbotErrorResponseSerializer):
+    code = serializers.CharField()
+    reset_date = serializers.DateField()
 
 
 @extend_schema(
@@ -40,6 +52,7 @@ class ChatbotErrorResponseSerializer(serializers.Serializer):
         (200, "text/event-stream"): OpenApiTypes.STR,
         400: ChatbotErrorResponseSerializer,
         404: ChatbotErrorResponseSerializer,
+        429: ChatbotLimitResponseSerializer,
         503: ChatbotErrorResponseSerializer,
     },
 )
@@ -110,6 +123,32 @@ class ChatbotView(APIView):
             check_chatbot_config()
         except ChatbotConfigError as e:
             error_response = ChatbotErrorResponseSerializer({"error": str(e)})
+            return Response(
+                error_response.data, status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        try:
+            check_spend_limit(request.user)
+        except SpendLimitExceeded as e:
+            logger.info(
+                "[chatbot] user=%s blocked: monthly spend %s >= limit %s",
+                request.user.pk, e.spent, e.limit,
+            )
+            error_response = ChatbotLimitResponseSerializer({
+                "error": str(e),
+                "code": e.code,
+                "reset_date": e.reset_date,
+            })
+            return Response(
+                error_response.data, status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        except ChatbotUnavailable as e:
+            logger.error(
+                "[chatbot] user=%s blocked: %s", request.user.pk, e.code
+            )
+            error_response = ChatbotErrorResponseSerializer(
+                {"error": str(e), "code": e.code}
+            )
             return Response(
                 error_response.data, status=status.HTTP_503_SERVICE_UNAVAILABLE
             )

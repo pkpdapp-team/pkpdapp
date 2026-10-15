@@ -16,6 +16,11 @@ from pkpdapp.models import (
     PharmacokineticModel,
 )
 from pkpdapp.utils.chatbot_app_layout import APP_LAYOUT, CONTEXT_NOTES
+from pkpdapp.utils.chatbot_usage import (
+    TokenUsage,
+    get_model_pricing,
+    record_usage,
+)
 
 from portkey_ai import Portkey
 
@@ -390,11 +395,13 @@ def _process_response_stream(stream):
       ("text", delta)         — incremental text content
       ("tool_call", {...})    — completed tool call (after stream ends)
       ("error", str)          — stream-level error / failure / incomplete
+      ("usage", TokenUsage)   — token usage of the response, if reported
       ("output_items", [...]) — raw output items for multi-turn input (last)
     """
     tool_calls_acc = {}
     output_items = []
     error_msg = None
+    usage = None
 
     for event in stream:
         etype = event.type
@@ -423,6 +430,7 @@ def _process_response_stream(stream):
 
         elif etype == "response.completed":
             output_items = list(getattr(event.response, "output", None) or [])
+            usage = getattr(event.response, "usage", None)
             status = getattr(event.response, "status", None)
             if status in ("failed", "incomplete"):
                 details = (
@@ -440,6 +448,7 @@ def _process_response_stream(stream):
 
         elif etype in ("response.failed", "response.incomplete"):
             response = getattr(event, "response", None)
+            usage = getattr(response, "usage", None) or usage
             details = getattr(response, "incomplete_details", None)
             error_msg = f"{etype}: {details}" if details else etype
             logger.error("[chatbot] stream %s: %s", etype, error_msg)
@@ -453,6 +462,9 @@ def _process_response_stream(stream):
 
     if error_msg:
         yield ("error", error_msg)
+
+    if usage is not None:
+        yield ("usage", TokenUsage.from_response(usage))
 
     yield ("output_items", output_items)
 
@@ -489,6 +501,7 @@ def stream_chat_response(
         )
 
         client = _get_client()
+        pricing = get_model_pricing()
 
         yield _sse({"type": "start", "messageId": message_id})
 
@@ -529,6 +542,22 @@ def stream_chat_response(
 
                 elif kind == "error":
                     stream_error = content
+
+                elif kind == "usage":
+                    # Every round is billed, including failed ones.
+                    try:
+                        cost = record_usage(conversation.user, content, pricing)
+                        logger.info(
+                            "[chatbot] [%s] usage: in=%s out=%s cost=$%.6f",
+                            req_id,
+                            content.input_tokens,
+                            content.output_tokens,
+                            cost,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "[chatbot] [%s] error recording usage", req_id
+                        )
 
             if text_started:
                 yield _sse({"type": "text-end", "id": text_id})
