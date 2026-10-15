@@ -8,6 +8,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { VariableRead } from "../../app/backendApi";
+import { correlation, percentRse, standardErrors } from "./optimisationStats";
 
 interface OptimisationCovarianceTableProps {
   covariance: number[][];
@@ -55,8 +56,7 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
     return v?.name ?? v?.qname ?? String(id);
   });
 
-  // Precompute diagonal standard errors
-  const se = covariance.map((row, i) => Math.sqrt(Math.max(0, row[i])));
+  const se = standardErrors(covariance);
 
   return (
     <Table size="small" sx={{ tableLayout: "fixed", width: tableWidth }}>
@@ -87,11 +87,10 @@ const OptimisationCovarianceTable: FC<OptimisationCovarianceTableProps> = ({
 
               if (isDiagonal) {
                 const pi = optimal[i];
-                displayValue = pi !== 0 ? (100 * se[i]) / Math.abs(pi) : NaN;
+                displayValue = percentRse(se[i], pi);
                 tooltipText = `%RSE = 100 × SE / |p| = 100 × ${se[i].toExponential(3)} / ${Math.abs(pi).toExponential(3)}`;
               } else {
-                const denom = se[i] * se[j];
-                displayValue = denom > 0 ? cellValue / denom : NaN;
+                displayValue = correlation(cellValue, se[i], se[j]);
                 tooltipText = `Correlation = C_ij / (SE_i × SE_j) = ${cellValue.toExponential(3)} / (${se[i].toExponential(3)} × ${se[j].toExponential(3)})`;
               }
 

@@ -20,6 +20,7 @@ import { SubjectBiomarker } from "../../hooks/useDataset";
 import { optimisePredictionsToSimulateResponses } from "./utils";
 import OptimisationResidualPlots from "./OptimisationResidualPlots";
 import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
+import { isNearBound } from "./optimisationStats";
 import HelpButton from "../../components/HelpButton";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
 
@@ -43,13 +44,6 @@ function formatNum(x: number): string {
   if (abs === 0) return "0";
   const e = Math.floor(Math.log10(abs));
   return e > 4 || e < -4 ? x.toExponential(3) : String(parseFloat(x.toPrecision(4)));
-}
-
-function isNearBound(optimal: number, lower: number, upper: number): boolean {
-  const range = upper - lower;
-  if (range === 0) return false;
-  const frac = (optimal - lower) / range;
-  return frac < 0.001 || frac > 0.999;
 }
 
 function conditionNumberColour(cn: number): string {
