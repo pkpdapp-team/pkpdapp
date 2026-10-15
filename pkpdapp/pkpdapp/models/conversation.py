@@ -52,7 +52,7 @@ class Conversation(models.Model):
         return self.title in ("", self.DEFAULT_TITLE)
 
     @classmethod
-    def changed_since_summary(cls, user: User, project: Project):
+    def needing_summary(cls, user: User, project: Project):
         return (
             cls.objects.filter(
                 user=user,
