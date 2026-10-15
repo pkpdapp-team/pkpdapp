@@ -318,6 +318,38 @@ export const IgnoresConversationCreatedForPreviousProject: Story = {
   },
 };
 
+// "New conversation" only clears the open chat; the conversation is created on
+// the first send.
+export const NewConversationClearsChat: Story = {
+  decorators: [activeConversationState],
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: conversationHandlers,
+        messages: messageHandlers,
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(
+      await canvas.findByText("How is clearance estimated?"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Conversations" }),
+    );
+    await userEvent.click(
+      canvas.getByRole("button", { name: "New conversation" }),
+    );
+
+    expect(
+      await canvas.findByText(/Ask me about pharmacokinetic/i),
+    ).toBeInTheDocument();
+    expect(store.getState().chat.activeConversationId).toBeNull();
+  },
+};
+
 // Clicking the "Conversations" button toggles the conversation list into view,
 // and the "Back to chat" control returns to the message view.
 export const ToggleConversations: Story = {

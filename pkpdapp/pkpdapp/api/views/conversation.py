@@ -28,10 +28,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete", "head", "options"]
 
     def get_queryset(self):
-        return Conversation.objects.filter(
+        conversations = Conversation.objects.filter(
             user=self.request.user,
             is_active=True,
         )
+        if self.action == "list":
+            conversations = conversations.filter(last_message_at__isnull=False)
+        return conversations
 
     def perform_create(self, serializer):
         conversation = serializer.save(user=self.request.user)
