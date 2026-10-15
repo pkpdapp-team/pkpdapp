@@ -9,25 +9,56 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0075_update_models'),
+        ("pkpdapp", "0075_update_models"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ChatbotUsage',
+            name="ChatbotUsage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('month', models.DateField(help_text='First day of the month (UTC).')),
-                ('cost', models.DecimalField(decimal_places=6, default=Decimal('0'), help_text='Estimated spend in USD.', max_digits=12)),
-                ('input_tokens', models.BigIntegerField(default=0)),
-                ('output_tokens', models.BigIntegerField(default=0)),
-                ('requests', models.BigIntegerField(default=0)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='chatbot_usage', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "month",
+                    models.DateField(help_text="First day of the month (UTC)."),
+                ),
+                (
+                    "cost",
+                    models.DecimalField(
+                        decimal_places=6,
+                        default=Decimal("0"),
+                        help_text="Estimated spend in USD.",
+                        max_digits=12,
+                    ),
+                ),
+                ("input_tokens", models.BigIntegerField(default=0)),
+                ("output_tokens", models.BigIntegerField(default=0)),
+                ("requests", models.BigIntegerField(default=0)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="chatbot_usage",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-month'],
-                'constraints': [models.UniqueConstraint(fields=('user', 'month'), name='unique_chatbot_usage_user_month')],
+                "ordering": ["-month"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("user", "month"),
+                        name="unique_chatbot_usage_user_month",
+                    )
+                ],
             },
         ),
     ]
