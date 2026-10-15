@@ -68,7 +68,10 @@ APP_LAYOUT = AppLayout(
         ),
         Page(
             name="Simulations",
-            description="Simulate the model, plot it and fit it to data.",
+            description=(
+                "Simulate the model, plot it and fit it to data. The last fit's "
+                "results dialog can share the fit with the AI in a new chat."
+            ),
         ),
         Page(
             name="Results",
