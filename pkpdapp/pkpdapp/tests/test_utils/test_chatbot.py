@@ -417,6 +417,31 @@ class ChatbotUtilsTestCase(TestCase):
         title_input = fake_client.responses.create.call_args.kwargs["input"]
         self.assertIn("USER: question\n\nASSISTANT: Answer", title_input[0]["content"])
 
+    def test_reply_summarises_my_newest_other_chat_needing_a_summary(self):
+        mine = []
+        for i in range(4):
+            conversation = Conversation.objects.create(
+                user=self.user, project=self.project
+            )
+            conversation.add_user_message(f"question {i}")
+            mine.append(conversation)
+        other_user = User.objects.create_user(username="other", password="12345")
+        theirs = Conversation.objects.create(user=other_user, project=self.project)
+        theirs.add_user_message("their question")
+        current = Conversation.objects.create(user=self.user, project=self.project)
+
+        fake_client = mock.Mock()
+        fake_client.responses.create.side_effect = [
+            [event("response.output_text.delta", delta="Answer"), completed_event()],
+            SimpleNamespace(output_text="A title"),
+            SimpleNamespace(output_text="- a summary"),
+        ]
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
+            list(chatbot.stream_chat_response(current, "question"))
+
+        summarized = Conversation.objects.exclude(summary="")
+        self.assertCountEqual(summarized, [mine[-1]])
+
     def test_existing_title_is_kept(self):
         # the setUp conversation already has a title
         fake_client = mock.Mock()

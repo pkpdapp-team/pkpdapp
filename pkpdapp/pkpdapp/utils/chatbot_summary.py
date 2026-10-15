@@ -6,16 +6,15 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
 
-from pkpdapp.models import Conversation, Project
+from pkpdapp.models import Conversation
 
 from portkey_ai import Portkey
 
 logger = logging.getLogger(__name__)
 
-# this many calls times the timeout must stay under gunicorn's 30 s
-MAX_SUMMARIES_PER_RUN = 3
+# runs after every chat reply, so keep the extra wait short
+MAX_SUMMARIES_PER_RUN = 1
 SUMMARY_TIMEOUT_SECONDS = 8
 MAX_SUMMARY_CHARS = 1500
 
@@ -53,10 +52,12 @@ def summarize_conversation(conversation: Conversation, client: Portkey):
         )
 
 
-def summarize_changed(user: User, project: Project, client: Portkey):
-    changed = Conversation.changed_since_summary(user, project)
-    for conversation in changed[:MAX_SUMMARIES_PER_RUN]:
-        summarize_conversation(conversation, client)
+def summarize_others(conversation: Conversation, client: Portkey):
+    needing_summary = Conversation.needing_summary(
+        conversation.user, conversation.project
+    ).exclude(pk=conversation.pk)
+    for other in needing_summary[:MAX_SUMMARIES_PER_RUN]:
+        summarize_conversation(other, client)
 
 
 PAST_SUMMARIES_CHAR_BUDGET = 12000
