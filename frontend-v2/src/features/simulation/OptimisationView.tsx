@@ -13,8 +13,10 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import { BiomarkerTypeRead, CombinedModelRead, CompoundRead, OptimiseResponse, SimulationPlot, SubjectGroupRead, UnitRead, VariableRead } from "../../app/backendApi";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { optimisePredictionsToSimulateResponses } from "./utils";
@@ -23,12 +25,13 @@ import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
 import { isNearBound } from "./optimisationStats";
 import HelpButton from "../../components/HelpButton";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
+import { aiButtonSx } from "../chat/aiButtonSx";
 
 type OptimisationViewProps = {
   open: boolean;
   onClose: () => void;
   optimiseResult: OptimiseResponse | null;
-  fitMessage: string | null;
+  onDiscuss?: () => void;
   variables: VariableRead[];
   units: UnitRead[];
   groups: SubjectGroupRead[] | undefined;
@@ -57,7 +60,7 @@ const OptimisationView = ({
   open,
   onClose,
   optimiseResult,
-  fitMessage: _fitMessage,
+  onDiscuss,
   variables,
   units,
   groups,
@@ -96,7 +99,31 @@ const OptimisationView = ({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" slotProps={{
       paper: { sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }
     }}>
-      <DialogTitle sx={{ fontWeight: "bold" }}>Last Optimisation Result</DialogTitle>
+      <Stack direction="row" sx={{ alignItems: "center" }}>
+        <DialogTitle sx={{ fontWeight: "bold" }}>
+          Last Optimisation Result
+        </DialogTitle>
+        {/* the message is built in quickFitMessage.ts: keep it in line with what this dialog shows */}
+        {onDiscuss && (
+          <Tooltip
+            describeChild
+            title="The AI also sees your current model and data. Run the fit again after changing them."
+          >
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ChatOutlinedIcon sx={{ fontSize: 16 }} />}
+              onClick={() => {
+                onDiscuss();
+                onClose();
+              }}
+              sx={[aiButtonSx(), { mr: 0 }]}
+            >
+              Discuss with AI
+            </Button>
+          </Tooltip>
+        )}
+      </Stack>
       <DialogContent dividers>
         {!optimiseResult ? (
           <Typography>No optimisation has been run yet.</Typography>
