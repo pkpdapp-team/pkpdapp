@@ -85,7 +85,8 @@ The chatbot feature uses an LLM via [Portkey] as a gateway. Set the following va
 - `VITE_ENABLE_CHATBOT`: set to `true` to show the chat button in the UI
 - `CHATBOT_BASE_URL`: base URL of the Portkey (or compatible OpenAI-API) gateway
 - `PORTKEY_API_KEY`: Portkey API key
-- `CHATBOT_MODEL`: model identifier to use (default `gpt-5-nano-2025-08-07`)
+- `CHATBOT_MODEL`: model identifier for the chat (required)
+- `CHATBOT_SMALL_MODEL`: cheaper model for small tasks such as conversation titles (optional, defaults to `CHATBOT_MODEL`)
 - `CHATBOT_MONTHLY_SPEND_LIMIT` (optional): per-user spend limit in USD per calendar month (UTC). Leave blank for no limit.
 - `CHATBOT_PRICING_PROVIDER` (optional): provider name used to look up the model's price from [Portkey's public pricing API](https://portkey.ai/docs/product/model-catalog/portkey-models) (default `openai`). Any `@provider-slug/` prefix on `CHATBOT_MODEL` is stripped for the lookup.
 - `CHATBOT_INPUT_PRICE_PER_MTOK`, `CHATBOT_CACHED_INPUT_PRICE_PER_MTOK`, `CHATBOT_OUTPUT_PRICE_PER_MTOK` (optional): override the model price in USD per 1M tokens, e.g. if Portkey has no price for the model or the pricing API is unreachable.
