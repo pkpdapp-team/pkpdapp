@@ -47,6 +47,9 @@ import { Control } from "react-hook-form";
 import { useCollapsibleSidebar } from "../../shared/contexts/CollapsibleSidebarContext";
 import OptimisationSettings from "./OptimisationSettings";
 import OptimisationView from "./OptimisationView";
+import { useAppDispatch } from "../../app/hooks";
+import { isChatbotEnabled } from "../chat/chatbotEnabled";
+import { sendInNewChat } from "../chat/chatSlice";
 import { NoiseModel } from "./useOptimise";
 import { getPlottedBiomarkerTypes } from "./utils";
 import "../../App.css";
@@ -269,6 +272,7 @@ export const SimulationsSidePanel = ({
   variables,
   biomarkerTypes,
 }: SimulationsSidePanelType) => {
+  const dispatch = useAppDispatch();
   const selectedPage = useSelector(
     (state: RootState) => state.main.selectedPage,
   );
@@ -800,7 +804,11 @@ export const SimulationsSidePanel = ({
             open={optimiseViewOpen}
             onClose={() => setOptimiseViewOpen(false)}
             optimiseResult={optimiseResult}
-            fitMessage={fitMessage}
+            onDiscuss={
+              isChatbotEnabled && fitMessage
+                ? () => dispatch(sendInNewChat(fitMessage))
+                : undefined
+            }
             variables={variables}
             units={units}
             groups={groups}
