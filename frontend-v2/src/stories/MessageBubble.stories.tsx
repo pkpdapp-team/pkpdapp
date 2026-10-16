@@ -1,4 +1,4 @@
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import MessageBubble from "../features/chat/MessageBubble";
@@ -56,5 +56,26 @@ export const StreamingAssistant: Story = {
     // the DOM — assert it via the computed style of the pseudo-element.
     const after = getComputedStyle(paragraph, "::after");
     expect(after.content).toContain("▋");
+  },
+};
+
+export const OptimisationResultsCard: Story = {
+  args: {
+    parts: [
+      {
+        type: "text",
+        text: '[OPTIMISATION RESULTS]\n{"summary":{"stop_reason":"converged"}}',
+      },
+    ],
+    isUser: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText("Optimisation results")).toBeInTheDocument();
+    expect(canvas.queryByText(/\[OPTIMISATION RESULTS\]/)).toBeNull();
+
+    // dev builds can open what was sent
+    await userEvent.click(canvas.getByText("What was sent to the AI"));
+    expect(canvas.getByText(/"stop_reason": "converged"/)).toBeVisible();
   },
 };
