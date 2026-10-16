@@ -6,7 +6,11 @@
 import pkpdapp.tests  # noqa: F401
 from django.test import SimpleTestCase
 
-from pkpdapp.api.serializers import ChatbotContextSerializer
+from pkpdapp.api.serializers import (
+    ChatbotContextSerializer,
+    ChatbotRequestSerializer,
+)
+from pkpdapp.api.serializers.chatbot import MAX_MESSAGE_LENGTH
 
 
 class ChatbotContextSerializerTestCase(SimpleTestCase):
@@ -48,3 +52,18 @@ class ChatbotContextSerializerTestCase(SimpleTestCase):
 
     def test_rejects_too_long_sub_page(self):
         self.assertIn("sub_page", self.errors({"sub_page": "x" * 201}))
+
+
+class ChatbotRequestSerializerTestCase(SimpleTestCase):
+    def test_accepts_a_long_optimisation_results_message(self):
+        serializer = ChatbotRequestSerializer(
+            data={"conversation_id": 1, "content": "x" * (MAX_MESSAGE_LENGTH)}
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_rejects_too_long_optimisation_results_message(self):
+        serializer = ChatbotRequestSerializer(
+            data={"conversation_id": 1, "content": "x" * (MAX_MESSAGE_LENGTH + 1)}
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("content", serializer.errors)
