@@ -61,7 +61,6 @@ const meta = {
     open: true,
     onClose: fn(),
     optimiseResult,
-    fitMessage: null,
     variables,
     units: [],
     groups: [],
@@ -98,6 +97,10 @@ function isHighlighted(cell: HTMLElement) {
 export const ShowsUncertaintyAndBoundWarnings: Story = {
   play: async () => {
     await screen.findByRole("heading", { name: "Last Optimisation Result" });
+    // without onDiscuss (chatbot off) there is no discuss button
+    expect(
+      screen.queryByRole("button", { name: "Discuss with AI" }),
+    ).toBeNull();
 
     // %RSE = SE / optimal on the diagonal, SE = √variance
     // CL: √0.04 / 2
@@ -124,5 +127,16 @@ export const ShowsUncertaintyAndBoundWarnings: Story = {
     expect(isHighlighted(optimalCell("Sigma additive (C1) [combined, log]"))).toBe(false);
     // proportional sigma: 1, at its upper bound
     expect(isHighlighted(optimalCell("Sigma proportional (C1) [log]"))).toBe(true);
+  },
+};
+
+export const DiscussWithAI: Story = {
+  args: { onDiscuss: fn() },
+  play: async ({ args, userEvent }) => {
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Discuss with AI" }),
+    );
+    expect(args.onDiscuss).toHaveBeenCalledTimes(1);
+    expect(args.onClose).toHaveBeenCalledTimes(1);
   },
 };
