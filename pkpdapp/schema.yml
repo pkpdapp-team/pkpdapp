@@ -338,6 +338,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatbotErrorResponse'
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatbotLimitResponse'
+          description: ''
         '503':
           content:
             application/json:
@@ -4026,8 +4032,24 @@ components:
       properties:
         error:
           type: string
+        code:
+          type: string
       required:
       - error
+    ChatbotLimitResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        reset_date:
+          type: string
+          format: date
+      required:
+      - code
+      - error
+      - reset_date
     ChatbotRequest:
       type: object
       description: Validate a chat request.

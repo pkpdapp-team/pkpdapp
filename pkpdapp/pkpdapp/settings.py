@@ -21,6 +21,7 @@ import sys
 import dj_database_url
 import ldap
 from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, LDAPSearchUnion
+from django.core.exceptions import ImproperlyConfigured
 
 # Set BASE_DIR to two directories up
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -326,6 +327,32 @@ SPECTACULAR_SETTINGS = {
 CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "")
 CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL")
 PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
+
+
+def _env_float(name):
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        raise ImproperlyConfigured(
+            f"{name} must be a number (e.g. 5 or 0.5), got {value!r}"
+        ) from None
+
+
+# Per-user chatbot spend is tracked in our DB (not in Portkey). If set, users
+# are blocked from the chatbot once their spend this calendar month (UTC)
+# reaches this many USD.
+CHATBOT_MONTHLY_SPEND_LIMIT = _env_float("CHATBOT_MONTHLY_SPEND_LIMIT")
+# Model prices are looked up from Portkey's public pricing endpoint using this
+# provider and CHATBOT_MODEL, unless overridden below (USD per 1M tokens).
+CHATBOT_PRICING_PROVIDER = os.environ.get("CHATBOT_PRICING_PROVIDER") or "openai"
+CHATBOT_INPUT_PRICE_PER_MTOK = _env_float("CHATBOT_INPUT_PRICE_PER_MTOK")
+CHATBOT_CACHED_INPUT_PRICE_PER_MTOK = _env_float(
+    "CHATBOT_CACHED_INPUT_PRICE_PER_MTOK"
+)
+CHATBOT_OUTPUT_PRICE_PER_MTOK = _env_float("CHATBOT_OUTPUT_PRICE_PER_MTOK")
 
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"

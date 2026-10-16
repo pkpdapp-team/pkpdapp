@@ -1,6 +1,10 @@
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
-import type { ChatbotRequest } from "../../app/backendApi";
+import type {
+  ChatbotErrorResponse,
+  ChatbotLimitResponse,
+  ChatbotRequest,
+} from "../../app/backendApi";
 import { store } from "../../app/store";
 import { selectCsrf } from "../login/loginSlice";
 
@@ -44,6 +48,35 @@ export function buildChatRequest({
     body: requestBody,
     headers: requestHeaders,
   };
+}
+
+export const DEFAULT_CHAT_ERROR = "Failed to get a response. Please try again.";
+
+export type ChatError = {
+  message: string;
+  isLimitReached: boolean;
+};
+
+/**
+ * Turn a useChat error into a message for the user. For non-OK responses the
+ * AI SDK throws an Error whose message is the response body. Django sets
+ * `code` on errors whose message is meant for the user; anything else gets a
+ * generic message.
+ */
+export function getChatError(error: Error): ChatError {
+  try {
+    const body: Partial<ChatbotErrorResponse & ChatbotLimitResponse> =
+      JSON.parse(error.message);
+    if (body?.code && typeof body.error === "string" && body.error) {
+      return {
+        message: body.error,
+        isLimitReached: body.code === "monthly_limit_reached",
+      };
+    }
+  } catch {
+    // Not a JSON error body (e.g. a network failure).
+  }
+  return { message: DEFAULT_CHAT_ERROR, isLimitReached: false };
 }
 
 const transport = new DefaultChatTransport({

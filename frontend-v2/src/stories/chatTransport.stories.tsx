@@ -2,7 +2,11 @@ import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import type { UIMessage } from "ai";
 
-import { buildChatRequest } from "../features/chat/chatTransport";
+import {
+  buildChatRequest,
+  DEFAULT_CHAT_ERROR,
+  getChatError,
+} from "../features/chat/chatTransport";
 import { PageName, SubPageName } from "../features/main/mainSlice";
 
 // These tests have no UI; they exercise the pure request-building logic the
@@ -98,5 +102,61 @@ export const MergesExistingHeaders: Story = {
 
     expect(req.headers["Content-Type"]).toBe("application/json");
     expect(req.headers["X-CSRFToken"]).toBe("abc");
+  },
+};
+
+export const ShowsMonthlyLimitError: Story = {
+  play: async () => {
+    const body = {
+      error: "You've reached your monthly AI assistant usage limit.",
+      code: "monthly_limit_reached",
+      reset_date: "2026-11-01",
+    };
+
+    expect(getChatError(new Error(JSON.stringify(body)))).toEqual({
+      message: body.error,
+      isLimitReached: true,
+    });
+  },
+};
+
+export const ShowsUserFacingBackendError: Story = {
+  play: async () => {
+    const error = new Error(
+      JSON.stringify({
+        error: "The AI assistant is temporarily unavailable.",
+        code: "pricing_unavailable",
+      }),
+    );
+
+    expect(getChatError(error)).toEqual({
+      message: "The AI assistant is temporarily unavailable.",
+      isLimitReached: false,
+    });
+  },
+};
+
+// Errors without a code (e.g. serializer validation) aren't user-facing.
+export const HidesInternalBackendErrors: Story = {
+  play: async () => {
+    const error = new Error(
+      JSON.stringify({
+        error: "{'content': [ErrorDetail(string='blank', code='blank')]}",
+      }),
+    );
+
+    expect(getChatError(error)).toEqual({
+      message: DEFAULT_CHAT_ERROR,
+      isLimitReached: false,
+    });
+  },
+};
+
+export const FallsBackToGenericError: Story = {
+  play: async () => {
+    expect(getChatError(new Error("Failed to fetch"))).toEqual({
+      message: DEFAULT_CHAT_ERROR,
+      isLimitReached: false,
+    });
   },
 };

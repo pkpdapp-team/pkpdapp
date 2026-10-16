@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from pkpdapp.models import (
+    ChatbotUsage,
     CombinedModel,
     Compound,
     Conversation,
@@ -20,6 +21,7 @@ from pkpdapp.models import (
 )
 from pkpdapp.utils import chatbot
 from pkpdapp.utils.chatbot_context import ChatContext
+from pkpdapp.utils.chatbot_usage import ModelPricing
 
 
 def event(type, **kwargs):
@@ -27,8 +29,22 @@ def event(type, **kwargs):
     return SimpleNamespace(type=type, **kwargs)
 
 
-def completed_event():
-    return event("response.completed", response=SimpleNamespace(status="completed"))
+def completed_event(usage=None):
+    return event(
+        "response.completed",
+        response=SimpleNamespace(status="completed", usage=usage),
+    )
+
+
+def usage(input_tokens, output_tokens, cached_tokens=0):
+    return SimpleNamespace(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        input_tokens_details=SimpleNamespace(cached_tokens=cached_tokens),
+    )
+
+
+PRICING = ModelPricing(input=1e-6, output=4e-6, cached_input=0.5e-6)
 
 
 class ChatbotUtilsTestCase(TestCase):
@@ -44,6 +60,11 @@ class ChatbotUtilsTestCase(TestCase):
         # _get_client caches a singleton, reset it so a leaked real client
         # from a previous test cannot bleed into this one.
         chatbot._client = None
+        pricing_patch = mock.patch.object(
+            chatbot, "get_model_pricing", return_value=PRICING
+        )
+        self.get_model_pricing = pricing_patch.start()
+        self.addCleanup(pricing_patch.stop)
 
     def test_stream_filters_tool_call_messages_from_api_input(self):
         Message.objects.create(
@@ -268,11 +289,11 @@ class ChatbotUtilsTestCase(TestCase):
                     output_index=0,
                     arguments=f'{{"model_name": "{library_model.name}"}}',
                 ),
-                completed_event(),
+                completed_event(usage(100, 10)),
             ],
             [
                 event("response.output_text.delta", delta="Answer"),
-                completed_event(),
+                completed_event(usage(300, 20)),
             ],
         ]
 
@@ -286,6 +307,69 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertEqual(tool_output["call_id"], "call-1")
         self.assertIn(library_model.name, tool_output["output"])
         self.assertIn('"delta": "Answer"', "".join(chunks))
+
+        # Both rounds are billed.
+        recorded = ChatbotUsage.objects.get(user=self.user)
+        self.assertEqual(recorded.requests, 2)
+        self.assertEqual(recorded.input_tokens, 400)
+        self.assertEqual(recorded.output_tokens, 30)
+
+    def test_stream_records_usage_and_cost(self):
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = [
+            event("response.output_text.delta", delta="Hi"),
+            completed_event(usage(1000, 500, cached_tokens=200)),
+        ]
+
+        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+            list(chatbot.stream_chat_response(self.conversation, "hello"))
+
+        recorded = ChatbotUsage.objects.get(user=self.user)
+        self.assertEqual(recorded.month, ChatbotUsage.current_month())
+        self.assertEqual(recorded.requests, 1)
+        self.assertEqual(recorded.input_tokens, 1000)
+        self.assertEqual(recorded.output_tokens, 500)
+        # 800 uncached input + 200 cached input + 500 output
+        expected = 800 * 1e-6 + 200 * 0.5e-6 + 500 * 4e-6
+        self.assertAlmostEqual(float(recorded.cost), expected, places=6)
+
+    def test_stream_records_tokens_without_cost_when_pricing_unknown(self):
+        self.get_model_pricing.return_value = None
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = [
+            event("response.output_text.delta", delta="Hi"),
+            completed_event(usage(1000, 500)),
+        ]
+
+        with mock.patch.object(chatbot, "_get_client", return_value=fake_client):
+            chunks = "".join(
+                chatbot.stream_chat_response(self.conversation, "hello")
+            )
+
+        self.assertIn('"type": "finish"', chunks)
+        recorded = ChatbotUsage.objects.get(user=self.user)
+        self.assertEqual(recorded.input_tokens, 1000)
+        self.assertEqual(recorded.cost, 0)
+
+    def test_stream_completes_when_recording_usage_fails(self):
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = [
+            event("response.output_text.delta", delta="Hi"),
+            completed_event(usage(1000, 500)),
+        ]
+
+        with (
+            mock.patch.object(chatbot, "_get_client", return_value=fake_client),
+            mock.patch.object(
+                chatbot, "record_usage", side_effect=RuntimeError("boom")
+            ),
+        ):
+            chunks = "".join(
+                chatbot.stream_chat_response(self.conversation, "hello")
+            )
+
+        self.assertIn('"type": "finish"', chunks)
+        self.assertNotIn('"type": "error"', chunks)
 
     @override_settings(PORTKEY_API_KEY="", CHATBOT_MODEL="some-model")
     def test_check_chatbot_config_raises_without_api_key(self):
