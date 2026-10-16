@@ -6,7 +6,14 @@ import {
   isQuickFitMessage,
   quickFitMessageText,
 } from "../features/simulation/quickFitMessage";
-import { Optimise, OptimiseResponse, UnitRead, VariableRead } from "../app/backendApi";
+import {
+  BiomarkerTypeRead,
+  Optimise,
+  OptimiseResponse,
+  SubjectGroupRead,
+  UnitRead,
+  VariableRead,
+} from "../app/backendApi";
 
 // no UI; tests the message "Discuss with AI" sends to the chat
 const QuickFitMessageTests = () => <div>Quick fit message tests</div>;
@@ -22,13 +29,17 @@ type Story = StoryObj<typeof meta>;
 const variables = [
   { id: 1, name: "CL", unit: 10 },
   { id: 2, name: "V", unit: 11 },
-  { id: 3, name: "C1" },
+  { id: 3, name: "C1", description: "central concentration" },
 ] as VariableRead[];
 
 const units = [
   { id: 10, symbol: "L/h" },
   { id: 11, symbol: "L" },
 ] as UnitRead[];
+
+const biomarkerTypes = [{ id: 20, name: "conc", variable: 3 }] as BiomarkerTypeRead[];
+
+const groups = [{ id: 30, name: "Group 1" }] as SubjectGroupRead[];
 
 // CL: SE 0.2 → 10% RSE, V: SE 10 → 100% RSE and at its upper bound,
 // CL–V correlation 0.5 / (0.2 × 10) = 0.25
@@ -45,6 +56,8 @@ const result: OptimiseResponse = {
     [0.5, 100],
   ],
   noise_models: ["additive"],
+  biomarker_types: [20],
+  subject_groups: [30],
   sigma_variables: [3],
   sigma: [0.5],
   sigma_start: [0.1],
@@ -75,9 +88,18 @@ const request: Optimise = {
 
 export const BuildsTheDialogResults: Story = {
   play: async () => {
-    const message = buildQuickFitMessage(result, request, variables, units);
+    const message = buildQuickFitMessage(
+      result,
+      request,
+      variables,
+      units,
+      biomarkerTypes,
+      groups,
+    );
 
     expect(message.summary.aic).toBe(20);
+    expect(message.inputs.observations).toEqual(["C1 (central concentration)"]);
+    expect(message.inputs.subject_groups).toEqual(["Group 1"]);
     expect(message.inputs.parameters[0]).toMatchObject({
       name: "CL",
       unit: "L/h",
@@ -99,7 +121,14 @@ export const BuildsTheDialogResults: Story = {
 
 export const SendsHeaderAndJson: Story = {
   play: async () => {
-    const message = buildQuickFitMessage(result, request, variables, units);
+    const message = buildQuickFitMessage(
+      result,
+      request,
+      variables,
+      units,
+      biomarkerTypes,
+      groups,
+    );
     const text = quickFitMessageText(message);
 
     expect(text.split("\n")[0]).toBe("[OPTIMISATION RESULTS]");
