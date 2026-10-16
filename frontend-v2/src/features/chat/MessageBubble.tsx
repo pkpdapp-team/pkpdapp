@@ -1,10 +1,15 @@
 import { FC, memo } from "react";
-import { Box, Stack, Typography, keyframes } from "@mui/material";
+import { Box, Stack, Typography, alpha, keyframes } from "@mui/material";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/a11y-light.css";
 import type { Components } from "react-markdown";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import type { UIMessage } from "ai";
+import {
+  isQuickFitMessage,
+  quickFitMessageDetails,
+} from "../simulation/quickFitMessage";
 type MessagePart = UIMessage["parts"][number];
 
 const cursorBlink = keyframes`
@@ -66,6 +71,74 @@ const mdComponents: Partial<Components> = {
 
 const markdownSx = { fontSize: "0.875rem" };
 
+const FitIcon: FC = () => (
+  <Box
+    sx={(theme) => ({
+      width: 40,
+      height: 40,
+      borderRadius: 1.5,
+      flexShrink: 0,
+      display: "grid",
+      placeItems: "center",
+      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+    })}
+  >
+    <ShowChartIcon sx={{ color: "white" }} />
+  </Box>
+);
+
+// a shared fit, shown as an event in the chat rather than a user bubble
+const QuickFitCard: FC<{ text: string }> = ({ text }) => (
+  <Stack direction="row" sx={{ justifyContent: "center", mb: 2 }}>
+    <Box
+      sx={(theme) => ({
+        width: "90%",
+        p: 1.5,
+        borderRadius: 3,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+      })}
+    >
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+        <FitIcon />
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Optimisation results
+          </Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Shared from the Simulations page
+          </Typography>
+        </Box>
+      </Stack>
+      {import.meta.env.DEV && (
+        <Box component="details" sx={{ mt: 1 }}>
+          <Typography
+            component="summary"
+            variant="caption"
+            sx={{ cursor: "pointer", color: "text.secondary" }}
+          >
+            What was sent to the AI
+          </Typography>
+          <Box
+            component="pre"
+            sx={{
+              fontSize: "0.75rem",
+              maxHeight: 240,
+              overflow: "auto",
+              bgcolor: "grey.100",
+              p: 1,
+              borderRadius: 1,
+              mb: 0,
+            }}
+          >
+            {quickFitMessageDetails(text)}
+          </Box>
+        </Box>
+      )}
+    </Box>
+  </Stack>
+);
+
 const rehypePlugins = [rehypeHighlight];
 
 const TextPart: FC<{
@@ -104,6 +177,9 @@ const MessageBubble: FC<{
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
       .join("");
+    if (isQuickFitMessage(text)) {
+      return <QuickFitCard text={text} />;
+    }
     return (
       <Stack direction="row-reverse" sx={{ mb: 2 }}>
         <Box
