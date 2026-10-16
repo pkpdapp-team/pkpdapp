@@ -114,6 +114,7 @@ type SimulationsSidePanelType = {
   noiseModelByVar: Record<number, NoiseModel>;
   setNoiseModelByVar: (value: Record<number, NoiseModel>) => void;
   optimiseResult: OptimiseResponse | null;
+  fitMessage: string | null;
   exportSimulation: () => void;
   showReference: boolean;
   setShowReference: (reference: boolean) => void;
@@ -257,6 +258,7 @@ export const SimulationsSidePanel = ({
   noiseModelByVar,
   setNoiseModelByVar,
   optimiseResult,
+  fitMessage,
   exportSimulation,
   showReference,
   setShowReference,
@@ -798,6 +800,7 @@ export const SimulationsSidePanel = ({
             open={optimiseViewOpen}
             onClose={() => setOptimiseViewOpen(false)}
             optimiseResult={optimiseResult}
+            fitMessage={fitMessage}
             variables={variables}
             units={units}
             groups={groups}
