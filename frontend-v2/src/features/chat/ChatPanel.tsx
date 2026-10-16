@@ -28,6 +28,8 @@ import {
   selectChatWidth,
   selectActiveConversationId,
   setActiveConversation,
+  clearPendingMessage,
+  selectPendingMessage,
   closeChat,
   setChatWidth,
   MIN_CHAT_WIDTH,
@@ -169,42 +171,74 @@ const ChatPanel: FC = () => {
     setShowConversationList(false);
   };
 
-  const handleSend = async () => {
+  const sendText = useCallback(
+    async (text: string) => {
+      if (isLoading || !selectedProject) return;
+      const projectId = selectedProject;
+
+      let convId = activeConversationId;
+      if (!convId) {
+        try {
+          const result = await createConversation({
+            conversation: { project: projectId, title: "" },
+          }).unwrap();
+          if (selectedProjectRef.current !== projectId) return;
+          convId = result.id;
+          // Keep the live transcript authoritative for new conversations.
+          syncedConversationRef.current = convId;
+          dispatch(
+            setActiveConversation({ conversationId: convId, projectId }),
+          );
+        } catch (err) {
+          console.error("Failed to create conversation:", err);
+          return;
+        }
+      }
+
+      if (selectedProjectRef.current !== projectId) return;
+
+      sendMessage(
+        { text },
+        {
+          body: {
+            conversation_id: convId,
+            context: { page: selectedPage, sub_page: selectedSubPage },
+          } satisfies ChatTransportBody,
+        },
+      );
+    },
+    [
+      isLoading,
+      selectedProject,
+      activeConversationId,
+      createConversation,
+      dispatch,
+      sendMessage,
+      selectedPage,
+      selectedSubPage,
+    ],
+  );
+
+  const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading || !selectedProject) return;
-    const projectId = selectedProject;
-
     setInput("");
-
-    let convId = activeConversationId;
-    if (!convId) {
-      try {
-        const result = await createConversation({
-          conversation: { project: projectId, title: "" },
-        }).unwrap();
-        if (selectedProjectRef.current !== projectId) return;
-        convId = result.id;
-        // Keep the live transcript authoritative for new conversations.
-        syncedConversationRef.current = convId;
-        dispatch(setActiveConversation({ conversationId: convId, projectId }));
-      } catch (err) {
-        console.error("Failed to create conversation:", err);
-        return;
-      }
-    }
-
-    if (selectedProjectRef.current !== projectId) return;
-
-    sendMessage(
-      { text: trimmed },
-      {
-        body: {
-          conversation_id: convId,
-          context: { page: selectedPage, sub_page: selectedSubPage },
-        } satisfies ChatTransportBody,
-      },
-    );
+    sendText(trimmed);
   };
+
+  const pendingMessage = useSelector(selectPendingMessage);
+
+  // a message queued by sendInNewChat, e.g. from "Discuss with AI"
+  useEffect(() => {
+    if (!pendingMessage) return;
+    if (isLoading) {
+      stop(); // runs again once the stream has stopped
+      return;
+    }
+    dispatch(clearPendingMessage());
+    setShowConversationList(false);
+    sendText(pendingMessage);
+  }, [pendingMessage, isLoading, stop, dispatch, sendText]);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
