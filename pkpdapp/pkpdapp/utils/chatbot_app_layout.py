@@ -59,7 +59,9 @@ APP_LAYOUT = AppLayout(
             name="Data",
             description=(
                 "Upload and view observed data, one tab per data group with "
-                "one table of its Protocols (doses) and one table of its Observations."
+                "one table of its Protocols (doses) and one table of its Observations. "
+                "Observed data is converted to the model's units automatically, so "
+                "data and model may use different units."
             ),
         ),
         Page(
