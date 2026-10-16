@@ -7,7 +7,11 @@ import { http, HttpResponse } from "msw";
 import { api } from "../app/api";
 import { store } from "../app/store";
 import ChatPanel from "../features/chat/ChatPanel";
-import { openChat, setActiveConversation } from "../features/chat/chatSlice";
+import {
+  openChat,
+  sendInNewChat,
+  setActiveConversation,
+} from "../features/chat/chatSlice";
 import {
   PageName,
   setPage,
@@ -260,6 +264,28 @@ export const SendsCurrentPageContext: Story = {
         sub_page: "Parameters",
       },
     });
+  },
+};
+
+// "Discuss with AI" queues a message: it is sent at once, in a new chat
+export const SendsQueuedMessageInNewChat: Story = {
+  decorators: [activeConversationState],
+  parameters: SendsCurrentPageContext.parameters,
+  beforeEach: () => {
+    createConversationRequest.mockClear();
+    chatbotRequest.mockClear();
+  },
+  play: async () => {
+    store.dispatch(sendInNewChat("[OPTIMISATION RESULTS]\n{}"));
+
+    await waitFor(() => expect(chatbotRequest).toHaveBeenCalledTimes(1));
+    expect(createConversationRequest).toHaveBeenCalledTimes(1);
+    expect(chatbotRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversation_id: 3,
+        content: "[OPTIMISATION RESULTS]\n{}",
+      }),
+    );
   },
 };
 
