@@ -61,6 +61,7 @@ const meta = {
     open: true,
     onClose: fn(),
     optimiseResult,
+    fitMessage: null,
     variables,
     units: [],
     groups: [],

@@ -28,6 +28,7 @@ type OptimisationViewProps = {
   open: boolean;
   onClose: () => void;
   optimiseResult: OptimiseResponse | null;
+  fitMessage: string | null;
   variables: VariableRead[];
   units: UnitRead[];
   groups: SubjectGroupRead[] | undefined;
@@ -56,6 +57,7 @@ const OptimisationView = ({
   open,
   onClose,
   optimiseResult,
+  fitMessage: _fitMessage,
   variables,
   units,
   groups,
