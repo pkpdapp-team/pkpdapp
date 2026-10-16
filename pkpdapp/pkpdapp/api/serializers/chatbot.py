@@ -5,6 +5,9 @@
 #
 from rest_framework import serializers
 
+# fits an optimisation results message with ~35 fitted parameters
+MAX_MESSAGE_LENGTH = 50000
+
 
 class StrictCharField(serializers.CharField):
     def to_internal_value(self, data):
@@ -42,5 +45,5 @@ class ChatbotRequestSerializer(serializers.Serializer):
     """Validate a chat request."""
 
     conversation_id = serializers.IntegerField()
-    content = StrictCharField(max_length=10000)
+    content = StrictCharField(max_length=MAX_MESSAGE_LENGTH)
     context = ChatbotContextSerializer(required=False, allow_null=True)

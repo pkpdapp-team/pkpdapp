@@ -4058,7 +4058,7 @@ components:
           type: integer
         content:
           type: string
-          maxLength: 10000
+          maxLength: 50000
         context:
           allOf:
           - $ref: '#/components/schemas/ChatbotContext'
