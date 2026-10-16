@@ -3,7 +3,9 @@ import { expect } from "storybook/test";
 
 import { store } from "../app/store";
 import chatReducer, {
+  clearPendingMessage,
   selectActiveConversationId,
+  sendInNewChat,
   setActiveConversation,
   setChatWidth,
   MIN_CHAT_WIDTH,
@@ -29,6 +31,7 @@ const initialState = {
   drawerWidth: DEFAULT_CHAT_WIDTH,
   activeConversationId: null,
   activeConversationProjectId: null,
+  pendingMessage: null,
 };
 
 export const ClampsDrawerWidth: Story = {
@@ -80,5 +83,22 @@ export const ScopesActiveConversationToProject: Story = {
     const clearedState = chatReducer(activeState, setActiveConversation(null));
     expect(clearedState.activeConversationId).toBeNull();
     expect(clearedState.activeConversationProjectId).toBeNull();
+  },
+};
+
+export const SendInNewChatQueuesTheMessage: Story = {
+  play: async () => {
+    const activeState = chatReducer(
+      initialState,
+      setActiveConversation({ conversationId: 3, projectId: 57 }),
+    );
+
+    const queuedState = chatReducer(activeState, sendInNewChat("hi"));
+    expect(queuedState.isOpen).toBe(true);
+    expect(queuedState.activeConversationId).toBeNull();
+    expect(queuedState.pendingMessage).toBe("hi");
+
+    const clearedState = chatReducer(queuedState, clearPendingMessage());
+    expect(clearedState.pendingMessage).toBeNull();
   },
 };
