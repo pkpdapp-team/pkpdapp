@@ -1,4 +1,11 @@
-import { Optimise, OptimiseResponse, UnitRead, VariableRead } from "../../app/backendApi";
+import {
+  BiomarkerTypeRead,
+  Optimise,
+  OptimiseResponse,
+  SubjectGroupRead,
+  UnitRead,
+  VariableRead,
+} from "../../app/backendApi";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
 import { correlation, isNearBound, percentRse, standardErrors } from "./optimisationStats";
 
@@ -47,6 +54,8 @@ export type QuickFitMessage = {
   inputs: {
     method: string;
     max_iterations: number | null;
+    observations: string[];
+    subject_groups: string[];
     parameters: FittedParameter[];
     noise: Noise[];
   };
@@ -62,6 +71,27 @@ function numberOrNull(value: number): number | null {
 
 function variableName(id: number, variables: VariableRead[]): string {
   return variables.find((v) => v.id === id)?.name ?? String(id);
+}
+
+// same label as the dialog: "name (description)", else name, else the biomarker's name
+function observationNames(
+  result: OptimiseResponse,
+  biomarkerTypes: BiomarkerTypeRead[],
+  variables: VariableRead[],
+): string[] {
+  return (result.biomarker_types ?? []).map((id) => {
+    const biomarkerType = biomarkerTypes.find((b) => b.id === id);
+    const variable = variables.find((v) => v.id === biomarkerType?.variable);
+    return variable?.description
+      ? `${variable.name} (${variable.description})`
+      : variable?.name || biomarkerType?.name || String(id);
+  });
+}
+
+function subjectGroupNames(result: OptimiseResponse, groups: SubjectGroupRead[]): string[] {
+  return (result.subject_groups ?? []).map(
+    (id) => groups.find((g) => g.id === id)?.name ?? String(id),
+  );
 }
 
 function sigma(start: number, bounds: number[], optimal: number, logSpace: boolean): Sigma {
@@ -159,6 +189,8 @@ export function buildQuickFitMessage(
   request: Optimise,
   variables: VariableRead[],
   units: UnitRead[],
+  biomarkerTypes: BiomarkerTypeRead[],
+  groups: SubjectGroupRead[],
 ): QuickFitMessage {
   return {
     summary: {
@@ -171,6 +203,8 @@ export function buildQuickFitMessage(
     inputs: {
       method: result.method,
       max_iterations: result.max_iterations ?? null,
+      observations: observationNames(result, biomarkerTypes, variables),
+      subject_groups: subjectGroupNames(result, groups),
       parameters: fittedParameters(result, request, variables, units),
       noise: noise(result, variables),
     },
