@@ -7,7 +7,6 @@ import type { Components } from "react-markdown";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import type { UIMessage } from "ai";
 import type { KindEnum } from "../../app/backendApi";
-import { quickFitMessageDetails } from "../simulation/quickFitMessage";
 type MessagePart = UIMessage["parts"][number];
 
 const cursorBlink = keyframes`
@@ -86,7 +85,7 @@ const FitIcon: FC = () => (
 );
 
 // a shared fit, shown as an event in the chat rather than a user bubble
-const QuickFitCard: FC<{ text: string }> = ({ text }) => (
+const QuickFitCard: FC = () => (
   <Stack direction="row" sx={{ justifyContent: "center", mb: 2 }}>
     <Box
       sx={(theme) => ({
@@ -108,31 +107,6 @@ const QuickFitCard: FC<{ text: string }> = ({ text }) => (
           </Typography>
         </Box>
       </Stack>
-      {import.meta.env.DEV && (
-        <Box component="details" sx={{ mt: 1 }}>
-          <Typography
-            component="summary"
-            variant="caption"
-            sx={{ cursor: "pointer", color: "text.secondary" }}
-          >
-            What was sent to the AI
-          </Typography>
-          <Box
-            component="pre"
-            sx={{
-              fontSize: "0.75rem",
-              maxHeight: 240,
-              overflow: "auto",
-              bgcolor: "grey.100",
-              p: 1,
-              borderRadius: 1,
-              mb: 0,
-            }}
-          >
-            {quickFitMessageDetails(text)}
-          </Box>
-        </Box>
-      )}
     </Box>
   </Stack>
 );
@@ -177,7 +151,7 @@ const MessageBubble: FC<{
       .map((p) => p.text)
       .join("");
     if (kind === "quick_fit") {
-      return <QuickFitCard text={text} />;
+      return <QuickFitCard />;
     }
     return (
       <Stack direction="row-reverse" sx={{ mb: 2 }}>
