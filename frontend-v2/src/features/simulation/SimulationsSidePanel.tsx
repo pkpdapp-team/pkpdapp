@@ -806,7 +806,10 @@ export const SimulationsSidePanel = ({
             optimiseResult={optimiseResult}
             onDiscuss={
               isChatbotEnabled && fitMessage
-                ? () => dispatch(sendInNewChat(fitMessage))
+                ? () =>
+                    dispatch(
+                      sendInNewChat({ text: fitMessage, kind: "quick_fit" }),
+                    )
                 : undefined
             }
             variables={variables}

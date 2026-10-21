@@ -14,13 +14,13 @@ import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import { useChat } from "@ai-sdk/react";
-import { UIMessage } from "ai";
 import { useAppDispatch } from "../../app/hooks";
 import { RootState } from "../../app/store";
 import {
   useProjectRetrieveQuery,
   useMessagesListQuery,
   MessageRead,
+  KindEnum,
 } from "../../app/backendApi";
 import { api } from "../../app/api";
 import {
@@ -39,14 +39,15 @@ import { useConversations } from "./useConversations";
 import ConversationList from "./ConversationList";
 import transport, {
   type ChatTransportBody,
+  type ChatUIMessage,
   getChatError,
 } from "./chatTransport";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
 
-function buildUIMessages(apiMessages: MessageRead[]): UIMessage[] {
-  const result: UIMessage[] = [];
+function buildUIMessages(apiMessages: MessageRead[]): ChatUIMessage[] {
+  const result: ChatUIMessage[] = [];
 
   for (const m of apiMessages) {
     if (m.role === "user") {
@@ -102,10 +103,11 @@ const ChatPanel: FC = () => {
 
   const { create: createConversation } = useConversations(selectedProject);
 
-  const { messages, sendMessage, setMessages, status, error, stop } = useChat({
-    transport,
-    experimental_throttle: 50,
-  });
+  const { messages, sendMessage, setMessages, status, error, stop } =
+    useChat<ChatUIMessage>({
+      transport,
+      experimental_throttle: 50,
+    });
 
   const isLoading = status === "submitted" || status === "streaming";
   const chatError = error ? getChatError(error) : null;
@@ -172,7 +174,7 @@ const ChatPanel: FC = () => {
   };
 
   const sendText = useCallback(
-    async (text: string) => {
+    async (text: string, kind?: KindEnum) => {
       if (isLoading || !selectedProject) return;
       const projectId = selectedProject;
 
@@ -198,7 +200,7 @@ const ChatPanel: FC = () => {
       if (selectedProjectRef.current !== projectId) return;
 
       sendMessage(
-        { text },
+        { text, metadata: kind ? { kind } : undefined },
         {
           body: {
             conversation_id: convId,
@@ -237,7 +239,7 @@ const ChatPanel: FC = () => {
     }
     dispatch(clearPendingMessage());
     setShowConversationList(false);
-    sendText(pendingMessage);
+    sendText(pendingMessage.text, pendingMessage.kind);
   }, [pendingMessage, isLoading, stop, dispatch, sendText]);
 
   const handleDragStart = useCallback(
