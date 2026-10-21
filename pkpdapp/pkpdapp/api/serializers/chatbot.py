@@ -47,3 +47,4 @@ class ChatbotRequestSerializer(serializers.Serializer):
     conversation_id = serializers.IntegerField()
     content = StrictCharField(max_length=MAX_MESSAGE_LENGTH)
     context = ChatbotContextSerializer(required=False, allow_null=True)
+    kind = serializers.ChoiceField(choices=["quick_fit"], required=False)
