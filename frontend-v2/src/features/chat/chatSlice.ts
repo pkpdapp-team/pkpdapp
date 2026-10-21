@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
+import { KindEnum } from "../../app/backendApi";
 
 export const MIN_CHAT_WIDTH = 320;
 export const DEFAULT_CHAT_WIDTH = 380;
@@ -10,7 +11,12 @@ interface ChatState {
   drawerWidth: number;
   activeConversationId: number | null;
   activeConversationProjectId: number | null;
-  pendingMessage: string | null;
+  pendingMessage: PendingMessage | null;
+}
+
+interface PendingMessage {
+  text: string;
+  kind?: KindEnum;
 }
 
 interface ActiveConversation {
@@ -53,7 +59,7 @@ const chatSlice = createSlice({
       state.activeConversationProjectId = action.payload?.projectId ?? null;
     },
     // open a new chat and queue the text for ChatPanel to send
-    sendInNewChat: (state, action: PayloadAction<string>) => {
+    sendInNewChat: (state, action: PayloadAction<PendingMessage>) => {
       state.isOpen = true;
       state.activeConversationId = null;
       state.activeConversationProjectId = null;

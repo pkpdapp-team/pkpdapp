@@ -4,11 +4,13 @@ import type {
   ChatbotErrorResponse,
   ChatbotLimitResponse,
   ChatbotRequest,
+  KindEnum,
 } from "../../app/backendApi";
 import { store } from "../../app/store";
 import { selectCsrf } from "../login/loginSlice";
 
-export type ChatTransportBody = Omit<ChatbotRequest, "content">;
+export type ChatTransportBody = Omit<ChatbotRequest, "content" | "kind">;
+export type ChatUIMessage = UIMessage<{ kind?: KindEnum }>;
 
 /** Build the Django request for the latest chat message. */
 export function buildChatRequest({
@@ -17,7 +19,7 @@ export function buildChatRequest({
   body,
   csrf,
 }: {
-  messages: UIMessage[];
+  messages: ChatUIMessage[];
   headers?: Record<string, string>;
   body?: ChatTransportBody;
   csrf: string;
@@ -42,6 +44,7 @@ export function buildChatRequest({
     conversation_id: conversationId,
     content,
     context: body?.context,
+    kind: lastMessage?.metadata?.kind,
   };
 
   return {
@@ -79,7 +82,7 @@ export function getChatError(error: Error): ChatError {
   return { message: DEFAULT_CHAT_ERROR, isLimitReached: false };
 }
 
-const transport = new DefaultChatTransport({
+const transport = new DefaultChatTransport<ChatUIMessage>({
   api: "/api/chatbot/",
   credentials: "include",
   prepareSendMessagesRequest: ({ messages, headers, body }) =>

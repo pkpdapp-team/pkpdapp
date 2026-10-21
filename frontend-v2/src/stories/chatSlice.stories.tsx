@@ -93,10 +93,11 @@ export const SendInNewChatQueuesTheMessage: Story = {
       setActiveConversation({ conversationId: 3, projectId: 57 }),
     );
 
-    const queuedState = chatReducer(activeState, sendInNewChat("hi"));
+    const queued = { text: "hi", kind: "quick_fit" } as const;
+    const queuedState = chatReducer(activeState, sendInNewChat(queued));
     expect(queuedState.isOpen).toBe(true);
     expect(queuedState.activeConversationId).toBeNull();
-    expect(queuedState.pendingMessage).toBe("hi");
+    expect(queuedState.pendingMessage).toEqual(queued);
 
     const clearedState = chatReducer(queuedState, clearPendingMessage());
     expect(clearedState.pendingMessage).toBeNull();
