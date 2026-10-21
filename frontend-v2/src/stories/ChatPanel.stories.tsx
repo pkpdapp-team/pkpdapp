@@ -275,7 +275,8 @@ export const SendsQueuedMessageInNewChat: Story = {
     createConversationRequest.mockClear();
     chatbotRequest.mockClear();
   },
-  play: async () => {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
     store.dispatch(
       sendInNewChat({ text: "[OPTIMISATION RESULTS]\n{}", kind: "quick_fit" }),
     );
@@ -289,6 +290,35 @@ export const SendsQueuedMessageInNewChat: Story = {
         kind: "quick_fit",
       }),
     );
+    expect(await canvas.findByText("Optimisation results")).toBeInTheDocument();
+  },
+};
+
+// after a reload the saved kind still shows the card
+export const ShowsStoredOptimisationResultsAsCard: Story = {
+  decorators: [activeConversationState],
+  parameters: {
+    msw: {
+      handlers: {
+        messages: http.get("/api/messages/", () =>
+          HttpResponse.json([
+            {
+              id: 1,
+              role: "user",
+              content: "[OPTIMISATION RESULTS]\n{}",
+              metadata: { kind: "quick_fit" },
+              created_at: "2025-06-01T09:00:00Z",
+            },
+          ]),
+        ),
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    expect(await canvas.findByText("Optimisation results")).toBeInTheDocument();
+    expect(canvas.queryByText(/\[OPTIMISATION RESULTS\]/)).toBeNull();
   },
 };
 

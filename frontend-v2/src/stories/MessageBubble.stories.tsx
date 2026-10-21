@@ -67,6 +67,7 @@ export const OptimisationResultsCard: Story = {
         text: '[OPTIMISATION RESULTS]\n{"summary":{"stop_reason":"converged"}}',
       },
     ],
+    kind: "quick_fit",
     isUser: true,
   },
   play: async ({ canvasElement }) => {
