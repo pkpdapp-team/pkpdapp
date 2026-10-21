@@ -3,7 +3,6 @@ import { expect } from "storybook/test";
 
 import {
   buildQuickFitMessage,
-  isQuickFitMessage,
   quickFitMessageText,
 } from "../features/simulation/quickFitMessage";
 import {
@@ -133,7 +132,5 @@ export const SendsHeaderAndJson: Story = {
 
     expect(text.split("\n")[0]).toBe("[OPTIMISATION RESULTS]");
     expect(JSON.parse(text.split("\n")[1])).toEqual(message);
-    expect(isQuickFitMessage(text)).toBe(true);
-    expect(isQuickFitMessage("What does the AIC mean?")).toBe(false);
   },
 };

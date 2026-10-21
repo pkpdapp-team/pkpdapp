@@ -6,10 +6,8 @@ import "highlight.js/styles/a11y-light.css";
 import type { Components } from "react-markdown";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import type { UIMessage } from "ai";
-import {
-  isQuickFitMessage,
-  quickFitMessageDetails,
-} from "../simulation/quickFitMessage";
+import type { KindEnum } from "../../app/backendApi";
+import { quickFitMessageDetails } from "../simulation/quickFitMessage";
 type MessagePart = UIMessage["parts"][number];
 
 const cursorBlink = keyframes`
@@ -169,15 +167,16 @@ const TextPart: FC<{
 
 const MessageBubble: FC<{
   parts: MessagePart[];
+  kind?: KindEnum;
   isUser: boolean;
   isStreaming?: boolean;
-}> = ({ parts, isUser, isStreaming }) => {
+}> = ({ parts, kind, isUser, isStreaming }) => {
   if (isUser) {
     const text = parts
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
       .join("");
-    if (isQuickFitMessage(text)) {
+    if (kind === "quick_fit") {
       return <QuickFitCard text={text} />;
     }
     return (
