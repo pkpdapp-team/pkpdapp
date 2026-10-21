@@ -1,9 +1,8 @@
 import { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
-import type { UIMessage } from "ai";
-
 import {
   buildChatRequest,
+  type ChatUIMessage,
   DEFAULT_CHAT_ERROR,
   getChatError,
 } from "../features/chat/chatTransport";
@@ -22,7 +21,7 @@ const meta: Meta<typeof ChatTransportTests> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function userMessage(...texts: string[]): UIMessage {
+function userMessage(...texts: string[]): ChatUIMessage {
   return {
     id: "1",
     role: "user",
@@ -70,6 +69,22 @@ export const IncludesContext: Story = {
 };
 
 // Multiple text parts of the latest message are concatenated.
+export const SendsMessageKind: Story = {
+  play: async () => {
+    const message: ChatUIMessage = {
+      ...userMessage("fit"),
+      metadata: { kind: "quick_fit" },
+    };
+    const req = buildChatRequest({
+      messages: [message],
+      body: { conversation_id: 42 },
+      csrf: "tok",
+    });
+
+    expect(req.body.kind).toBe("quick_fit");
+  },
+};
+
 export const JoinsMultipleTextParts: Story = {
   play: async () => {
     const req = buildChatRequest({

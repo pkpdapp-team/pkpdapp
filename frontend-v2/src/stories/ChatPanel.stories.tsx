@@ -276,7 +276,9 @@ export const SendsQueuedMessageInNewChat: Story = {
     chatbotRequest.mockClear();
   },
   play: async () => {
-    store.dispatch(sendInNewChat("[OPTIMISATION RESULTS]\n{}"));
+    store.dispatch(
+      sendInNewChat({ text: "[OPTIMISATION RESULTS]\n{}", kind: "quick_fit" }),
+    );
 
     await waitFor(() => expect(chatbotRequest).toHaveBeenCalledTimes(1));
     expect(createConversationRequest).toHaveBeenCalledTimes(1);
@@ -284,6 +286,7 @@ export const SendsQueuedMessageInNewChat: Story = {
       expect.objectContaining({
         conversation_id: 3,
         content: "[OPTIMISATION RESULTS]\n{}",
+        kind: "quick_fit",
       }),
     );
   },
