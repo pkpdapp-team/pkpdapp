@@ -219,10 +219,6 @@ export function quickFitMessageText(message: QuickFitMessage): string {
   return `${QUICK_FIT_HEADER}\n${JSON.stringify(message)}`;
 }
 
-export function isQuickFitMessage(text: string): boolean {
-  return text.startsWith(`${QUICK_FIT_HEADER}\n`);
-}
-
 // the sent JSON indented for reading, or the raw text if it isn't JSON
 export function quickFitMessageDetails(text: string): string {
   const json = text.slice(QUICK_FIT_HEADER.length + 1);

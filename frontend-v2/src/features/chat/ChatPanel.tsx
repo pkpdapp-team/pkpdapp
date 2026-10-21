@@ -54,6 +54,7 @@ function buildUIMessages(apiMessages: MessageRead[]): ChatUIMessage[] {
       result.push({
         id: String(m.id),
         role: "user",
+        metadata: m.metadata,
         parts: [{ type: "text" as const, text: m.content }],
       });
     } else if (m.role === "assistant") {
@@ -568,6 +569,7 @@ const ChatPanel: FC = () => {
                   <MessageBubble
                     key={msg.id}
                     parts={msg.parts ?? []}
+                    kind={msg.metadata?.kind}
                     isUser={isUser}
                     isStreaming={isLastAssistant}
                   />
