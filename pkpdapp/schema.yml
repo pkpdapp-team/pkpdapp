@@ -4063,6 +4063,8 @@ components:
           allOf:
           - $ref: '#/components/schemas/ChatbotContext'
           nullable: true
+        kind:
+          $ref: '#/components/schemas/KindEnum'
       required:
       - content
       - conversation_id
@@ -4763,6 +4765,11 @@ components:
       description: |-
         * `MS` - Microsomes
         * `HC` - Hepatocytes
+    KindEnum:
+      enum:
+      - quick_fit
+      type: string
+      description: '* `quick_fit` - quick_fit'
     Message:
       type: object
       properties:

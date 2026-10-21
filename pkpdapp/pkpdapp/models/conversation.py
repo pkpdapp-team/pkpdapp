@@ -108,12 +108,13 @@ class Conversation(models.Model):
         )
         return f"<transcript>\n{text}\n</transcript>"
 
-    def add_user_message(self, content):
+    def add_user_message(self, content, kind=None):
         """Persist a user message to the database and return it."""
         message = Message.objects.create(
             conversation=self,
             role="user",
             content=content,
+            metadata={"kind": kind} if kind else {},
         )
         self.last_message_at = message.created_at
         self.save(update_fields=["last_message_at"])
