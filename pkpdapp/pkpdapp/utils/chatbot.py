@@ -499,7 +499,10 @@ DONE_TOKEN = "[DONE]"
 
 
 def stream_chat_response(
-    conversation: Conversation, new_user_message: str, context=None
+    conversation: Conversation,
+    new_user_message: str,
+    context=None,
+    kind: str | None = None,
 ):
     """Yield SSE events following the Vercel AI SDK data stream protocol.
 
@@ -510,7 +513,7 @@ def stream_chat_response(
     try:
         logger.info("[chatbot] [%s] conversation=%s", req_id, conversation.pk)
 
-        conversation.add_user_message(new_user_message)
+        conversation.add_user_message(new_user_message, kind=kind)
 
         _log_io(req_id, "USER MESSAGE", new_user_message)
 
