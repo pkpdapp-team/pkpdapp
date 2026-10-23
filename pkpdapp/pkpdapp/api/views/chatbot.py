@@ -173,7 +173,9 @@ class ChatbotView(APIView):
                 project=None,
             )
 
-        generator = stream_chat_response(conversation, content, context=chat_context)
+        generator = stream_chat_response(
+            conversation, content, context=chat_context, kind=data.get("kind")
+        )
         response = StreamingHttpResponse(
             generator,
             content_type="text/event-stream; charset=utf-8",

@@ -20,6 +20,7 @@ import { RootState } from "../../app/store";
 import { LinearProgress, Tooltip } from "@mui/material";
 import { logout } from "../login/loginSlice";
 import { useAppDispatch } from "../../app/hooks";
+import { isChatbotEnabled } from "../chat/chatbotEnabled";
 import ErrorIcon from "@mui/icons-material/Error";
 import { SvgIcon } from "@mui/material";
 import { ReactComponent as RocheLogo } from "../../shared/assets/svg/logo_roche.svg";
@@ -94,12 +95,11 @@ export default function Sidebar() {
   );
 
   const [intervals] = useModelTimeIntervals();
-  const { VITE_APP_ROCHE, VITE_ENABLE_CHATBOT } = import.meta.env;
+  const { VITE_APP_ROCHE } = import.meta.env;
   const isRocheLogo =
     typeof VITE_APP_ROCHE === "string"
       ? VITE_APP_ROCHE === "true"
       : VITE_APP_ROCHE;
-  const isChatbotEnabled = VITE_ENABLE_CHATBOT === "true";
 
   const modelIsIncomplete = (
     mdl: CombinedModelRead | null,
