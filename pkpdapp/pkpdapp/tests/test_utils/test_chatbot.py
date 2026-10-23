@@ -436,15 +436,18 @@ class ChatbotUtilsTestCase(TestCase):
 
         fake_client = mock.Mock()
         fake_client.responses.create.side_effect = [
+            SimpleNamespace(output_text="- a summary"),
             [event("response.output_text.delta", delta="Answer"), completed_event()],
             SimpleNamespace(output_text="A title"),
-            SimpleNamespace(output_text="- a summary"),
         ]
         with mock.patch.object(chatbot, "get_client", return_value=fake_client):
             list(chatbot.stream_chat_response(current, "question"))
 
         summarized = Conversation.objects.exclude(summary="")
         self.assertCountEqual(summarized, [mine[-1]])
+        # the summary is already in this reply's prompt
+        chat_call = fake_client.responses.create.call_args_list[1]
+        self.assertIn("- a summary", chat_call.kwargs["instructions"])
 
     def test_summary_input_cuts_long_messages(self):
         self.conversation.add_user_message("x" * (MAX_SUMMARY_INPUT_CHARS + 100))

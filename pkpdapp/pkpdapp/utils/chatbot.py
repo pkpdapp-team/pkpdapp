@@ -506,6 +506,10 @@ def stream_chat_response(
 
         input_items = conversation.build_input_items()
 
+        client = get_client()
+        # before the prompt, so a chat that just ended is already in it
+        summarize_others(conversation, client)
+
         assistant_text_parts = []
         instructions = _build_system_prompt(context, conversation=conversation)
         message_id = str(uuid.uuid4())
@@ -516,7 +520,6 @@ def stream_chat_response(
             _build_system_prompt(context, conversation=conversation, indent=2),
         )
 
-        client = get_client()
         pricing = get_model_pricing()
 
         yield _sse({"type": "start", "messageId": message_id})
@@ -630,7 +633,6 @@ def stream_chat_response(
                 "[chatbot] [%s] error saving assistant message", req_id
             )
         set_title_if_default(conversation, client)
-        summarize_others(conversation, client)
         _log_io(req_id, "ASSISTANT FINAL", "".join(assistant_text_parts))
         logger.info("[chatbot] [%s] done", req_id)
 

@@ -13,7 +13,7 @@ from portkey_ai import Portkey
 
 logger = logging.getLogger(__name__)
 
-# runs after every chat reply, so keep the extra wait short
+# runs before every chat reply, so keep the extra wait short
 MAX_SUMMARIES_PER_RUN = 1
 SUMMARY_TIMEOUT_SECONDS = 8
 MAX_SUMMARY_INPUT_CHARS = 8000  # per message
