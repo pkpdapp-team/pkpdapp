@@ -9,6 +9,8 @@ from django.conf import settings
 
 
 class Conversation(models.Model):
+    DEFAULT_TITLE = "Untitled conversation"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -22,7 +24,7 @@ class Conversation(models.Model):
         blank=True,
     )
     title = models.CharField(
-        max_length=200, blank=True, default="Untitled conversation"
+        max_length=200, blank=True, default=DEFAULT_TITLE
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,6 +38,9 @@ class Conversation(models.Model):
 
     def get_project(self):
         return self.project
+
+    def has_default_title(self):
+        return self.title in ("", self.DEFAULT_TITLE)
 
     def last_message_preview(self):
         """Return the first text line from the last user/assistant message."""
@@ -53,6 +58,21 @@ class Conversation(models.Model):
             return ""
         first_line = text.split("\n", 1)[0]
         return first_line[:120]
+
+    def transcript(
+        self,
+        max_messages: int | None = None,
+        max_message_chars: int | None = None,
+    ) -> str:
+        """Return the chat as USER:/ASSISTANT: lines in <transcript> tags."""
+        messages = self.messages.filter(
+            role__in=["user", "assistant"]
+        ).order_by("created_at")[:max_messages]
+        text = "\n\n".join(
+            f"{m.role.upper()}: {m.content[:max_message_chars]}"
+            for m in messages
+        )
+        return f"<transcript>\n{text}\n</transcript>"
 
     def add_user_message(self, content):
         """Persist a user message to the database and return it."""
