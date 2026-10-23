@@ -378,13 +378,13 @@ class DataParser:
             data = data.fillna("")
         return data
 
-    def parse_from_str(self, data_str, delimiter=None):
+    def parse_from_str(self, data_str, delimiter=","):
         data = StringIO(data_str)
         data = pd.read_csv(data, delimiter=delimiter)
         data = self.validate(data)
         return data
 
-    def parse_from_stream(self, data_stream, delimiter=None):
+    def parse_from_stream(self, data_stream, delimiter=","):
         data = pd.read_csv(data_stream, delimiter=delimiter)
         data = self.validate(data)
         return data
