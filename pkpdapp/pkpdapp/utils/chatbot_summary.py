@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # runs after every chat reply, so keep the extra wait short
 MAX_SUMMARIES_PER_RUN = 1
 SUMMARY_TIMEOUT_SECONDS = 8
+MAX_SUMMARY_INPUT_CHARS = 8000  # per message
 MAX_SUMMARY_CHARS = 1500
 
 
@@ -32,10 +33,13 @@ settled on, and questions left open. Output only the bullet points.
 
 def summarize_conversation(conversation: Conversation, client: Portkey):
     try:
+        transcript = conversation.transcript(
+            max_message_chars=MAX_SUMMARY_INPUT_CHARS
+        )
         response = client.responses.create(
             model=settings.CHATBOT_SMALL_MODEL,
             instructions=SUMMARY_INSTRUCTIONS,
-            input=[{"role": "user", "content": conversation.transcript()}],
+            input=[{"role": "user", "content": transcript}],
             store=False,
             reasoning={"effort": "low"},
             timeout=SUMMARY_TIMEOUT_SECONDS,

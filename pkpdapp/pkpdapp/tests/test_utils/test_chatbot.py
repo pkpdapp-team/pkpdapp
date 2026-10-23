@@ -23,6 +23,10 @@ from pkpdapp.utils import chatbot
 from pkpdapp.utils.chatbot_context import ChatContext
 from pkpdapp.utils.chatbot_usage import ModelPricing
 from pkpdapp.utils.chatbot_title import set_title_if_default
+from pkpdapp.utils.chatbot_summary import (
+    MAX_SUMMARY_INPUT_CHARS,
+    summarize_conversation,
+)
 
 
 def event(type, **kwargs):
@@ -441,6 +445,20 @@ class ChatbotUtilsTestCase(TestCase):
 
         summarized = Conversation.objects.exclude(summary="")
         self.assertCountEqual(summarized, [mine[-1]])
+
+    def test_summary_input_cuts_long_messages(self):
+        self.conversation.add_user_message("x" * (MAX_SUMMARY_INPUT_CHARS + 100))
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = SimpleNamespace(
+            output_text="- a summary"
+        )
+
+        summarize_conversation(self.conversation, fake_client)
+
+        summary_input = fake_client.responses.create.call_args.kwargs["input"]
+        transcript = summary_input[0]["content"]
+        self.assertIn("x" * MAX_SUMMARY_INPUT_CHARS, transcript)
+        self.assertNotIn("x" * (MAX_SUMMARY_INPUT_CHARS + 1), transcript)
 
     def test_existing_title_is_kept(self):
         # the setUp conversation already has a title
