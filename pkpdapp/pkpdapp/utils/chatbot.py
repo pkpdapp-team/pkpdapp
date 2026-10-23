@@ -16,6 +16,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
 )
 from pkpdapp.utils.chatbot_app_layout import APP_LAYOUT, CONTEXT_NOTES
+from pkpdapp.utils.chatbot_documents import document_search_enabled, search
 from pkpdapp.utils.chatbot_usage import (
     TokenUsage,
     get_model_pricing,
@@ -304,6 +305,29 @@ _STATIC_TOOLS = [
     },
 ]
 
+_SEARCH_DOCUMENTS_TOOL = {
+    "type": "function",
+    "name": "search_documents",
+    "description": (
+        "Search the app's library of reference documents (for example PK/PD "
+        "papers, textbooks and manuals) for passages relevant to a question. "
+        "This is a semantic search, so write the query as a short question or "
+        "statement about one topic. Returns the most relevant passages with "
+        "their source and pages. When your answer draws on a passage, say "
+        "which source it comes from."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "A short question or statement about one topic",
+            }
+        },
+        "required": ["query"],
+    },
+}
+
 # Limit repeated tool calls.
 MAX_TOOL_ROUNDS = 4
 
@@ -336,10 +360,31 @@ def _get_current_model_definition(conversation):
         return "Error looking up the current model definition."
 
 
+def _search_documents(query):
+    try:
+        hits = search(get_client(), query)
+    except Exception:
+        logger.exception("[chatbot] tool search_documents error")
+        return "Error searching the documents."
+    if not hits:
+        return "No matching passages found."
+    return "\n\n".join(_format_hit(hit) for hit in hits)
+
+
+def _format_hit(hit):
+    first, last = hit["pages"][0], hit["pages"][-1]
+    pages = f"p. {first}" if first == last else f"pp. {first}–{last}"
+    section = " > ".join(hit["headings"])
+    return f"From {hit['filename']}, {pages} ({section}):\n{hit['raw_text']}"
+
+
 def _execute_tool(name, arguments, conversation=None):
     """Execute a tool call and return the result string."""
     if name == "get_current_model_definition":
         return _get_current_model_definition(conversation)
+
+    if name == "search_documents":
+        return _search_documents(arguments.get("query", ""))
 
     if name == "get_library_model_definition":
         model_name = arguments.get("model_name", "")
@@ -534,6 +579,9 @@ def stream_chat_response(
         )
 
         pricing = get_model_pricing()
+        tools = _STATIC_TOOLS
+        if document_search_enabled():
+            tools = tools + [_SEARCH_DOCUMENTS_TOOL]
 
         yield _sse({"type": "start", "messageId": message_id})
 
@@ -547,7 +595,7 @@ def stream_chat_response(
                 model=settings.CHATBOT_MODEL,
                 instructions=instructions,
                 input=input_items,
-                tools=_STATIC_TOOLS,
+                tools=tools,
                 stream=True,
                 store=False,
                 reasoning={"effort": "low"},
