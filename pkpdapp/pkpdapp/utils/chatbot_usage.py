@@ -92,11 +92,11 @@ class _PricingEntry:
     pricing: ModelPricing
 
 
-# Last successfully fetched price. Also stored in the Django cache so it is
-# shared between workers and survives restarts.
-_last_pricing: Optional[_PricingEntry] = None
-# time.time() before which a failed fetch is not retried.
-_retry_after: float = 0.0
+# Last successfully fetched price per model id. Also stored in the Django
+# cache so it is shared between workers and survives restarts.
+_last_pricing: dict[str, _PricingEntry] = {}
+# time.time() per model id before which a failed fetch is not retried.
+_retry_after: dict[str, float] = {}
 
 
 class ChatbotUnavailable(Exception):
@@ -135,24 +135,23 @@ class PricingUnavailable(ChatbotUnavailable):
         )
 
 
-def _pricing_model_name() -> str:
-    """CHATBOT_MODEL without any Portkey '@provider-slug/' prefix."""
-    model = settings.CHATBOT_MODEL or ""
+def _pricing_model_name(model: str) -> str:
+    """The model without any Portkey '@provider-slug/' prefix."""
     if model.startswith("@") and "/" in model:
         model = model.split("/", 1)[1]
     return model
 
 
-def _pricing_model_id() -> str:
-    return f"{settings.CHATBOT_PRICING_PROVIDER}/{_pricing_model_name()}"
+def _pricing_model_id(model: str) -> str:
+    return f"{settings.CHATBOT_PRICING_PROVIDER}/{_pricing_model_name(model)}"
 
 
-def _fetch_portkey_pricing() -> ModelPricing:
-    """Fetch prices for CHATBOT_MODEL from Portkey.
+def _fetch_portkey_pricing(model_id: str) -> ModelPricing:
+    """Fetch a model's prices from Portkey.
 
     Portkey reports prices in USD cents per token.
     """
-    url = f"{PORTKEY_PRICING_URL}/{_pricing_model_id()}"
+    url = f"{PORTKEY_PRICING_URL}/{model_id}"
     response = httpx.get(url, timeout=_PRICING_TIMEOUT_SECONDS)
     response.raise_for_status()
     payg = (response.json() or {}).get("pay_as_you_go") or {}
@@ -183,40 +182,46 @@ def _env_overrides() -> dict[str, float]:
     return {k: v / 1_000_000 for k, v in per_mtok.items() if v is not None}
 
 
-def _previous_pricing() -> Optional[_PricingEntry]:
+def _pricing_cache_key(model_id: str) -> str:
+    return f"{_PRICING_CACHE_KEY}:{model_id}"
+
+
+def _previous_pricing(model_id: str) -> Optional[_PricingEntry]:
     """Return the most recent previously fetched price for the model."""
     entries = [
-        e for e in (_last_pricing, cache.get(_PRICING_CACHE_KEY))
-        if isinstance(e, _PricingEntry) and e.model == _pricing_model_id()
+        e for e in (
+            _last_pricing.get(model_id),
+            cache.get(_pricing_cache_key(model_id)),
+        )
+        if isinstance(e, _PricingEntry)
     ]
     return max(entries, key=lambda e: e.fetched_at, default=None)
 
 
-def _portkey_pricing() -> Optional[ModelPricing]:
+def _portkey_pricing(model: str) -> Optional[ModelPricing]:
     """Return Portkey's pricing for the model, falling back to the previous
     fetch for up to a week if Portkey can't be reached. None if unknown."""
-    global _last_pricing, _retry_after
+    model_id = _pricing_model_id(model)
     now = time.time()
-    previous = _previous_pricing()
+    previous = _previous_pricing(model_id)
     age = now - previous.fetched_at if previous else math.inf
     if previous is not None and age < _PRICING_REFRESH_SECONDS:
         return previous.pricing
 
-    if now >= _retry_after:
+    if now >= _retry_after.get(model_id, 0.0):
         try:
-            pricing = _fetch_portkey_pricing()
+            pricing = _fetch_portkey_pricing(model_id)
         except Exception as e:
-            _retry_after = now + _PRICING_RETRY_SECONDS
+            _retry_after[model_id] = now + _PRICING_RETRY_SECONDS
             logger.error(
                 "[chatbot] could not fetch model pricing for %s: %s",
-                _pricing_model_id(), e,
+                model_id, e,
             )
         else:
-            _last_pricing = _PricingEntry(
-                fetched_at=now, model=_pricing_model_id(), pricing=pricing
-            )
+            entry = _PricingEntry(fetched_at=now, model=model_id, pricing=pricing)
+            _last_pricing[model_id] = entry
             cache.set(
-                _PRICING_CACHE_KEY, _last_pricing,
+                _pricing_cache_key(model_id), entry,
                 timeout=_PRICING_MAX_AGE_SECONDS,
             )
             return pricing
@@ -229,17 +234,19 @@ def _portkey_pricing() -> Optional[ModelPricing]:
     return None
 
 
-def get_model_pricing() -> Optional[ModelPricing]:
-    """Return the chatbot model's prices, or None if unknown.
+def get_model_pricing(model: Optional[str] = None) -> Optional[ModelPricing]:
+    """Return a model's prices (default CHATBOT_MODEL), or None if unknown.
 
-    Env var overrides take precedence; anything not overridden comes from
-    Portkey's pricing endpoint.
+    Env var overrides take precedence for CHATBOT_MODEL; anything not
+    overridden comes from Portkey's pricing endpoint.
     """
-    overrides = _env_overrides()
+    model = model or settings.CHATBOT_MODEL or ""
+    # the CHATBOT_*_PRICE_PER_MTOK env vars are for the main model
+    overrides = _env_overrides() if model == settings.CHATBOT_MODEL else {}
     if "input" in overrides and "output" in overrides:
         return ModelPricing(**overrides)
 
-    fetched = _portkey_pricing()
+    fetched = _portkey_pricing(model)
     if fetched is None:
         return None
     return dataclasses.replace(fetched, **overrides)
