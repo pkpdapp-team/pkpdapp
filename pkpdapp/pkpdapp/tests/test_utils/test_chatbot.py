@@ -7,6 +7,7 @@ import pkpdapp.tests  # noqa: F401
 from types import SimpleNamespace
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
@@ -19,7 +20,7 @@ from pkpdapp.models import (
     PharmacodynamicModel,
     Project,
 )
-from pkpdapp.utils import chatbot
+from pkpdapp.utils import chatbot, chatbot_summary, chatbot_title
 from pkpdapp.utils.chatbot_context import ChatContext
 from pkpdapp.utils.chatbot_usage import ModelPricing
 from pkpdapp.utils.chatbot_title import set_title_if_default
@@ -71,6 +72,13 @@ class ChatbotUtilsTestCase(TestCase):
         )
         self.get_model_pricing = pricing_patch.start()
         self.addCleanup(pricing_patch.stop)
+        # titles and summaries look up the small model's price
+        for module in (chatbot_title, chatbot_summary):
+            small_pricing_patch = mock.patch.object(
+                module, "get_model_pricing", return_value=PRICING
+            )
+            small_pricing_patch.start()
+            self.addCleanup(small_pricing_patch.stop)
 
     def test_stream_filters_tool_call_messages_from_api_input(self):
         Message.objects.create(
@@ -462,6 +470,20 @@ class ChatbotUtilsTestCase(TestCase):
         transcript = summary_input[0]["content"]
         self.assertIn("x" * MAX_SUMMARY_INPUT_CHARS, transcript)
         self.assertNotIn("x" * (MAX_SUMMARY_INPUT_CHARS + 1), transcript)
+
+    def test_summary_cost_counts_towards_the_monthly_spend(self):
+        self.conversation.add_user_message("question")
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = SimpleNamespace(
+            output_text="- a summary", usage=usage(1000, 500)
+        )
+        summarize_conversation(self.conversation, fake_client)
+
+        chatbot_summary.get_model_pricing.assert_called_once_with(
+            settings.CHATBOT_SMALL_MODEL
+        )
+        spent = ChatbotUsage.spend_this_month(self.user)
+        self.assertAlmostEqual(float(spent), 1000 * 1e-6 + 500 * 4e-6, places=6)
 
     def test_existing_title_is_kept(self):
         # the setUp conversation already has a title
