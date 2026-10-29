@@ -18,19 +18,22 @@ logger = logging.getLogger("chunk")
 
 def make_chunker() -> HybridChunker:
     encoding = tiktoken.get_encoding(TOKENIZER)
-    return HybridChunker(tokenizer=OpenAITokenizer(tokenizer=encoding, max_tokens=MAX_TOKENS))
+    tokenizer = OpenAITokenizer(tokenizer=encoding, max_tokens=MAX_TOKENS)
+    return HybridChunker(tokenizer=tokenizer)
 
 
 def chunk_document(chunker: HybridChunker, doc: DoclingDocument) -> list[dict]:
     chunks = []
     for index, chunk in enumerate(chunker.chunk(dl_doc=doc)):
         pages = {prov.page_no for item in chunk.meta.doc_items for prov in item.prov}
+        # what gets embedded
+        text = f"{doc.name}\n{chunker.contextualize(chunk=chunk)}"
         chunks.append({
             "filename": doc.origin.filename,
             "chunk_index": index,
             "pages": sorted(pages),
             "headings": chunk.meta.headings or [],
-            "text": f"{doc.name}\n{chunker.contextualize(chunk=chunk)}",  # what gets embedded
+            "text": text,
             "raw_text": chunk.text,
         })
     return chunks
