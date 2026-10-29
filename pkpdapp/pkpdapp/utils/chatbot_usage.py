@@ -171,14 +171,23 @@ def _fetch_portkey_pricing(model_id: str) -> ModelPricing:
     )
 
 
-def _env_overrides() -> dict[str, float]:
-    """USD-per-token prices set by the CHATBOT_*_PRICE_PER_MTOK env vars,
-    keyed by ModelPricing field."""
-    per_mtok = {
-        "input": settings.CHATBOT_INPUT_PRICE_PER_MTOK,
-        "cached_input": settings.CHATBOT_CACHED_INPUT_PRICE_PER_MTOK,
-        "output": settings.CHATBOT_OUTPUT_PRICE_PER_MTOK,
-    }
+def _env_overrides(model: str) -> dict[str, float]:
+    """USD-per-token prices set by the CHATBOT_*_PRICE_PER_MTOK env vars
+    for the main or small model, keyed by ModelPricing field."""
+    if model == settings.CHATBOT_MODEL:
+        per_mtok = {
+            "input": settings.CHATBOT_INPUT_PRICE_PER_MTOK,
+            "cached_input": settings.CHATBOT_CACHED_INPUT_PRICE_PER_MTOK,
+            "output": settings.CHATBOT_OUTPUT_PRICE_PER_MTOK,
+        }
+    elif model == settings.CHATBOT_SMALL_MODEL:
+        per_mtok = {
+            "input": settings.CHATBOT_SMALL_INPUT_PRICE_PER_MTOK,
+            "cached_input": settings.CHATBOT_SMALL_CACHED_INPUT_PRICE_PER_MTOK,
+            "output": settings.CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK,
+        }
+    else:
+        return {}
     return {k: v / 1_000_000 for k, v in per_mtok.items() if v is not None}
 
 
@@ -237,12 +246,11 @@ def _portkey_pricing(model: str) -> Optional[ModelPricing]:
 def get_model_pricing(model: Optional[str] = None) -> Optional[ModelPricing]:
     """Return a model's prices (default CHATBOT_MODEL), or None if unknown.
 
-    Env var overrides take precedence for CHATBOT_MODEL; anything not
-    overridden comes from Portkey's pricing endpoint.
+    Env var overrides take precedence; anything not overridden comes from
+    Portkey's pricing endpoint.
     """
     model = model or settings.CHATBOT_MODEL or ""
-    # the CHATBOT_*_PRICE_PER_MTOK env vars are for the main model
-    overrides = _env_overrides() if model == settings.CHATBOT_MODEL else {}
+    overrides = _env_overrides(model)
     if "input" in overrides and "output" in overrides:
         return ModelPricing(**overrides)
 

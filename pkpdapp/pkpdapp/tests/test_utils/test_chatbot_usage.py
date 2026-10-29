@@ -48,6 +48,10 @@ MODEL_ID = "openai/gpt-test"
     CHATBOT_INPUT_PRICE_PER_MTOK=None,
     CHATBOT_CACHED_INPUT_PRICE_PER_MTOK=None,
     CHATBOT_OUTPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_MODEL="gpt-test-mini",
+    CHATBOT_SMALL_INPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_CACHED_INPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK=None,
 )
 class ModelPricingTestCase(TestCase):
     def setUp(self):
@@ -95,6 +99,19 @@ class ModelPricingTestCase(TestCase):
 
         get.assert_not_called()
         self.assertEqual(pricing, ModelPricing(input=2e-6, output=8e-6))
+
+    @override_settings(
+        CHATBOT_INPUT_PRICE_PER_MTOK=2.0,
+        CHATBOT_OUTPUT_PRICE_PER_MTOK=8.0,
+        CHATBOT_SMALL_INPUT_PRICE_PER_MTOK=0.5,
+        CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK=1.0,
+    )
+    def test_small_model_has_its_own_env_overrides(self):
+        with mock.patch.object(chatbot_usage.httpx, "get") as get:
+            pricing = chatbot_usage.get_model_pricing("gpt-test-mini")
+
+        get.assert_not_called()
+        self.assertEqual(pricing, ModelPricing(input=0.5e-6, output=1e-6))
 
     def test_returns_none_when_portkey_fails(self):
         with mock.patch.object(

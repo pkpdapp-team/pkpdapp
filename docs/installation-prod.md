@@ -90,6 +90,7 @@ The chatbot feature uses an LLM via [Portkey] as a gateway. Set the following va
 - `CHATBOT_MONTHLY_SPEND_LIMIT` (optional): per-user spend limit in USD per calendar month (UTC). Leave blank for no limit.
 - `CHATBOT_PRICING_PROVIDER` (optional): provider name used to look up the model's price from [Portkey's public pricing API](https://portkey.ai/docs/product/model-catalog/portkey-models) (default `openai`). Any `@provider-slug/` prefix on `CHATBOT_MODEL` is stripped for the lookup.
 - `CHATBOT_INPUT_PRICE_PER_MTOK`, `CHATBOT_CACHED_INPUT_PRICE_PER_MTOK`, `CHATBOT_OUTPUT_PRICE_PER_MTOK` (optional): override the model price in USD per 1M tokens, e.g. if Portkey has no price for the model or the pricing API is unreachable.
+- `CHATBOT_SMALL_INPUT_PRICE_PER_MTOK`, `CHATBOT_SMALL_CACHED_INPUT_PRICE_PER_MTOK`, `CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK` (optional): the same for `CHATBOT_SMALL_MODEL`.
 
 ### Frontend Environment Variables
 
