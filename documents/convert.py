@@ -66,8 +66,12 @@ def convert_or_skip(converter: DocumentConverter, pdf: Path, run_log) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Convert PDFs to docling JSON.")
-    parser.add_argument("pdfs", nargs="*", type=Path, help="default: every PDF in pdfs/")
-    parser.add_argument("--formulas", action="store_true", help="read formulas as LaTeX (slow)")
+    parser.add_argument(
+        "pdfs", nargs="*", type=Path, help="default: every PDF in pdfs/"
+    )
+    parser.add_argument(
+        "--formulas", action="store_true", help="read formulas as LaTeX (slow)"
+    )
     args = parser.parse_args()
     # show docling's progress messages, not only its warnings
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s")
@@ -82,17 +86,25 @@ def main():
 
     with log_path.open("w") as run_log:
         for pdf in args.pdfs or sorted(PDF_DIR.glob("*.pdf")):
-            entry = {"file": pdf.name, "formulas": args.formulas, **convert_or_skip(converter, pdf, run_log)}
+            entry = {
+                "file": pdf.name,
+                "formulas": args.formulas,
+                **convert_or_skip(converter, pdf, run_log),
+            }
             write_line(run_log, entry)
             counts[entry["status"]] += 1
             if entry["status"] == "failed":
                 failed.append(pdf.name)
-            logger.info(f"{entry['status']:8} {entry.get('seconds', ''):>7} {pdf.name}")
+            seconds = entry.get("seconds", "")
+            logger.info(f"{entry['status']:8} {seconds:>7} {pdf.name}")
 
         seconds = round(time.perf_counter() - run_start, 1)
-        write_line(run_log, {"summary": dict(counts), "failed": failed, "seconds": seconds})
+        summary = {"summary": dict(counts), "failed": failed, "seconds": seconds}
+        write_line(run_log, summary)
 
-    logger.info(f"{dict(counts)} in {seconds} s, failed: {failed or 'none'}, log: {log_path}")
+    logger.info(
+        f"{dict(counts)} in {seconds} s, failed: {failed or 'none'}, log: {log_path}"
+    )
 
 
 if __name__ == "__main__":
