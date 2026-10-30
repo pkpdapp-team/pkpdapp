@@ -64,6 +64,7 @@ import useSliderSettings from "./useSliderSettings";
 import { useUnits } from "../results/useUnits";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
 import { buildQuickFitMessage, quickFitMessageText } from "./quickFitMessage";
+import { isChatbotEnabled } from "../chat/chatbotEnabled";
 
 interface ErrorObject {
   error: string;
@@ -594,18 +595,20 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         return nextSliderValues;
       });
       setOptimiseResult(response.data);
-      setFitMessage(
-        quickFitMessageText(
-          buildQuickFitMessage(
-            response.data,
-            optimiseInputs,
-            variables,
-            units,
-            biomarkerTypes,
-            groups,
+      if (isChatbotEnabled) {
+        setFitMessage(
+          quickFitMessageText(
+            buildQuickFitMessage(
+              response.data,
+              optimiseInputs,
+              variables,
+              units,
+              biomarkerTypes,
+              groups,
+            ),
           ),
-        ),
-      );
+        );
+      }
       setOptimiseResultOpen(true);
     },
     [
