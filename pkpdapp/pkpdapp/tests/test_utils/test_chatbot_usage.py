@@ -261,6 +261,14 @@ class SpendLimitTestCase(TestCase):
         with self.assertRaises(chatbot_usage.PricingUnavailable):
             chatbot_usage.check_spend_limit(self.user)
 
+    @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0, CHATBOT_SMALL_MODEL="small")
+    def test_limit_blocks_when_small_model_pricing_unknown(self):
+        self.get_model_pricing.side_effect = lambda model=None: (
+            None if model == "small" else PRICING
+        )
+        with self.assertRaises(chatbot_usage.PricingUnavailable):
+            chatbot_usage.check_spend_limit(self.user)
+
     @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=None)
     def test_no_limit_does_not_need_pricing(self):
         self.get_model_pricing.return_value = None

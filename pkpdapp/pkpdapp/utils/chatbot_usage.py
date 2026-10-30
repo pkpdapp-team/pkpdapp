@@ -282,11 +282,15 @@ def next_reset_date() -> datetime.date:
 
 def check_spend_limit(user: AbstractBaseUser) -> None:
     """Raise SpendLimitExceeded if the user is at or over the monthly limit,
-    or PricingUnavailable if a limit is set but spend can't be priced."""
+    or PricingUnavailable if a limit is set but either model's spend can't
+    be priced."""
     limit = settings.CHATBOT_MONTHLY_SPEND_LIMIT
     if limit is None:
         return
-    if get_model_pricing() is None:
+    if (
+        get_model_pricing() is None
+        or get_model_pricing(settings.CHATBOT_SMALL_MODEL) is None
+    ):
         raise PricingUnavailable()
     spent = ChatbotUsage.spend_this_month(user)
     if spent >= Decimal(str(limit)):
