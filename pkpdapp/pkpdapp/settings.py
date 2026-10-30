@@ -328,6 +328,9 @@ CHATBOT_MODEL = os.environ.get("CHATBOT_MODEL", "")
 CHATBOT_SMALL_MODEL = os.environ.get("CHATBOT_SMALL_MODEL") or CHATBOT_MODEL
 CHATBOT_BASE_URL = os.environ.get("CHATBOT_BASE_URL")
 PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
+CHATBOT_EMBEDDING_MODEL = os.environ.get("CHATBOT_EMBEDDING_MODEL", "")
+QDRANT_URL = os.environ.get("QDRANT_URL")
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 
 
 def _env_float(name):
