@@ -23,6 +23,7 @@ import { optimisePredictionsToSimulateResponses } from "./utils";
 import OptimisationResidualPlots from "./OptimisationResidualPlots";
 import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
 import { isNearBound } from "./optimisationStats";
+import { observationLabel } from "./optimisationLabels";
 import HelpButton from "../../components/HelpButton";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
 import { aiButtonSx } from "../chat/aiButtonSx";
@@ -317,13 +318,7 @@ const OptimisationView = ({
                 <Typography variant="body2">
                   <strong>Observations:</strong>{" "}
                   {optimiseResult.biomarker_types
-                    .map((id) => {
-                      const bt = biomarkerTypes.find((b) => b.id === id);
-                      const variable = variables.find((v) => v.id === bt?.variable);
-                      return variable?.description
-                        ? `${variable.name} (${variable.description})`
-                        : variable?.name || bt?.name || String(id);
-                    })
+                    .map((id) => observationLabel(id, biomarkerTypes, variables))
                     .join(", ")}
                 </Typography>
               )}
