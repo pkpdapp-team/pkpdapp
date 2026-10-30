@@ -2980,7 +2980,7 @@ export type ConversationRead = {
   project?: number | null;
   title?: string;
   created_at: string;
-  updated_at: string;
+  last_message_at: string | null;
   last_message_preview: string;
 };
 export type Correlation = {

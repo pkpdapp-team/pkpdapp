@@ -38,6 +38,8 @@ PORTKEY_PAYLOAD = {
 
 PRICING = ModelPricing(input=1e-6, output=4e-6, cached_input=0.5e-6)
 DAY = 24 * 60 * 60
+# the pricing id of CHATBOT_MODEL below
+MODEL_ID = "openai/gpt-test"
 
 
 @override_settings(
@@ -46,12 +48,16 @@ DAY = 24 * 60 * 60
     CHATBOT_INPUT_PRICE_PER_MTOK=None,
     CHATBOT_CACHED_INPUT_PRICE_PER_MTOK=None,
     CHATBOT_OUTPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_MODEL="gpt-test-mini",
+    CHATBOT_SMALL_INPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_CACHED_INPUT_PRICE_PER_MTOK=None,
+    CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK=None,
 )
 class ModelPricingTestCase(TestCase):
     def setUp(self):
-        for name, value in [("_last_pricing", None), ("_retry_after", 0.0)]:
-            setattr(chatbot_usage, name, value)
-            self.addCleanup(setattr, chatbot_usage, name, value)
+        for name in ["_last_pricing", "_retry_after"]:
+            setattr(chatbot_usage, name, {})
+            self.addCleanup(setattr, chatbot_usage, name, {})
         self.cache = LocMemCache("chatbot-usage-tests", {})
         self.cache.clear()
         cache_patch = mock.patch.object(chatbot_usage, "cache", self.cache)
@@ -61,7 +67,7 @@ class ModelPricingTestCase(TestCase):
     def previous_pricing(self, age, pricing=PRICING):
         return chatbot_usage._PricingEntry(
             fetched_at=time.time() - age,
-            model="openai/gpt-test",
+            model=MODEL_ID,
             pricing=pricing,
         )
 
@@ -94,6 +100,19 @@ class ModelPricingTestCase(TestCase):
         get.assert_not_called()
         self.assertEqual(pricing, ModelPricing(input=2e-6, output=8e-6))
 
+    @override_settings(
+        CHATBOT_INPUT_PRICE_PER_MTOK=2.0,
+        CHATBOT_OUTPUT_PRICE_PER_MTOK=8.0,
+        CHATBOT_SMALL_INPUT_PRICE_PER_MTOK=0.5,
+        CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK=1.0,
+    )
+    def test_small_model_has_its_own_env_overrides(self):
+        with mock.patch.object(chatbot_usage.httpx, "get") as get:
+            pricing = chatbot_usage.get_model_pricing("gpt-test-mini")
+
+        get.assert_not_called()
+        self.assertEqual(pricing, ModelPricing(input=0.5e-6, output=1e-6))
+
     def test_returns_none_when_portkey_fails(self):
         with mock.patch.object(
             chatbot_usage.httpx, "get", side_effect=OSError("offline")
@@ -110,7 +129,7 @@ class ModelPricingTestCase(TestCase):
         get.assert_called_once()
 
     def test_falls_back_to_previous_price_under_a_week_old(self):
-        chatbot_usage._last_pricing = self.previous_pricing(6 * DAY)
+        chatbot_usage._last_pricing[MODEL_ID] = self.previous_pricing(6 * DAY)
         with mock.patch.object(
             chatbot_usage.httpx, "get", side_effect=OSError("offline")
         ) as get:
@@ -120,14 +139,14 @@ class ModelPricingTestCase(TestCase):
         self.assertEqual(pricing, PRICING)
 
     def test_does_not_use_previous_price_over_a_week_old(self):
-        chatbot_usage._last_pricing = self.previous_pricing(8 * DAY)
+        chatbot_usage._last_pricing[MODEL_ID] = self.previous_pricing(8 * DAY)
         with mock.patch.object(
             chatbot_usage.httpx, "get", side_effect=OSError("offline")
         ):
             self.assertIsNone(chatbot_usage.get_model_pricing())
 
     def test_refreshes_price_older_than_a_day(self):
-        chatbot_usage._last_pricing = self.previous_pricing(2 * DAY)
+        chatbot_usage._last_pricing[MODEL_ID] = self.previous_pricing(2 * DAY)
         with mock.patch.object(
             chatbot_usage.httpx, "get",
             return_value=pricing_response(PORTKEY_PAYLOAD),
@@ -138,7 +157,7 @@ class ModelPricingTestCase(TestCase):
 
     def test_uses_price_shared_by_another_worker(self):
         self.cache.set(
-            chatbot_usage._PRICING_CACHE_KEY, self.previous_pricing(60)
+            chatbot_usage._pricing_cache_key(MODEL_ID), self.previous_pricing(60)
         )
         with mock.patch.object(chatbot_usage.httpx, "get") as get:
             pricing = chatbot_usage.get_model_pricing()
@@ -147,7 +166,7 @@ class ModelPricingTestCase(TestCase):
         self.assertEqual(pricing, PRICING)
 
     def test_ignores_previous_price_for_another_model(self):
-        chatbot_usage._last_pricing = dataclasses.replace(
+        chatbot_usage._last_pricing["openai/other-model"] = dataclasses.replace(
             self.previous_pricing(60), model="openai/other-model"
         )
         with mock.patch.object(
@@ -239,6 +258,14 @@ class SpendLimitTestCase(TestCase):
     @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0)
     def test_limit_blocks_when_pricing_unknown(self):
         self.get_model_pricing.return_value = None
+        with self.assertRaises(chatbot_usage.PricingUnavailable):
+            chatbot_usage.check_spend_limit(self.user)
+
+    @override_settings(CHATBOT_MONTHLY_SPEND_LIMIT=1.0, CHATBOT_SMALL_MODEL="small")
+    def test_limit_blocks_when_small_model_pricing_unknown(self):
+        self.get_model_pricing.side_effect = lambda model=None: (
+            None if model == "small" else PRICING
+        )
         with self.assertRaises(chatbot_usage.PricingUnavailable):
             chatbot_usage.check_spend_limit(self.user)
 
