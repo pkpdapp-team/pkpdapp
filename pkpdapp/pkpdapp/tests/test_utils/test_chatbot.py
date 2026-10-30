@@ -107,6 +107,19 @@ class ChatbotUtilsTestCase(TestCase):
             ],
         )
 
+    def test_stream_saves_message_kind(self):
+        fake_client = mock.Mock()
+        fake_client.responses.create.return_value = [completed_event()]
+        with mock.patch.object(chatbot, "get_client", return_value=fake_client):
+            list(
+                chatbot.stream_chat_response(
+                    self.conversation, "fit results", kind="quick_fit"
+                )
+            )
+
+        message = self.conversation.messages.get(role="user")
+        self.assertEqual(message.metadata, {"kind": "quick_fit"})
+
     def test_stream_truncates_input_to_40_message_window(self):
         for i in range(45):
             Message.objects.create(

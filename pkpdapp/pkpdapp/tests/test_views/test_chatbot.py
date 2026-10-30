@@ -104,7 +104,25 @@ class ChatbotViewTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stream_response.assert_called_once_with(
-            self.conversation, "Hello", context=ANY
+            self.conversation, "Hello", context=ANY, kind=None
+        )
+
+    def test_stream_receives_message_kind(self):
+        data = {
+            "conversation_id": self.conversation.id,
+            "content": "Hello",
+            "kind": "quick_fit",
+        }
+
+        with patch(
+            "pkpdapp.api.views.chatbot.stream_chat_response",
+            return_value=iter(()),
+        ) as stream_response:
+            response = self.client.post("/api/chatbot/", data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stream_response.assert_called_once_with(
+            self.conversation, "Hello", context=ANY, kind="quick_fit"
         )
 
     def test_api_key_not_set(self):

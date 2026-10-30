@@ -7,7 +7,11 @@ import { http, HttpResponse } from "msw";
 import { api } from "../app/api";
 import { store } from "../app/store";
 import ChatPanel from "../features/chat/ChatPanel";
-import { openChat, setActiveConversation } from "../features/chat/chatSlice";
+import {
+  openChat,
+  sendInNewChat,
+  setActiveConversation,
+} from "../features/chat/chatSlice";
 import {
   PageName,
   setPage,
@@ -260,6 +264,61 @@ export const SendsCurrentPageContext: Story = {
         sub_page: "Parameters",
       },
     });
+  },
+};
+
+// "Discuss with AI" queues a message: it is sent at once, in a new chat
+export const SendsQueuedMessageInNewChat: Story = {
+  decorators: [activeConversationState],
+  parameters: SendsCurrentPageContext.parameters,
+  beforeEach: () => {
+    createConversationRequest.mockClear();
+    chatbotRequest.mockClear();
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    store.dispatch(
+      sendInNewChat({ text: "[OPTIMISATION RESULTS]\n{}", kind: "quick_fit" }),
+    );
+
+    await waitFor(() => expect(chatbotRequest).toHaveBeenCalledTimes(1));
+    expect(createConversationRequest).toHaveBeenCalledTimes(1);
+    expect(chatbotRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversation_id: 3,
+        content: "[OPTIMISATION RESULTS]\n{}",
+        kind: "quick_fit",
+      }),
+    );
+    expect(await canvas.findByText("Optimisation results")).toBeInTheDocument();
+  },
+};
+
+// after a reload the saved kind still shows the card
+export const ShowsStoredOptimisationResultsAsCard: Story = {
+  decorators: [activeConversationState],
+  parameters: {
+    msw: {
+      handlers: {
+        messages: http.get("/api/messages/", () =>
+          HttpResponse.json([
+            {
+              id: 1,
+              role: "user",
+              content: "[OPTIMISATION RESULTS]\n{}",
+              metadata: { kind: "quick_fit" },
+              created_at: "2025-06-01T09:00:00Z",
+            },
+          ]),
+        ),
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    expect(await canvas.findByText("Optimisation results")).toBeInTheDocument();
+    expect(canvas.queryByText(/\[OPTIMISATION RESULTS\]/)).toBeNull();
   },
 };
 

@@ -2344,10 +2344,12 @@ export type ChatbotContext = {
   page?: string | null;
   sub_page?: string | null;
 };
+export type KindEnum = "quick_fit";
 export type ChatbotRequest = {
   conversation_id: number;
   content: string;
   context?: ChatbotContext | null;
+  kind?: KindEnum;
 };
 export type PkpdMapping = {
   /** PKPD model that this mapping is for */

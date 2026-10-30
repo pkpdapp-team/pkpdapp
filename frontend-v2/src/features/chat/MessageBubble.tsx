@@ -1,10 +1,12 @@
 import { FC, memo } from "react";
-import { Box, Stack, Typography, keyframes } from "@mui/material";
+import { Box, Stack, Typography, alpha, keyframes } from "@mui/material";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/a11y-light.css";
 import type { Components } from "react-markdown";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import type { UIMessage } from "ai";
+import type { KindEnum } from "../../app/backendApi";
 type MessagePart = UIMessage["parts"][number];
 
 const cursorBlink = keyframes`
@@ -66,6 +68,49 @@ const mdComponents: Partial<Components> = {
 
 const markdownSx = { fontSize: "0.875rem" };
 
+const FitIcon: FC = () => (
+  <Box
+    sx={(theme) => ({
+      width: 40,
+      height: 40,
+      borderRadius: 1.5,
+      flexShrink: 0,
+      display: "grid",
+      placeItems: "center",
+      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+    })}
+  >
+    <ShowChartIcon sx={{ color: "white" }} />
+  </Box>
+);
+
+// a shared fit, shown as an event in the chat rather than a user bubble
+const QuickFitCard: FC = () => (
+  <Stack direction="row" sx={{ justifyContent: "center", mb: 2 }}>
+    <Box
+      sx={(theme) => ({
+        width: "90%",
+        p: 1.5,
+        borderRadius: 3,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+      })}
+    >
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+        <FitIcon />
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Optimisation results
+          </Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Shared from the Simulations page
+          </Typography>
+        </Box>
+      </Stack>
+    </Box>
+  </Stack>
+);
+
 const rehypePlugins = [rehypeHighlight];
 
 const TextPart: FC<{
@@ -96,14 +141,18 @@ const TextPart: FC<{
 
 const MessageBubble: FC<{
   parts: MessagePart[];
+  kind?: KindEnum;
   isUser: boolean;
   isStreaming?: boolean;
-}> = ({ parts, isUser, isStreaming }) => {
+}> = ({ parts, kind, isUser, isStreaming }) => {
   if (isUser) {
     const text = parts
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
       .join("");
+    if (kind === "quick_fit") {
+      return <QuickFitCard />;
+    }
     return (
       <Stack direction="row-reverse" sx={{ mb: 2 }}>
         <Box

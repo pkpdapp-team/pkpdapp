@@ -13,20 +13,26 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import { BiomarkerTypeRead, CombinedModelRead, CompoundRead, OptimiseResponse, SimulationPlot, SubjectGroupRead, UnitRead, VariableRead } from "../../app/backendApi";
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { optimisePredictionsToSimulateResponses } from "./utils";
 import OptimisationResidualPlots from "./OptimisationResidualPlots";
 import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
+import { isNearBound } from "./optimisationStats";
+import { observationLabel } from "./optimisationLabels";
 import HelpButton from "../../components/HelpButton";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
+import { aiButtonSx } from "../chat/aiButtonSx";
 
 type OptimisationViewProps = {
   open: boolean;
   onClose: () => void;
   optimiseResult: OptimiseResponse | null;
+  onDiscuss?: () => void;
   variables: VariableRead[];
   units: UnitRead[];
   groups: SubjectGroupRead[] | undefined;
@@ -45,13 +51,6 @@ function formatNum(x: number): string {
   return e > 4 || e < -4 ? x.toExponential(3) : String(parseFloat(x.toPrecision(4)));
 }
 
-function isNearBound(optimal: number, lower: number, upper: number): boolean {
-  const range = upper - lower;
-  if (range === 0) return false;
-  const frac = (optimal - lower) / range;
-  return frac < 0.001 || frac > 0.999;
-}
-
 function conditionNumberColour(cn: number): string {
   if (cn < 100) return "success.main";
   if (cn < 1000) return "warning.main";
@@ -62,6 +61,7 @@ const OptimisationView = ({
   open,
   onClose,
   optimiseResult,
+  onDiscuss,
   variables,
   units,
   groups,
@@ -100,7 +100,31 @@ const OptimisationView = ({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" slotProps={{
       paper: { sx: { maxHeight: "calc(100vh - 128px)", mt: "64px" } }
     }}>
-      <DialogTitle sx={{ fontWeight: "bold" }}>Last Optimisation Result</DialogTitle>
+      <Stack direction="row" sx={{ alignItems: "center" }}>
+        <DialogTitle sx={{ fontWeight: "bold" }}>
+          Last Optimisation Result
+        </DialogTitle>
+        {/* the message is built in quickFitMessage.ts: keep it in line with what this dialog shows */}
+        {onDiscuss && (
+          <Tooltip
+            describeChild
+            title="The AI also sees your current model and data. Run the fit again after changing them."
+          >
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ChatOutlinedIcon sx={{ fontSize: 16 }} />}
+              onClick={() => {
+                onDiscuss();
+                onClose();
+              }}
+              sx={[aiButtonSx(), { mr: 0 }]}
+            >
+              Discuss with AI
+            </Button>
+          </Tooltip>
+        )}
+      </Stack>
       <DialogContent dividers>
         {!optimiseResult ? (
           <Typography>No optimisation has been run yet.</Typography>
@@ -294,13 +318,7 @@ const OptimisationView = ({
                 <Typography variant="body2">
                   <strong>Observations:</strong>{" "}
                   {optimiseResult.biomarker_types
-                    .map((id) => {
-                      const bt = biomarkerTypes.find((b) => b.id === id);
-                      const variable = variables.find((v) => v.id === bt?.variable);
-                      return variable?.description
-                        ? `${variable.name} (${variable.description})`
-                        : variable?.name || bt?.name || String(id);
-                    })
+                    .map((id) => observationLabel(id, biomarkerTypes, variables))
                     .join(", ")}
                 </Typography>
               )}
