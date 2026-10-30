@@ -8,6 +8,7 @@ import {
 } from "../../app/backendApi";
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
 import { correlation, isNearBound, percentRse, standardErrors } from "./optimisationStats";
+import { observationLabel } from "./optimisationLabels";
 
 // what "Discuss with AI" sends to the chat, as at fit time
 
@@ -71,21 +72,6 @@ function numberOrNull(value: number): number | null {
 
 function variableName(id: number, variables: VariableRead[]): string {
   return variables.find((v) => v.id === id)?.name ?? String(id);
-}
-
-// same label as the dialog: "name (description)", else name, else the biomarker's name
-function observationNames(
-  result: OptimiseResponse,
-  biomarkerTypes: BiomarkerTypeRead[],
-  variables: VariableRead[],
-): string[] {
-  return (result.biomarker_types ?? []).map((id) => {
-    const biomarkerType = biomarkerTypes.find((b) => b.id === id);
-    const variable = variables.find((v) => v.id === biomarkerType?.variable);
-    return variable?.description
-      ? `${variable.name} (${variable.description})`
-      : variable?.name || biomarkerType?.name || String(id);
-  });
 }
 
 function subjectGroupNames(result: OptimiseResponse, groups: SubjectGroupRead[]): string[] {
@@ -203,7 +189,9 @@ export function buildQuickFitMessage(
     inputs: {
       method: result.method,
       max_iterations: result.max_iterations ?? null,
-      observations: observationNames(result, biomarkerTypes, variables),
+      observations: (result.biomarker_types ?? []).map((id) =>
+        observationLabel(id, biomarkerTypes, variables),
+      ),
       subject_groups: subjectGroupNames(result, groups),
       parameters: fittedParameters(result, request, variables, units),
       noise: noise(result, variables),
