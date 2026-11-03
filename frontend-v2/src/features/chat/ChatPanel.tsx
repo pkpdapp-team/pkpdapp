@@ -151,19 +151,9 @@ const ChatPanel: FC = () => {
     prevStatusRef.current = status;
   }, [status, activeConversationId, dispatch]);
 
-  const handleNewConversation = async () => {
-    if (!selectedProject) return;
-    const projectId = selectedProject;
-    try {
-      const result = await createConversation({
-        conversation: { project: projectId, title: "" },
-      }).unwrap();
-      if (selectedProjectRef.current !== projectId) return;
-      dispatch(setActiveConversation({ conversationId: result.id, projectId }));
-      setShowConversationList(false);
-    } catch (err) {
-      console.error("Failed to create conversation:", err);
-    }
+  const handleNewConversation = () => {
+    dispatch(setActiveConversation(null));
+    setShowConversationList(false);
   };
 
   const handleSelectConversation = (id: number) => {

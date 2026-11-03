@@ -21,6 +21,7 @@ from pkpdapp.utils.chatbot_usage import (
     get_model_pricing,
     record_usage,
 )
+from pkpdapp.utils.chatbot_summary import past_summaries_section, summarize_others
 from pkpdapp.utils.chatbot_title import set_title_if_default
 
 from portkey_ai import Portkey
@@ -54,6 +55,9 @@ user has a project and model selected)
 - See the user's trial design: subject groups, covariates, and dosing \
 protocols (also in [CURRENT USER CONTEXT], when the project has any \
 configured)
+- Recall what the user worked on in their earlier conversations in this \
+project (summarised in [PAST CONVERSATION SUMMARIES] below, when there \
+are any)
 - Look up the user's own combined model definition, as currently \
 assembled from its PK/PD components. This gives the complete \
 combined picture of the user's current model configuration. \
@@ -145,7 +149,7 @@ if settings.CHATBOT_SMALL_MODEL == settings.CHATBOT_MODEL:
 _client = None
 
 
-def _get_client():
+def get_client():
     """Return a cached Portkey client, creating it on first call."""
     global _client
     if _client is None:
@@ -227,6 +231,11 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     parts = [SYSTEM_PROMPT, f"\n\n[APP LAYOUT]\n{app_layout_json}"]
     if catalog:
         parts.append(f"\n\n[LIBRARY MODELS]\n{catalog}")
+
+    if conversation is not None:
+        past_summaries = past_summaries_section(conversation)
+        if past_summaries:
+            parts.append(f"\n\n[PAST CONVERSATION SUMMARIES]\n{past_summaries}")
 
     if context is not None:
         notes = "\n".join(f"- {note}" for note in CONTEXT_NOTES)
@@ -497,6 +506,10 @@ def stream_chat_response(
 
         input_items = conversation.build_input_items()
 
+        client = get_client()
+        # before the prompt, so a chat that just ended is already in it
+        summarize_others(conversation, client)
+
         assistant_text_parts = []
         instructions = _build_system_prompt(context, conversation=conversation)
         message_id = str(uuid.uuid4())
@@ -507,7 +520,6 @@ def stream_chat_response(
             _build_system_prompt(context, conversation=conversation, indent=2),
         )
 
-        client = _get_client()
         pricing = get_model_pricing()
 
         yield _sse({"type": "start", "messageId": message_id})

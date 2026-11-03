@@ -190,3 +190,24 @@ export const CancelDelete: Story = {
     expect(canvas.getByText(targetConversation.title!)).toBeInTheDocument();
   },
 };
+
+export const WithoutMessages: Story = {
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: [
+          http.get("/api/conversations/", () =>
+            HttpResponse.json([{ ...conversations[0], last_message_at: null }]),
+          ),
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(
+      await canvas.findByText(conversations[0].title!),
+    ).toBeInTheDocument();
+    expect(canvas.getByText(/2025/)).toBeInTheDocument();
+  },
+};

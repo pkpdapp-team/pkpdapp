@@ -41,19 +41,40 @@ class ConversationViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_list_only_returns_own_conversations(self):
-        Conversation.objects.create(user=self.user, project=self.project)
+        mine = Conversation.objects.create(user=self.user, project=self.project)
+        mine.add_user_message("hi")
         other_user = User.objects.create_user(username="other", password="12345")
-        Conversation.objects.create(user=other_user, project=self.project)
+        theirs = Conversation.objects.create(user=other_user, project=self.project)
+        theirs.add_user_message("hi")
 
         response = self.client.get("/api/conversations/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_list_excludes_soft_deleted(self):
+    def test_list_hides_empty_chats_and_shows_latest_message_first(self):
+        replied_last = Conversation.objects.create(
+            user=self.user, project=self.project, title="replied last"
+        )
+        replied_first = Conversation.objects.create(
+            user=self.user, project=self.project, title="replied first"
+        )
+        replied_first.add_user_message("hi")
+        replied_last.add_user_message("hi")
         Conversation.objects.create(
+            user=self.user, project=self.project, title="empty"
+        )
+
+        response = self.client.get("/api/conversations/")
+
+        titles = [conversation["title"] for conversation in response.data]
+        self.assertEqual(titles, ["replied last", "replied first"])
+
+    def test_list_excludes_soft_deleted(self):
+        conversation = Conversation.objects.create(
             user=self.user, project=self.project, is_active=False
         )
+        conversation.add_user_message("hi")
         response = self.client.get("/api/conversations/")
         self.assertEqual(len(response.data), 0)
 

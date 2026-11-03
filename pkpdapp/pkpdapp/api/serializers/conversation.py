@@ -21,10 +21,10 @@ class ConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
         fields = [
-            "id", "project", "title", "created_at", "updated_at",
+            "id", "project", "title", "created_at", "last_message_at",
             "last_message_preview",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "last_message_at"]
 
     def get_last_message_preview(self, obj: Conversation) -> str:
         return obj.last_message_preview()

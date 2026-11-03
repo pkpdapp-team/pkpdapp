@@ -9,6 +9,7 @@ import re
 from django.conf import settings
 
 from pkpdapp.models import Conversation
+from pkpdapp.utils.chatbot_usage import TokenUsage, get_model_pricing, record_usage
 
 from portkey_ai import Portkey
 
@@ -73,6 +74,11 @@ def set_title_if_default(conversation: Conversation, client: Portkey):
         if title:
             conversation.title = title
             conversation.save(update_fields=["title"])
+        record_usage(
+            conversation.user,
+            TokenUsage.from_response(getattr(response, "usage", None)),
+            get_model_pricing(settings.CHATBOT_SMALL_MODEL),
+        )
     except Exception:
         logger.exception(
             "[chatbot] title generation failed for conversation=%s",

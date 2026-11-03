@@ -234,7 +234,10 @@ const ConversationList: FC<ConversationListProps> = ({
                             component="span"
                             sx={{ fontSize: "0.8rem", color: "text.secondary" }}
                           >
-                            {formatRelativeDate(conversation.updated_at)}
+                            {formatRelativeDate(
+                              conversation.last_message_at ??
+                                conversation.created_at,
+                            )}
                           </Box>
                           {conversation.last_message_preview && (
                             <Box

@@ -202,7 +202,7 @@ export const SendsCurrentPageContext: Story = {
                 project: 57,
                 title: "",
                 created_at: "2025-06-03T09:00:00Z",
-                updated_at: "2025-06-03T09:00:00Z",
+                last_message_at: null,
                 last_message_preview: "",
               },
               { status: 201 },
@@ -278,7 +278,7 @@ export const IgnoresConversationCreatedForPreviousProject: Story = {
               project: 57,
               title: "",
               created_at: "2025-06-03T09:00:00Z",
-              updated_at: "2025-06-03T09:00:00Z",
+              last_message_at: null,
               last_message_preview: "",
             },
             { status: 201 },
@@ -315,6 +315,38 @@ export const IgnoresConversationCreatedForPreviousProject: Story = {
     await Promise.all(runningMutations);
     expect(store.getState().chat.activeConversationId).toBeNull();
     expect(chatbotRequest).not.toHaveBeenCalled();
+  },
+};
+
+// "New conversation" only clears the open chat; the conversation is created on
+// the first send.
+export const NewConversationClearsChat: Story = {
+  decorators: [activeConversationState],
+  parameters: {
+    msw: {
+      handlers: {
+        conversations: conversationHandlers,
+        messages: messageHandlers,
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(
+      await canvas.findByText("How is clearance estimated?"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Conversations" }),
+    );
+    await userEvent.click(
+      canvas.getByRole("button", { name: "New conversation" }),
+    );
+
+    expect(
+      await canvas.findByText(/Ask me about pharmacokinetic/i),
+    ).toBeInTheDocument();
+    expect(store.getState().chat.activeConversationId).toBeNull();
   },
 };
 
