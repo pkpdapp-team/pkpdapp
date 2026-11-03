@@ -76,7 +76,7 @@ jobs:
   backend-generated:
     # the API schema and the storybook mocks both need the full backend, so they
     # share one job (the backend install is the expensive part)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
