@@ -63,6 +63,8 @@ import {
 import useSliderSettings from "./useSliderSettings";
 import { useUnits } from "../results/useUnits";
 import { UnitReadWithCompatible } from "../../shared/unitConversion";
+import { buildQuickFitMessage, quickFitMessageText } from "./quickFitMessage";
+import { isChatbotEnabled } from "../chat/chatbotEnabled";
 
 interface ErrorObject {
   error: string;
@@ -234,6 +236,8 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
   const [optimiseResult, setOptimiseResult] = useState<OptimiseResponse | null>(
     null,
   );
+  // what "Discuss with AI" sends, built when the fit returns
+  const [fitMessage, setFitMessage] = useState<string | null>(null);
   const [optimiseResultOpen, setOptimiseResultOpen] = useState(false);
   const [optimiseError, setOptimiseError] = useState<ErrorObject | null>(null);
   const [shouldShowLegend, setShouldShowLegend] = useState(true);
@@ -591,9 +595,31 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         return nextSliderValues;
       });
       setOptimiseResult(response.data);
+      if (isChatbotEnabled) {
+        setFitMessage(
+          quickFitMessageText(
+            buildQuickFitMessage(
+              response.data,
+              optimiseInputs,
+              variables,
+              units,
+              biomarkerTypes,
+              groups,
+            ),
+          ),
+        );
+      }
       setOptimiseResultOpen(true);
     },
-    [model, optimiseModel, setSliderValues],
+    [
+      model,
+      optimiseModel,
+      setSliderValues,
+      variables,
+      units,
+      biomarkerTypes,
+      groups,
+    ],
   );
 
   const handleOptimise = useCallback(() => {
@@ -753,6 +779,7 @@ const SimulationsTab: FC<SimulationsTabProps> = ({
         noiseModelByVar={noiseModelByVar}
         setNoiseModelByVar={setNoiseModelByVar}
         optimiseResult={optimiseResult}
+        fitMessage={fitMessage}
         exportSimulation={exportSimulation}
         showReference={showReference}
         setShowReference={setShowReference}

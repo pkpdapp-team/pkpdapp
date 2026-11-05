@@ -58,3 +58,21 @@ export const StreamingAssistant: Story = {
     expect(after.content).toContain("▋");
   },
 };
+
+export const OptimisationResultsCard: Story = {
+  args: {
+    parts: [
+      {
+        type: "text",
+        text: '[OPTIMISATION RESULTS]\n{"summary":{"stop_reason":"converged"}}',
+      },
+    ],
+    kind: "quick_fit",
+    isUser: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText("Optimisation results")).toBeInTheDocument();
+    expect(canvas.queryByText(/\[OPTIMISATION RESULTS\]/)).toBeNull();
+  },
+};

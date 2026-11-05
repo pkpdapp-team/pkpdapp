@@ -59,7 +59,9 @@ APP_LAYOUT = AppLayout(
             name="Data",
             description=(
                 "Upload and view observed data, one tab per data group with "
-                "one table of its Protocols (doses) and one table of its Observations."
+                "one table of its Protocols (doses) and one table of its Observations. "
+                "Observed data is converted to the model's units automatically, so "
+                "data and model may use different units."
             ),
         ),
         Page(
@@ -68,7 +70,10 @@ APP_LAYOUT = AppLayout(
         ),
         Page(
             name="Simulations",
-            description="Simulate the model, plot it and fit it to data.",
+            description=(
+                "Simulate the model, plot it and fit it to data. The last fit's "
+                "results dialog can share the fit with the AI in a new chat."
+            ),
         ),
         Page(
             name="Results",
