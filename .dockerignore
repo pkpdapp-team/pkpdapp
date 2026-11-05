@@ -3,3 +3,4 @@ env
 *.egg-info
 pkpdapp/db.sqlite3
 .docker
+documents/
