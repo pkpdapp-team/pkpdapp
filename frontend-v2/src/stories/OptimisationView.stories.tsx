@@ -52,6 +52,7 @@ const optimiseResult: OptimiseResponse = {
   predictions: null,
   residuals: null,
   observations: null,
+  summary_statistics: null,
 };
 
 const meta = {

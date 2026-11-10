@@ -89,6 +89,19 @@ class TestOptimiseView(APITestCase):
             len(response.data["residuals"][0][output_var_id]),
         )
 
+        # Residual summary statistics: one entry per fitted output variable, each
+        # carrying the distribution/structure metrics and a reliability flag.
+        self.assertIn("summary_statistics", response.data)
+        summary = response.data["summary_statistics"]
+        self.assertIsNotNone(summary)
+        self.assertEqual(len(summary), len(response.data["sigma_variables"]))
+        self.assertEqual(
+            [s["variable"] for s in summary], response.data["sigma_variables"]
+        )
+        stat = summary[0]
+        for key in ("n", "reliable", "mean", "sd", "rmse", "r_squared", "ccc"):
+            self.assertIn(key, stat)
+
     def test_optimise_result_close_to_true(self):
         data = {
             "inputs": [self.k_var.id, self.scale_var.id],

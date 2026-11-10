@@ -2741,6 +2741,11 @@ export type OptimiseResponse = {
         [key: string]: any;
       }[]
     | null;
+  summary_statistics:
+    | {
+        [key: string]: any;
+      }[]
+    | null;
   covariance: number[][] | null;
   condition_number: number | null;
   neg2ll: number | null;
