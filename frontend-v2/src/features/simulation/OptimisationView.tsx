@@ -21,6 +21,7 @@ import { BiomarkerTypeRead, CombinedModelRead, CompoundRead, OptimiseResponse, S
 import { SubjectBiomarker } from "../../hooks/useDataset";
 import { optimisePredictionsToSimulateResponses } from "./utils";
 import OptimisationResidualPlots from "./OptimisationResidualPlots";
+import OptimisationResidualStatsTable from "./OptimisationResidualStatsTable";
 import OptimisationCovarianceTable from "./OptimisationCovarianceTable";
 import { isNearBound } from "./optimisationStats";
 import { observationLabel } from "./optimisationLabels";
@@ -478,8 +479,36 @@ const OptimisationView = ({
                         Normal QQ plot is shown only when at least 30 residuals are
                         available, below which it is not informative.
                       </p>
+                      <p>
+                        The <strong>summary statistics</strong> table compares the
+                        standardised residuals of each output variable to their
+                        expected standard-normal distribution. Each cell is colour
+                        coded:
+                      </p>
+                      <ul style={{ margin: "0.25rem 0", paddingLeft: "1.5rem" }}>
+                        <li><span style={{ color: "#2e7d32" }}>Green</span>: close to the expected value (good)</li>
+                        <li><span style={{ color: "#ed6c02" }}>Amber</span>: moderate deviation</li>
+                        <li><span style={{ color: "#d32f2f" }}>Red</span>: large deviation (investigate)</li>
+                      </ul>
+                      <p>Thresholds: mean |m| &lt;0.1 / &lt;0.3; SD 0.8–1.2 / 0.5–1.5;
+                        RMSE |r−1| &lt;0.2 / &lt;0.5; skewness |s| &lt;0.5 / &lt;1; excess
+                        kurtosis |k| &lt;1 / &lt;2; normality p &gt;0.05 / &gt;0.01;
+                        % within ±1.96 ≥93 / ≥90; outliers |z|&gt;3 none / ≤1%;
+                        correlations |r| &lt;0.2 / &lt;0.4; R² and CCC &gt;0.9 / &gt;0.75.</p>
+                      <p>When an output has fewer than 30 residual points, its
+                        <strong> n</strong> is shown in amber and the other statistics
+                        are left uncoloured, since they are not reliable at that
+                        sample size.</p>
                     </HelpButton>
                   </Stack>
+                  {optimiseResult.summary_statistics && (
+                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                      <OptimisationResidualStatsTable
+                        summaryStatistics={optimiseResult.summary_statistics}
+                        variables={variables}
+                      />
+                    </Box>
+                  )}
                   <OptimisationResidualPlots
                     predictions={predictions}
                     residuals={residuals}

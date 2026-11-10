@@ -76,6 +76,7 @@ const result: OptimiseResponse = {
   predictions: null,
   residuals: null,
   observations: null,
+  summary_statistics: null,
 };
 
 const request: Optimise = {

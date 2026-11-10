@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 from scipy.linalg import svd
+from scipy.stats import kstest, kurtosis, pearsonr, shapiro, skew
 from django.db.models import Max
 
 from pkpdapp.models.simulate_context import (
@@ -28,6 +29,138 @@ _MULTIPLICATIVE_NOISE_FLOOR = 1e-5
 # because log(observed) is undefined / numerically unstable near zero. The count
 # of dropped observations is reported back as ``filtered_observations``.
 _MULTIPLICATIVE_OBSERVED_FLOOR = 1e-5
+
+# Minimum number of residual points for the per-output summary statistics to be
+# considered reliable. Below this the stats are still reported, but flagged
+# ``reliable=False`` so the frontend can withhold the green/amber/red colouring.
+# Matches the frontend QQ plot's ``QQ_MIN_POINTS = 30`` threshold.
+MIN_RELIABLE_N = 30
+
+# Standardised residuals follow N(0, 1) under a correct fit, so |z| > 1.96 brackets
+# the central 95% and |z| > 3 flags gross outliers.
+_RESIDUAL_COVERAGE_Z = 1.96
+_RESIDUAL_OUTLIER_Z = 3.0
+
+# Shapiro-Wilk is only valid up to ~5000 points; beyond that fall back to a
+# Kolmogorov-Smirnov test against the standard normal.
+_SHAPIRO_MAX_N = 5000
+
+
+def _safe_float(value) -> float | None:
+    """Coerce to a finite float, returning None for NaN/inf/non-numeric input."""
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    return result if np.isfinite(result) else None
+
+
+def _residual_summary_statistics(
+    residuals: list[float],
+    predicted: list[float],
+    observed: list[float],
+    times: list[float],
+) -> dict[str, Any]:
+    """Summary statistics for one output's standardised residuals.
+
+    The residuals are standardised (divided by the fitted noise sd), so under a
+    correct fit they are distributed as N(0, 1). Each statistic is reported with its
+    expected value in mind: location (mean -> 0), scale (sd, rmse -> 1), shape
+    (skewness, excess kurtosis -> 0; normality p-value large), coverage (% within
+    +-1.96 -> ~95, outliers |z|>3 -> ~0), structure (correlation of the residuals
+    with time and with the prediction -> 0), and observed-vs-predicted agreement
+    (R^2 and the concordance correlation coefficient -> 1).
+
+    Every statistic is guarded for small ``n`` / zero variance / non-finite inputs
+    and reported as ``None`` rather than raising. ``reliable`` is False when there
+    are fewer than ``MIN_RELIABLE_N`` points.
+    """
+    r = np.asarray(residuals, dtype=float)
+    p = np.asarray(predicted, dtype=float)
+    o = np.asarray(observed, dtype=float)
+    t = np.asarray(times, dtype=float)
+
+    finite = np.isfinite(r)
+    r = r[finite]
+    p = p[finite] if p.shape == finite.shape else p
+    o = o[finite] if o.shape == finite.shape else o
+    t = t[finite] if t.shape == finite.shape else t
+    n = int(r.size)
+
+    stats: dict[str, Any] = {
+        "n": n,
+        "reliable": n >= MIN_RELIABLE_N,
+        "mean": None,
+        "sd": None,
+        "rmse": None,
+        "skewness": None,
+        "kurtosis": None,
+        "normality_p": None,
+        "pct_within_1_96": None,
+        "n_outliers": None,
+        "corr_time": None,
+        "corr_predicted": None,
+        "r_squared": None,
+        "ccc": None,
+    }
+    if n == 0:
+        return stats
+
+    stats["mean"] = _safe_float(np.mean(r))
+    stats["sd"] = _safe_float(np.std(r, ddof=1)) if n > 1 else None
+    stats["rmse"] = _safe_float(np.sqrt(np.mean(r * r)))
+    stats["pct_within_1_96"] = _safe_float(
+        100.0 * np.mean(np.abs(r) < _RESIDUAL_COVERAGE_Z)
+    )
+    stats["n_outliers"] = int(np.sum(np.abs(r) > _RESIDUAL_OUTLIER_Z))
+
+    if n > 2:
+        stats["skewness"] = _safe_float(skew(r, bias=False))
+    if n > 3:
+        stats["kurtosis"] = _safe_float(kurtosis(r, fisher=True, bias=False))
+
+    # Normality test: Shapiro-Wilk for small-to-moderate n, KS vs N(0,1) beyond.
+    if 3 <= n <= _SHAPIRO_MAX_N:
+        try:
+            stats["normality_p"] = _safe_float(shapiro(r).pvalue)
+        except Exception:
+            pass
+    elif n > _SHAPIRO_MAX_N:
+        try:
+            stats["normality_p"] = _safe_float(kstest(r, "norm").pvalue)
+        except Exception:
+            pass
+
+    stats["corr_time"] = _safe_correlation(r, t)
+    stats["corr_predicted"] = _safe_correlation(r, p)
+
+    # Observed-vs-predicted agreement (not standardised).
+    if o.size == p.size and o.size > 1:
+        ss_tot = float(np.sum((o - np.mean(o)) ** 2))
+        if ss_tot > 0:
+            ss_res = float(np.sum((o - p) ** 2))
+            stats["r_squared"] = _safe_float(1.0 - ss_res / ss_tot)
+        var_o = float(np.var(o))
+        var_p = float(np.var(p))
+        denom = var_o + var_p + (float(np.mean(o)) - float(np.mean(p))) ** 2
+        if denom > 0:
+            cov_op = float(np.mean((o - np.mean(o)) * (p - np.mean(p))))
+            stats["ccc"] = _safe_float(2.0 * cov_op / denom)
+
+    return stats
+
+
+def _safe_correlation(a: np.ndarray, b: np.ndarray) -> float | None:
+    """Pearson correlation guarded for mismatched length / constant / tiny input."""
+    if a.size != b.size or a.size < 3:
+        return None
+    if np.std(a) == 0 or np.std(b) == 0:
+        return None
+    try:
+        return _safe_float(pearsonr(a, b).statistic)
+    except Exception:
+        return None
+
 
 # Supported noise (error) models. See the loss/gradient/diagnostics methods for
 # the residual definition of each:
@@ -146,6 +279,11 @@ class OptimiseResult:
     # (same shape as ``predictions`` / ``residuals``). Optional so the result
     # tolerates optimise_diagnostics variants that do or do not report it.
     observations: list[dict[str, Any]] | None = None
+    # Per-output residual summary statistics (one dict per fitted output variable,
+    # keyed ``"variable"`` -> output variable id), comparing the standardised
+    # residuals to their expected N(0, 1). Optional/None when diagnostics could not
+    # be computed. See ``_residual_summary_statistics`` for the per-entry fields.
+    summary_statistics: list[dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True)
@@ -686,6 +824,13 @@ class OptimiseContext(SimulateContext):
         residual_values = []
         weights = []
         n_filtered = 0
+        # Pooled per-output arrays (across all groups), keyed by output variable id,
+        # for the residual summary statistics: the standardised residuals and the
+        # matched predicted / observed / time values at each observed point.
+        pooled_residuals: dict[int, list[float]] = {}
+        pooled_predicted: dict[int, list[float]] = {}
+        pooled_observed: dict[int, list[float]] = {}
+        pooled_times: dict[int, list[float]] = {}
         # Sum of log(observed) over non-filtered observations, used to restore the
         # change-of-variables Jacobian of the log-space (multiplicative) likelihood
         # when reporting the absolute deviance / information criteria.
@@ -712,6 +857,7 @@ class OptimiseContext(SimulateContext):
                     "neg2ll": None,
                     "aic": None,
                     "bic": None,
+                    "summary_statistics": None,
                 }
 
             t_eval = np.asarray(group.t_eval, dtype=float)
@@ -729,6 +875,7 @@ class OptimiseContext(SimulateContext):
             obs_residuals_per_output = {i: [] for i in range(len(group.outputs))}
             obs_observations_per_output = {i: [] for i in range(len(group.outputs))}
             obs_times_per_output = {i: [] for i in range(len(group.outputs))}
+            obs_predicted_per_output = {i: [] for i in range(len(group.outputs))}
 
             for record in group.records:
                 t_idx = record.time_index
@@ -737,6 +884,11 @@ class OptimiseContext(SimulateContext):
                 noise_model = noise_models[k]
                 prediction = y[t_idx, o_idx]
                 observed = record.value
+                # Predicted value in display units at this observed point, matched to
+                # the residual below (for the observed-vs-predicted summary stats).
+                predicted_display = float(
+                    y[t_idx, o_idx] / output_contexts[o_idx].conversion_factor
+                )
 
                 if noise_model == "multiplicative":
                     if self._is_filtered_observation(observed):
@@ -778,6 +930,7 @@ class OptimiseContext(SimulateContext):
                 obs_times_per_output[o_idx].append(
                     float(record.time / time_conversion_factor)
                 )
+                obs_predicted_per_output[o_idx].append(predicted_display)
                 jacobian_rows.append(jac_row)
                 residual_values.append(float(residual))
                 weights.append(weight)
@@ -792,8 +945,35 @@ class OptimiseContext(SimulateContext):
                 obs_dict[output.id] = obs_observations_per_output[i]
                 resid_dict["times"][output.id] = obs_times_per_output[i]
                 obs_dict["times"][output.id] = obs_times_per_output[i]
+                # Pool across groups for the per-output summary statistics.
+                pooled_residuals.setdefault(output.id, []).extend(
+                    obs_residuals_per_output[i]
+                )
+                pooled_predicted.setdefault(output.id, []).extend(
+                    obs_predicted_per_output[i]
+                )
+                pooled_observed.setdefault(output.id, []).extend(
+                    obs_observations_per_output[i]
+                )
+                pooled_times.setdefault(output.id, []).extend(obs_times_per_output[i])
             residuals_list.append(resid_dict)
             observations_list.append(obs_dict)
+
+        # Per-output residual summary statistics, ordered to match sigma_variables
+        # (ascending output variable id), each with a traffic-light-ready set of
+        # metrics comparing the standardised residuals to their expected N(0, 1).
+        summary_statistics = [
+            {
+                "variable": output_id,
+                **_residual_summary_statistics(
+                    pooled_residuals.get(output_id, []),
+                    pooled_predicted.get(output_id, []),
+                    pooled_observed.get(output_id, []),
+                    pooled_times.get(output_id, []),
+                ),
+            }
+            for output_id in sigma_variables
+        ]
 
         # Information criteria (AIC/BIC) from the absolute deviance -2*ln(L).
         # The internal NLL drops the per-observation 0.5*log(2*pi) constant, and
@@ -832,6 +1012,7 @@ class OptimiseContext(SimulateContext):
                 "sigma_mult": sigma_mult_list,
                 "sigma_variables": sigma_variables,
                 "filtered_observations": n_filtered,
+                "summary_statistics": summary_statistics,
                 **info_criteria,
             }
 
@@ -867,6 +1048,7 @@ class OptimiseContext(SimulateContext):
             "sigma_mult": sigma_mult_list,
             "sigma_variables": sigma_variables,
             "filtered_observations": n_filtered,
+            "summary_statistics": summary_statistics,
             **info_criteria,
         }
 

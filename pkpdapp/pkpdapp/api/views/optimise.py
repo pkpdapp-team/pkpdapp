@@ -116,6 +116,12 @@ class OptimiseResponseSerializer(serializers.Serializer):
     observations = serializers.ListField(
         child=serializers.DictField(), allow_null=True
     )
+    # One dict per fitted output variable of residual summary statistics (mean, sd,
+    # rmse, skewness, kurtosis, normality_p, pct_within_1_96, n_outliers, corr_time,
+    # corr_predicted, r_squared, ccc) plus "variable", "n" and a "reliable" flag.
+    summary_statistics = serializers.ListField(
+        child=serializers.DictField(), allow_null=True
+    )
     covariance = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
         allow_null=True,

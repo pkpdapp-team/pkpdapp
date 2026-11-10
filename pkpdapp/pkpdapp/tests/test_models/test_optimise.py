@@ -15,6 +15,7 @@ from pkpdapp.models.optimise_context import (
     ObservationInfo,
     OptimiseContext,
     ParameterInfo,
+    _residual_summary_statistics,
 )
 from pkpdapp.models import (
     Biomarker,
@@ -123,6 +124,63 @@ class FakeDiffsolOde:
         if self.raise_sens:
             raise RuntimeError("sensitivity solve failed")
         return SimpleNamespace(ys=self.y, sens=self.sens)
+
+
+class TestResidualSummaryStatistics(TestCase):
+    """Unit tests for the pure ``_residual_summary_statistics`` helper."""
+
+    def test_standard_normal_residuals_look_like_a_good_fit(self):
+        # Seeded so the drawn sample is cleanly normal (Shapiro-Wilk p well above
+        # the 0.05 threshold); the statistic itself is what is under test here.
+        rng = np.random.default_rng(8)
+        n = 500
+        resid = rng.standard_normal(n).tolist()
+        # Arbitrary monotonic predictions/observations that agree closely so the
+        # observed-vs-predicted metrics are high.
+        predicted = np.linspace(1.0, 10.0, n)
+        observed = (predicted + rng.standard_normal(n) * 0.05).tolist()
+        times = np.linspace(0.0, 24.0, n).tolist()
+
+        stats = _residual_summary_statistics(
+            resid, predicted.tolist(), observed, times
+        )
+
+        self.assertEqual(stats["n"], n)
+        self.assertTrue(stats["reliable"])
+        self.assertAlmostEqual(stats["mean"], 0.0, delta=0.15)
+        self.assertAlmostEqual(stats["sd"], 1.0, delta=0.15)
+        self.assertAlmostEqual(stats["rmse"], 1.0, delta=0.15)
+        self.assertLess(abs(stats["skewness"]), 0.5)
+        self.assertLess(abs(stats["kurtosis"]), 1.0)
+        self.assertGreater(stats["normality_p"], 0.05)
+        self.assertGreater(stats["pct_within_1_96"], 90.0)
+        # Residuals are independent of time / prediction here.
+        self.assertLess(abs(stats["corr_time"]), 0.2)
+        self.assertLess(abs(stats["corr_predicted"]), 0.2)
+        self.assertGreater(stats["r_squared"], 0.9)
+        self.assertGreater(stats["ccc"], 0.9)
+
+    def test_small_sample_is_flagged_unreliable(self):
+        stats = _residual_summary_statistics(
+            [0.1, -0.2, 0.3], [1.0, 2.0, 3.0], [1.1, 1.9, 3.2], [0.0, 1.0, 2.0]
+        )
+        self.assertEqual(stats["n"], 3)
+        self.assertFalse(stats["reliable"])
+
+    def test_empty_input_returns_none_stats(self):
+        stats = _residual_summary_statistics([], [], [], [])
+        self.assertEqual(stats["n"], 0)
+        self.assertFalse(stats["reliable"])
+        self.assertIsNone(stats["mean"])
+        self.assertIsNone(stats["sd"])
+        self.assertIsNone(stats["r_squared"])
+
+    def test_non_finite_residuals_are_dropped(self):
+        resid = [0.5, float("nan"), -0.5, float("inf"), 0.2]
+        stats = _residual_summary_statistics(
+            resid, [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [0, 1, 2, 3, 4]
+        )
+        self.assertEqual(stats["n"], 3)
 
 
 class TestOptimise(TestCase):
@@ -1092,6 +1150,37 @@ class TestOptimise(TestCase):
             len(diagnostics["residuals"][0][output_id]),
         )
 
+        # Per-output residual summary statistics: one entry per fitted output
+        # variable (aligned to sigma_variables), each carrying the expected keys.
+        summary = diagnostics["summary_statistics"]
+        self.assertIsNotNone(summary)
+        self.assertEqual(len(summary), len(diagnostics["sigma_variables"]))
+        self.assertEqual(
+            [s["variable"] for s in summary], diagnostics["sigma_variables"]
+        )
+        stat = next(s for s in summary if s["variable"] == output_id)
+        for key in (
+            "n",
+            "reliable",
+            "mean",
+            "sd",
+            "rmse",
+            "skewness",
+            "kurtosis",
+            "normality_p",
+            "pct_within_1_96",
+            "n_outliers",
+            "corr_time",
+            "corr_predicted",
+            "r_squared",
+            "ccc",
+        ):
+            self.assertIn(key, stat)
+        # n matches the number of residual points pooled across groups for that output.
+        pooled_n = sum(len(r[output_id]) for r in diagnostics["residuals"])
+        self.assertEqual(stat["n"], pooled_n)
+        self.assertEqual(stat["reliable"], pooled_n >= 30)
+
         context.optimisation_groups = (
             replace(
                 first_group,
@@ -1120,6 +1209,7 @@ class TestOptimise(TestCase):
                 "neg2ll": None,
                 "aic": None,
                 "bic": None,
+                "summary_statistics": None,
             },
         )
 
