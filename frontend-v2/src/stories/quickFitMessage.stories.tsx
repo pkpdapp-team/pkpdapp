@@ -76,7 +76,25 @@ const result: OptimiseResponse = {
   predictions: null,
   residuals: null,
   observations: null,
-  summary_statistics: null,
+  summary_statistics: [
+    {
+      variable: 3,
+      n: 10,
+      reliable: false,
+      mean: 0.05,
+      sd: 1.1,
+      rmse: 1.2,
+      skewness: null,
+      kurtosis: null,
+      normality_p: null,
+      pct_within_1_96: 90,
+      n_outliers: 0,
+      corr_time: 0.1,
+      corr_predicted: -0.1,
+      r_squared: 0.95,
+      ccc: 0.9,
+    },
+  ],
 };
 
 const request: Optimise = {
@@ -116,6 +134,31 @@ export const BuildsTheDialogResults: Story = {
     });
     expect(message.uncertainty.correlations).toHaveLength(1);
     expect(message.uncertainty.correlations[0].r).toBeCloseTo(0.25);
+    // residual statistics are named by output, not variable id
+    expect(message.residuals).toHaveLength(1);
+    expect(message.residuals[0]).toMatchObject({
+      output: "C1",
+      n: 10,
+      reliable: false,
+      mean: 0.05,
+      skewness: null,
+      ccc: 0.9,
+    });
+    expect(message.residuals[0]).not.toHaveProperty("variable");
+  },
+};
+
+export const NoResidualStatistics: Story = {
+  play: async () => {
+    const message = buildQuickFitMessage(
+      { ...result, summary_statistics: null },
+      request,
+      variables,
+      units,
+      biomarkerTypes,
+      groups,
+    );
+    expect(message.residuals).toEqual([]);
   },
 };
 

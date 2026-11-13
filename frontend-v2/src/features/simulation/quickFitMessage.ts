@@ -9,6 +9,7 @@ import {
 import formatUnitSymbol from "../../shared/formatUnitSymbol";
 import { correlation, isNearBound, percentRse, standardErrors } from "./optimisationStats";
 import { observationLabel } from "./optimisationLabels";
+import type { ResidualStat } from "./OptimisationResidualStatsTable";
 
 // what "Discuss with AI" sends to the chat, as at fit time
 
@@ -44,6 +45,9 @@ type Noise = {
 
 type Correlation = { a: string; b: string; r: number | null };
 
+// standardised-residual diagnostics for one fitted output; all metrics may be null
+type ResidualOutput = Omit<ResidualStat, "variable"> & { output: string };
+
 export type QuickFitMessage = {
   summary: {
     stop_reason: string;
@@ -64,6 +68,7 @@ export type QuickFitMessage = {
     condition_number: number | null;
     correlations: Correlation[]; // every pair
   };
+  residuals: ResidualOutput[];
 };
 
 function numberOrNull(value: number): number | null {
@@ -170,6 +175,18 @@ function correlations(result: OptimiseResponse, variables: VariableRead[]): Corr
   return pairs;
 }
 
+function residualStatistics(
+  result: OptimiseResponse,
+  variables: VariableRead[],
+): ResidualOutput[] {
+  return ((result.summary_statistics ?? []) as unknown as ResidualStat[]).map(
+    ({ variable, ...stats }) => ({
+      output: variableName(variable, variables),
+      ...stats,
+    }),
+  );
+}
+
 export function buildQuickFitMessage(
   result: OptimiseResponse,
   request: Optimise,
@@ -200,6 +217,7 @@ export function buildQuickFitMessage(
       condition_number: result.condition_number,
       correlations: correlations(result, variables),
     },
+    residuals: residualStatistics(result, variables),
   };
 }
 
