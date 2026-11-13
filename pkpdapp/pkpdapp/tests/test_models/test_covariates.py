@@ -605,6 +605,25 @@ class TestCovariateInjection(TestCase):
             self.pkpd_model.variables.filter(qname="Covariates.mu_AGE").exists()
         )
 
+    def test_optimise_context_pins_covariates_to_neutral_values(self):
+        from pkpdapp.models.optimise_context import OptimiseContext
+
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.AGE_COVARIATE,
+        )
+        DerivedVariable.objects.create(
+            pkpd_model=self.pkpd_model,
+            pk_variable=self._cl_variable(),
+            type=DerivedVariable.Type.SEX_COVARIATE,
+        )
+        self.pkpd_model = CombinedModel.objects.get(pk=self.pkpd_model.pk)
+        values = OptimiseContext._neutral_covariate_values(self.pkpd_model)
+        # age sits at its reference (factor 1); sex at the base category
+        self.assertEqual(values["Covariates.AGE"], 25.0)
+        self.assertEqual(values["Covariates.SEX"], 0.0)
+
     def test_custom_continuous_uses_reference_value(self):
         covariate = Covariate.objects.create(
             project=self.project,
