@@ -12,7 +12,7 @@ import { VariableRead } from "../../app/backendApi";
 /** One output variable's residual summary statistics (see the backend
  * `_residual_summary_statistics` helper). All metric fields may be null when
  * they could not be computed. */
-interface ResidualStat {
+export interface ResidualStat {
   variable: number;
   n: number;
   reliable: boolean;
