@@ -348,6 +348,10 @@ class OptimiseContext(SimulateContext):
         use_diffsol: bool = False,
         time_max: float | None = None,
     ):
+        # The fit solves one deterministic curve per group, so covariate inputs
+        # are pinned to their neutral value (covariate effect factor of 1) rather
+        # than left at the placeholder default. Caller-supplied values win.
+        variables = {**self._neutral_covariate_values(model), **(variables or {})}
         super().__init__(
             model=model,
             outputs=outputs,
@@ -376,6 +380,39 @@ class OptimiseContext(SimulateContext):
         self._build_sigma_output_index()
 
         self._discard_database_state()
+
+    @staticmethod
+    def _neutral_covariate_values(model: Any) -> dict[str, float]:
+        """Covariate input values that make every covariate effect a no-op.
+
+        Continuous covariates ``C`` enter as ``(C / reference) ** a``, so the
+        reference gives a factor of 1; categorical covariates use the base
+        category (0). Without this the inputs keep their placeholder default of 1,
+        which for e.g. age (reference 25) shrinks the effective parameter and
+        biases the fitted value.
+        """
+        from pkpdapp.utils.covariate_effects import (
+            _is_continuous,
+            _reference_value,
+            covariate_input_name,
+        )
+
+        derived_variables = getattr(model, "derived_variables", None)
+        if derived_variables is None:
+            return {}
+        project = model.get_project()
+        existing = set(model.variables.values_list("qname", flat=True))
+        values: dict[str, float] = {}
+        for dv in derived_variables.all():
+            if not dv.is_covariate():
+                continue
+            qname = f"Covariates.{covariate_input_name(dv)}"
+            if qname not in existing:
+                continue
+            values[qname] = (
+                _reference_value(dv, project) if _is_continuous(dv) else 0.0
+            )
+        return values
 
     @staticmethod
     def _validate_observations(observations: list[ObservationInfo]) -> None:
