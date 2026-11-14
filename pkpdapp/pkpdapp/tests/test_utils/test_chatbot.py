@@ -361,6 +361,40 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertEqual(recorded.input_tokens, 400)
         self.assertEqual(recorded.output_tokens, 30)
 
+    def test_search_tool_formats_hits_with_source_and_pages(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [3, 4],
+            "headings": ["Theory"],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertIn("a.pdf", result)
+        self.assertIn("3–4", result)
+        self.assertIn("Theory", result)
+        self.assertIn("TMDD binding", result)
+
+    def test_search_tool_is_offered_only_when_configured(self):
+        def offered_tools():
+            fake_client = mock.Mock()
+            fake_client.responses.create.return_value = [completed_event()]
+            with mock.patch.object(chatbot, "get_client", return_value=fake_client):
+                list(chatbot.stream_chat_response(self.conversation, "question"))
+            chat_call = fake_client.responses.create.call_args_list[0]
+            return [tool["name"] for tool in chat_call.kwargs["tools"]]
+
+        with override_settings(QDRANT_URL=None, CHATBOT_EMBEDDING_MODEL=""):
+            self.assertNotIn("search_documents", offered_tools())
+        with override_settings(
+            QDRANT_URL="http://qdrant:6333", CHATBOT_EMBEDDING_MODEL="embeddings"
+        ):
+            self.assertIn("search_documents", offered_tools())
+
     def test_stream_records_usage_and_cost(self):
         fake_client = mock.Mock()
         fake_client.responses.create.return_value = [
