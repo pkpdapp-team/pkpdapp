@@ -145,6 +145,22 @@ dAe/dt = CLr * C1
 
 where `CLr` is renal clearance and `C1` is the central concentration."""
 
+# Added to the system prompt only when document search is configured.
+DOCUMENT_SEARCH_PROMPT = """\
+[DOCUMENT SEARCH]
+You have a library of reference documents (PK/PD textbooks and papers) that \
+you can search with the search_documents tool. When a question touches on \
+PK/PD concepts, terminology, methods, best practice or theory, search the \
+documents before you answer and base your answer on what you find. Do not \
+answer such questions from memory alone. When your answer draws on a \
+passage, mention its source and pages. Skip the search for questions about \
+how to use the app, the user's own model or data, or small talk.
+
+Search results are candidates, not answers. Use a passage only if it \
+actually bears on the question. Passages that are not relevant are simply \
+left out: do not mention them or the search, and answer from general \
+knowledge without a citation."""
+
 logger.info(
     "[chatbot] config: model=%s small_model=%s base_url=%s",
     settings.CHATBOT_MODEL,
@@ -243,6 +259,9 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     if catalog:
         parts.append(f"\n\n[LIBRARY MODELS]\n{catalog}")
 
+    if document_search_enabled():
+        parts.append(f"\n\n{DOCUMENT_SEARCH_PROMPT}")
+
     if conversation is not None:
         past_summaries = past_summaries_section(conversation)
         if past_summaries:
@@ -311,10 +330,12 @@ _SEARCH_DOCUMENTS_TOOL = {
     "description": (
         "Search the app's library of reference documents (for example PK/PD "
         "papers, textbooks and manuals) for passages relevant to a question. "
+        "Use it for questions about PK/PD concepts, methods, terminology or "
+        "best practice, before answering from memory. "
         "This is a semantic search, so write the query as a short question or "
         "statement about one topic. Returns the most relevant passages with "
-        "their source and pages. When your answer draws on a passage, say "
-        "which source it comes from."
+        "their source and pages. When your answer draws on a relevant "
+        "passage, say which source it comes from."
     ),
     "parameters": {
         "type": "object",
@@ -360,6 +381,13 @@ def _get_current_model_definition(conversation):
         return "Error looking up the current model definition."
 
 
+_SEARCH_RESULT_REMINDER = (
+    "These passages are candidates and may not be relevant. Use one only if "
+    "it bears on the question, cite it only if your answer draws on it, and "
+    "do not mention the others."
+)
+
+
 def _search_documents(query):
     try:
         hits = search(get_client(), query)
@@ -368,7 +396,8 @@ def _search_documents(query):
         return "Error searching the documents."
     if not hits:
         return "No matching passages found."
-    return "\n\n".join(_format_hit(hit) for hit in hits)
+    passages = "\n\n".join(_format_hit(hit) for hit in hits)
+    return f"{_SEARCH_RESULT_REMINDER}\n\n{passages}"
 
 
 def _format_hit(hit):

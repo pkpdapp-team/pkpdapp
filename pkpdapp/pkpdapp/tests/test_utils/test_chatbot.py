@@ -272,6 +272,14 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertNotIn("- their chat", prompt)
         self.assertNotIn("- this chat", prompt)
 
+    def test_system_prompt_mentions_document_search_only_when_configured(self):
+        with override_settings(QDRANT_URL=None, CHATBOT_EMBEDDING_MODEL=""):
+            self.assertNotIn("[DOCUMENT SEARCH]", chatbot._build_system_prompt())
+        with override_settings(
+            QDRANT_URL="http://qdrant:6333", CHATBOT_EMBEDDING_MODEL="embeddings"
+        ):
+            self.assertIn("[DOCUMENT SEARCH]", chatbot._build_system_prompt())
+
     def test_system_prompt_includes_the_app_layout(self):
         prompt = chatbot._build_system_prompt()
 
@@ -378,6 +386,29 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertIn("3–4", result)
         self.assertIn("Theory", result)
         self.assertIn("TMDD binding", result)
+
+    def test_search_tool_result_starts_with_the_relevance_reminder(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [3],
+            "headings": ["Theory"],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertTrue(result.startswith(chatbot._SEARCH_RESULT_REMINDER))
+
+    def test_search_tool_without_hits_has_no_reminder(self):
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertEqual(result, "No matching passages found.")
 
     def test_search_tool_is_offered_only_when_configured(self):
         def offered_tools():
