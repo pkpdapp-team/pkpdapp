@@ -5,7 +5,7 @@
 #   docker compose -f docker-compose.yml -f docker-compose.qdrant.yml up -d
 #
 # Put chunks.jsonl in ./documents and fill the collection with:
-#   docker compose exec app python manage.py ingest_documents /documents/chunks.jsonl
+#   docker compose exec app python manage.py documents ingest /documents/chunks.jsonl
 # CHATBOT_EMBEDDING_MODEL must be set in .env.prod.
 version: "2.1"
 volumes:

@@ -201,14 +201,20 @@ Run Qdrant with the `docker-compose.qdrant.yml` override, or set `QDRANT_URL` to
 Prepare `chunks.jsonl` as described in [`documents/README.md`](../documents/README.md), copy it to `./documents/` and load it:
 
 ```bash
-docker compose exec app python manage.py ingest_documents /documents/chunks.jsonl
+docker compose exec app python manage.py documents ingest /documents/chunks.jsonl
 ```
 
-Each ingest creates a new collection and keeps the older ones. List or delete those with:
+Each ingest creates a new collection, makes it live and keeps the older ones, so you can switch back. To add new PDFs to the live collection instead, embedding only the new and changed chunks, add `--add`.
+
+Manage the collections with:
 
 ```bash
-docker compose exec app python manage.py cleanup_documents [--delete]
+docker compose exec app python manage.py documents list
+docker compose exec app python manage.py documents switch <collection>
+docker compose exec app python manage.py documents delete --old
 ```
+
+See `python manage.py documents <action> --help` for the options of each action, e.g. `documents ingest --help`.
 
 ## Help Pages & Tutorials
 

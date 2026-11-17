@@ -22,3 +22,16 @@ Docker build.
 
     python convert.py      # pdfs/ → docling/ (options: --help)
     python make_chunks.py  # docling/ → chunks.jsonl
+
+`convert.py` is the slow step: it reads the PDFs once and keeps the result in
+`docling/`. `make_chunks.py` is fast and rebuilds `chunks.jsonl` from all of
+`docling/` on every run. `chunks.jsonl` has one chunk per line and is the file
+the app loads into the document search (`manage.py documents ingest`).
+
+## Adding a PDF
+
+    python convert.py pdfs/new.pdf   # convert only the new PDF
+    python make_chunks.py
+    cd ../pkpdapp && python manage.py documents ingest ../documents/chunks.jsonl --add
+
+With `--add`, only new and changed chunks are embedded into the live collection.
