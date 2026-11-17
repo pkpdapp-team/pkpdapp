@@ -152,9 +152,15 @@ You have a library of reference documents (PK/PD textbooks and papers) that \
 you can search with the search_documents tool. When a question touches on \
 PK/PD concepts, terminology, methods, best practice or theory, search the \
 documents before you answer and base your answer on what you find. Do not \
-answer such questions from memory alone. When your answer draws on a \
-passage, mention its source and pages. Skip the search for questions about \
-how to use the app, the user's own model or data, or small talk.
+answer such questions from memory alone. Skip the search for questions \
+about how to use the app, the user's own model or data, or small talk.
+
+The user cannot see the search or its results. When your answer draws on a \
+passage, cite it by its file name exactly as given and its pages, e.g. \
+(2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27), so the user can \
+find the source. Do not turn the file name into an author–year citation or a \
+description such as "the text by Mortensen", and do not refer to the \
+passages as if the user had read them.
 
 Search results are candidates, not answers. Use a passage only if it \
 actually bears on the question. Passages that are not relevant are simply \
@@ -335,7 +341,7 @@ _SEARCH_DOCUMENTS_TOOL = {
         "This is a semantic search, so write the query as a short question or "
         "statement about one topic. Returns the most relevant passages with "
         "their source and pages. When your answer draws on a relevant "
-        "passage, say which source it comes from."
+        "passage, cite its file name and pages."
     ),
     "parameters": {
         "type": "object",
@@ -383,8 +389,9 @@ def _get_current_model_definition(conversation):
 
 _SEARCH_RESULT_REMINDER = (
     "These passages are candidates and may not be relevant. Use one only if "
-    "it bears on the question, cite it only if your answer draws on it, and "
-    "do not mention the others."
+    "it bears on the question, and do not mention the others. The user "
+    "cannot see these passages: cite one you use by its file name and pages, "
+    "e.g. (file.pdf, pp. 3–4)."
 )
 
 
