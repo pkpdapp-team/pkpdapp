@@ -29,13 +29,17 @@ class Command(BaseCommand):
         )
         ingest.add_argument("chunks_path", type=Path)
         ingest.add_argument(
+            "--tag",
+            help="a short name for the new collection, accepted in place of its name",
+        )
+        ingest.add_argument(
             "--add",
             action="store_true",
             help="add to an existing collection instead (default: the live one)",
         )
         ingest.add_argument(
             "--collection",
-            help="with --add, the collection to add to",
+            help="with --add, the collection (name or tag) to add to",
         )
         ingest.add_argument(
             "--force",
@@ -44,7 +48,7 @@ class Command(BaseCommand):
         )
 
         switch = actions.add_parser("switch", help="Make a collection live.")
-        switch.add_argument("collection")
+        switch.add_argument("collection", help="name or tag")
         switch.add_argument(
             "--force",
             action="store_true",
@@ -52,7 +56,7 @@ class Command(BaseCommand):
         )
 
         delete = actions.add_parser("delete", help="Delete collections.")
-        delete.add_argument("collections", nargs="*")
+        delete.add_argument("collections", nargs="*", help="names or tags")
         delete.add_argument(
             "--old",
             action="store_true",
@@ -83,22 +87,27 @@ class Command(BaseCommand):
         if not collections:
             self.stdout.write("no document collections")
             return
+        tags = [c["tag"] or "-" for c in collections]
+        tag_width = max(len(tag) for tag in ["TAG", *tags])
         self.stdout.write(
-            f"{'COLLECTION':<40}  {'STATE':<10}  {'CHUNKS':>6}  EMBEDDING MODEL"
+            f"{'TAG':<{tag_width}}  {'COLLECTION':<40}  {'STATE':<10}  "
+            f"{'CHUNKS':>6}  EMBEDDING MODEL"
         )
-        for c in collections:
+        for c, tag in zip(collections, tags):
             if c["live"]:
                 state = "live"
             else:
                 state = "complete" if c["complete"] else "incomplete"
             self.stdout.write(
-                f"{c['name']:<40}  {state:<10}  {c['chunks']:>6}  "
-                f"{c['embedding_model']}"
+                f"{tag:<{tag_width}}  {c['name']:<40}  {state:<10}  "
+                f"{c['chunks']:>6}  {c['embedding_model']}"
             )
 
-    def handle_ingest(self, chunks_path, add, collection, force, **options):
+    def handle_ingest(self, chunks_path, add, collection, force, tag, **options):
         if collection and not add:
             raise CommandError("--collection only works with --add")
+        if tag and add:
+            raise CommandError("--tag only works without --add")
         with chunks_path.open() as chunks_file:
             chunks = [json.loads(line) for line in chunks_file if line.strip()]
         if add:
@@ -113,7 +122,7 @@ class Command(BaseCommand):
             )
         else:
             collection = chatbot_documents.ingest_new(
-                client=get_client(), chunks=chunks
+                client=get_client(), chunks=chunks, tag=tag
             )
             self.stdout.write(f"{collection} is now live")
 

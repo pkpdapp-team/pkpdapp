@@ -206,6 +206,8 @@ docker compose exec app python manage.py documents ingest /documents/chunks.json
 
 Each ingest creates a new collection, makes it live and keeps the older ones, so you can switch back. To add new PDFs to the live collection instead, embedding only the new and changed chunks, add `--add`.
 
+To tell the collections apart, give a new one a tag, e.g. `--tag three-pdfs`. `documents list` shows the tags, and `switch`, `delete` and `--add --collection` accept a tag in place of the collection's name.
+
 Manage the collections with:
 
 ```bash

@@ -4,6 +4,7 @@
 # copyright notice and full license details.
 #
 import pkpdapp.tests  # noqa: F401
+import io
 from unittest import mock
 
 from django.core.management import call_command
@@ -193,6 +194,52 @@ class DocumentSearchTestCase(TestCase):
 
         # of the two old complete collections, the newest is kept
         self.assertEqual(chatbot_documents.old_collections(keep=1), [oldest])
+
+    def test_ingest_new_stores_the_tag_and_refuses_a_used_or_bad_one(self):
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="three-pdfs")
+        [listed] = chatbot_documents.list_collections(qdrant=self.qdrant)
+        self.assertEqual(listed["tag"], "three-pdfs")
+
+        with self.assertRaisesRegex(DocumentsError, "already used"):
+            chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="three-pdfs")
+        with self.assertRaisesRegex(DocumentsError, "may only contain"):
+            chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="two words")
+        self.assertEqual(len(self.qdrant.get_collections().collections), 1)
+
+    def test_a_tag_works_in_place_of_the_name(self):
+        older = chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="old")
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="new")
+        new_chunk = {"text": "NONMEM $PK", "filename": "c.pdf", "chunk_index": 0}
+
+        chatbot_documents.switch_collection(collection="old")
+        result = chatbot_documents.ingest_add(
+            client=None, chunks=[new_chunk], collection="new"
+        )
+        chatbot_documents.delete_collections(collections=["new"])
+
+        self.assertEqual(result, {"stored": 1, "unchanged": 0})
+        collections = chatbot_documents.list_collections(qdrant=self.qdrant)
+        self.assertEqual([c["name"] for c in collections], [older])
+        self.assertTrue(collections[0]["live"])
+
+    def test_documents_list_shows_the_tags_in_line(self):
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS)
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS, tag="three-pdfs")
+        out = io.StringIO()
+
+        call_command("documents", "list", stdout=out)
+
+        header, tagged, untagged = out.getvalue().splitlines()
+        self.assertTrue(tagged.startswith("three-pdfs  "))
+        self.assertTrue(untagged.startswith("-  "))
+        # the collection names start in the same column on every line
+        column = header.index("COLLECTION")
+        self.assertEqual(tagged.index(chatbot_documents.COLLECTION_PREFIX), column)
+        self.assertEqual(untagged.index(chatbot_documents.COLLECTION_PREFIX), column)
+
+    def test_documents_ingest_refuses_tag_together_with_add(self):
+        with self.assertRaises(CommandError):
+            call_command("documents", "ingest", "chunks.jsonl", "--add", "--tag", "x")
 
     def test_documents_delete_refuses_names_together_with_old(self):
         with self.assertRaises(CommandError):

@@ -5,6 +5,7 @@
 #
 import hashlib
 import logging
+import re
 import uuid
 from datetime import datetime
 
@@ -82,17 +83,27 @@ def list_collections(qdrant: QdrantClient) -> list[dict]:
                 "chunks": info.points_count,
                 "embedding_model": metadata.get("embedding_model"),
                 "complete": bool(metadata.get("complete")),
+                "tag": metadata.get("tag"),
             }
         )
     # names end in a timestamp, so sorting by name sorts by age
     return sorted(collections, key=lambda c: c["name"], reverse=True)
 
 
-def ingest_new(client: Portkey, chunks: list[dict]) -> str:
-    """Build a new collection from the chunks and make it live."""
+def ingest_new(client: Portkey, chunks: list[dict], tag: str | None = None) -> str:
+    """Build a new collection from the chunks and make it live.
+
+    The `tag` is a short name of your choice that the other commands accept
+    in place of the collection's name.
+    """
     if not chunks:
         raise DocumentsError("no chunks to ingest")
     qdrant = get_qdrant()
+    if tag is not None:
+        if not re.fullmatch(r"[\w.-]+", tag):
+            raise DocumentsError("a tag may only contain letters, digits, - _ and .")
+        if tag in [c["tag"] for c in list_collections(qdrant=qdrant)]:
+            raise DocumentsError(f"the tag {tag!r} is already used")
     collection = f"{COLLECTION_PREFIX}{datetime.now():%Y%m%d_%H%M%S_%f}"
     _store(
         client=client,
@@ -103,7 +114,7 @@ def ingest_new(client: Portkey, chunks: list[dict]) -> str:
     )
     # marked complete only once every chunk is stored, so an unfinished
     # collection (e.g. from a failed ingest) can be told apart
-    qdrant.update_collection(collection, metadata={"complete": True})
+    qdrant.update_collection(collection, metadata={"complete": True, "tag": tag})
     switch_alias(qdrant, collection)
     return collection
 
@@ -133,7 +144,9 @@ def ingest_add(
             raise DocumentsError(
                 "no live collection yet; run documents ingest without --add first"
             )
-    model = _find(qdrant=qdrant, collection=collection)["embedding_model"]
+    target = _find(qdrant=qdrant, collection=collection)
+    collection = target["name"]
+    model = target["embedding_model"]
     if model != settings.CHATBOT_EMBEDDING_MODEL and not force:
         raise DocumentsError(
             f"{collection} was built with embedding model {model!r}, not "
@@ -268,7 +281,7 @@ def switch_collection(collection: str, force: bool = False) -> None:
             f"{collection} was built with embedding model {model!r}, not "
             f"{settings.CHATBOT_EMBEDDING_MODEL!r}; use --force to switch anyway"
         )
-    switch_alias(qdrant, collection)
+    switch_alias(qdrant, target["name"])
 
 
 def old_collections(keep: int) -> list[str]:
@@ -286,18 +299,19 @@ def old_collections(keep: int) -> list[str]:
 def delete_collections(collections: list[str]) -> None:
     """Delete the named collections; the live one is refused."""
     qdrant = get_qdrant()
-    for collection in collections:
-        if _find(qdrant=qdrant, collection=collection)["live"]:
-            raise DocumentsError(f"{collection} is live and cannot be deleted")
-    for collection in collections:
-        qdrant.delete_collection(collection)
-        logger.info(f"deleted {collection}")
+    targets = [_find(qdrant=qdrant, collection=name) for name in collections]
+    for target in targets:
+        if target["live"]:
+            raise DocumentsError(f"{target['name']} is live and cannot be deleted")
+    for target in targets:
+        qdrant.delete_collection(target["name"])
+        logger.info(f"deleted {target['name']}")
 
 
 def _find(qdrant: QdrantClient, collection: str) -> dict:
-    """The listing entry of a document collection; unknown names are refused."""
+    """The listing entry of a collection, by name or tag; unknown ones are refused."""
     for entry in list_collections(qdrant=qdrant):
-        if entry["name"] == collection:
+        if collection in (entry["name"], entry["tag"]):
             return entry
     raise DocumentsError(f"no collection named {collection!r}")
 
