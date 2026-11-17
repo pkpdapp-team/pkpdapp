@@ -229,19 +229,23 @@ def _stored_hashes(
 
 
 def switch_alias(qdrant: QdrantClient, new_collection: str) -> None:
-    # both operations in one request, so search never sees a missing alias
-    qdrant.update_collection_aliases(
-        change_aliases_operations=[
+    operations = []
+    # on the first ingest there is no alias to delete yet
+    if live_collection(qdrant=qdrant) is not None:
+        operations.append(
             models.DeleteAliasOperation(
                 delete_alias=models.DeleteAlias(alias_name=COLLECTION)
-            ),
-            models.CreateAliasOperation(
-                create_alias=models.CreateAlias(
-                    collection_name=new_collection, alias_name=COLLECTION
-                )
-            ),
-        ]
+            )
+        )
+    operations.append(
+        models.CreateAliasOperation(
+            create_alias=models.CreateAlias(
+                collection_name=new_collection, alias_name=COLLECTION
+            )
+        )
     )
+    # all operations in one request, so search never sees a missing alias
+    qdrant.update_collection_aliases(change_aliases_operations=operations)
     logger.info(
         f"{COLLECTION} now points to {new_collection}; "
         "older collections are kept (see manage.py documents list)"
