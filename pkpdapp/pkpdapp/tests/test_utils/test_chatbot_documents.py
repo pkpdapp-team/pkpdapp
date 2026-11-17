@@ -21,8 +21,18 @@ def fake_embed(client, texts):
 
 
 CHUNKS = [
-    {"text": "TMDD binding to the target", "filename": "a.pdf", "pages": [3, 4]},
-    {"text": "NONMEM ADVAN6 subroutines", "filename": "b.pdf", "pages": [7]},
+    {
+        "text": "TMDD binding to the target",
+        "filename": "a.pdf",
+        "chunk_index": 0,
+        "pages": [3, 4],
+    },
+    {
+        "text": "NONMEM ADVAN6 subroutines",
+        "filename": "b.pdf",
+        "chunk_index": 0,
+        "pages": [7],
+    },
 ]
 
 
@@ -39,18 +49,18 @@ class DocumentSearchTestCase(TestCase):
             self.addCleanup(patch.stop)
 
     def test_search_returns_the_closest_chunk_first(self):
-        chatbot_documents.ingest(None, CHUNKS)
+        chatbot_documents.ingest_new(None, CHUNKS)
         hits = chatbot_documents.search(None, "Which NONMEM subroutines?")
         self.assertEqual(hits[0]["filename"], "b.pdf")
         self.assertEqual(hits[0]["pages"], [7])
 
     def test_ingest_keeps_the_old_collection_until_cleanup(self):
-        chatbot_documents.ingest(None, CHUNKS)
-        chatbot_documents.ingest(None, CHUNKS[:1])
+        chatbot_documents.ingest_new(None, CHUNKS)
+        chatbot_documents.ingest_new(None, CHUNKS[:1])
         self.assertEqual(len(self.qdrant.get_collections().collections), 2)
         # search uses the newest collection
         self.assertEqual(self.qdrant.count(chatbot_documents.COLLECTION).count, 1)
 
-        chatbot_documents.clean_up(delete=True)
+        chatbot_documents.delete_collections(chatbot_documents.old_collections(keep=0))
         self.assertEqual(len(self.qdrant.get_collections().collections), 1)
         self.assertEqual(self.qdrant.count(chatbot_documents.COLLECTION).count, 1)
