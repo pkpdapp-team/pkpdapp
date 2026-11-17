@@ -391,20 +391,25 @@ _SEARCH_RESULT_REMINDER = (
 def _search_documents(query):
     try:
         hits = search(get_client(), query)
+        passages = "\n\n".join(_format_hit(hit) for hit in hits)
     except Exception:
         logger.exception("[chatbot] tool search_documents error")
         return "Error searching the documents."
     if not hits:
         return "No matching passages found."
-    passages = "\n\n".join(_format_hit(hit) for hit in hits)
     return f"{_SEARCH_RESULT_REMINDER}\n\n{passages}"
 
 
 def _format_hit(hit):
-    first, last = hit["pages"][0], hit["pages"][-1]
-    pages = f"p. {first}" if first == last else f"pp. {first}–{last}"
-    section = " > ".join(hit["headings"])
-    return f"From {hit['filename']}, {pages} ({section}):\n{hit['raw_text']}"
+    source = f"From {hit.get('filename')}"
+    pages = hit.get("pages")
+    if pages:
+        first, last = pages[0], pages[-1]
+        source += f", p. {first}" if first == last else f", pp. {first}–{last}"
+    headings = hit.get("headings")
+    if headings:
+        source += f" ({' > '.join(headings)})"
+    return f"{source}:\n{hit.get('raw_text')}"
 
 
 def _execute_tool(name, arguments, conversation=None):

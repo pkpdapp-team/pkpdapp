@@ -410,6 +410,35 @@ class ChatbotUtilsTestCase(TestCase):
             result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
         self.assertEqual(result, "No matching passages found.")
 
+    def test_search_tool_formats_hits_without_pages_or_headings(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [],
+            "headings": [],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents", arguments={"query": "TMDD"}
+            )
+        self.assertIn("a.pdf", result)
+        self.assertIn("TMDD binding", result)
+
+    def test_search_tool_reports_a_hit_it_cannot_format(self):
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[{}]),
+            mock.patch.object(chatbot, "_format_hit", side_effect=KeyError("pages")),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents", arguments={"query": "TMDD"}
+            )
+        self.assertEqual(result, "Error searching the documents.")
+
     def test_search_tool_is_offered_only_when_configured(self):
         def offered_tools():
             fake_client = mock.Mock()
