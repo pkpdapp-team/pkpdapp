@@ -4,3 +4,5 @@
 !README.md
 !*.py
 !requirements.txt
+!pdfs/
+!pdfs/.gitkeep
