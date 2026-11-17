@@ -27,12 +27,14 @@ def fake_embed(client, texts):
 CHUNKS = [
     {
         "text": "TMDD binding to the target",
+        "raw_text": "binding to the target",
         "filename": "a.pdf",
         "chunk_index": 0,
         "pages": [3, 4],
     },
     {
         "text": "NONMEM ADVAN6 subroutines",
+        "raw_text": "ADVAN6 subroutines",
         "filename": "b.pdf",
         "chunk_index": 0,
         "pages": [7],
@@ -58,6 +60,23 @@ class DocumentSearchTestCase(TestCase):
         hits = chatbot_documents.search(None, "Which NONMEM subroutines?")
         self.assertEqual(hits[0]["filename"], "b.pdf")
         self.assertEqual(hits[0]["pages"], [7])
+
+    def test_search_skips_hits_without_text(self):
+        # the closest chunk has no passage, so the next one is returned instead
+        blank = {**CHUNKS[1], "raw_text": "   "}
+        chatbot_documents.ingest_new(client=None, chunks=[CHUNKS[0], blank])
+        hits = chatbot_documents.search(None, "Which NONMEM subroutines?")
+        self.assertEqual([hit["filename"] for hit in hits], ["a.pdf"])
+
+    def test_search_skips_points_without_payload(self):
+        # e.g. stored by another ingester
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS)
+        self.qdrant.upsert(
+            chatbot_documents.COLLECTION,
+            points=[models.PointStruct(id=1, vector=[0.0, 1.0, 0.1], payload=None)],
+        )
+        hits = chatbot_documents.search(None, "Which NONMEM subroutines?")
+        self.assertEqual([hit["filename"] for hit in hits], ["b.pdf", "a.pdf"])
 
     def test_ingest_keeps_the_old_collection_until_cleanup(self):
         chatbot_documents.ingest_new(client=None, chunks=CHUNKS)

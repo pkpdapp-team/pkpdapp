@@ -316,7 +316,17 @@ def _find(qdrant: QdrantClient, collection: str) -> dict:
     raise DocumentsError(f"no collection named {collection!r}")
 
 
+def _has_text(hit: dict) -> bool:
+    """Whether a hit has a passage to show; other ingesters may store none."""
+    text = hit.get("raw_text")
+    return isinstance(text, str) and bool(text.strip())
+
+
 def search(client: Portkey, query: str) -> list[dict]:
     [vector] = embed(client, [query])
-    response = get_qdrant().query_points(COLLECTION, query=vector, limit=SEARCH_LIMIT)
-    return [{**hit.payload, "score": hit.score} for hit in response.points]
+    # fetch extra, so dropping hits without text still leaves SEARCH_LIMIT
+    response = get_qdrant().query_points(
+        COLLECTION, query=vector, limit=SEARCH_LIMIT * 2
+    )
+    hits = [{**(hit.payload or {}), "score": hit.score} for hit in response.points]
+    return [hit for hit in hits if _has_text(hit)][:SEARCH_LIMIT]
