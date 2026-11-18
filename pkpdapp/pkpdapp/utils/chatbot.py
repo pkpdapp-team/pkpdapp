@@ -640,7 +640,7 @@ def stream_chat_response(
                 stream=True,
                 store=False,
                 reasoning={"effort": "low"},
-                tool_choice = "none" if _round == MAX_TOOL_ROUNDS else "auto",
+                tool_choice="none" if _round == MAX_TOOL_ROUNDS else "auto",
             )
 
             text_id = str(uuid.uuid4())
