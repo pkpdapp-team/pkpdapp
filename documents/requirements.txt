@@ -1,0 +1,5 @@
+# cpu-only torch; for a gpu, swap in the cuda index line below
+--extra-index-url https://download.pytorch.org/whl/cpu
+# --extra-index-url https://download.pytorch.org/whl/cu128
+docling==2.142.0
+docling-core[chunking-openai]

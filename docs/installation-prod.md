@@ -92,6 +92,14 @@ The chatbot feature uses an LLM via [Portkey] as a gateway. Set the following va
 - `CHATBOT_INPUT_PRICE_PER_MTOK`, `CHATBOT_CACHED_INPUT_PRICE_PER_MTOK`, `CHATBOT_OUTPUT_PRICE_PER_MTOK` (optional): override the model price in USD per 1M tokens, e.g. if Portkey has no price for the model or the pricing API is unreachable.
 - `CHATBOT_SMALL_INPUT_PRICE_PER_MTOK`, `CHATBOT_SMALL_CACHED_INPUT_PRICE_PER_MTOK`, `CHATBOT_SMALL_OUTPUT_PRICE_PER_MTOK` (optional): the same for `CHATBOT_SMALL_MODEL`.
 
+**Chatbot document search (Optional):**
+
+Lets the chatbot search documents stored in a [Qdrant](https://qdrant.tech) database. Enabled when `QDRANT_URL` and `CHATBOT_EMBEDDING_MODEL` are set.
+
+- `CHATBOT_EMBEDDING_MODEL`: embedding model identifier on the gateway
+- `QDRANT_URL`: Qdrant server URL (set by `docker-compose.qdrant.yml`)
+- `QDRANT_API_KEY` (optional): Qdrant API key
+
 ### Frontend Environment Variables
 
 The frontend is configured with a number of `VITE_` variables that are baked into the React build. **For the production Docker build, set these in the root `.env.prod` file** — the Dockerfile copies `.env.prod` to `frontend-v2/.env` before `yarn build`, so `.env.prod` is the single source of truth. (`frontend-v2/.env` is used only for local development outside Docker.)
@@ -186,6 +194,30 @@ Verify with `sudo certbot renew --dry-run`.
 
 The application uses a PostgreSQL database. You should supply your own database and set the `DATABASE_URL` variable in the `.env.prod` file appropriately.
 
+## Document Search
+
+Run Qdrant with the `docker-compose.qdrant.yml` override, or set `QDRANT_URL` to an external server.
+
+Prepare `chunks.jsonl` as described in [`documents/README.md`](../documents/README.md), copy it to `./documents/` and load it:
+
+```bash
+docker compose exec app python manage.py documents ingest /documents/chunks.jsonl
+```
+
+Each ingest creates a new collection, makes it live and keeps the older ones, so you can switch back. To add new PDFs to the live collection instead, embedding only the new and changed chunks, add `--add`.
+
+To tell the collections apart, give a new one a tag, e.g. `--tag three-pdfs`. `documents list` shows the tags, and `switch`, `delete` and `--add --collection` accept a tag in place of the collection's name.
+
+Manage the collections with:
+
+```bash
+docker compose exec app python manage.py documents list
+docker compose exec app python manage.py documents switch <collection>
+docker compose exec app python manage.py documents delete --old
+```
+
+See `python manage.py documents <action> --help` for the options of each action, e.g. `documents ingest --help`.
+
 ## Help Pages & Tutorials
 
 To add tutorial videos to the application, you will need to create a csv file with the following columns (the first line of the csv file should be the column names):
@@ -226,3 +258,5 @@ If you are running the bundled PostgreSQL database (see the PostgreSQL section) 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.certbot.yml up -d
 ```
+
+For document search, also add `-f docker-compose.qdrant.yml` (see the Document Search section).

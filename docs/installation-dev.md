@@ -194,6 +194,23 @@ Memcached is installed as part of the system dependencies. Run memcached:
 memcached -p 11211
 ```
 
+## Document Search (Optional)
+
+Run a local [Qdrant](https://qdrant.tech) server:
+
+```bash
+docker run -d --name pkpdapp-qdrant -p 127.0.0.1:6333:6333 -e QDRANT__TELEMETRY_DISABLED=true -v pkpdapp-qdrant:/qdrant/storage qdrant/qdrant:v1.19.2
+```
+
+Set `QDRANT_URL=http://127.0.0.1:6333` and `CHATBOT_EMBEDDING_MODEL`, prepare `documents/chunks.jsonl` (see [`documents/README.md`](../documents/README.md)) and load it:
+
+```bash
+cd pkpdapp
+python manage.py documents ingest ../documents/chunks.jsonl
+```
+
+To add new PDFs to the live collection later, run the same command with `--add`. See `python manage.py documents --help` for the other actions (list, switch, delete) and `documents <action> --help` for their options.
+
 ## Git Workflow for Development
 
 - Create feature branches from the `develop` branch

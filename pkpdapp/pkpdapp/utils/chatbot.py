@@ -16,6 +16,7 @@ from pkpdapp.models import (
     PharmacokineticModel,
 )
 from pkpdapp.utils.chatbot_app_layout import APP_LAYOUT, CONTEXT_NOTES
+from pkpdapp.utils.chatbot_documents import document_search_enabled, search
 from pkpdapp.utils.chatbot_usage import (
     TokenUsage,
     get_model_pricing,
@@ -153,6 +154,28 @@ dAe/dt = CLr * C1
 
 where `CLr` is renal clearance and `C1` is the central concentration."""
 
+# Added to the system prompt only when document search is configured.
+DOCUMENT_SEARCH_PROMPT = """\
+[DOCUMENT SEARCH]
+You have a library of reference documents (PK/PD textbooks and papers) that \
+you can search with the search_documents tool. When a question touches on \
+PK/PD concepts, terminology, methods, best practice or theory, search the \
+documents before you answer and base your answer on what you find. Do not \
+answer such questions from memory alone. Skip the search for questions \
+about how to use the app, the user's own model or data, or small talk.
+
+The user cannot see the search or its results. When your answer draws on a \
+passage, cite it by its file name exactly as given and its pages, e.g. \
+(2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27), so the user can \
+find the source. Do not turn the file name into an author–year citation or a \
+description such as "the text by Mortensen", and do not refer to the \
+passages as if the user had read them.
+
+Search results are candidates, not answers. Use a passage only if it \
+actually bears on the question. Passages that are not relevant are simply \
+left out: do not mention them or the search, and answer from general \
+knowledge without a citation."""
+
 logger.info(
     "[chatbot] config: model=%s small_model=%s base_url=%s",
     settings.CHATBOT_MODEL,
@@ -251,6 +274,9 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     if catalog:
         parts.append(f"\n\n[LIBRARY MODELS]\n{catalog}")
 
+    if document_search_enabled():
+        parts.append(f"\n\n{DOCUMENT_SEARCH_PROMPT}")
+
     if conversation is not None:
         past_summaries = past_summaries_section(conversation)
         if past_summaries:
@@ -313,6 +339,31 @@ _STATIC_TOOLS = [
     },
 ]
 
+_SEARCH_DOCUMENTS_TOOL = {
+    "type": "function",
+    "name": "search_documents",
+    "description": (
+        "Search the app's library of reference documents (for example PK/PD "
+        "papers, textbooks and manuals) for passages relevant to a question. "
+        "Use it for questions about PK/PD concepts, methods, terminology or "
+        "best practice, before answering from memory. "
+        "This is a semantic search, so write the query as a short question or "
+        "statement about one topic. Returns the most relevant passages with "
+        "their source and pages. When your answer draws on a relevant "
+        "passage, cite its file name and pages."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "A short question or statement about one topic",
+            }
+        },
+        "required": ["query"],
+    },
+}
+
 # Limit repeated tool calls.
 MAX_TOOL_ROUNDS = 4
 
@@ -345,10 +396,45 @@ def _get_current_model_definition(conversation):
         return "Error looking up the current model definition."
 
 
+_SEARCH_RESULT_REMINDER = (
+    "These passages are candidates and may not be relevant. Use one only if "
+    "it bears on the question, and do not mention the others. The user "
+    "cannot see these passages: cite one you use by its file name and pages, "
+    "e.g. (file.pdf, pp. 3–4)."
+)
+
+
+def _search_documents(query):
+    try:
+        hits = search(get_client(), query)
+        passages = "\n\n".join(_format_hit(hit) for hit in hits)
+    except Exception:
+        logger.exception("[chatbot] tool search_documents error")
+        return "Error searching the documents."
+    if not hits:
+        return "No matching passages found."
+    return f"{_SEARCH_RESULT_REMINDER}\n\n{passages}"
+
+
+def _format_hit(hit):
+    source = f"From {hit.get('filename')}"
+    pages = hit.get("pages")
+    if pages:
+        first, last = pages[0], pages[-1]
+        source += f", p. {first}" if first == last else f", pp. {first}–{last}"
+    headings = hit.get("headings")
+    if headings:
+        source += f" ({' > '.join(headings)})"
+    return f"{source}:\n{hit.get('raw_text')}"
+
+
 def _execute_tool(name, arguments, conversation=None):
     """Execute a tool call and return the result string."""
     if name == "get_current_model_definition":
         return _get_current_model_definition(conversation)
+
+    if name == "search_documents":
+        return _search_documents(arguments.get("query", ""))
 
     if name == "get_library_model_definition":
         model_name = arguments.get("model_name", "")
@@ -543,6 +629,9 @@ def stream_chat_response(
         )
 
         pricing = get_model_pricing()
+        tools = _STATIC_TOOLS
+        if document_search_enabled():
+            tools = tools + [_SEARCH_DOCUMENTS_TOOL]
 
         yield _sse({"type": "start", "messageId": message_id})
 
@@ -556,10 +645,11 @@ def stream_chat_response(
                 model=settings.CHATBOT_MODEL,
                 instructions=instructions,
                 input=input_items,
-                tools=_STATIC_TOOLS,
+                tools=tools,
                 stream=True,
                 store=False,
                 reasoning={"effort": "low"},
+                tool_choice="none" if _round == MAX_TOOL_ROUNDS else "auto",
             )
 
             text_id = str(uuid.uuid4())

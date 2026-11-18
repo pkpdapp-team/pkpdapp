@@ -272,6 +272,14 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertNotIn("- their chat", prompt)
         self.assertNotIn("- this chat", prompt)
 
+    def test_system_prompt_mentions_document_search_only_when_configured(self):
+        with override_settings(QDRANT_URL=None, CHATBOT_EMBEDDING_MODEL=""):
+            self.assertNotIn("[DOCUMENT SEARCH]", chatbot._build_system_prompt())
+        with override_settings(
+            QDRANT_URL="http://qdrant:6333", CHATBOT_EMBEDDING_MODEL="embeddings"
+        ):
+            self.assertIn("[DOCUMENT SEARCH]", chatbot._build_system_prompt())
+
     def test_system_prompt_includes_the_app_layout(self):
         prompt = chatbot._build_system_prompt()
 
@@ -360,6 +368,92 @@ class ChatbotUtilsTestCase(TestCase):
         self.assertEqual(recorded.requests, 2)
         self.assertEqual(recorded.input_tokens, 400)
         self.assertEqual(recorded.output_tokens, 30)
+
+    def test_search_tool_formats_hits_with_source_and_pages(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [3, 4],
+            "headings": ["Theory"],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertIn("a.pdf", result)
+        self.assertIn("3–4", result)
+        self.assertIn("Theory", result)
+        self.assertIn("TMDD binding", result)
+
+    def test_search_tool_result_starts_with_the_relevance_reminder(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [3],
+            "headings": ["Theory"],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertTrue(result.startswith(chatbot._SEARCH_RESULT_REMINDER))
+
+    def test_search_tool_without_hits_has_no_reminder(self):
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[]),
+        ):
+            result = chatbot._execute_tool("search_documents", {"query": "TMDD"})
+        self.assertEqual(result, "No matching passages found.")
+
+    def test_search_tool_formats_hits_without_pages_or_headings(self):
+        hit = {
+            "filename": "a.pdf",
+            "pages": [],
+            "headings": [],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents", arguments={"query": "TMDD"}
+            )
+        self.assertIn("a.pdf", result)
+        self.assertIn("TMDD binding", result)
+
+    def test_search_tool_reports_a_hit_it_cannot_format(self):
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[{}]),
+            mock.patch.object(chatbot, "_format_hit", side_effect=KeyError("pages")),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents", arguments={"query": "TMDD"}
+            )
+        self.assertEqual(result, "Error searching the documents.")
+
+    def test_search_tool_is_offered_only_when_configured(self):
+        def offered_tools():
+            fake_client = mock.Mock()
+            fake_client.responses.create.return_value = [completed_event()]
+            with mock.patch.object(chatbot, "get_client", return_value=fake_client):
+                list(chatbot.stream_chat_response(self.conversation, "question"))
+            chat_call = fake_client.responses.create.call_args_list[0]
+            return [tool["name"] for tool in chat_call.kwargs["tools"]]
+
+        with override_settings(QDRANT_URL=None, CHATBOT_EMBEDDING_MODEL=""):
+            self.assertNotIn("search_documents", offered_tools())
+        with override_settings(
+            QDRANT_URL="http://qdrant:6333", CHATBOT_EMBEDDING_MODEL="embeddings"
+        ):
+            self.assertIn("search_documents", offered_tools())
 
     def test_stream_records_usage_and_cost(self):
         fake_client = mock.Mock()

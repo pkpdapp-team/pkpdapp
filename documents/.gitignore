@@ -1,0 +1,8 @@
+# only the scripts and docs here are committed, not the data
+*
+!.gitignore
+!README.md
+!*.py
+!requirements.txt
+!pdfs/
+!pdfs/.gitkeep
