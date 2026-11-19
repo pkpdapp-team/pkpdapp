@@ -33,3 +33,9 @@ See the [Architecture Overview](docs/architecture.md) for how these pieces fit t
 - Create feature branches from the `develop` branch and open pull requests against `develop` (not `master`).
 - Use conventional commits for commit messages.
 - Run the backend tests, style checks, and frontend tests before opening a PR — see the [Developer Installation Guide](docs/installation-dev.md#testing).
+
+## Development Notes
+
+- When you add a model field or model, update its `copy()` (used by `Project.copy`) or list it in `COPY_REGISTRY` / `NOT_COPIED` in `tests/test_models/test_copy_coverage.py` with a reason. The copy tests fail until you do.
+- If a model or serializer change alters the API, regenerate the OpenAPI spec (`pkpdapp/schema.yml`) and the frontend RTK Query client (`frontend-v2/src/app/backendApi.ts`), see [OpenAPI Specification & API Client Generation](docs/installation-dev.md#openapi-specification--api-client-generation).
+- If that changes API responses, also regenerate the frontend Storybook mocks with `python manage.py generate_storybook_mocks` (see [docs](docs/generate-storybook-mocks.md)) and commit the result.

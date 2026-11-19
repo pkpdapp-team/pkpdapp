@@ -34,3 +34,14 @@ class TestProtocolModel(TestCase):
         )
 
         self.assertTrue(isinstance(p, Protocol))
+
+    def test_dose_type_can_be_changed_and_saved(self):
+        c = Compound.objects.create(name='compound', description='')
+        p = Protocol.objects.create(name='protocol', compound=c)
+        self.assertEqual(p.dose_type, Protocol.DoseType.DIRECT)
+
+        p.dose_type = Protocol.DoseType.INDIRECT
+        p.save()
+
+        p.refresh_from_db()
+        self.assertEqual(p.dose_type, Protocol.DoseType.INDIRECT)

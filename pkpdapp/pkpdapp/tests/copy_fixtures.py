@@ -10,7 +10,6 @@
 import datetime
 
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 from pkpdapp.models import (
     Biomarker,
@@ -198,10 +197,32 @@ def build_maximal_project():
         has_bioavailability=True,
         has_saturation=True,
     )
+
     def var(qname):
         # structural changes (mappings, derived variables) rebuild the model's
         # variables, so always look them up fresh
         return pkpd_model.variables.get(qname=qname)
+
+    # --- a second model that uses the remaining structural CombinedModel
+    # options (alternative effect compartment, hill coefficient, a second PD
+    # model, anti-drug antibodies)
+    CombinedModel.objects.create(
+        name="second model",
+        project=project,
+        pk_model=PharmacokineticModel.objects.get(name="1-compartmental model"),
+        pk_effect_model=PharmacokineticModel.objects.get(
+            name="Effect compartment model (kin & kout)"
+        ),
+        has_effect=True,
+        has_anti_drug_antibodies=True,
+        pd_model=PharmacodynamicModel.objects.get(
+            name="Direct effect model (inhibitory)"
+        ),
+        has_hill_coefficient=True,
+        pd_model2=PharmacodynamicModel.objects.get(
+            name="Tumor growth model (linear)"
+        ),
+    )
 
     # --- covariates
     continuous = Covariate.objects.create(

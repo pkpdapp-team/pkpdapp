@@ -137,13 +137,6 @@ ALLOWED_AT_DEFAULT = {
     (m.Protocol, "amount_unit"): "optional",
     (m.Dataset, "datetime"): "set by auto_now",
     (m.BiomarkerType, "variable"): "set on all types",
-    # structural CombinedModel options: each selects a different library model
-    # structure, so covering them needs dedicated models (copy() is checked
-    # statically by test_copy_coverage meanwhile)
-    (m.CombinedModel, "pk_effect_model"): "needs a dedicated model",
-    (m.CombinedModel, "has_anti_drug_antibodies"): "needs a dedicated model",
-    (m.CombinedModel, "has_hill_coefficient"): "needs a dedicated model",
-    (m.CombinedModel, "pd_model2"): "needs a dedicated model",
 }
 
 

@@ -113,7 +113,6 @@ NOT_COPIED = {
 }
 
 
-
 def reachable_models():
     """Every model reachable from Project through reverse relations."""
     seen = set()
@@ -140,7 +139,9 @@ def copyable_fields(model):
 
 
 def copy_source(model):
-    return inspect.getsource(model.copy)
+    # Project.copy is a thin atomic wrapper around Project._copy
+    parts = [model.copy, getattr(model, "_copy", None)]
+    return "\n".join(inspect.getsource(f) for f in parts if f is not None)
 
 
 class TestCopyCoverage(SimpleTestCase):
