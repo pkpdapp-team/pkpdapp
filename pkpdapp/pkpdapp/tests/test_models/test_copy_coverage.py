@@ -40,6 +40,7 @@ COPY_REGISTRY = {
     m.Covariate: {"project": "set to new project"},
     m.CovariatePopulation: {},
     m.DerivedVariable: {
+        "read_only": "copies start writable; read_only is not carried over",
         "datetime": "auto timestamp",
         "pkpd_model": "set to new model",
     },
@@ -51,17 +52,27 @@ COPY_REGISTRY = {
         "dataset": "set to new dataset",
     },
     m.Dose: {
+        "read_only": "copies start writable; read_only is not carried over",
         "datetime": "auto timestamp",
         "protocol": "set to new protocol",
     },
     m.Subject: {"dataset": "set to new dataset", "protocol": "linked in Protocol.copy"},
     m.Biomarker: {"subject": "mapped to new subject"},
     m.CombinedModel: {
+        "read_only": "copies start writable; read_only is not carried over",
         "datetime": "auto timestamp",
         "project": "set to new project",
     },
-    m.PkpdMapping: {"datetime": "auto timestamp", "pkpd_model": "set to new model"},
-    m.TimeInterval: {"datetime": "auto timestamp", "pkpd_model": "set to new model"},
+    m.PkpdMapping: {
+        "read_only": "copies start writable; read_only is not carried over",
+        "datetime": "auto timestamp",
+        "pkpd_model": "set to new model",
+    },
+    m.TimeInterval: {
+        "read_only": "copies start writable; read_only is not carried over",
+        "datetime": "auto timestamp",
+        "pkpd_model": "set to new model",
+    },
     m.Variable: {
         "read_only": "copies start writable; read_only is not carried over",
         "datetime": "auto timestamp",
@@ -73,11 +84,13 @@ COPY_REGISTRY = {
     m.BiomarkerType: {"dataset": "set to new dataset"},
     m.CategoricalBiomarker: {"subject": "mapped to new subject"},
     m.Distribution: {
+        "read_only": "copies start writable; read_only is not carried over",
         "datetime": "auto timestamp",
         "correlations": "copied separately (CombinedModel.copy)",
         "variable": "set to new variable",
     },
     m.Correlation: {
+        "read_only": "copies start writable; read_only is not carried over",
         "distribution_1": "mapped to new distribution",
         "distribution_2": "mapped to new distribution",
         "datetime": "auto timestamp",

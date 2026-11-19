@@ -194,7 +194,6 @@ class DerivedVariable(StoredModel):
                 if self.covariate_id and covariate_map is not None
                 else self.covariate
             ),
-            "read_only": self.read_only,
             "type": self.type,
         }
         stored_mapping = DerivedVariable.objects.create(**stored_kwargs)

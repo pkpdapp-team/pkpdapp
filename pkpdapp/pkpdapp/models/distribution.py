@@ -54,7 +54,6 @@ class Distribution(StoredModel):
             variable=new_variable,
             pdf=self.pdf,
             variance=self.variance,
-            read_only=self.read_only,
         )
 
     def get_correlations(self):
@@ -163,7 +162,6 @@ class Correlation(StoredModel):
             distribution_1=new_1,
             distribution_2=new_2,
             coefficient=self.coefficient,
-            read_only=self.read_only,
         )
 
     def get_project(self):
