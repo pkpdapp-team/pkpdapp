@@ -355,12 +355,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             distribution_1__in=old_to_new_distribution,
             distribution_2__in=old_to_new_distribution,
         ):
-            Correlation.objects.create(
-                distribution_1=old_to_new_distribution[correlation.distribution_1_id],
-                distribution_2=old_to_new_distribution[correlation.distribution_2_id],
-                coefficient=correlation.coefficient,
-                read_only=correlation.read_only,
-            )
+            correlation.copy(old_to_new_distribution)
 
         for time_interval in self.time_intervals.all():
             time_interval.copy(stored_model)

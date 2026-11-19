@@ -181,6 +181,7 @@ class Compound(models.Model):
         kwargs = {
             "name": self.name,
             "description": self.description,
+            "use_efficacy": self.use_efficacy,
             "molecular_mass": self.molecular_mass,
             "molecular_mass_unit": self.molecular_mass_unit,
             "fraction_unbound_plasma": self.fraction_unbound_plasma,

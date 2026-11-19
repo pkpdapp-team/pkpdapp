@@ -108,9 +108,14 @@ class Project(models.Model):
             description=new_description,
             species=self.species,
             species_weight=self.species_weight,
+            species_weight_unit=self.species_weight_unit,
+            version=self.version,
+            tags=self.tags,
             compound=new_compound,
             created=new_created,
         )
+        new_project.pk_tags.set(self.pk_tags.all())
+        new_project.pd_tags.set(self.pd_tags.all())
         group_map = {}
         new_dataset = self.datasets.first().copy(new_project, group_map)
         new_project.datasets.set([new_dataset])
