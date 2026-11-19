@@ -236,10 +236,10 @@ class TestCopyApi(TestCase):
         new_project = m.Project.objects.get(pk=response.data["id"])
         self.assertNotEqual(new_project.pk, self.project.pk)
         self.assertEqual(new_project.name, "Copy of empty")
-        self.assertEqual(
-            list(new_project.projectaccess_set.values_list("user__username", "read_only")),
-            [("api_user", False)],
+        access = new_project.projectaccess_set.values_list(
+            "user__username", "read_only"
         )
+        self.assertEqual(list(access), [("api_user", False)])
 
     def test_user_without_access_cannot_copy(self):
         self.client.force_authenticate(user=self.other)

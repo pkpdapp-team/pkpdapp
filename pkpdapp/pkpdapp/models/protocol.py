@@ -153,7 +153,10 @@ class Protocol(StoredModel):
         else:
             new_dataset = new_project.datasets.first()
         # a protocol belongs to the project's compound, which is itself copied
-        if self.compound_id is not None and self.compound_id == self.project.compound_id:
+        if (
+            self.compound_id is not None
+            and self.compound_id == self.project.compound_id
+        ):
             new_compound = new_project.compound
         else:
             new_compound = self.compound
