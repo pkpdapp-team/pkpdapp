@@ -167,14 +167,14 @@ answer such questions from memory alone. Skip the search for questions \
 about how to use the app, the user's own model or data, or small talk.
 
 The user cannot see the search or its results. When your answer draws on a \
-passage, cite it using the markdown link given in the passage's heading, copied \
-exactly, e.g. \
-[2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27](/api/documents/3/download/#page=25), \
-so the user can open the source. If a passage has no link, cite it by its \
-file name exactly as given and its pages, e.g. \
-(2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27). Do not turn the file name into an author–year citation or a \
-description such as "the text by Mortensen", and do not refer to the \
-passages as if the user had read them.
+passage, cite it using the markdown link given in the passage's heading, \
+copied exactly, e.g. \
+[2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27]\
+(/api/documents/3/download/#page=25), so the user can open the source. If a \
+passage has no link, cite it by its file name exactly as given and its pages, \
+e.g. (2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27). Do not turn \
+the file name into an author–year citation or a description such as "the text \
+by Mortensen", and do not refer to the passages as if the user had read them.
 
 Search results are candidates, not answers. Use a passage only if it \
 actually bears on the question. Passages that are not relevant are simply \

@@ -139,7 +139,6 @@ class Command(BaseCommand):
             )
             self.stdout.write(f"{collection} is now live")
 
-
     def handle_switch(self, collection, force, **options):
         chatbot_documents.switch_collection(collection=collection, force=force)
         self.stdout.write(f"{collection} is now live")

@@ -14,14 +14,48 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Document',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('file', models.FileField(upload_to='documents/')),
-                ('filename', models.CharField(help_text="The name the document's chunks refer to it by.", max_length=255)),
+                (
+                    'filename',
+                    models.CharField(
+                        help_text="The name the document's chunks refer to it by.",
+                        max_length=255,
+                    ),
+                ),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('project', models.ForeignKey(blank=True, help_text='Leave empty for a document shared by all projects.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='pkpdapp.project')),
+                (
+                    'project',
+                    models.ForeignKey(
+                        blank=True,
+                        help_text='Leave empty for a document shared by all projects.',
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='documents',
+                        to='pkpdapp.project',
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('project', 'filename'), name='unique_document_filename_per_project'), models.UniqueConstraint(condition=models.Q(('project__isnull', True)), fields=('filename',), name='unique_shared_document_filename')],
+                'constraints': [
+                    models.UniqueConstraint(
+                        fields=('project', 'filename'),
+                        name='unique_document_filename_per_project',
+                    ),
+                    models.UniqueConstraint(
+                        condition=models.Q(('project__isnull', True)),
+                        fields=('filename',),
+                        name='unique_shared_document_filename',
+                    ),
+                ],
             },
         ),
     ]
