@@ -477,6 +477,7 @@ class Variable(StoredModel):
         self.lower_threshold = variable.lower_threshold
         self.upper_threshold = variable.upper_threshold
         self.unit_per_body_weight = variable.unit_per_body_weight
+        self.secondary_unit = variable.secondary_unit
 
         # copy protocols
         for p in variable.protocols.all():
@@ -496,9 +497,4 @@ class Variable(StoredModel):
         source_distribution = getattr(variable, "distribution", None)
         Distribution.objects.filter(variable=self).delete()
         if source_distribution is not None:
-            Distribution.objects.create(
-                variable=self,
-                pdf=source_distribution.pdf,
-                variance=source_distribution.variance,
-                read_only=source_distribution.read_only,
-            )
+            source_distribution.copy(self)

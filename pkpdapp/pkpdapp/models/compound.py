@@ -201,6 +201,11 @@ class Compound(models.Model):
             "target2_molecular_mass_unit": self.target2_molecular_mass_unit,
         }
         new_compound = Compound.objects.create(**kwargs)
+        # use_efficacy points at one of this compound's experiments, so it must
+        # be remapped to the new copy rather than shared with the original
         for efficacy_experiment in self.efficacy_experiments.all():
-            efficacy_experiment.copy(new_compound)
+            new_experiment = efficacy_experiment.copy(new_compound)
+            if efficacy_experiment.id == self.use_efficacy_id:
+                new_compound.use_efficacy = new_experiment
+                new_compound.save()
         return new_compound

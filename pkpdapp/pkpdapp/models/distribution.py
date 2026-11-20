@@ -45,6 +45,17 @@ class Distribution(StoredModel):
         help_text="other distributions this one is correlated with",
     )
 
+    def copy(self, new_variable):
+        """Create a copy of this distribution for ``new_variable``.
+
+        Correlations are not copied here, see :meth:`Correlation.copy`.
+        """
+        return Distribution.objects.create(
+            variable=new_variable,
+            pdf=self.pdf,
+            variance=self.variance,
+        )
+
     def get_correlations(self):
         """Return every :class:`Correlation` this distribution takes part in.
 
@@ -135,6 +146,23 @@ class Correlation(StoredModel):
                 name="unique_correlation_pair",
             ),
         ]
+
+    def copy(self, distribution_map):
+        """Copy this correlation between the new distributions.
+
+        ``distribution_map`` maps old distribution ids to the new
+        :class:`Distribution` objects. Returns ``None`` if either end of the
+        correlation is not in the map.
+        """
+        new_1 = distribution_map.get(self.distribution_1_id)
+        new_2 = distribution_map.get(self.distribution_2_id)
+        if new_1 is None or new_2 is None:
+            return None
+        return Correlation.objects.create(
+            distribution_1=new_1,
+            distribution_2=new_2,
+            coefficient=self.coefficient,
+        )
 
     def get_project(self):
         """Return the project this correlation belongs to (via its variables)."""

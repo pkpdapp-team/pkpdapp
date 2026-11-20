@@ -161,10 +161,17 @@ class BiomarkerType(models.Model):
             display_unit=self.display_unit,
             stored_time_unit=self.stored_time_unit,
             display_time_unit=self.display_time_unit,
+            color=self.color,
+            axis=self.axis,
             variable=new_variable,
         )
         # copy biomarkers
         for b in self.biomarkers.all():
+            new_subject = new_dataset.subjects.get(
+                id_in_dataset=b.subject.id_in_dataset
+            )
+            b.copy(new_biomarker_type, new_subject)
+        for b in self.categorical_biomarkers.all():
             new_subject = new_dataset.subjects.get(
                 id_in_dataset=b.subject.id_in_dataset
             )

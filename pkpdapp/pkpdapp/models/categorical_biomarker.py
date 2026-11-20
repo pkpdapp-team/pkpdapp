@@ -44,3 +44,15 @@ class CategoricalBiomarker(models.Model):
 
     def get_project(self):
         return self.biomarker_type.get_project()
+
+    def copy(self, new_biomarker_type, new_subject):
+        """
+        Create a copy of this biomarker with a different biomarker type and
+        subject.
+        """
+        return CategoricalBiomarker.objects.create(
+            time=self.time,
+            subject=new_subject,
+            biomarker_type=new_biomarker_type,
+            value=self.value,
+        )

@@ -7,7 +7,7 @@ from pkpdapp.models import (
     Unit,
 )
 from django.utils import timezone
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.urls import reverse
 
@@ -98,7 +98,13 @@ class Project(models.Model):
     def copy(self, user=None):
         """
         Copy the project, including all datasets, models and users.
+
+        The copy is atomic: if anything fails, nothing is left behind.
         """
+        with transaction.atomic():
+            return self._copy(user)
+
+    def _copy(self, user):
         new_name = f"Copy of {self.name}"
         new_description = self.description
         new_created = timezone.now()
@@ -108,13 +114,19 @@ class Project(models.Model):
             description=new_description,
             species=self.species,
             species_weight=self.species_weight,
+            species_weight_unit=self.species_weight_unit,
+            version=self.version,
+            tags=self.tags,
             compound=new_compound,
             created=new_created,
         )
+        new_project.pk_tags.set(self.pk_tags.all())
+        new_project.pd_tags.set(self.pd_tags.all())
         group_map = {}
-        new_dataset = self.datasets.first().copy(new_project, group_map)
-        new_project.datasets.set([new_dataset])
-        new_project.save()
+        # a project may not have a dataset yet
+        dataset = self.datasets.first()
+        if dataset is not None:
+            dataset.copy(new_project, group_map)
 
         # copy project-level groups (e.g. the base "Sim-Group 1") directly so
         # they survive even when no protocol references them. Dataset-level

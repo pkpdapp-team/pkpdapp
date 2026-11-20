@@ -278,7 +278,6 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             "pd_model": self.pd_model,
             "pd_model2": self.pd_model2,
             "time_max": self.time_max,
-            "read_only": self.read_only,
             "has_saturation": self.has_saturation,
             "has_extravascular": self.has_extravascular,
             "has_effect": self.has_effect,
@@ -355,12 +354,7 @@ class CombinedModel(MyokitModelMixin, StoredModel):
             distribution_1__in=old_to_new_distribution,
             distribution_2__in=old_to_new_distribution,
         ):
-            Correlation.objects.create(
-                distribution_1=old_to_new_distribution[correlation.distribution_1_id],
-                distribution_2=old_to_new_distribution[correlation.distribution_2_id],
-                coefficient=correlation.coefficient,
-                read_only=correlation.read_only,
-            )
+            correlation.copy(old_to_new_distribution)
 
         for time_interval in self.time_intervals.all():
             time_interval.copy(stored_model)
@@ -817,7 +811,6 @@ class PkpdMapping(StoredModel):
             "pkpd_model": new_pkpd_model,
             "pk_variable": new_pk_variable,
             "pd_variable": new_pd_variable,
-            "read_only": self.read_only,
         }
         stored_mapping = PkpdMapping.objects.create(**stored_kwargs)
         return stored_mapping
@@ -847,7 +840,6 @@ class TimeInterval(StoredModel):
             "start_time": self.start_time,
             "end_time": self.end_time,
             "unit": self.unit,
-            "read_only": self.read_only,
         }
         stored_mapping = TimeInterval.objects.create(**stored_kwargs)
         return stored_mapping
