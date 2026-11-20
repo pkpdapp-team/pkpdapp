@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
 from pkpdapp.models import (
+    Document,
     ChatbotUsage,
     CombinedModel,
     Compound,
@@ -427,6 +428,26 @@ class ChatbotUtilsTestCase(TestCase):
             )
         self.assertIn("a.pdf", result)
         self.assertIn("TMDD binding", result)
+
+    def test_search_tool_links_the_cited_document(self):
+        document = Document.objects.create(filename="a.pdf", file="documents/a.pdf")
+        hit = {
+            "filename": "a.pdf",
+            "pages": [3, 4],
+            "headings": [],
+            "raw_text": "TMDD binding",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents", arguments={"query": "TMDD"}
+            )
+        self.assertIn(
+            f"[a.pdf, pp. 3–4](/api/documents/{document.id}/download/#page=3)", result
+        )
 
     def test_search_tool_reports_a_hit_it_cannot_format(self):
         with (

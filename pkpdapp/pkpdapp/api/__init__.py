@@ -43,5 +43,6 @@ from .views import (
     EfficacyExperimentView,
     ChatbotView,
     ConversationViewSet,
+    DocumentViewSet,
     MessageViewSet,
 )

@@ -50,4 +50,5 @@ from .simulation import (
 )
 from .tag import Tag
 from .conversation import Conversation, Message
+from .document import Document
 from .chatbot_usage import ChatbotUsage

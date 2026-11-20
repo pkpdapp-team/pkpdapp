@@ -29,6 +29,15 @@ class Command(BaseCommand):
         )
         ingest.add_argument("chunks_path", type=Path)
         ingest.add_argument(
+            "--pdfs",
+            type=Path,
+            required=True,
+            help=(
+                "directory holding the original PDF of every file named in the "
+                "chunks; they are copied to MEDIA_ROOT so the chatbot can link them"
+            ),
+        )
+        ingest.add_argument(
             "--tag",
             help="a short name for the new collection, accepted in place of its name",
         )
@@ -103,13 +112,17 @@ class Command(BaseCommand):
                 f"{c['chunks']:>6}  {c['embedding_model']}"
             )
 
-    def handle_ingest(self, chunks_path, add, collection, force, tag, **options):
+    def handle_ingest(self, chunks_path, pdfs, add, collection, force, tag, **options):
         if collection and not add:
             raise CommandError("--collection only works with --add")
         if tag and add:
             raise CommandError("--tag only works without --add")
         with chunks_path.open() as chunks_file:
             chunks = [json.loads(line) for line in chunks_file if line.strip()]
+        pdf_paths = chatbot_documents.check_pdfs(chunks, pdfs)
+        # first, so that every citation the new chunks can make has a link
+        chatbot_documents.store_pdfs(pdf_paths)
+        self.stdout.write(f"{len(pdf_paths)} PDFs stored")
         if add:
             result = chatbot_documents.ingest_add(
                 client=get_client(),
@@ -125,6 +138,7 @@ class Command(BaseCommand):
                 client=get_client(), chunks=chunks, tag=tag
             )
             self.stdout.write(f"{collection} is now live")
+
 
     def handle_switch(self, collection, force, **options):
         chatbot_documents.switch_collection(collection=collection, force=force)

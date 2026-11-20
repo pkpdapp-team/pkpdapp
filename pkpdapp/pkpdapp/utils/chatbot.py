@@ -9,9 +9,11 @@ import uuid
 
 from django.conf import settings
 from django.core.cache import cache
+from django.urls import reverse
 
 from pkpdapp.models import (
     Conversation,
+    Document,
     PharmacodynamicModel,
     PharmacokineticModel,
 )
@@ -165,9 +167,12 @@ answer such questions from memory alone. Skip the search for questions \
 about how to use the app, the user's own model or data, or small talk.
 
 The user cannot see the search or its results. When your answer draws on a \
-passage, cite it by its file name exactly as given and its pages, e.g. \
-(2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27), so the user can \
-find the source. Do not turn the file name into an author–year citation or a \
+passage, cite it using the markdown link given in the passage's heading, copied \
+exactly, e.g. \
+[2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27](/api/documents/3/download/#page=25), \
+so the user can open the source. If a passage has no link, cite it by its \
+file name exactly as given and its pages, e.g. \
+(2008-Mortensen-IntroductionToPKPDModelling.pdf, pp. 25–27). Do not turn the file name into an author–year citation or a \
 description such as "the text by Mortensen", and do not refer to the \
 passages as if the user had read them.
 
@@ -350,7 +355,7 @@ _SEARCH_DOCUMENTS_TOOL = {
         "This is a semantic search, so write the query as a short question or "
         "statement about one topic. Returns the most relevant passages with "
         "their source and pages. When your answer draws on a relevant "
-        "passage, cite its file name and pages."
+        "passage, cite it with the link given in its heading."
     ),
     "parameters": {
         "type": "object",
@@ -399,15 +404,18 @@ def _get_current_model_definition(conversation):
 _SEARCH_RESULT_REMINDER = (
     "These passages are candidates and may not be relevant. Use one only if "
     "it bears on the question, and do not mention the others. The user "
-    "cannot see these passages: cite one you use by its file name and pages, "
-    "e.g. (file.pdf, pp. 3–4)."
+    "cannot see these passages: cite one you use with the markdown link "
+    "given in its heading, copied exactly, e.g. "
+    "[file.pdf, pp. 3–4](/api/documents/1/download/#page=3). If a heading has "
+    "no link, cite it by file name and pages, e.g. (file.pdf, pp. 3–4)."
 )
 
 
 def _search_documents(query):
     try:
         hits = search(get_client(), query)
-        passages = "\n\n".join(_format_hit(hit) for hit in hits)
+        document_ids = _document_ids(hits)
+        passages = "\n\n".join(_format_hit(hit, document_ids) for hit in hits)
     except Exception:
         logger.exception("[chatbot] tool search_documents error")
         return "Error searching the documents."
@@ -416,12 +424,30 @@ def _search_documents(query):
     return f"{_SEARCH_RESULT_REMINDER}\n\n{passages}"
 
 
-def _format_hit(hit):
-    source = f"From {hit.get('filename')}"
+def _document_ids(hits):
+    """Map the file names of the hits to the ids of their shared Documents."""
+    filenames = {hit.get("filename") for hit in hits}
+    return dict(
+        Document.objects.filter(project__isnull=True, filename__in=filenames)
+        .exclude(file="")
+        .values_list("filename", "id")
+    )
+
+
+def _format_hit(hit, document_ids):
+    filename = hit.get("filename")
     pages = hit.get("pages")
+    label = filename
+    anchor = ""
     if pages:
         first, last = pages[0], pages[-1]
-        source += f", p. {first}" if first == last else f", pp. {first}–{last}"
+        label += f", p. {first}" if first == last else f", pp. {first}–{last}"
+        anchor = f"#page={first}"
+    if filename in document_ids:
+        url = reverse("document-download", args=[document_ids[filename]])
+        source = f"From [{label}]({url}{anchor})"
+    else:
+        source = f"From {label}"
     headings = hit.get("headings")
     if headings:
         source += f" ({' > '.join(headings)})"

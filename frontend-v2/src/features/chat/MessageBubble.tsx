@@ -1,5 +1,5 @@
 import { FC, memo } from "react";
-import { Box, Stack, Typography, alpha, keyframes } from "@mui/material";
+import { Box, Link, Stack, Typography, alpha, keyframes } from "@mui/material";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/a11y-light.css";
@@ -16,6 +16,12 @@ const cursorBlink = keyframes`
 
 /* ---- Markdown component overrides ---- */
 const mdComponents: Partial<Components> = {
+  // Document citations are links to a PDF: open them in a new tab.
+  a: ({ href, children }) => (
+    <Link href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </Link>
+  ),
   blockquote: ({ children }) => (
     <Box
       component="blockquote"

@@ -59,3 +59,4 @@ from .covariate_population import CovariatePopulationView
 from .tag import TagView
 from .chatbot import ChatbotView
 from .conversation import ConversationViewSet, MessageViewSet
+from .document import DocumentViewSet

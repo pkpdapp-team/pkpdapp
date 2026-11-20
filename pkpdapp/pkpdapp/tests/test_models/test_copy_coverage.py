@@ -110,6 +110,7 @@ NOT_COPIED = {
     m.Conversation: "chat history is per user/project and not duplicated",
     m.Message: "chat history is per user/project and not duplicated",
     m.PharmacodynamicModel: "library model referenced by CombinedModel, not copied",
+    m.Document: "shared library documents and project uploads are not duplicated",
 }
 
 
