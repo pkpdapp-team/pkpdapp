@@ -23,6 +23,24 @@ export const UserMessage: Story = {
   },
 };
 
+export const AssistantMessageWithCitation: Story = {
+  args: {
+    parts: [
+      {
+        type: "text",
+        text: "Clearance is the volume of plasma cleared per unit time ([intro.pdf, pp. 3–4](/api/documents/1/download/#page=3)).",
+      },
+    ],
+    isUser: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: "intro.pdf, pp. 3–4" });
+    expect(link).toHaveAttribute("href", "/api/documents/1/download/#page=3");
+    expect(link).toHaveAttribute("target", "_blank");
+  },
+};
+
 export const AssistantMessage: Story = {
   args: {
     parts: [{ type: "text", text: "Clearance is estimated from the **dose** and concentration data." }],

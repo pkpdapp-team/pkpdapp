@@ -206,7 +206,7 @@ Set `QDRANT_URL=http://127.0.0.1:6333` and `CHATBOT_EMBEDDING_MODEL`, prepare `d
 
 ```bash
 cd pkpdapp
-python manage.py documents ingest ../documents/chunks.jsonl
+python manage.py documents ingest ../documents/chunks.jsonl --pdfs ../documents/pdfs
 ```
 
 To add new PDFs to the live collection later, run the same command with `--add`. See `python manage.py documents --help` for the other actions (list, switch, delete) and `documents <action> --help` for their options.

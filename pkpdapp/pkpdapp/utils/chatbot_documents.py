@@ -3,15 +3,20 @@
 # is released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import filecmp
 import hashlib
 import logging
 import re
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 from django.conf import settings
+from django.core.files import File
 from portkey_ai import Portkey
 from qdrant_client import QdrantClient, models
+
+from pkpdapp.models import Document
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +31,48 @@ _qdrant = None
 
 class DocumentsError(Exception):
     """A refused document collection operation, e.g. an unknown collection."""
+
+
+def check_pdfs(chunks: list[dict], pdf_dir: Path) -> dict[str, Path]:
+    """Find the PDF for every file name in the chunks, or raise DocumentsError."""
+    if not pdf_dir.is_dir():
+        raise DocumentsError(f"{pdf_dir} is not a directory")
+    names = sorted({c["filename"] for c in chunks})
+    unsafe = [name for name in names if Path(name).name != name]
+    if unsafe:
+        raise DocumentsError(f"file names must not contain a path: {', '.join(unsafe)}")
+    paths = {name: pdf_dir / name for name in names}
+    missing = [name for name, path in paths.items() if not path.is_file()]
+    if missing:
+        raise DocumentsError(f"no PDF in {pdf_dir} for: {', '.join(missing)}")
+    return paths
+
+
+def _same_file(document: Document, path: Path) -> bool:
+    try:
+        return filecmp.cmp(document.file.path, path, shallow=False)
+    except (OSError, NotImplementedError, ValueError):  # missing, or not on disk
+        return False
+
+
+def store_pdfs(paths: dict[str, Path]) -> None:
+    """Copy PDFs into MEDIA_ROOT as shared Documents, replacing changed ones.
+
+    The new file is saved before the old one is removed, and a Document is only
+    created once its file is stored, so a failure never leaves a Document
+    without a file.
+    """
+    for name, path in paths.items():
+        document = Document.objects.filter(project=None, filename=name).first()
+        if document is None:
+            document = Document(project=None, filename=name)
+        elif document.file and _same_file(document, path):
+            continue
+        old_name = document.file.name
+        with path.open("rb") as pdf:
+            document.file.save(name, File(pdf), save=True)
+        if old_name and old_name != document.file.name:
+            document.file.storage.delete(old_name)
 
 
 def get_qdrant() -> QdrantClient:

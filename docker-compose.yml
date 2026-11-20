@@ -1,6 +1,8 @@
 version: "2"
 volumes:
   db:
+  # uploaded and ingested documents (MEDIA_ROOT), kept across rebuilds
+  media:
 services:
   app:
     image: pkpdapp
@@ -13,6 +15,7 @@ services:
       # certbot issuance/renewal and for the http->https redirect).
       - 80:80
     volumes:
+      - media:/app/media
       # Manual-cert deploy: place pkpdapp.crt / pkpdapp.key in ./.certs.
       # Mounted as a directory (not individual files) so replacing the certs is
       # picked up on an nginx reload. A dedicated /etc/ssl/pkpdapp subdir keeps

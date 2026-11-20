@@ -5,6 +5,9 @@
 #
 import pkpdapp.tests  # noqa: F401
 import io
+import json
+import tempfile
+from pathlib import Path
 from unittest import mock
 
 from django.core.management import call_command
@@ -12,6 +15,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from qdrant_client import QdrantClient, models
 
+from pkpdapp.models import Document
 from pkpdapp.utils import chatbot_documents
 from pkpdapp.utils.chatbot_documents import DocumentsError
 
@@ -258,8 +262,83 @@ class DocumentSearchTestCase(TestCase):
 
     def test_documents_ingest_refuses_tag_together_with_add(self):
         with self.assertRaises(CommandError):
-            call_command("documents", "ingest", "chunks.jsonl", "--add", "--tag", "x")
+            call_command(
+                "documents",
+                "ingest",
+                "chunks.jsonl",
+                "--pdfs",
+                ".",
+                "--add",
+                "--tag",
+                "x",
+            )
 
     def test_documents_delete_refuses_names_together_with_old(self):
         with self.assertRaises(CommandError):
             call_command("documents", "delete", "pkpdapp_documents_a", "--old")
+
+
+class StorePdfsTest(TestCase):
+    def setUp(self):
+        self.media = tempfile.TemporaryDirectory()
+        self.addCleanup(self.media.cleanup)
+        self.pdfs = tempfile.TemporaryDirectory()
+        self.addCleanup(self.pdfs.cleanup)
+        override = override_settings(MEDIA_ROOT=self.media.name)
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def write_pdf(self, name, content=b"%PDF-1.4 test"):
+        (Path(self.pdfs.name) / name).write_bytes(content)
+
+    def test_check_pdfs_names_every_missing_pdf(self):
+        self.write_pdf("a.pdf")
+        with self.assertRaisesRegex(DocumentsError, "b.pdf"):
+            chatbot_documents.check_pdfs(CHUNKS, Path(self.pdfs.name))
+        self.assertEqual(Document.objects.count(), 0)
+
+    def test_check_pdfs_refuses_file_names_with_a_path(self):
+        chunk = {**CHUNKS[0], "filename": "../a.pdf"}
+        with self.assertRaisesRegex(DocumentsError, "path"):
+            chatbot_documents.check_pdfs([chunk], Path(self.pdfs.name))
+
+    def test_store_pdfs_restores_a_file_missing_from_media(self):
+        self.write_pdf("a.pdf")
+        paths = chatbot_documents.check_pdfs(CHUNKS[:1], Path(self.pdfs.name))
+        chatbot_documents.store_pdfs(paths)
+        Document.objects.get().file.storage.delete(Document.objects.get().file.name)
+
+        chatbot_documents.store_pdfs(paths)
+
+        with Document.objects.get().file.open("rb") as stored:
+            self.assertEqual(stored.read(), b"%PDF-1.4 test")
+
+    def test_store_pdfs_makes_shared_documents_and_is_repeatable(self):
+        self.write_pdf("a.pdf")
+        self.write_pdf("b.pdf")
+        paths = chatbot_documents.check_pdfs(CHUNKS, Path(self.pdfs.name))
+
+        chatbot_documents.store_pdfs(paths)
+        self.write_pdf("a.pdf", b"%PDF-1.4 new")
+        chatbot_documents.store_pdfs(paths)
+
+        self.assertEqual(Document.objects.count(), 2)
+        document = Document.objects.get(filename="a.pdf")
+        self.assertIsNone(document.project)
+        with document.file.open("rb") as stored:
+            self.assertEqual(stored.read(), b"%PDF-1.4 new")
+        self.assertEqual(len(list(Path(self.media.name, "documents").iterdir())), 2)
+
+    def test_ingest_command_refuses_before_ingesting_when_a_pdf_is_missing(self):
+        self.write_pdf("a.pdf")
+        chunks_path = Path(self.pdfs.name) / "chunks.jsonl"
+        chunks_path.write_text("\n".join(json.dumps(c) for c in CHUNKS))
+        with (
+            mock.patch.object(chatbot_documents, "ingest_new") as ingest_new,
+            self.assertRaises(CommandError),
+        ):
+            call_command(
+                "documents", "ingest", str(chunks_path), "--pdfs", self.pdfs.name
+            )
+        ingest_new.assert_not_called()
+        self.assertEqual(Document.objects.count(), 0)

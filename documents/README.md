@@ -32,6 +32,11 @@ the app loads into the document search (`manage.py documents ingest`).
 
     python convert.py pdfs/new.pdf   # convert only the new PDF
     python make_chunks.py
-    cd ../pkpdapp && python manage.py documents ingest ../documents/chunks.jsonl --add
+    cd ../pkpdapp && python manage.py documents ingest ../documents/chunks.jsonl --pdfs ../documents/pdfs --add
 
 With `--add`, only new and changed chunks are embedded into the live collection.
+
+`--pdfs` is required: every file named in the chunks must be in that directory.
+The PDFs are copied into `MEDIA_ROOT/documents/` and recorded as shared
+`Document`s (re-ingesting replaces them), and the chatbot links its citations
+to them. `documents delete` and `documents switch` leave the `Document`s alone.

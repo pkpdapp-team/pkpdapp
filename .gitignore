@@ -42,3 +42,4 @@ certbot-webroot/
 /uv.lock
 /.python-version
 /frontend-v2/package-lock.json
+/pkpdapp/media/

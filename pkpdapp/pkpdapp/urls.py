@@ -47,6 +47,7 @@ router.register("pharmacodynamic", api.PharmacodynamicView, basename="pharmacody
 router.register("combined_model", api.CombinedModelView, basename="combined_model")
 router.register("simulation", api.SimulationViewSet, basename="simulation")
 router.register("conversations", api.ConversationViewSet, basename="conversation")
+router.register("documents", api.DocumentViewSet, basename="document")
 router.register("messages", api.MessageViewSet, basename="message")
 
 urlpatterns = [

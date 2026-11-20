@@ -1467,6 +1467,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/DatasetCsv'
           description: ''
+  /api/documents/:
+    get:
+      operationId: documents_list
+      description: Shared documents, plus those of projects the user has access to.
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/:
+    get:
+      operationId: documents_retrieve
+      description: Shared documents, plus those of projects the user has access to.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/download/:
+    get:
+      operationId: documents_download_retrieve
+      description: Shared documents, plus those of projects the user has access to.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
   /api/dose/:
     get:
       operationId: dose_list
@@ -4667,6 +4726,30 @@ components:
           description: variance of the ETA (normal random effect)
       required:
       - id
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        filename:
+          type: string
+          readOnly: true
+          description: The name the document's chunks refer to it by.
+        project:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Leave empty for a document shared by all projects.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - filename
+      - id
+      - project
     Dose:
       type: object
       properties:

@@ -522,6 +522,21 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.datasetCsv,
       }),
     }),
+    documentsList: build.query<DocumentsListApiResponse, DocumentsListApiArg>({
+      query: () => ({ url: `/api/documents/` }),
+    }),
+    documentsRetrieve: build.query<
+      DocumentsRetrieveApiResponse,
+      DocumentsRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/documents/${queryArg.id}/` }),
+    }),
+    documentsDownloadRetrieve: build.query<
+      DocumentsDownloadRetrieveApiResponse,
+      DocumentsDownloadRetrieveApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/documents/${queryArg.id}/download/` }),
+    }),
     doseList: build.query<DoseListApiResponse, DoseListApiArg>({
       query: () => ({ url: `/api/dose/` }),
     }),
@@ -1661,6 +1676,17 @@ export type DatasetCsvUpdateApiArg = {
   /** A unique integer value identifying this dataset. */
   id: number;
   datasetCsv: DatasetCsv;
+};
+export type DocumentsListApiResponse = /** status 200  */ DocumentRead[];
+export type DocumentsListApiArg = void;
+export type DocumentsRetrieveApiResponse = /** status 200  */ DocumentRead;
+export type DocumentsRetrieveApiArg = {
+  id: string;
+};
+export type DocumentsDownloadRetrieveApiResponse =
+  /** status 200  */ DocumentRead;
+export type DocumentsDownloadRetrieveApiArg = {
+  id: string;
 };
 export type DoseListApiResponse = /** status 200  */ DoseRead[];
 export type DoseListApiArg = void;
@@ -3429,6 +3455,15 @@ export type DatasetCsv = {
   name: string;
   csv: string;
 };
+export type Document = {};
+export type DocumentRead = {
+  id: number;
+  /** The name the document's chunks refer to it by. */
+  filename: string;
+  /** Leave empty for a document shared by all projects. */
+  project: number | null;
+  created_at: string;
+};
 export type PatchedDose = {
   /** starting time point of dose, see protocol for units */
   start_time?: number;
@@ -4849,6 +4884,9 @@ export const {
   useDatasetPartialUpdateMutation,
   useDatasetDestroyMutation,
   useDatasetCsvUpdateMutation,
+  useDocumentsListQuery,
+  useDocumentsRetrieveQuery,
+  useDocumentsDownloadRetrieveQuery,
   useDoseListQuery,
   useDoseCreateMutation,
   useDoseRetrieveQuery,

@@ -198,10 +198,10 @@ The application uses a PostgreSQL database. You should supply your own database 
 
 Run Qdrant with the `docker-compose.qdrant.yml` override, or set `QDRANT_URL` to an external server.
 
-Prepare `chunks.jsonl` as described in [`documents/README.md`](../documents/README.md), copy it to `./documents/` and load it:
+Prepare `chunks.jsonl` as described in [`documents/README.md`](../documents/README.md), copy it and the original PDFs to `./documents/` (`chunks.jsonl` and `pdfs/`) and load it. The PDFs are copied into the app's media volume so the chatbot can link its citations to them:
 
 ```bash
-docker compose exec app python manage.py documents ingest /documents/chunks.jsonl
+docker compose exec app python manage.py documents ingest /documents/chunks.jsonl --pdfs /documents/pdfs
 ```
 
 Each ingest creates a new collection, makes it live and keeps the older ones, so you can switch back. To add new PDFs to the live collection instead, embedding only the new and changed chunks, add `--add`.
