@@ -1262,6 +1262,22 @@ const injectedRtkApi = api.injectEndpoints({
     userList: build.query<UserListApiResponse, UserListApiArg>({
       query: () => ({ url: `/api/user/` }),
     }),
+    userSearch: build.query<UserSearchApiResponse, UserSearchApiArg>({
+      query: (queryArg) => ({
+        url: `/api/user/search/`,
+        params: { q: queryArg.q },
+      }),
+    }),
+    userPlaceholderCreate: build.mutation<
+      UserPlaceholderCreateApiResponse,
+      UserPlaceholderCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/user/placeholder/`,
+        method: "POST",
+        body: { username: queryArg.username },
+      }),
+    }),
     userCreate: build.mutation<UserCreateApiResponse, UserCreateApiArg>({
       query: (queryArg) => ({
         url: `/api/user/`,
@@ -2152,6 +2168,24 @@ export type UnitDestroyApiArg = {
 };
 export type UserListApiResponse = /** status 200  */ UserRead[];
 export type UserListApiArg = void;
+export type UserSearchResult = {
+  /** null for directory users that have not logged in yet */
+  id: number | null;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  is_placeholder: boolean;
+};
+export type UserSearchApiResponse = /** status 200  */ UserSearchResult[];
+export type UserSearchApiArg = {
+  q: string;
+};
+export type UserPlaceholderCreateApiResponse = /** status 201  */ UserRead;
+export type UserPlaceholderCreateApiArg = {
+  username: string;
+};
 export type UserCreateApiResponse = /** status 201  */ UserRead;
 export type UserCreateApiArg = {
   user: User;
@@ -4562,6 +4596,8 @@ export type ProfileRead = {
   id: number;
   /** the user's department */
   department?: string;
+  /** user was added via a project share but has not yet logged in */
+  is_placeholder?: boolean;
   user: number;
 };
 export type UserRead = {
@@ -4975,6 +5011,8 @@ export const {
   useUnitPartialUpdateMutation,
   useUnitDestroyMutation,
   useUserListQuery,
+  useUserSearchQuery,
+  useUserPlaceholderCreateMutation,
   useUserCreateMutation,
   useUserRetrieveQuery,
   useUserUpdateMutation,

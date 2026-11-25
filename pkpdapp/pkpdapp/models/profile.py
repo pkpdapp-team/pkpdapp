@@ -20,3 +20,7 @@ class Profile(models.Model):
         default="",
         help_text="the user's department",
     )
+    is_placeholder = models.BooleanField(
+        default=False,
+        help_text="user was added via a project share but has not yet logged in",
+    )

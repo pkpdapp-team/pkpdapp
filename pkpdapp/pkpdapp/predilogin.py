@@ -157,10 +157,12 @@ class PrediBackend(BaseBackend):
             user.is_active = is_superuser or is_user
             user.save()
 
+            # a successful login turns any placeholder into a real user
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.is_placeholder = False
             if details.get("department"):
-                profile, _ = Profile.objects.get_or_create(user=user)
                 profile.department = details["department"]
-                profile.save()
+            profile.save()
 
             if not user.is_active:
                 user = None
