@@ -78,7 +78,8 @@ model or data since the fit, point out that the results may no longer \
 apply and suggest running the fit again. Keep the first reply to a \
 shared fit to a few sentences, humbly: whether it looks reasonable and, \
 if something stands out, what the user could look into, in plain \
-language rather than field names. The user can then ask about details
+language rather than field names. The settings available are described \
+in [FITTING OPTIONS] below. The user can then ask about details
 - Look up the user's own combined model definition, as currently \
 assembled from its PK/PD components. This gives the complete \
 combined picture of the user's current model configuration. \
@@ -155,6 +156,30 @@ dAe/dt = CLr * C1
 ```
 
 where `CLr` is renal clearance and `C1` is the central concentration."""
+
+# Constant description of the Simulations-page fit options, mirroring what the
+# UI offers (OptimisationSettings.tsx). Not user-specific, so it lives in the
+# system prompt rather than [CURRENT USER CONTEXT].
+FITTING_OPTIONS_PROMPT = """\
+[FITTING OPTIONS]
+Fits are run from the Simulations page. inputs.method and \
+noise[].noise_model in [OPTIMISATION RESULTS] hold the keys below.
+
+Optimisers (all gradient-free; default cmaes; max iterations default 1000):
+- pso: Particle Swarm Optimisation
+- cmaes: CMA-ES
+- nelder-mead: Nelder-Mead simplex
+
+Noise models (set per observation), for observation y and prediction yhat:
+- additive: y ~ N(yhat, sigma^2)
+- multiplicative (default): log(y) ~ N(log(yhat), sigma^2); near-zero \
+observations are excluded
+- combined: y ~ N(yhat, sigma_a^2 + sigma_m^2 * yhat^2); two sigmas
+
+Fitted parameters are those with sliders on the Simulations page. Each \
+parameter and sigma has a start value, bounds and an optional log scale. \
+By default only the selected observations and visible subject groups \
+are fitted."""
 
 # Added to the system prompt only when document search is configured.
 DOCUMENT_SEARCH_PROMPT = """\
@@ -275,7 +300,11 @@ def _build_system_prompt(context=None, conversation=None, indent=None):
     """Build the system prompt with library models and user context."""
     catalog = _build_model_catalog()
     app_layout_json = APP_LAYOUT.model_dump_json(exclude_none=True, indent=indent)
-    parts = [SYSTEM_PROMPT, f"\n\n[APP LAYOUT]\n{app_layout_json}"]
+    parts = [
+        SYSTEM_PROMPT,
+        f"\n\n{FITTING_OPTIONS_PROMPT}",
+        f"\n\n[APP LAYOUT]\n{app_layout_json}",
+    ]
     if catalog:
         parts.append(f"\n\n[LIBRARY MODELS]\n{catalog}")
 

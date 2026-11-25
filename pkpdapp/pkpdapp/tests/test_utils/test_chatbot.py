@@ -281,6 +281,19 @@ class ChatbotUtilsTestCase(TestCase):
         ):
             self.assertIn("[DOCUMENT SEARCH]", chatbot._build_system_prompt())
 
+    def test_system_prompt_lists_the_fitting_options(self):
+        from pkpdapp.models.myokit_model_mixin import MyokitModelMixin
+
+        prompt = chatbot._build_system_prompt()
+
+        self.assertIn("[FITTING OPTIONS]", prompt)
+        # the three optimisers the UI offers, all valid backend methods
+        for key in ["pso", "cmaes", "nelder-mead"]:
+            self.assertIn(f"- {key}:", prompt)
+            self.assertIn(key, MyokitModelMixin._OPTIMISE_METHODS)
+        for key in ["additive", "multiplicative", "combined"]:
+            self.assertIn(f"- {key}", prompt)
+
     def test_system_prompt_includes_the_app_layout(self):
         prompt = chatbot._build_system_prompt()
 
