@@ -1,0 +1,7 @@
+Hello {{ user.first_name|default:user.username }},
+
+{{ shared_by_name }} has shared the project "{{ project.name }}" with you ({% if read_only %}read-only{% else %}read and write{% endif %} access).
+
+Open PKPDApp: {{ app_url }}
+
+If you have not used PKPDApp before, log in at {{ app_url }} with your usual credentials and the project will appear in your project list.

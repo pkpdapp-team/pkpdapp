@@ -45,6 +45,26 @@ const users = [
 
 const currentUser = users[0];
 
+// A directory user who has never logged in: returned by search with id null.
+const directoryUser = {
+  id: null,
+  username: "cdavis",
+  first_name: "Carol",
+  last_name: "Davis",
+  email: "carol.davis@pkpdapp.com",
+  department: "",
+  is_placeholder: true,
+};
+const placeholderUser = {
+  id: 4,
+  username: "cdavis",
+  first_name: "Carol",
+  last_name: "Davis",
+  email: "carol.davis@pkpdapp.com",
+  profile: { id: 4, department: "", is_placeholder: true, user: 4 },
+  project_set: [],
+} as unknown as UserRead;
+
 // A harness that supplies the react-hook-form control/append/remove that
 // UserAccess needs, mirroring how Project.tsx wires the dialog. See
 // Parameters.population.stories.tsx for the same pattern.
@@ -82,6 +102,34 @@ const meta: Meta<typeof UserAccess> = {
       handlers: [
         http.get("/api/user", async () => {
           return HttpResponse.json(users, { status: 200 });
+        }),
+        http.get("/api/user/search", async ({ request }) => {
+          const q = (new URL(request.url).searchParams.get("q") || "")
+            .toLowerCase();
+          const local = users
+            .filter((u) =>
+              `${u.username} ${u.first_name} ${u.last_name}`
+                .toLowerCase()
+                .includes(q),
+            )
+            .map((u) => ({
+              id: u.id,
+              username: u.username,
+              first_name: u.first_name,
+              last_name: u.last_name,
+              email: u.email,
+              department: u.profile.department,
+              is_placeholder: false,
+            }));
+          const directory = `${directoryUser.username} ${directoryUser.first_name} ${directoryUser.last_name}`
+            .toLowerCase()
+            .includes(q)
+            ? [directoryUser]
+            : [];
+          return HttpResponse.json([...local, ...directory], { status: 200 });
+        }),
+        http.post("/api/user/placeholder", async () => {
+          return HttpResponse.json(placeholderUser, { status: 201 });
         }),
       ],
     },
@@ -177,5 +225,24 @@ export const RemoveUser: Story = {
     await waitFor(() =>
       expect(screen.queryByText("asmith")).not.toBeInTheDocument(),
     );
+  },
+};
+
+export const AddUserNotYetLoggedIn: Story = {
+  play: async ({ userEvent }) => {
+    const combobox = await screen.findByRole("combobox", { name: /Add user/i });
+    await userEvent.click(combobox);
+    await userEvent.type(combobox, "cda");
+
+    const option = await screen.findByRole("option", {
+      name: /cdavis \(Carol Davis\)/,
+    });
+    expect(within(option).getByText("not yet logged in")).toBeInTheDocument();
+    await userEvent.click(option);
+
+    // A placeholder user is created and added to the table.
+    const row = await waitFor(() => rowForUser("cdavis"));
+    expect(within(row).getByText("Carol Davis")).toBeInTheDocument();
+    expect(within(row).getByText("not yet logged in")).toBeInTheDocument();
   },
 };

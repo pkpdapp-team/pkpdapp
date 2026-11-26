@@ -33,7 +33,11 @@ from .subject_group import SubjectGroupSerializer
 from .dataset import DatasetSerializer, DatasetCsvSerializer
 from .subject import SubjectSerializer
 from .unit import UnitSerializer
-from .user import UserSerializer
+from .user import (
+    UserSerializer,
+    UserSearchResultSerializer,
+    PlaceholderRequestSerializer,
+)
 from .simulation import (
     SimulationSerializer,
     SimulationYAxisSerializer,

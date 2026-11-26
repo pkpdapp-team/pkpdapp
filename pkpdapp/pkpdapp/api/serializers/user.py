@@ -29,3 +29,18 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'first_name',
             'last_name', 'email', 'profile', 'project_set'
         )
+
+
+class UserSearchResultSerializer(serializers.Serializer):
+    """A user found by search; id is null for directory-only users."""
+    id = serializers.IntegerField(allow_null=True)
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    department = serializers.CharField()
+    is_placeholder = serializers.BooleanField()
+
+
+class PlaceholderRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()

@@ -1295,6 +1295,24 @@ const injectedRtkApi = api.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    userPlaceholderCreate: build.mutation<
+      UserPlaceholderCreateApiResponse,
+      UserPlaceholderCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/user/placeholder/`,
+        method: "POST",
+        body: queryArg.placeholderRequest,
+      }),
+    }),
+    userSearch: build.query<UserSearchApiResponse, UserSearchApiArg>({
+      query: (queryArg) => ({
+        url: `/api/user/search/`,
+        params: {
+          q: queryArg.q,
+        },
+      }),
+    }),
     variableList: build.query<VariableListApiResponse, VariableListApiArg>({
       query: (queryArg) => ({
         url: `/api/variable/`,
@@ -2177,6 +2195,16 @@ export type UserDestroyApiResponse = unknown;
 export type UserDestroyApiArg = {
   /** A unique integer value identifying this user. */
   id: number;
+};
+export type UserPlaceholderCreateApiResponse = /** status 200  */
+  | UserRead
+  | /** status 201  */ UserRead;
+export type UserPlaceholderCreateApiArg = {
+  placeholderRequest: PlaceholderRequest;
+};
+export type UserSearchApiResponse = /** status 200  */ UserSearchResult[];
+export type UserSearchApiArg = {
+  q: string;
 };
 export type VariableListApiResponse = /** status 200  */ VariableRead[];
 export type VariableListApiArg = {
@@ -4556,12 +4584,16 @@ export type User = {
 export type Profile = {
   /** the user's department */
   department?: string;
+  /** user was added via a project share but has not yet logged in */
+  is_placeholder?: boolean;
   user: number;
 };
 export type ProfileRead = {
   id: number;
   /** the user's department */
   department?: string;
+  /** user was added via a project share but has not yet logged in */
+  is_placeholder?: boolean;
   user: number;
 };
 export type UserRead = {
@@ -4590,6 +4622,18 @@ export type PatchedUserRead = {
   email?: string;
   profile?: ProfileRead;
   project_set?: number[];
+};
+export type PlaceholderRequest = {
+  username: string;
+};
+export type UserSearchResult = {
+  id: number | null;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  is_placeholder: boolean;
 };
 export type PdfEnum = "normal" | "lognormal" | "logit";
 export type Distribution = {
@@ -4980,6 +5024,8 @@ export const {
   useUserUpdateMutation,
   useUserPartialUpdateMutation,
   useUserDestroyMutation,
+  useUserPlaceholderCreateMutation,
+  useUserSearchQuery,
   useVariableListQuery,
   useVariableCreateMutation,
   useVariableRetrieveQuery,
