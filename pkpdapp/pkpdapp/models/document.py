@@ -30,6 +30,20 @@ class Document(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Status(models.TextChoices):
+        PROCESSING = "processing"
+        READY = "ready"
+        FAILED = "failed"
+
+    # Shared documents are ingested offline, so they default to ready. A project
+    # upload is processing until its chunks are searchable.
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.READY
+    )
+    error = models.TextField(blank=True, default="")
+    chunk_count = models.PositiveIntegerField(null=True, blank=True)
+    processing_started_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(

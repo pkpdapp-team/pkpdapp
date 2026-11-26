@@ -16,6 +16,10 @@ envsubst '$PORT $HOST_NAME $SSL_CERT_PATH $SSL_KEY_PATH' \
 # Set the Sites-framework domain from HOST_NAME so allauth's verification
 # emails reference the real host instead of the default "example.com".
 (python manage.py update_site)
+# Uploads still processing were cut off by the restart, and some chunks of
+# deleted documents may be left over. Best effort: never stops the server from
+# starting (e.g. if Qdrant is not up yet), and bounded in time.
+(timeout 120 python manage.py documents cleanup || echo "documents cleanup skipped")
 (memcached -l 127.0.0.1 -p 11211 -m "${MEMCACHED_MEMORY_MB:-64}" -U 0) &
 (gunicorn pkpdapp.wsgi:application --bind unix:/run/gunicorn.socket --workers 3) &
 nginx -g "daemon off;"

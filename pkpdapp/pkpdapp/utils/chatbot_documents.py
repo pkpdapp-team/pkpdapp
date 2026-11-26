@@ -10,6 +10,7 @@ import re
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 from django.conf import settings
 from django.core.files import File
@@ -25,6 +26,13 @@ COLLECTION_PREFIX = f"{COLLECTION}_"  # each ingest makes a collection named lik
 EMBEDDING_BATCH_SIZE = 128
 SCROLL_BATCH_SIZE = 1000
 SEARCH_LIMIT = 5
+MAX_ERROR_LENGTH = 1000  # of the reason stored on a failed Document
+# Uploaded documents live in their own collection, which is never swapped, so
+# a new shared collection does not lose them.
+PROJECT_COLLECTION = "pkpdapp_project_documents"
+# Project hits come first but leave room for shared ones, as a semantic search
+# always returns something, however weak.
+PROJECT_SEARCH_LIMIT = 3
 
 _qdrant = None
 
@@ -157,7 +165,9 @@ def ingest_new(client: Portkey, chunks: list[dict], tag: str | None = None) -> s
         qdrant=qdrant,
         collection=collection,
         chunks=chunks,
-        create=True,
+        create_collection=lambda size: _create_collection(
+            qdrant, collection, size, complete=False
+        ),
     )
     # marked complete only once every chunk is stored, so an unfinished
     # collection (e.g. from a failed ingest) can be told apart
@@ -214,11 +224,23 @@ def ingest_add(
         qdrant=qdrant,
         collection=collection,
         chunks=to_store,
-        create=False,
     )
     result = {"stored": len(to_store), "unchanged": len(chunks) - len(to_store)}
     logger.info(f"{collection}: {result}")
     return result
+
+
+def _create_collection(
+    qdrant: QdrantClient, collection: str, size: int, complete: bool
+) -> None:
+    qdrant.create_collection(
+        collection,
+        vectors_config=models.VectorParams(size=size, distance=models.Distance.COSINE),
+        metadata={
+            "embedding_model": settings.CHATBOT_EMBEDDING_MODEL,
+            "complete": complete,
+        },
+    )
 
 
 def _store(
@@ -226,32 +248,24 @@ def _store(
     qdrant: QdrantClient,
     collection: str,
     chunks: list[dict],
-    create: bool,
+    create_collection: Callable[[int], None] | None = None,
+    point_id_fn: Callable[[dict], str] = point_id,
 ) -> None:
     """Embed the chunks and store them in `collection`.
 
-    With `create`, the collection is created from the first batch, since the
-    vector size is only known once something is embedded.
+    `create_collection`, if given, is called with the vector size before the
+    first batch is stored: the size is only known once something is embedded.
     """
     for start in range(0, len(chunks), EMBEDDING_BATCH_SIZE):
         batch = chunks[start : start + EMBEDDING_BATCH_SIZE]
         vectors = embed(client, [chunk["text"] for chunk in batch])
-        if create and start == 0:
-            qdrant.create_collection(
-                collection,
-                vectors_config=models.VectorParams(
-                    size=len(vectors[0]), distance=models.Distance.COSINE
-                ),
-                metadata={
-                    "embedding_model": settings.CHATBOT_EMBEDDING_MODEL,
-                    "complete": False,
-                },
-            )
+        if create_collection is not None and start == 0:
+            create_collection(len(vectors[0]))
         qdrant.upsert(
             collection,
             points=[
                 models.PointStruct(
-                    id=point_id(chunk=chunk),
+                    id=point_id_fn(chunk),
                     vector=vector,
                     payload={**chunk, "hash": content_hash(chunk=chunk)},
                 )
@@ -272,20 +286,28 @@ def _stored_hashes(
             )
         ]
     )
-    hashes = {}
+    return {
+        str(point.id): point.payload.get("hash")
+        for point in _scroll_all(
+            qdrant, collection, scroll_filter=only_these_files, with_payload=["hash"]
+        )
+    }
+
+
+def _scroll_all(qdrant: QdrantClient, collection: str, **scroll_args):
+    """Every point of the collection (that matches the filter), page by page."""
     offset = None
     while True:
         points, offset = qdrant.scroll(
             collection,
-            scroll_filter=only_these_files,
             limit=SCROLL_BATCH_SIZE,
             offset=offset,
-            with_payload=["hash"],
             with_vectors=False,
+            **scroll_args,
         )
-        hashes.update({str(p.id): p.payload.get("hash") for p in points})
+        yield from points
         if offset is None:
-            return hashes
+            return
 
 
 def switch_alias(qdrant: QdrantClient, new_collection: str) -> None:
@@ -369,11 +391,244 @@ def _has_text(hit: dict) -> bool:
     return isinstance(text, str) and bool(text.strip())
 
 
-def search(client: Portkey, query: str) -> list[dict]:
-    [vector] = embed(client, [query])
-    # fetch extra, so dropping hits without text still leaves SEARCH_LIMIT
-    response = get_qdrant().query_points(
-        COLLECTION, query=vector, limit=SEARCH_LIMIT * 2
+def project_point_id(chunk: dict) -> str:
+    """A stable id for a project chunk; the project is part of it, so two
+    projects can upload files of the same name."""
+    key = f"project/{chunk['project_id']}/{chunk['filename']}#{chunk['chunk_index']}"
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, key))
+
+
+def _project_filter(key: str, value: int) -> models.Filter:
+    return models.Filter(
+        must=[models.FieldCondition(key=key, match=models.MatchValue(value=value))]
     )
-    hits = [{**(hit.payload or {}), "score": hit.score} for hit in response.points]
-    return [hit for hit in hits if _has_text(hit)][:SEARCH_LIMIT]
+
+
+def _ensure_project_collection(qdrant: QdrantClient, size: int) -> None:
+    """Create the project collection, with the indexes its filters use."""
+    if qdrant.collection_exists(PROJECT_COLLECTION):
+        return
+    try:
+        _create_collection(qdrant, PROJECT_COLLECTION, size, complete=True)
+    except Exception:
+        # another worker may have created it between the check and the create
+        if not qdrant.collection_exists(PROJECT_COLLECTION):
+            raise
+    for field in ("project_id", "document_id"):
+        qdrant.create_payload_index(
+            PROJECT_COLLECTION,
+            field_name=field,
+            field_schema=models.PayloadSchemaType.INTEGER,
+        )
+
+
+def project_collection_info(qdrant: QdrantClient) -> dict | None:
+    """The size and embedding model of the project collection, if it exists."""
+    if not qdrant.collection_exists(PROJECT_COLLECTION):
+        return None
+    info = qdrant.get_collection(PROJECT_COLLECTION)
+    return {
+        "chunks": info.points_count,
+        "embedding_model": (info.config.metadata or {}).get("embedding_model"),
+    }
+
+
+def _project_collection_model(qdrant: QdrantClient) -> str | None:
+    """The embedding model of the project collection; None if there is none."""
+    info = project_collection_info(qdrant=qdrant)
+    return info["embedding_model"] if info else None
+
+
+def add_project_document(
+    client: Portkey, document: Document, chunks: list[dict]
+) -> int:
+    """Embed the chunks of a project's document, replacing any it had stored.
+
+    Returns the number of chunks stored.
+    """
+    if document.project_id is None:
+        raise DocumentsError("only a project's documents are stored here")
+    if not chunks:
+        raise DocumentsError("no text found in the document")
+    qdrant = get_qdrant()
+    model = _project_collection_model(qdrant=qdrant)
+    if model is not None and model != settings.CHATBOT_EMBEDDING_MODEL:
+        raise DocumentsError(
+            f"project documents were embedded with {model!r}, not "
+            f"{settings.CHATBOT_EMBEDDING_MODEL!r}; run manage.py documents "
+            "rebuild-projects"
+        )
+    tagged = [
+        {
+            **chunk,
+            "filename": document.filename,
+            "project_id": document.project_id,
+            "document_id": document.id,
+        }
+        for chunk in chunks
+    ]
+    # a retry or a re-upload must not leave stale chunks behind
+    delete_project_document(document_id=document.id)
+    _store(
+        client=client,
+        qdrant=qdrant,
+        collection=PROJECT_COLLECTION,
+        chunks=tagged,
+        create_collection=lambda size: _ensure_project_collection(qdrant, size),
+        point_id_fn=project_point_id,
+    )
+    return len(tagged)
+
+
+def delete_project_document(document_id: int) -> None:
+    """Remove the stored chunks of a project's document."""
+    qdrant = get_qdrant()
+    if not qdrant.collection_exists(PROJECT_COLLECTION):
+        return
+    qdrant.delete(
+        PROJECT_COLLECTION,
+        points_selector=models.FilterSelector(
+            filter=_project_filter("document_id", document_id)
+        ),
+    )
+
+
+def delete_orphan_project_chunks() -> int:
+    """Remove the chunks of documents that no longer exist.
+
+    The cleanup when a document is deleted is best effort (e.g. Qdrant may be
+    down), so this catches what it missed. Returns the number of deleted
+    documents whose chunks were removed.
+    """
+    qdrant = get_qdrant()
+    if not qdrant.collection_exists(PROJECT_COLLECTION):
+        return 0
+    stored = {
+        point.payload.get("document_id")
+        for point in _scroll_all(
+            qdrant, PROJECT_COLLECTION, with_payload=["document_id"]
+        )
+    }
+    existing = set(
+        Document.objects.filter(project__isnull=False, id__in=stored).values_list(
+            "id", flat=True
+        )
+    )
+    # a chunk without a document id belongs to no document either
+    orphans = sorted(stored - existing - {None})
+    conditions = []
+    if orphans:
+        conditions.append(
+            models.FieldCondition(
+                key="document_id", match=models.MatchAny(any=orphans)
+            )
+        )
+    if None in stored:
+        conditions.append(
+            models.IsEmptyCondition(
+                is_empty=models.PayloadField(key="document_id")
+            )
+        )
+    if conditions:
+        qdrant.delete(
+            PROJECT_COLLECTION,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(should=conditions)
+            ),
+        )
+    return len(orphans)
+
+
+def rebuild_project_documents(client: Portkey) -> dict:
+    """Embed every project document again with the current embedding model.
+
+    Needed after the embedding model changes. The stored chunk texts are
+    reused, so the PDFs are only read again for documents with none stored.
+    """
+    qdrant = get_qdrant()
+    stored: dict[int, list[dict]] = {}
+    if qdrant.collection_exists(PROJECT_COLLECTION):
+        for point in _scroll_all(qdrant, PROJECT_COLLECTION, with_payload=True):
+            payload = {k: v for k, v in point.payload.items() if k != "hash"}
+            stored.setdefault(payload["document_id"], []).append(payload)
+        qdrant.delete_collection(PROJECT_COLLECTION)
+
+    rebuilt, failed = 0, []
+    documents = Document.objects.filter(
+        project__isnull=False, status=Document.Status.READY
+    )
+    for document in documents:
+        try:
+            chunks = sorted(
+                stored.get(document.id, []), key=lambda chunk: chunk["chunk_index"]
+            )
+            if not chunks:
+                from pkpdapp.utils.document_chunking import chunk_pdf
+
+                chunks = chunk_pdf(Path(document.file.path), document.filename)
+            document.chunk_count = add_project_document(
+                client=client, document=document, chunks=chunks
+            )
+            document.save(update_fields=["chunk_count"])
+            rebuilt += 1
+        except Exception as error:
+            logger.exception(f"could not rebuild {document.filename}")
+            # shown as failed, so the user can retry it
+            record_failure(document_id=document.id, error=error)
+            failed.append(document.filename)
+    return {"rebuilt": rebuilt, "failed": failed}
+
+
+def record_failure(document_id: int, error: Exception) -> None:
+    """Mark a project document failed, with no half-searchable chunks left."""
+    try:
+        delete_project_document(document_id=document_id)
+    except Exception:
+        logger.exception(f"could not clean up document {document_id}")
+    message = str(error) or type(error).__name__
+    Document.objects.filter(pk=document_id).update(
+        status=Document.Status.FAILED,
+        error=message[:MAX_ERROR_LENGTH],
+        chunk_count=None,
+    )
+
+
+def _hits(response, **extra) -> list[dict]:
+    hits = [
+        {**(hit.payload or {}), "score": hit.score, **extra}
+        for hit in response.points
+    ]
+    return [hit for hit in hits if _has_text(hit)]
+
+
+def _project_hits(
+    qdrant: QdrantClient, vector: list[float], project_id: int
+) -> list[dict]:
+    try:
+        if _project_collection_model(qdrant=qdrant) != settings.CHATBOT_EMBEDDING_MODEL:
+            return []  # none uploaded yet, or embedded with another model
+        response = qdrant.query_points(
+            PROJECT_COLLECTION,
+            query=vector,
+            query_filter=_project_filter("project_id", project_id),
+            limit=PROJECT_SEARCH_LIMIT * 2,
+        )
+    except Exception:
+        # the shared documents can still answer
+        logger.exception("project document search failed")
+        return []
+    return _hits(response, project=True)[:PROJECT_SEARCH_LIMIT]
+
+
+def search(client: Portkey, query: str, project_id: int | None = None) -> list[dict]:
+    """The best passages for the query: the project's own documents first,
+    then the shared ones, at most SEARCH_LIMIT in all."""
+    [vector] = embed(client, [query])
+    qdrant = get_qdrant()
+    hits = []
+    if project_id is not None:
+        hits = _project_hits(qdrant=qdrant, vector=vector, project_id=project_id)
+    # fetch extra, so dropping hits without text still leaves enough
+    response = qdrant.query_points(COLLECTION, query=vector, limit=SEARCH_LIMIT * 2)
+    hits += _hits(response, project=False)
+    return hits[:SEARCH_LIMIT]

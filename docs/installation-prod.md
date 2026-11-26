@@ -99,6 +99,7 @@ Lets the chatbot search documents stored in a [Qdrant](https://qdrant.tech) data
 - `CHATBOT_EMBEDDING_MODEL`: embedding model identifier on the gateway
 - `QDRANT_URL`: Qdrant server URL (set by `docker-compose.qdrant.yml`)
 - `QDRANT_API_KEY` (optional): Qdrant API key
+- `DOCUMENT_UPLOAD_MAX_BYTES` (optional): the largest PDF a user can upload to a project, 50 MB by default (nginx allows 55 MB; raise `client_max_body_size` in `nginx.default.template` with it)
 
 ### Frontend Environment Variables
 
@@ -198,11 +199,35 @@ The application uses a PostgreSQL database. You should supply your own database 
 
 Run Qdrant with the `docker-compose.qdrant.yml` override, or set `QDRANT_URL` to an external server.
 
-Prepare `chunks.jsonl` as described in [`documents/README.md`](../documents/README.md), copy it and the original PDFs to `./documents/` (`chunks.jsonl` and `pdfs/`) and load it. The PDFs are copied into the app's media volume so the chatbot can link its citations to them:
+Loading the shared documents takes two steps: chunking the PDFs, which is slow and best done on a development machine, and ingesting the chunks, which embeds them into Qdrant on the server.
+
+### Chunking the PDFs
+
+Work from the `pkpdapp/` folder, in the app's Python environment (docling is in `requirements.txt`, with the CPU build of torch; for a GPU, install a CUDA build of torch on top). Put the PDFs in `documents/pdfs/` and run:
+
+```bash
+python manage.py documents chunk
+```
+
+Reading the PDFs is the slow step. Each PDF is read once and the result is kept in `documents/docling/`, so a PDF that already has one is skipped. The chunks of all documents are rebuilt from there on every run, which is fast, and written to `documents/chunks.jsonl`, one chunk per line. The `documents/` folder is ignored by git (except its README) and excluded from the Docker build.
+
+To add a PDF later, read only the new one; `chunks.jsonl` is still rewritten with the chunks of all documents:
+
+```bash
+python manage.py documents chunk ../documents/pdfs/new.pdf
+```
+
+Other options: `--formulas` reads formulas as LaTeX (slow), and `--pdf-dir` and `--work-dir` use other folders. See `documents chunk --help`. The chunking itself is `pkpdapp/pkpdapp/utils/document_chunking.py`, which the app also uses for the PDFs that users upload to a project, so both make the same chunks.
+
+### Ingesting the chunks
+
+Copy `chunks.jsonl` and the original PDFs to `./documents/` on the server (`chunks.jsonl` and `pdfs/`; the `docling/` folder is only a cache and is not needed) and load them. Only the server needs access to the gateway and Qdrant, because the embedding happens there. The PDFs are copied into the app's media volume so the chatbot can link its citations to them, so every file named in the chunks must be in the `--pdfs` folder:
 
 ```bash
 docker compose exec app python manage.py documents ingest /documents/chunks.jsonl --pdfs /documents/pdfs
 ```
+
+The PDFs are recorded as shared documents (ingesting again replaces them). `documents delete` and `documents switch` leave them alone.
 
 Each ingest creates a new collection, makes it live and keeps the older ones, so you can switch back. To add new PDFs to the live collection instead, embedding only the new and changed chunks, add `--add`.
 
@@ -215,6 +240,22 @@ docker compose exec app python manage.py documents list
 docker compose exec app python manage.py documents switch <collection>
 docker compose exec app python manage.py documents delete --old
 ```
+
+### Project uploads
+
+Users can upload a PDF to a project, and the chatbot then searches it before the shared documents. The app reads the PDF (with [docling](https://github.com/docling-project/docling), which takes from seconds to minutes) and embeds its chunks in a separate Qdrant collection, `pkpdapp_project_documents`, in a background thread of the web process. Uploads are not part of the shared collections, so `documents ingest` and `documents switch` never lose them. A document shows as `processing` until it is searchable, and as `failed`, with a reason, if it could not be read or embedded; the user can retry it.
+
+Deleting a document or its project removes its chunks. `documents list` also shows the project collection.
+
+The chunks of a collection are embedded with one embedding model. If you change `CHATBOT_EMBEDDING_MODEL` (e.g. for a new shared collection), project documents embedded with the old model are skipped by the search until you embed them again:
+
+```bash
+docker compose exec app python manage.py documents rebuild-projects
+```
+
+Project documents are not searchable while this runs. A document that cannot be rebuilt is marked `failed`, so its owner can retry it; if the command is interrupted, run it again, which re-reads the PDFs of any document left without chunks.
+
+When the server starts, `start-server.sh` runs `documents cleanup`. It marks uploads that were still processing as failed, because a restart stops their processing, and removes the chunks of project documents that no longer exist. It never stops the server from starting. You can run it yourself at any time.
 
 See `python manage.py documents <action> --help` for the options of each action, e.g. `documents ingest --help`.
 

@@ -9,6 +9,7 @@ import uuid
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Q
 from django.urls import reverse
 
 from pkpdapp.models import (
@@ -185,11 +186,14 @@ are fitted."""
 DOCUMENT_SEARCH_PROMPT = """\
 [DOCUMENT SEARCH]
 You have a library of reference documents (PK/PD textbooks and papers) that \
-you can search with the search_documents tool. When a question touches on \
-PK/PD concepts, terminology, methods, best practice or theory, search the \
-documents before you answer and base your answer on what you find. Do not \
-answer such questions from memory alone. Skip the search for questions \
-about how to use the app, the user's own model or data, or small talk.
+you can search with the search_documents tool. The project may also have \
+documents the user uploaded; the search lists passages from those first. \
+When a question touches on PK/PD concepts, terminology, methods, best \
+practice or theory, search the documents before you answer and base your \
+answer on what you find. Do not answer such questions from memory alone. \
+Skip the search for questions about how to use the app, the user's own \
+model or data, or small talk. Do search when the user asks about their \
+uploaded documents.
 
 The user cannot see the search or its results. When your answer draws on a \
 passage, cite it using the markdown link given in the passage's heading, \
@@ -440,9 +444,16 @@ _SEARCH_RESULT_REMINDER = (
 )
 
 
-def _search_documents(query):
+def _conversation_project_id(conversation):
+    project = conversation.get_project() if conversation is not None else None
+    return project.id if project is not None else None
+
+
+def _search_documents(query, conversation=None):
     try:
-        hits = search(get_client(), query)
+        hits = search(
+            get_client(), query, project_id=_conversation_project_id(conversation)
+        )
         document_ids = _document_ids(hits)
         passages = "\n\n".join(_format_hit(hit, document_ids) for hit in hits)
     except Exception:
@@ -453,14 +464,27 @@ def _search_documents(query):
     return f"{_SEARCH_RESULT_REMINDER}\n\n{passages}"
 
 
+def _hit_document_key(hit):
+    """How a hit finds its Document: project chunks record the document's id,
+    shared ones are matched by file name."""
+    return hit.get("document_id") if hit.get("project") else hit.get("filename")
+
+
 def _document_ids(hits):
-    """Map the file names of the hits to the ids of their shared Documents."""
-    filenames = {hit.get("filename") for hit in hits}
-    return dict(
-        Document.objects.filter(project__isnull=True, filename__in=filenames)
+    """Map the hits' keys (see _hit_document_key) to the ids of their Documents."""
+    shared = {h.get("filename") for h in hits if not h.get("project")}
+    project = {h.get("document_id") for h in hits if h.get("project")}
+    documents = (
+        Document.objects.filter(
+            Q(project__isnull=True, filename__in=shared)
+            | Q(project__isnull=False, id__in=project)
+        )
         .exclude(file="")
-        .values_list("filename", "id")
+        .values_list("id", "filename", "project_id")
     )
+    return {
+        (id if project_id else filename): id for id, filename, project_id in documents
+    }
 
 
 def _format_hit(hit, document_ids):
@@ -472,11 +496,13 @@ def _format_hit(hit, document_ids):
         first, last = pages[0], pages[-1]
         label += f", p. {first}" if first == last else f", pp. {first}–{last}"
         anchor = f"#page={first}"
-    if filename in document_ids:
-        url = reverse("document-download", args=[document_ids[filename]])
-        source = f"From [{label}]({url}{anchor})"
+    key = _hit_document_key(hit)
+    origin = "From the user's uploaded document" if hit.get("project") else "From"
+    if key in document_ids:
+        url = reverse("document-download", args=[document_ids[key]])
+        source = f"{origin} [{label}]({url}{anchor})"
     else:
-        source = f"From {label}"
+        source = f"{origin} {label}"
     headings = hit.get("headings")
     if headings:
         source += f" ({' > '.join(headings)})"
@@ -489,7 +515,7 @@ def _execute_tool(name, arguments, conversation=None):
         return _get_current_model_definition(conversation)
 
     if name == "search_documents":
-        return _search_documents(arguments.get("query", ""))
+        return _search_documents(arguments.get("query", ""), conversation)
 
     if name == "get_library_model_definition":
         model_name = arguments.get("model_name", "")

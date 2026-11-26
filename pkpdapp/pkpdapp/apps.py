@@ -15,3 +15,8 @@ class PkpdAppConfig(AppConfig):
         from .signals import add_profile_on_user_save
         from django.db.models.signals import post_save
         post_save.connect(add_profile_on_user_save, sender=User)
+
+        from django.db.models.signals import post_delete
+        from .models import Document
+        from .signals import delete_document_data
+        post_delete.connect(delete_document_data, sender=Document)

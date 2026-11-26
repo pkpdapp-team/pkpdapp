@@ -29,6 +29,10 @@ server {
     ssl_certificate     ${SSL_CERT_PATH};
     ssl_certificate_key ${SSL_KEY_PATH};
 
+    # PDF uploads for the chatbot's document search; keep in step with
+    # DOCUMENT_UPLOAD_MAX_BYTES in settings.py (a little above it)
+    client_max_body_size 55m;
+
     # javascript frontend
     location / {
       root /usr/share/nginx/html;
