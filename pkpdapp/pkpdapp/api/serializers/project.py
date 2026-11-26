@@ -23,8 +23,10 @@ class BaseProjectSerializer(serializers.ModelSerializer):
 
 
 def _notify_shared(access_list, project, shared_by):
-    """email each newly shared user once the surrounding transaction commits"""
+    """email each newly shared user (except the sharer) after commit"""
     for access in access_list:
+        if access.user == shared_by:
+            continue
         transaction.on_commit(
             lambda a=access: send_project_shared_email(
                 a.user, project, shared_by, a.read_only
@@ -46,6 +48,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return getattr(request, "user", None)
 
+    @transaction.atomic
     def create(self, validated_data):
         users = validated_data.pop("projectaccess_set")
         project = BaseProjectSerializer().create(validated_data)
@@ -54,14 +57,13 @@ class ProjectSerializer(serializers.ModelSerializer):
         for user in users:
             user["project"] = project
             serializer = ProjectAccessSerializer()
-            access = serializer.create(user)
-            if access.user != shared_by:
-                new_accesses.append(access)
+            new_accesses.append(serializer.create(user))
         _notify_shared(new_accesses, project, shared_by)
         # every project starts with a base simulation group ("Sim-Group 1")
         SubjectGroup.objects.create(name="Sim-Group 1", project=project, dataset=None)
         return project
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         users = validated_data.pop("projectaccess_set")
         old_accesses = list(instance.projectaccess_set.all())

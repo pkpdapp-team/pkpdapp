@@ -33,6 +33,24 @@ def _predilogin():
     return predilogin
 
 
+def _is_shareable(user):
+    """active users and not-yet-logged-in placeholders can be shared with"""
+    return user.is_active or user.profile.is_placeholder
+
+
+def _result(username, first_name, last_name, email, **extra):
+    return {
+        "id": None,
+        "username": username,
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email,
+        "department": "",
+        "is_placeholder": True,
+        **extra,
+    }
+
+
 class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -56,37 +74,32 @@ class UserView(viewsets.ModelViewSet):
             )
             .filter(Q(is_active=True) | Q(profile__is_placeholder=True))
             .select_related("profile")
-            .order_by("username")
-            .distinct()[:MAX_LOCAL_RESULTS]
+            .order_by("username")[:MAX_LOCAL_RESULTS]
         )
-        results = {}
-        for user in local:
-            profile = getattr(user, "profile", None)
-            results[user.username.lower()] = {
-                "id": user.id,
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "department": profile.department if profile else "",
-                "is_placeholder": bool(profile and profile.is_placeholder),
-            }
+        results = {
+            user.username.lower(): _result(
+                user.username,
+                user.first_name,
+                user.last_name,
+                user.email,
+                id=user.id,
+                department=user.profile.department,
+                is_placeholder=user.profile.is_placeholder,
+            )
+            for user in local
+        }
 
         predi = _predilogin()
         if predi is not None:
             for found in predi.search_users(q):
                 key = found.username.lower()
-                if not found.username or key in results:
-                    continue
-                results[key] = {
-                    "id": None,
-                    "username": found.username,
-                    "first_name": found.first_name,
-                    "last_name": found.last_name,
-                    "email": found.email,
-                    "department": "",
-                    "is_placeholder": True,
-                }
+                if found.username and key not in results:
+                    results[key] = _result(
+                        found.username,
+                        found.first_name,
+                        found.last_name,
+                        found.email,
+                    )
         return Response(list(results.values()))
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
@@ -101,8 +114,7 @@ class UserView(viewsets.ModelViewSet):
 
         user = User.objects.filter(username__iexact=username).first()
         if user is not None:
-            profile = getattr(user, "profile", None)
-            if user.is_active or (profile and profile.is_placeholder):
+            if _is_shareable(user):
                 return Response(UserSerializer(user).data)
             raise ValidationError({"username": "user cannot be shared with"})
 
@@ -123,17 +135,14 @@ class UserView(viewsets.ModelViewSet):
         user.set_unusable_password()
         try:
             with transaction.atomic():
-                user.save()
-                Profile.objects.update_or_create(
-                    user=user,
-                    defaults={
-                        "is_placeholder": True,
-                        "department": details.get("department", ""),
-                    },
+                user.save()  # a signal creates the Profile
+                Profile.objects.filter(user=user).update(
+                    is_placeholder=True,
+                    department=details.get("department", ""),
                 )
         except IntegrityError:
             # lost a race with a concurrent request: return the winner
             user = User.objects.get(username__iexact=username)
             return Response(UserSerializer(user).data)
-        user.refresh_from_db()
+        user = User.objects.select_related("profile").get(pk=user.pk)
         return Response(UserSerializer(user).data, status=201)

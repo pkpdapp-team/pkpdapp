@@ -21,7 +21,6 @@ import {
   ProjectAccess,
   ProjectRead,
   UserRead,
-  UserSearchResult,
   useUserListQuery,
   useUserPlaceholderCreateMutation,
   useUserSearchQuery,
@@ -53,6 +52,14 @@ interface UserOption {
 
 const MIN_SEARCH_LENGTH = 3;
 const SEARCH_DEBOUNCE_MS = 300;
+
+const PlaceholderChip: FC = () => (
+  <Chip
+    size="small"
+    label="not yet logged in"
+    sx={{ marginLeft: "0.5rem" }}
+  />
+);
 
 const fullName = (firstName?: string, lastName?: string) =>
   `${firstName || ""} ${lastName || ""}`.trim();
@@ -89,6 +96,8 @@ const UserAccess: FC<Props> = ({
     { q: debouncedQuery },
     { skip: debouncedQuery.length < MIN_SEARCH_LENGTH },
   );
+
+  const tooShort = inputValue.trim().length < MIN_SEARCH_LENGTH;
 
   // create map from user id to user object
   const userMap = new Map<number, UserRead>();
@@ -130,15 +139,15 @@ const UserAccess: FC<Props> = ({
 
   // create list of user options for the autocomplete
   const userOptions: UserOption[] =
-    inputValue.trim().length < MIN_SEARCH_LENGTH
+    tooShort
       ? []
       : (searchResults || [])
           .filter(
-            (user: UserSearchResult) =>
+            (user) =>
               user.id !== myUserId &&
               (user.id === null || !sharedUsers.includes(user.id)),
           )
-          .map((user: UserSearchResult) => ({
+          .map((user) => ({
             id: user.id,
             username: user.username,
             firstName: user.first_name || "",
@@ -176,11 +185,7 @@ const UserAccess: FC<Props> = ({
                     <TableCell>
                       {userName}
                       {userData?.profile?.is_placeholder && (
-                        <Chip
-                          size="small"
-                          label="not yet logged in"
-                          sx={{ marginLeft: "0.5rem" }}
-                        />
+                        <PlaceholderChip />
                       )}
                     </TableCell>
                     <TableCell>{name}</TableCell>
@@ -218,16 +223,12 @@ const UserAccess: FC<Props> = ({
               <li {...props} key={option.username}>
                 {optionLabel(option)}
                 {option.isPlaceholder && (
-                  <Chip
-                    size="small"
-                    label="not yet logged in"
-                    sx={{ marginLeft: "0.5rem" }}
-                  />
+                  <PlaceholderChip />
                 )}
               </li>
             )}
             noOptionsText={
-              inputValue.trim().length < MIN_SEARCH_LENGTH
+              tooShort
                 ? `Type at least ${MIN_SEARCH_LENGTH} characters to search`
                 : isFetching
                   ? "Searching..."

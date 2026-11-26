@@ -22,18 +22,15 @@ def send_project_shared_email(user, project, shared_by, read_only):
         return
     try:
         base = (settings.FRONTEND_BASE_URL or "").rstrip("/")
+        shared_by_name = "A colleague"
+        if shared_by:
+            shared_by_name = shared_by.get_full_name() or shared_by.username
         context = {
             "user": user,
             "project": project,
-            "shared_by": shared_by,
-            "shared_by_name": (
-                shared_by.get_full_name() or shared_by.username
-                if shared_by
-                else "A colleague"
-            ),
+            "shared_by_name": shared_by_name,
             "read_only": read_only,
-            "project_url": base,
-            "login_url": base,
+            "app_url": base,
         }
         subject = f"PKPDApp: project '{project.name}' was shared with you"
         text = render_to_string("email/project_shared.txt", context)

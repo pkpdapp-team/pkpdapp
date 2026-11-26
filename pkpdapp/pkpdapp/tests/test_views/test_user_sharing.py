@@ -72,9 +72,9 @@ class TestUserSharing(APITestCase):
         self.assertFalse(user.has_usable_password())
         self.assertTrue(user.profile.is_placeholder)
         self.assertEqual(user.email, "bob@x.com")
-        r = self.client.post("/api/user/placeholder/", {"username": "bob"})
+        r = self.client.post("/api/user/placeholder/", {"username": "BOB"})
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(User.objects.filter(username="bob").count(), 1)
+        self.assertEqual(User.objects.filter(username__iexact="bob").count(), 1)
 
     def _put(self, access):
         data = {
@@ -115,9 +115,3 @@ class TestUserSharing(APITestCase):
         User.objects.create_user(username="gone", password="x", is_active=False)
         r = self.client.post("/api/user/placeholder/", {"username": "gone"})
         self.assertEqual(r.status_code, 400)
-
-    def test_placeholder_returns_existing_placeholder(self):
-        self.client.post("/api/user/placeholder/", {"username": "bob"})
-        r = self.client.post("/api/user/placeholder/", {"username": "BOB"})
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(User.objects.filter(username__iexact="bob").count(), 1)
