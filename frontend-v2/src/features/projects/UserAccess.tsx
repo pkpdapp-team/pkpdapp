@@ -118,7 +118,7 @@ const UserAccess: FC<Props> = ({
       // user is in the directory but has never logged in: create a placeholder
       try {
         const created = await createPlaceholder({
-          username: option.username,
+          placeholderRequest: { username: option.username },
         }).unwrap();
         setAddedUsers((prev) => [...prev, created]);
         id = created.id;

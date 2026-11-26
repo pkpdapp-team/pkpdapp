@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
             name="is_placeholder",
             field=models.BooleanField(
                 default=False,
-                help_text="user was added via a project share but has not yet logged in",
+                help_text=(
+                    "user was added via a project share but has not yet logged in"
+                ),
             ),
         ),
     ]

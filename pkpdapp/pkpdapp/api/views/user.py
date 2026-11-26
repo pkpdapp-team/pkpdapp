@@ -9,13 +9,18 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from pkpdapp.api.serializers import UserSerializer
+from pkpdapp.api.serializers import (
+    PlaceholderRequestSerializer,
+    UserSearchResultSerializer,
+    UserSerializer,
+)
 from pkpdapp.models import Profile
 
 logger = logging.getLogger(__name__)
@@ -55,6 +60,11 @@ class UserView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    @extend_schema(
+        operation_id="user_search",
+        parameters=[OpenApiParameter("q", str, required=True)],
+        responses=UserSearchResultSerializer(many=True),
+    )
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def search(self, request):
         """
@@ -102,6 +112,11 @@ class UserView(viewsets.ModelViewSet):
                     )
         return Response(list(results.values()))
 
+    @extend_schema(
+        operation_id="user_placeholder_create",
+        request=PlaceholderRequestSerializer,
+        responses={200: UserSerializer, 201: UserSerializer},
+    )
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def placeholder(self, request):
         """
