@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pkpdapp', '0079_document'),
+        ('pkpdapp', '0080_profile_is_placeholder'),
     ]
 
     operations = [

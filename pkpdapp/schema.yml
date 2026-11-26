@@ -1470,7 +1470,11 @@ paths:
   /api/documents/:
     get:
       operationId: documents_list
-      description: Shared documents, plus those of projects the user has access to.
+      description: |-
+        Shared documents, plus those of projects the user has access to.
+
+        A user can upload a PDF to a project, which the chatbot can then search,
+        and delete the PDFs of their projects. Shared documents are read-only.
       tags:
       - documents
       security:
@@ -1484,10 +1488,41 @@ paths:
                 items:
                   $ref: '#/components/schemas/Document'
           description: ''
+    post:
+      operationId: documents_create
+      description: |-
+        Shared documents, plus those of projects the user has access to.
+
+        A user can upload a PDF to a project, which the chatbot can then search,
+        and delete the PDFs of their projects. Shared documents are read-only.
+      tags:
+      - documents
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Document'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Document'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
   /api/documents/{id}/:
     get:
       operationId: documents_retrieve
-      description: Shared documents, plus those of projects the user has access to.
+      description: |-
+        Shared documents, plus those of projects the user has access to.
+
+        A user can upload a PDF to a project, which the chatbot can then search,
+        and delete the PDFs of their projects. Shared documents are read-only.
       parameters:
       - in: path
         name: id
@@ -1505,10 +1540,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/Document'
           description: ''
+    delete:
+      operationId: documents_destroy
+      description: |-
+        Shared documents, plus those of projects the user has access to.
+
+        A user can upload a PDF to a project, which the chatbot can then search,
+        and delete the PDFs of their projects. Shared documents are read-only.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/documents/{id}/download/:
     get:
       operationId: documents_download_retrieve
-      description: Shared documents, plus those of projects the user has access to.
+      description: |-
+        Shared documents, plus those of projects the user has access to.
+
+        A user can upload a PDF to a project, which the chatbot can then search,
+        and delete the PDFs of their projects. Shared documents are read-only.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/retry/:
+    post:
+      operationId: documents_retry_create
+      description: Process a failed upload again.
       parameters:
       - in: path
         name: id
@@ -4788,6 +4868,7 @@ components:
       - id
     Document:
       type: object
+      description: A document; creating one uploads a PDF to a project.
       properties:
         id:
           type: integer
@@ -4798,18 +4879,35 @@ components:
           description: The name the document's chunks refer to it by.
         project:
           type: integer
-          readOnly: true
           nullable: true
           description: Leave empty for a document shared by all projects.
         created_at:
           type: string
           format: date-time
           readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        error:
+          type: string
+          readOnly: true
+        chunk_count:
+          type: integer
+          readOnly: true
+          nullable: true
+        file:
+          type: string
+          format: uri
+          writeOnly: true
       required:
+      - chunk_count
       - created_at
+      - error
+      - file
       - filename
       - id
-      - project
+      - status
     Dose:
       type: object
       properties:
@@ -7136,6 +7234,16 @@ components:
       required:
       - id
       - variable
+    StatusEnum:
+      enum:
+      - processing
+      - ready
+      - failed
+      type: string
+      description: |-
+        * `processing` - Processing
+        * `ready` - Ready
+        * `failed` - Failed
     Subject:
       type: object
       properties:

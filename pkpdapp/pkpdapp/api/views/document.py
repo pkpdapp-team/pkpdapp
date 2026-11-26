@@ -8,6 +8,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
@@ -99,6 +100,7 @@ class DocumentViewSet(
         self._get_editable_object().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(request=None, responses=DocumentSerializer)
     @action(detail=True, methods=["post"])
     def retry(self, request, pk=None):
         """Process a failed upload again."""
