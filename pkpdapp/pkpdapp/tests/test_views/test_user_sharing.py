@@ -110,3 +110,14 @@ class TestUserSharing(APITestCase):
         self.assertTrue(
             ProjectAccess.objects.filter(project=self.project, user=noemail).exists()
         )
+
+    def test_placeholder_rejects_deactivated_user(self):
+        User.objects.create_user(username="gone", password="x", is_active=False)
+        r = self.client.post("/api/user/placeholder/", {"username": "gone"})
+        self.assertEqual(r.status_code, 400)
+
+    def test_placeholder_returns_existing_placeholder(self):
+        self.client.post("/api/user/placeholder/", {"username": "bob"})
+        r = self.client.post("/api/user/placeholder/", {"username": "BOB"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(User.objects.filter(username__iexact="bob").count(), 1)

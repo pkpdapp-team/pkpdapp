@@ -136,10 +136,12 @@ class PrediBackend(BaseBackend):
             is_superuser = check_groupmembership(
                 username, settings.AUTH_PREDILOGIN_ADMIN_GROUP
             )
-            try:
-                user = User.objects.get(username=username)
+            # case-insensitive so a placeholder created with a differently
+            # cased username is still matched on first login
+            user = User.objects.filter(username__iexact=username).first()
+            if user is not None:
                 logger.info(f"User found: {user.username}")
-            except User.DoesNotExist:
+            else:
                 logger.info(f"User not found, creating new user: {username}")
                 user = User(username=username)
 
@@ -157,9 +159,10 @@ class PrediBackend(BaseBackend):
             user.is_active = is_superuser or is_user
             user.save()
 
-            # a successful login turns any placeholder into a real user
             profile, _ = Profile.objects.get_or_create(user=user)
-            profile.is_placeholder = False
+            # only an accepted login turns a placeholder into a real user
+            if user.is_active:
+                profile.is_placeholder = False
             if details.get("department"):
                 profile.department = details["department"]
             profile.save()

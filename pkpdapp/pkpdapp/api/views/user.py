@@ -7,6 +7,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -55,6 +56,7 @@ class UserView(viewsets.ModelViewSet):
             )
             .filter(Q(is_active=True) | Q(profile__is_placeholder=True))
             .select_related("profile")
+            .order_by("username")
             .distinct()[:MAX_LOCAL_RESULTS]
         )
         results = {}
@@ -99,7 +101,10 @@ class UserView(viewsets.ModelViewSet):
 
         user = User.objects.filter(username__iexact=username).first()
         if user is not None:
-            return Response(UserSerializer(user).data)
+            profile = getattr(user, "profile", None)
+            if user.is_active or (profile and profile.is_placeholder):
+                return Response(UserSerializer(user).data)
+            raise ValidationError({"username": "user cannot be shared with"})
 
         predi = _predilogin()
         if predi is None:
@@ -116,13 +121,19 @@ class UserView(viewsets.ModelViewSet):
             is_active=False,
         )
         user.set_unusable_password()
-        user.save()
-        Profile.objects.update_or_create(
-            user=user,
-            defaults={
-                "is_placeholder": True,
-                "department": details.get("department", ""),
-            },
-        )
+        try:
+            with transaction.atomic():
+                user.save()
+                Profile.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "is_placeholder": True,
+                        "department": details.get("department", ""),
+                    },
+                )
+        except IntegrityError:
+            # lost a race with a concurrent request: return the winner
+            user = User.objects.get(username__iexact=username)
+            return Response(UserSerializer(user).data)
         user.refresh_from_db()
         return Response(UserSerializer(user).data, status=201)
