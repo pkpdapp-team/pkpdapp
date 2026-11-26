@@ -331,6 +331,10 @@ PORTKEY_API_KEY = os.environ.get("PORTKEY_API_KEY")
 CHATBOT_EMBEDDING_MODEL = os.environ.get("CHATBOT_EMBEDDING_MODEL", "")
 QDRANT_URL = os.environ.get("QDRANT_URL")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
+# the largest PDF a user can upload to a project; nginx allows a little more
+DOCUMENT_UPLOAD_MAX_BYTES = int(
+    os.environ.get("DOCUMENT_UPLOAD_MAX_BYTES", 50 * 1024 * 1024)
+)
 
 
 def _env_float(name):

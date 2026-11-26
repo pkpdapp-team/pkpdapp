@@ -525,17 +525,45 @@ const injectedRtkApi = api.injectEndpoints({
     documentsList: build.query<DocumentsListApiResponse, DocumentsListApiArg>({
       query: () => ({ url: `/api/documents/` }),
     }),
+    documentsCreate: build.mutation<
+      DocumentsCreateApiResponse,
+      DocumentsCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/`,
+        method: "POST",
+        body: queryArg.document,
+      }),
+    }),
     documentsRetrieve: build.query<
       DocumentsRetrieveApiResponse,
       DocumentsRetrieveApiArg
     >({
       query: (queryArg) => ({ url: `/api/documents/${queryArg.id}/` }),
     }),
+    documentsDestroy: build.mutation<
+      DocumentsDestroyApiResponse,
+      DocumentsDestroyApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/${queryArg.id}/`,
+        method: "DELETE",
+      }),
+    }),
     documentsDownloadRetrieve: build.query<
       DocumentsDownloadRetrieveApiResponse,
       DocumentsDownloadRetrieveApiArg
     >({
       query: (queryArg) => ({ url: `/api/documents/${queryArg.id}/download/` }),
+    }),
+    documentsRetryCreate: build.mutation<
+      DocumentsRetryCreateApiResponse,
+      DocumentsRetryCreateApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/documents/${queryArg.id}/retry/`,
+        method: "POST",
+      }),
     }),
     doseList: build.query<DoseListApiResponse, DoseListApiArg>({
       query: () => ({ url: `/api/dose/` }),
@@ -1697,13 +1725,25 @@ export type DatasetCsvUpdateApiArg = {
 };
 export type DocumentsListApiResponse = /** status 200  */ DocumentRead[];
 export type DocumentsListApiArg = void;
+export type DocumentsCreateApiResponse = /** status 201  */ DocumentRead;
+export type DocumentsCreateApiArg = {
+  document: DocumentWrite;
+};
 export type DocumentsRetrieveApiResponse = /** status 200  */ DocumentRead;
 export type DocumentsRetrieveApiArg = {
+  id: string;
+};
+export type DocumentsDestroyApiResponse = unknown;
+export type DocumentsDestroyApiArg = {
   id: string;
 };
 export type DocumentsDownloadRetrieveApiResponse =
   /** status 200  */ DocumentRead;
 export type DocumentsDownloadRetrieveApiArg = {
+  id: string;
+};
+export type DocumentsRetryCreateApiResponse = /** status 200  */ DocumentRead;
+export type DocumentsRetryCreateApiArg = {
   id: string;
 };
 export type DoseListApiResponse = /** status 200  */ DoseRead[];
@@ -3483,14 +3523,26 @@ export type DatasetCsv = {
   name: string;
   csv: string;
 };
-export type Document = {};
+export type Document = {
+  /** Leave empty for a document shared by all projects. */
+  project?: number | null;
+};
+export type StatusEnum = "processing" | "ready" | "failed";
 export type DocumentRead = {
   id: number;
   /** The name the document's chunks refer to it by. */
   filename: string;
   /** Leave empty for a document shared by all projects. */
-  project: number | null;
+  project?: number | null;
   created_at: string;
+  status: StatusEnum;
+  error: string;
+  chunk_count: number | null;
+};
+export type DocumentWrite = {
+  /** Leave empty for a document shared by all projects. */
+  project?: number | null;
+  file: string;
 };
 export type PatchedDose = {
   /** starting time point of dose, see protocol for units */
@@ -4929,8 +4981,11 @@ export const {
   useDatasetDestroyMutation,
   useDatasetCsvUpdateMutation,
   useDocumentsListQuery,
+  useDocumentsCreateMutation,
   useDocumentsRetrieveQuery,
+  useDocumentsDestroyMutation,
   useDocumentsDownloadRetrieveQuery,
+  useDocumentsRetryCreateMutation,
   useDoseListQuery,
   useDoseCreateMutation,
   useDoseRetrieveQuery,

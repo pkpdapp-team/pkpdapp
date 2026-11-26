@@ -5,3 +5,4 @@
 #
 
 from .add_profile_on_user_save import add_profile_on_user_save  # noqa: F401
+from .delete_document_data import delete_document_data  # noqa: F401

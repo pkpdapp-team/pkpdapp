@@ -33,3 +33,7 @@ pydiffsol>=0.6.2
 portkey-ai>=2.2.0,<3.0
 qdrant-client>=1.19,<2
 pydantic>=2,<3
+# document upload chunking (cpu-only torch; swap the index for a gpu build)
+--extra-index-url https://download.pytorch.org/whl/cpu
+docling==2.142.0
+docling-core[chunking-openai]

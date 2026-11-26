@@ -462,6 +462,48 @@ class ChatbotUtilsTestCase(TestCase):
             f"[a.pdf, pp. 3–4](/api/documents/{document.id}/download/#page=3)", result
         )
 
+    def test_search_tool_searches_the_conversations_project(self):
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[]) as search,
+        ):
+            chatbot._execute_tool(
+                name="search_documents",
+                arguments={"query": "TMDD"},
+                conversation=self.conversation,
+            )
+        self.assertEqual(search.call_args.kwargs["project_id"], self.project.id)
+
+    def test_search_tool_links_a_project_document_by_its_id(self):
+        # a shared document of the same name must not get the link
+        Document.objects.create(filename="mine.pdf", file="documents/shared.pdf")
+        mine = Document.objects.create(
+            filename="mine.pdf", file="documents/mine.pdf", project=self.project
+        )
+        hit = {
+            "filename": "mine.pdf",
+            "document_id": mine.id,
+            "project": True,
+            "pages": [2],
+            "headings": [],
+            "raw_text": "my own data",
+            "score": 0.6,
+        }
+        with (
+            mock.patch.object(chatbot, "get_client"),
+            mock.patch.object(chatbot, "search", return_value=[hit]),
+        ):
+            result = chatbot._execute_tool(
+                name="search_documents",
+                arguments={"query": "data"},
+                conversation=self.conversation,
+            )
+        self.assertIn(
+            f"uploaded document [mine.pdf, p. 2](/api/documents/{mine.id}"
+            "/download/#page=2)",
+            result,
+        )
+
     def test_search_tool_reports_a_hit_it_cannot_format(self):
         with (
             mock.patch.object(chatbot, "get_client"),

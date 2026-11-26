@@ -15,7 +15,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from qdrant_client import QdrantClient, models
 
-from pkpdapp.models import Document
+from pkpdapp.models import Compound, Document, Project
 from pkpdapp.utils import chatbot_documents
 from pkpdapp.utils.chatbot_documents import DocumentsError
 
@@ -342,3 +342,327 @@ class StorePdfsTest(TestCase):
             )
         ingest_new.assert_not_called()
         self.assertEqual(Document.objects.count(), 0)
+
+
+def make_project_document(name, project):
+    return Document.objects.create(
+        filename=name, file=f"documents/{name}", project=project
+    )
+
+
+def project_chunks(filename, text, count=1):
+    return [
+        {
+            "text": text,
+            "raw_text": text,
+            "filename": filename,
+            "chunk_index": index,
+            "pages": [index + 1],
+        }
+        for index in range(count)
+    ]
+
+
+@override_settings(CHATBOT_EMBEDDING_MODEL="model-a")
+class ProjectDocumentTestCase(TestCase):
+    def setUp(self):
+        self.qdrant = QdrantClient(":memory:")
+        for patch in (
+            mock.patch.object(
+                chatbot_documents, "get_qdrant", return_value=self.qdrant
+            ),
+            mock.patch.object(chatbot_documents, "embed", fake_embed),
+        ):
+            patch.start()
+            self.addCleanup(patch.stop)
+        self.project = Project.objects.create(
+            name="mine", compound=Compound.objects.create(name="demo")
+        )
+        self.other = Project.objects.create(
+            name="theirs", compound=Compound.objects.create(name="other")
+        )
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS)
+
+    def add(self, name, text, project=None, count=1):
+        document = make_project_document(name, project or self.project)
+        chatbot_documents.add_project_document(
+            client=None,
+            document=document,
+            chunks=project_chunks(name, text, count=count),
+        )
+        return document
+
+    def search(self, query, project=None):
+        project = project or self.project
+        return chatbot_documents.search(None, query, project_id=project.id)
+
+    def test_project_hits_come_before_shared_hits(self):
+        self.add("mine.pdf", "TMDD in my own data")
+        hits = self.search("TMDD")
+        self.assertEqual(
+            [hit["filename"] for hit in hits], ["mine.pdf", "a.pdf", "b.pdf"]
+        )
+        self.assertEqual([hit["project"] for hit in hits], [True, False, False])
+
+    def test_a_weak_project_hit_still_comes_first(self):
+        self.add("mine.pdf", "something else entirely")
+        self.assertEqual(self.search("TMDD")[0]["filename"], "mine.pdf")
+
+    def test_shared_hits_keep_room_when_the_project_has_many(self):
+        self.add("mine.pdf", "TMDD", count=10)
+        hits = self.search("TMDD")
+        self.assertEqual(len(hits), chatbot_documents.SEARCH_LIMIT)
+        self.assertEqual(
+            sum(hit["project"] for hit in hits), chatbot_documents.PROJECT_SEARCH_LIMIT
+        )
+
+    def test_other_projects_documents_are_never_returned(self):
+        self.add("theirs.pdf", "TMDD secret", project=self.other)
+        names = [hit["filename"] for hit in self.search("TMDD secret")]
+        self.assertNotIn("theirs.pdf", names)
+        theirs = [h["filename"] for h in self.search("TMDD", self.other)]
+        self.assertIn("theirs.pdf", theirs)
+
+    def test_search_without_a_project_returns_only_shared_hits(self):
+        self.add("mine.pdf", "TMDD in my own data")
+        hits = chatbot_documents.search(None, "TMDD")
+        self.assertEqual([hit["project"] for hit in hits], [False, False])
+
+    def test_search_works_before_any_upload(self):
+        self.assertEqual(len(self.search("TMDD")), 2)
+
+    def test_search_skips_project_hits_embedded_with_another_model(self):
+        self.add("mine.pdf", "TMDD in my own data")
+        with override_settings(CHATBOT_EMBEDDING_MODEL="model-b"):
+            hits = self.search("TMDD")
+        self.assertEqual([hit["project"] for hit in hits], [False, False])
+
+    def test_a_failing_project_search_falls_back_to_shared_hits(self):
+        self.add("mine.pdf", "TMDD in my own data")
+        with mock.patch.object(
+            chatbot_documents, "_project_collection_model", side_effect=RuntimeError
+        ):
+            hits = self.search("TMDD")
+        self.assertEqual([hit["project"] for hit in hits], [False, False])
+
+    def test_same_file_name_in_two_projects_does_not_collide(self):
+        self.add("same.pdf", "TMDD mine")
+        self.add("same.pdf", "TMDD theirs", project=self.other)
+        count = self.qdrant.count(chatbot_documents.PROJECT_COLLECTION).count
+        self.assertEqual(count, 2)
+        [hit] = [h for h in self.search("TMDD") if h["project"]]
+        self.assertEqual(hit["raw_text"], "TMDD mine")
+
+    def test_adding_a_document_again_replaces_its_chunks(self):
+        document = self.add("mine.pdf", "TMDD", count=3)
+        chatbot_documents.add_project_document(
+            client=None, document=document, chunks=project_chunks("mine.pdf", "TMDD")
+        )
+        count = self.qdrant.count(chatbot_documents.PROJECT_COLLECTION).count
+        self.assertEqual(count, 1)
+
+    def test_delete_project_document_removes_only_its_chunks(self):
+        first = self.add("one.pdf", "TMDD one")
+        self.add("two.pdf", "TMDD two")
+        chatbot_documents.delete_project_document(document_id=first.id)
+        names = [h["filename"] for h in self.search("TMDD") if h["project"]]
+        self.assertEqual(names, ["two.pdf"])
+
+    def test_delete_project_document_with_no_collection_is_fine(self):
+        chatbot_documents.delete_project_document(document_id=123)
+
+    def test_project_documents_refuse_a_different_embedding_model(self):
+        self.add("mine.pdf", "TMDD")
+        with override_settings(CHATBOT_EMBEDDING_MODEL="model-b"):
+            with self.assertRaisesRegex(DocumentsError, "rebuild-projects"):
+                self.add("more.pdf", "TMDD")
+
+    def test_refuses_shared_documents_and_no_chunks(self):
+        shared = Document.objects.create(filename="s.pdf", file="documents/s.pdf")
+        with self.assertRaises(DocumentsError):
+            chatbot_documents.add_project_document(
+                client=None, document=shared, chunks=project_chunks("s.pdf", "x")
+            )
+        with self.assertRaises(DocumentsError):
+            self.add("empty.pdf", "x", count=0)
+
+    def test_a_new_shared_collection_keeps_the_project_documents(self):
+        self.add("mine.pdf", "TMDD in my own data")
+        chatbot_documents.ingest_new(client=None, chunks=CHUNKS[:1])
+        hits = self.search("TMDD")
+        self.assertEqual([hit["filename"] for hit in hits], ["mine.pdf", "a.pdf"])
+
+    def test_the_project_collection_is_not_listed_as_a_shared_one(self):
+        self.add("mine.pdf", "TMDD")
+        names = [c["name"] for c in chatbot_documents.list_collections(self.qdrant)]
+        self.assertNotIn(chatbot_documents.PROJECT_COLLECTION, names)
+
+    def test_rebuild_embeds_again_with_the_current_model(self):
+        self.add("mine.pdf", "TMDD in my own data", count=2)
+        with override_settings(CHATBOT_EMBEDDING_MODEL="model-b"):
+            result = chatbot_documents.rebuild_project_documents(client=None)
+            info = chatbot_documents.project_collection_info(self.qdrant)
+        self.assertEqual(result, {"rebuilt": 1, "failed": []})
+        self.assertEqual(info, {"chunks": 2, "embedding_model": "model-b"})
+        self.assertEqual(Document.objects.get(filename="mine.pdf").chunk_count, 2)
+
+    def test_rebuild_reads_the_pdf_when_no_chunks_are_stored(self):
+        document = make_project_document("lost.pdf", self.project)
+        with mock.patch(
+            "pkpdapp.utils.document_chunking.chunk_pdf",
+            return_value=project_chunks("lost.pdf", "TMDD again"),
+        ) as chunk_pdf:
+            result = chatbot_documents.rebuild_project_documents(client=None)
+        chunk_pdf.assert_called_once()
+        self.assertEqual(result["rebuilt"], 1)
+        self.assertEqual(Document.objects.get(pk=document.pk).chunk_count, 1)
+
+    def test_rebuild_reports_documents_it_could_not_rebuild(self):
+        make_project_document("bad.pdf", self.project)
+        with mock.patch(
+            "pkpdapp.utils.document_chunking.chunk_pdf", side_effect=RuntimeError
+        ):
+            result = chatbot_documents.rebuild_project_documents(client=None)
+        self.assertEqual(result, {"rebuilt": 0, "failed": ["bad.pdf"]})
+        document = Document.objects.get(filename="bad.pdf")
+        self.assertEqual(document.status, Document.Status.FAILED)
+        self.assertEqual(document.chunk_count, None)
+        self.assertTrue(document.error)
+
+    def test_cleanup_removes_the_chunks_of_deleted_documents_only(self):
+        kept = self.add("kept.pdf", "TMDD kept")
+        gone = self.add("gone.pdf", "TMDD gone", count=2)
+        # as if the delete-time cleanup had failed
+        Document.objects.filter(pk=gone.pk)._raw_delete(Document.objects.db)
+        self.assertEqual(chatbot_documents.delete_orphan_project_chunks(), 1)
+        info = chatbot_documents.project_collection_info(self.qdrant)
+        self.assertEqual(info["chunks"], 1)
+        names = [h["filename"] for h in self.search("TMDD") if h["project"]]
+        self.assertEqual(names, ["kept.pdf"])
+        self.assertEqual(chatbot_documents.delete_orphan_project_chunks(), 0)
+        self.assertTrue(Document.objects.filter(pk=kept.pk).exists())
+
+    def test_cleanup_removes_chunks_that_name_no_document(self):
+        self.add("kept.pdf", "TMDD kept")
+        self.qdrant.upsert(
+            chatbot_documents.PROJECT_COLLECTION,
+            points=[
+                models.PointStruct(
+                    id=1,
+                    vector=[1.0, 0.0, 0.1],
+                    payload={"project_id": self.project.id},
+                )
+            ],
+        )
+        chatbot_documents.delete_orphan_project_chunks()
+        info = chatbot_documents.project_collection_info(self.qdrant)
+        self.assertEqual(info["chunks"], 1)
+
+    def test_cleanup_without_a_project_collection_is_fine(self):
+        self.assertEqual(chatbot_documents.delete_orphan_project_chunks(), 0)
+
+    def test_documents_cleanup_command(self):
+        gone = self.add("gone.pdf", "TMDD gone")
+        Document.objects.filter(pk=gone.pk)._raw_delete(Document.objects.db)
+        busy = make_project_document("busy.pdf", self.project)
+        Document.objects.filter(pk=busy.pk).update(status="processing")
+        out = io.StringIO()
+        with override_settings(QDRANT_URL="http://qdrant"):
+            call_command("documents", "cleanup", stdout=out)
+        self.assertIn("1 interrupted uploads marked failed", out.getvalue())
+        self.assertIn("chunks of 1 deleted documents removed", out.getvalue())
+        self.assertEqual(Document.objects.get(pk=busy.pk).status, "failed")
+
+    def test_documents_cleanup_still_fails_uploads_without_document_search(self):
+        busy = make_project_document("busy.pdf", self.project)
+        Document.objects.filter(pk=busy.pk).update(status="processing")
+        out = io.StringIO()
+        with override_settings(QDRANT_URL=None):
+            call_command("documents", "cleanup", stdout=out)
+        self.assertIn("not enabled", out.getvalue())
+        self.assertEqual(Document.objects.get(pk=busy.pk).status, "failed")
+
+
+class ChunkCommandTestCase(TestCase):
+    """documents chunk, with docling replaced by fakes."""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.work = Path(directory.name)
+        self.pdf_dir = self.work / "pdfs"
+        self.pdf_dir.mkdir()
+        for name in ("a.pdf", "b.pdf"):
+            (self.pdf_dir / name).write_bytes(b"%PDF-1.4")
+        self.converted = []
+
+        def convert_to_json(converter, pdf, json_path):
+            self.converted.append(pdf.name)
+            if pdf.name == "bad.pdf":
+                raise RuntimeError("unreadable")
+            json_path.write_text(json.dumps({"name": pdf.stem}))
+            return {"status": "ok", "pages": 1}
+
+        def chunk_document(chunker, document):
+            return [
+                {"filename": f"{document['name']}.pdf", "chunk_index": 0, "text": "t"}
+            ]
+
+        module = "pkpdapp.management.commands.documents.document_chunking"
+        for name, fake in {
+            "make_converter": mock.Mock(),
+            "make_chunker": mock.Mock(),
+            "convert_to_json": convert_to_json,
+            "load_docling_json": lambda path: json.loads(path.read_text()),
+            "chunk_document": chunk_document,
+        }.items():
+            patch = mock.patch(f"{module}.{name}", fake)
+            patch.start()
+            self.addCleanup(patch.stop)
+
+    def run_chunk(self, *pdfs):
+        out = io.StringIO()
+        call_command(
+            "documents",
+            "chunk",
+            *pdfs,
+            f"--pdf-dir={self.pdf_dir}",
+            f"--work-dir={self.work}",
+            stdout=out,
+        )
+        return out.getvalue()
+
+    def written_files(self):
+        lines = (self.work / "chunks.jsonl").read_text().splitlines()
+        return [json.loads(line)["filename"] for line in lines]
+
+    def test_chunks_every_pdf_in_the_folder(self):
+        output = self.run_chunk()
+        self.assertEqual(self.converted, ["a.pdf", "b.pdf"])
+        self.assertEqual(self.written_files(), ["a.pdf", "b.pdf"])
+        self.assertIn("2 chunks written", output)
+
+    def test_a_pdf_that_was_read_is_not_read_again(self):
+        self.run_chunk()
+        self.converted.clear()
+        (self.pdf_dir / "c.pdf").write_bytes(b"%PDF-1.4")
+        self.run_chunk()
+        self.assertEqual(self.converted, ["c.pdf"])
+        self.assertEqual(self.written_files(), ["a.pdf", "b.pdf", "c.pdf"])
+
+    def test_named_pdfs_are_the_only_ones_read(self):
+        self.run_chunk(str(self.pdf_dir / "b.pdf"))
+        self.assertEqual(self.converted, ["b.pdf"])
+        self.assertEqual(self.written_files(), ["b.pdf"])
+
+    def test_a_pdf_that_cannot_be_read_is_reported_after_the_rest_is_written(self):
+        (self.pdf_dir / "bad.pdf").write_bytes(b"%PDF-1.4")
+        with self.assertRaisesRegex(CommandError, "bad.pdf"):
+            self.run_chunk()
+        self.assertEqual(self.written_files(), ["a.pdf", "b.pdf"])
+
+    def test_no_pdfs_is_refused(self):
+        for pdf in self.pdf_dir.glob("*.pdf"):
+            pdf.unlink()
+        with self.assertRaisesRegex(CommandError, "no PDFs"):
+            self.run_chunk()
