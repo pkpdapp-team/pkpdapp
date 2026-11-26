@@ -57,9 +57,11 @@ The following variables are used for PrediLogin authentication:
 - `AUTH_PREDILOGIN_ADMIN_GROUP`: user must be in this group to be a superuser (e.g. `admin`)
 - `AUTH_PREDILOGIN_USER_GROUP`: authentication will only succeed if user is in this group (e.g. `user`)
 
-**Email/Password Sign Up & Verification:**
+When PrediLogin is enabled, the "Share Project" dialog searches the whole PrediLogin directory, not just users who have already logged in. Sharing with someone who has never logged in creates an inactive placeholder user (shown as "not yet logged in"); it becomes a normal user the first time they log in. Every user a project is newly shared with is sent an email, so configure the email settings below (with `EMAIL_HOST` unset, share emails are only printed to the console).
 
-When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password. Registration sends a verification email (handled by [django-allauth](https://docs.allauth.org/)); the user must click the verification link before they can log in. Configure email delivery so these emails can be sent (if `EMAIL_HOST` is unset, emails are printed to the console, which is only suitable for development):
+**Email Delivery:**
+
+The app sends email for sign-up verification (when `ENABLE_SIGNUP` is `'true'`; handled by [django-allauth](https://docs.allauth.org/), the user must click the verification link before they can log in) and for project-share notifications. SMTP is configured with the separate variables below, not a single URL. If `EMAIL_HOST` is unset, emails are printed to the console, which is only suitable for development:
 
 - `EMAIL_HOST`: SMTP server host name
 - `EMAIL_PORT`: SMTP server port (default `587`)
@@ -67,7 +69,7 @@ When `ENABLE_SIGNUP` is `'true'`, users can register with an email and password.
 - `EMAIL_HOST_PASSWORD`: SMTP password
 - `EMAIL_USE_TLS`: use STARTTLS (default `true`; correct for port 587 and most providers including Amazon SES). If this is not set on a port-587 server you will see `530 Must issue a STARTTLS command first`.
 - `EMAIL_USE_SSL`: use implicit SSL instead, for port 465 (default `false`). Only one of `EMAIL_USE_TLS`/`EMAIL_USE_SSL` may be true.
-- `DEFAULT_FROM_EMAIL`: the "from" address used for verification emails
+- `DEFAULT_FROM_EMAIL`: the "from" address used for verification and project-share emails
 
 The base URL that the verification link redirects back to is derived automatically from `HOST_NAME` (`https://<HOST_NAME>` in production). Set `FRONTEND_BASE_URL` only if you need to override this, e.g. when the frontend is served from a different host. The CSRF trusted origin is likewise derived from `HOST_NAME`; `CSRF_TRUSTED_ORIGINS` only needs setting to add extra origins.
 

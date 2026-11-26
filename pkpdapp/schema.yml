@@ -3787,6 +3787,66 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/user/placeholder/:
+    post:
+      operationId: user_placeholder_create
+      description: |-
+        Get or create a placeholder user for a directory user who has not
+        logged in yet. Details are re-fetched server side.
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceholderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlaceholderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlaceholderRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/user/search/:
+    get:
+      operationId: user_search
+      description: |-
+        Search local users and (if configured) the predilogin directory.
+        Directory-only matches are returned with id=None.
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSearchResult'
+          description: ''
   /api/variable/:
     get:
       operationId: variable_list
@@ -6537,6 +6597,13 @@ components:
       - pk_variable
       - pkpd_model
       - read_only
+    PlaceholderRequest:
+      type: object
+      properties:
+        username:
+          type: string
+      required:
+      - username
     PopulationRegionEnum:
       enum:
       - US
@@ -6559,6 +6626,9 @@ components:
           type: string
           description: the user's department
           maxLength: 100
+        is_placeholder:
+          type: boolean
+          description: user was added via a project share but has not yet logged in
         user:
           type: integer
       required:
@@ -7336,6 +7406,33 @@ components:
       - id
       - profile
       - project_set
+      - username
+    UserSearchResult:
+      type: object
+      description: A user found by search; id is null for directory-only users.
+      properties:
+        id:
+          type: integer
+          nullable: true
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        is_placeholder:
+          type: boolean
+      required:
+      - department
+      - email
+      - first_name
+      - id
+      - is_placeholder
+      - last_name
       - username
     Variable:
       type: object
