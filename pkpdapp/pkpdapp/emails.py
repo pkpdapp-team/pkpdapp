@@ -40,5 +40,8 @@ def send_project_shared_email(user, project, shared_by, read_only):
         )
         message.attach_alternative(html, "text/html")
         message.send()
+        logger.info(
+            f"Sent share email for project {project.id} to {user.username}"
+        )
     except Exception:
         logger.exception(f"Failed to send share email to {user.username}")
