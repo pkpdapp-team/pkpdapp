@@ -130,14 +130,27 @@ class UserView(viewsets.ModelViewSet):
         user = User.objects.filter(username__iexact=username).first()
         if user is not None:
             if _is_shareable(user):
+                logger.info(
+                    f"Placeholder lookup: {user.username} already exists, "
+                    f"requested by {request.user.username}"
+                )
                 return Response(UserSerializer(user).data)
+            logger.warning(
+                f"Placeholder lookup: {user.username} cannot be shared with "
+                f"(requested by {request.user.username})"
+            )
             raise ValidationError({"username": "user cannot be shared with"})
 
         predi = _predilogin()
         if predi is None:
+            logger.warning("Placeholder lookup: user directory not available")
             raise ValidationError("User directory is not available")
         details = predi.get_user_details(username)
         if not details:
+            logger.warning(
+                f"Placeholder lookup: {username} not found in directory "
+                f"(requested by {request.user.username})"
+            )
             raise ValidationError({"username": "unknown user"})
 
         user = User(
@@ -157,7 +170,15 @@ class UserView(viewsets.ModelViewSet):
                 )
         except IntegrityError:
             # lost a race with a concurrent request: return the winner
+            logger.warning(
+                f"Placeholder creation for {username} lost a race; "
+                "returning existing user"
+            )
             user = User.objects.get(username__iexact=username)
             return Response(UserSerializer(user).data)
+        logger.info(
+            f"Created placeholder user {username} "
+            f"(requested by {request.user.username})"
+        )
         user = User.objects.select_related("profile").get(pk=user.pk)
         return Response(UserSerializer(user).data, status=201)
