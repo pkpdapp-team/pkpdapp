@@ -42,7 +42,8 @@
     "test": "npx tsc && eslint src && vitest --project=storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:coverage": "vitest --project=storybook --coverage"
+    "test:coverage": "vitest --project=storybook --coverage",
+    "test:exploratory": "cd exploratory_tester && pytest . --base-url http://localhost:3000"
   },
   "eslintConfig": {
     "extends": [
