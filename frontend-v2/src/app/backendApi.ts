@@ -523,7 +523,12 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     documentsList: build.query<DocumentsListApiResponse, DocumentsListApiArg>({
-      query: () => ({ url: `/api/documents/` }),
+      query: (queryArg) => ({
+        url: `/api/documents/`,
+        params: {
+          project_id: queryArg.projectId,
+        },
+      }),
     }),
     documentsCreate: build.mutation<
       DocumentsCreateApiResponse,
@@ -1724,7 +1729,10 @@ export type DatasetCsvUpdateApiArg = {
   datasetCsv: DatasetCsv;
 };
 export type DocumentsListApiResponse = /** status 200  */ DocumentRead[];
-export type DocumentsListApiArg = void;
+export type DocumentsListApiArg = {
+  /** Filter documents by project ID */
+  projectId?: number;
+};
 export type DocumentsCreateApiResponse = /** status 201  */ DocumentRead;
 export type DocumentsCreateApiArg = {
   document: DocumentWrite;

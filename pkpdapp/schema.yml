@@ -1475,6 +1475,12 @@ paths:
 
         A user can upload a PDF to a project, which the chatbot can then search,
         and delete the PDFs of their projects. Shared documents are read-only.
+      parameters:
+      - in: query
+        name: project_id
+        schema:
+          type: integer
+        description: Filter documents by project ID
       tags:
       - documents
       security:

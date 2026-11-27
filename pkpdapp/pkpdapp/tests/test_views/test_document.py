@@ -74,6 +74,17 @@ class DocumentViewTestCase(APITestCase):
         names = {d["filename"] for d in response.data}
         self.assertEqual(names, {"shared.pdf", "mine.pdf"})
 
+    def test_list_filtered_by_project(self):
+        response = self.client.get(f"/api/documents/?project_id={self.project.id}")
+        names = {d["filename"] for d in response.data}
+        self.assertEqual(names, {"mine.pdf"})
+
+    def test_list_filtered_by_inaccessible_project_is_empty(self):
+        other_id = self.other_project.id
+        response = self.client.get(f"/api/documents/?project_id={other_id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list(response.data), [])
+
     def test_anonymous_cannot_download(self):
         response = APIClient().get(f"/api/documents/{self.shared.id}/download/")
         self.assertIn(
