@@ -8,7 +8,8 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
@@ -19,6 +20,7 @@ from rest_framework.response import Response
 from pkpdapp.models import Document
 from pkpdapp.api.serializers import DocumentSerializer
 from pkpdapp.api.serializers.document import can_edit_project
+from pkpdapp.api.views.filters import ProjectFilter
 from pkpdapp.utils.chatbot_documents import document_search_enabled
 from pkpdapp.utils.document_processing import (
     fail_stale_documents,
@@ -47,6 +49,7 @@ class DocumentViewSet(
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+    filter_backends = [ProjectFilter]
 
     def get_queryset(self):
         user = self.request.user
@@ -56,6 +59,17 @@ class DocumentViewSet(
             Q(project__isnull=True) | Q(project__users=user)
         ).distinct()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="project_id",
+                description="Filter documents by project ID",
+                required=False,
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
+    )
     def list(self, request, *args, **kwargs):
         # uploads whose processing was lost (e.g. a restart) are marked failed;
         # checked where the status is read, which a client polls

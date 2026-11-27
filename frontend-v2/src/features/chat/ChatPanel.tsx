@@ -12,6 +12,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import { useChat } from "@ai-sdk/react";
 import { useAppDispatch } from "../../app/hooks";
@@ -37,6 +38,7 @@ import {
 } from "./chatSlice";
 import { useConversations } from "./useConversations";
 import ConversationList from "./ConversationList";
+import DocumentList from "./DocumentList";
 import transport, {
   type ChatTransportBody,
   type ChatUIMessage,
@@ -45,6 +47,25 @@ import transport, {
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
+
+type PanelView = "chat" | "conversations" | "documents";
+
+const headerButtonSx = (active: boolean) => ({
+  color: active ? "white" : "rgba(255,255,255,0.7)",
+  borderColor: active ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)",
+  bgcolor: active ? "rgba(255,255,255,0.15)" : "transparent",
+  textTransform: "none",
+  fontSize: "0.75rem",
+  px: 1,
+  py: 0,
+  justifyContent: "flex-start",
+  "& .MuiButton-startIcon": { mr: 0.75 },
+  "&:hover": {
+    color: "white",
+    borderColor: "rgba(255,255,255,0.6)",
+    bgcolor: active ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.1)",
+  },
+});
 
 function buildUIMessages(apiMessages: MessageRead[]): ChatUIMessage[] {
   const result: ChatUIMessage[] = [];
@@ -90,7 +111,7 @@ const ChatPanel: FC = () => {
     (state: RootState) => state.main.selectedSubPage,
   );
   const [input, setInput] = useState("");
-  const [showConversationList, setShowConversationList] = useState(false);
+  const [view, setView] = useState<PanelView>("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const drawerPaperRef = useRef<HTMLDivElement>(null);
@@ -138,7 +159,7 @@ const ChatPanel: FC = () => {
     stop();
     setMessages([]);
     setInput("");
-    setShowConversationList(false);
+    setView("chat");
     dispatch(setActiveConversation(null));
   }, [selectedProject, stop, setMessages, dispatch]);
 
@@ -158,7 +179,7 @@ const ChatPanel: FC = () => {
 
   const handleNewConversation = () => {
     dispatch(setActiveConversation(null));
-    setShowConversationList(false);
+    setView("chat");
   };
 
   const handleSelectConversation = (id: number) => {
@@ -171,7 +192,7 @@ const ChatPanel: FC = () => {
           })
         : setActiveConversation(null),
     );
-    setShowConversationList(false);
+    setView("chat");
   };
 
   const sendText = useCallback(
@@ -239,7 +260,7 @@ const ChatPanel: FC = () => {
       return;
     }
     dispatch(clearPendingMessage());
-    setShowConversationList(false);
+    setView("chat");
     sendText(pendingMessage.text, pendingMessage.kind);
   }, [pendingMessage, isLoading, stop, dispatch, sendText]);
 
@@ -449,30 +470,24 @@ const ChatPanel: FC = () => {
             <Button
               size="small"
               variant="outlined"
+              startIcon={<DescriptionOutlinedIcon sx={{ fontSize: 16 }} />}
+              onClick={() =>
+                setView((v) => (v === "documents" ? "chat" : "documents"))
+              }
+              sx={headerButtonSx(view === "documents")}
+            >
+              Documents
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
               startIcon={<ForumOutlinedIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setShowConversationList((v) => !v)}
-              sx={{
-                color: showConversationList ? "white" : "rgba(255,255,255,0.7)",
-                borderColor: showConversationList
-                  ? "rgba(255,255,255,0.5)"
-                  : "rgba(255,255,255,0.3)",
-                bgcolor: showConversationList
-                  ? "rgba(255,255,255,0.15)"
-                  : "transparent",
-                textTransform: "none",
-                fontSize: "0.75rem",
-                px: 1,
-                py: 0,
-                justifyContent: "flex-start",
-                "& .MuiButton-startIcon": { mr: 0.75 },
-                "&:hover": {
-                  color: "white",
-                  borderColor: "rgba(255,255,255,0.6)",
-                  bgcolor: showConversationList
-                    ? "rgba(255,255,255,0.22)"
-                    : "rgba(255,255,255,0.1)",
-                },
-              }}
+              onClick={() =>
+                setView((v) =>
+                  v === "conversations" ? "chat" : "conversations",
+                )
+              }
+              sx={headerButtonSx(view === "conversations")}
             >
               Conversations
             </Button>
@@ -494,14 +509,20 @@ const ChatPanel: FC = () => {
         </Box>
 
         {/* Main content: conversation list or messages */}
-        {showConversationList ? (
+        {view === "documents" ? (
+          <DocumentList
+            projectId={selectedProject}
+            projectName={project?.name}
+            onBack={() => setView("chat")}
+          />
+        ) : view === "conversations" ? (
           <ConversationList
             projectId={selectedProject}
             projectName={project?.name}
             activeConversationId={activeConversationId}
             onSelect={handleSelectConversation}
             onNew={handleNewConversation}
-            onBack={() => setShowConversationList(false)}
+            onBack={() => setView("chat")}
           />
         ) : (
           <>

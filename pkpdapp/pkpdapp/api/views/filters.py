@@ -12,6 +12,7 @@ from pkpdapp.models import (
     Covariate,
     CovariatePopulation,
     Dataset,
+    Document,
     Project,
     PharmacodynamicModel,
     CombinedModel,
@@ -175,6 +176,10 @@ class ProjectFilter(filters.BaseFilterBackend):
                 elif queryset.model == Conversation:
                     # Filter (not replace) so the user/is_active scoping applied
                     # in ConversationViewSet.get_queryset is preserved.
+                    queryset = queryset.filter(project=project)
+                elif queryset.model == Document:
+                    # Filter (not replace) to keep the access scoping applied
+                    # in DocumentViewSet.get_queryset.
                     queryset = queryset.filter(project=project)
                 else:
                     raise RuntimeError(queryset_model_not_recognised_text)

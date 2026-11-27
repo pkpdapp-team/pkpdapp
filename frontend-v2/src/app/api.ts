@@ -15,6 +15,7 @@ export const api = backendApi.enhanceEndpoints({
     "BiomarkerType",
     "EfficacyExperiment",
     "Conversation",
+    "Document",
     "CovariatePopulation",
   ],
   endpoints: {
@@ -467,6 +468,31 @@ export const api = backendApi.enhanceEndpoints({
         { type: "Conversation", id },
         { type: "Conversation", id: "LIST" },
       ],
+    },
+    // Documents
+    documentsList: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({
+                type: "Document" as const,
+                id,
+              })),
+              { type: "Document", id: "LIST" },
+            ]
+          : [{ type: "Document", id: "LIST" }],
+    },
+    documentsCreate: {
+      invalidatesTags: [{ type: "Document", id: "LIST" }],
+    },
+    documentsDestroy: {
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Document", id },
+        { type: "Document", id: "LIST" },
+      ],
+    },
+    documentsRetryCreate: {
+      invalidatesTags: [{ type: "Document", id: "LIST" }],
     },
   },
   //addTagTypes: ['User'],
