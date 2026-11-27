@@ -162,7 +162,17 @@ class PrediBackend(BaseBackend):
             profile, _ = Profile.objects.get_or_create(user=user)
             # only an accepted login turns a placeholder into a real user
             if user.is_active:
+                if profile.is_placeholder:
+                    logger.info(
+                        f"Placeholder {user.username} converted to active "
+                        "user on first login"
+                    )
                 profile.is_placeholder = False
+            elif profile.is_placeholder:
+                logger.info(
+                    f"Login rejected for placeholder {user.username}: "
+                    "not in an allowed group; remains a placeholder"
+                )
             if details.get("department"):
                 profile.department = details["department"]
             profile.save()
